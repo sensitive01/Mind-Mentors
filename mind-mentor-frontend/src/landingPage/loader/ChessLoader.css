@@ -1,0 +1,26 @@
+/* src/ChessLoader.css */
+.loader-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;  /* Full viewport height */
+    background-color: #f4f4f4;  /* Optional background color */
+    position: absolute;
+    width: 100%;
+  }
+  
+  .chess-piece img {
+    width: 100px;
+    height: 100px;
+    animation: spin 2s infinite linear;
+  }
+  
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+  

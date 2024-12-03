@@ -1,0 +1,6 @@
+.nav-link.active .icon-container img {
+    filter: brightness(0) invert(1) sepia(1) saturate(10000%) hue-rotate(240deg);
+    }
+    .nav-link:hover .icon-container img {
+    filter: brightness(0) invert(1) sepia(1) saturate(10000%) hue-rotate(240deg);
+    }
