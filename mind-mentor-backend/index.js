@@ -18,7 +18,7 @@ dbConnect()
 app.use(cookieParser());
 app.use(express.json());   
 
-const allowedOrigins = ["http://localhost:5173","https://mind-mendorz.vercel.app"];
+const allowedOrigins = ["http://localhost:5173","https://mind-mendorz.vercel.app","https://mind-mentors.vercel.app"];
 
 const corsOptions = {
   origin: function (origin, callback) {
