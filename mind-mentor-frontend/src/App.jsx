@@ -90,6 +90,103 @@ import CenterLoginPage from "./centeradmin-components/CenterLoginPage";
 
 
 
+// ...................................................................................................
+import ServiceAttendance from './pages/servicedelivery/ServiceAttendance';
+import ServiceAttendanceReport from "./pages/servicedelivery/ServiceAttendanceReport";
+import ServiceDashboard from "./pages/servicedelivery/ServiceDashboard";
+import ServiceFeedback from "./pages/servicedelivery/ServiceFeedback";
+import ServiceInvoice from "./pages/servicedelivery/ServiceInvoice";
+import ServiceKids from "./pages/servicedelivery/ServiceKids";
+import ServiceLeaves from "./pages/servicedelivery/ServiceLeaves";
+import ServiceLeavesAdd from "./pages/servicedelivery/ServiceLeavesAdd";
+import ServiceMessageStusTrackPage from "./pages/servicedelivery/ServiceMessageStusTrackPage";
+import ServiceMyAssignTasks from "./pages/servicedelivery/ServiceMyAssignTasks";
+import ServiceMyAssignTasksTable from "./pages/servicedelivery/ServiceMyAssignTasksTable";
+import ServiceMyTasks from "./pages/servicedelivery/ServiceMyTasks";
+import ServiceProfile from "./pages/servicedelivery/ServiceProfile";
+import ServicePrograms from "./pages/servicedelivery/ServicePrograms";
+import ServiceScheduleClass from "./pages/servicedelivery/ServiceScheduleClass";
+import ServiceSupport from "./pages/servicedelivery/ServiceSupport";
+import ServiceSupportRequest from "./pages/servicedelivery/ServiceSupportRequest";
+import ServiceLogin from "./servicedelivery/components/LoginPage";
+
+// ...........................................................................................................
+
+
+
+import RenewalAttendance from './pages/renewalassociate/RenewalAttendance';
+import RenewalAttendanceReport from "./pages/renewalassociate/RenewalAttendanceReport";
+import RenewalDashboard from "./pages/renewalassociate/RenewalDashboard";
+import RenewalFeedback from "./pages/renewalassociate/RenewalFeedback";
+import RenewalInvoice from "./pages/renewalassociate/RenewalInvoice";
+import RenewalKids from "./pages/renewalassociate/RenewalKids";
+import RenewalLeaves from "./pages/renewalassociate/RenewalLeaves";
+import RenewalLeavesAdd from "./pages/renewalassociate/RenewalLeavesAdd";
+import RenewalMessageStusTrackPage from "./pages/renewalassociate/RenewalMessageStusTrackPage";
+import RenewalMyAssignTasks from "./pages/renewalassociate/RenewalMyAssignTasks";
+import RenewalMyAssignTasksTable from "./pages/renewalassociate/RenewalMyAssignTasksTable";
+import RenewalMyTasks from "./pages/renewalassociate/RenewalMyTasks";
+import RenewalParents from './pages/renewalassociate/RenewalParents';
+import RenewalProfile from "./pages/renewalassociate/RenewalProfile";
+import RenewalPrograms from "./pages/renewalassociate/RenewalPrograms";
+import RenewalReferal from "./pages/renewalassociate/RenewalReferal";
+import RenewalRenewal from './pages/renewalassociate/RenewalRenewal';
+import RenewalScheduleClass from "./pages/renewalassociate/RenewalScheduleClass";
+import RenewalSupport from "./pages/renewalassociate/RenewalSupport";
+import RenewalSupportRequest from "./pages/renewalassociate/RenewalSupportRequest";
+import RenewalLogin from "./renewalassociate/components/LoginPage";
+
+
+
+
+
+
+
+
+
+import CoachLogin from "./coach/components/LoginPage";
+import CoachAttendance from './pages/coach/CoachAttendance';
+import CoachAttendanceReport from "./pages/coach/CoachAttendanceReport";
+import CoachDashboard from "./pages/coach/CoachDashboard";
+// import CoachFeedback from "./pages/coach/CoachFeedback";
+import CoachFeedbackAdd from "./pages/coach/CoachFeedbackAdd";
+import CoachInvoice from "./pages/coach/CoachInvoice";
+import CoachLeaves from "./pages/coach/CoachLeaves";
+import CoachLeavesAdd from "./pages/coach/CoachLeavesAdd";
+import CoachMyAssignTasks from "./pages/coach/CoachMyAssignTasks";
+import CoachMyAssignTasksTable from "./pages/coach/CoachMyAssignTasksTable";
+import CoachMyTasks from "./pages/coach/CoachMyTasks";
+import CoachProfile from "./pages/coach/CoachProfile";
+import CoachScheduleClass from "./pages/coach/CoachScheduleClass";
+import CoachSupport from "./pages/coach/CoachSupport";
+import CoachSupportRequest from "./pages/coach/CoachSupportRequest";
+
+
+
+import MarketingAttendance from './pages/marketing/MarketingAttendance';
+import MarketingAttendanceReport from "./pages/marketing/MarketingAttendanceReport";
+import MarketingDashboard from "./pages/marketing/MarketingDashboard";
+import MarketingFeedback from "./pages/marketing/MarketingFeedback";
+// import MarketingInvoice from "./pages/marketing/MarketingInvoice";
+import MarketingLeaves from "./pages/marketing/MarketingLeaves";
+import MarketingLeavesAdd from "./pages/marketing/MarketingLeavesAdd";
+import MarketingProfile from "./pages/marketing/MarketingProfile";
+import MarketingSupport from "./pages/marketing/MarketingSupport";
+import MarketingSupportRequest from "./pages/marketing/MarketingSupportRequest";
+
+import MarketingLogin from "./marketing/components/LoginPage";
+import MarketingEnquiry from "./pages/marketing/MarketingEnquiry";
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -189,6 +286,126 @@ function App() {
         <Route path="/employee-operation/invoice" element={<InvoicePage/>} />
         <Route path="/employee-operation/studentreport" element={<StudentReport/>} />
         <Route path="/employee-operation/coachfeedback" element={<CoachFeedback/>} />
+
+
+
+
+
+
+        <Route path="/serviceProfile" element={<ServiceProfile />} />
+        <Route path="/serviceAttendance" element={<ServiceAttendance />} />
+        <Route path="/serviceLeaves" element={<ServiceLeaves />} />
+        <Route path="/serviceLeaves/add" element={<ServiceLeavesAdd />} />
+        <Route path="/serviceInvoice" element={<ServiceInvoice />} />
+        <Route path="/serviceFeedback" element={<ServiceFeedback />} />
+        <Route path="/serviceAttendanceReport" element={<ServiceAttendanceReport />} />
+        <Route path="/serviceMyTasks/assigntask" element={<ServiceMyAssignTasks />} />
+        <Route path="/serviceMyTasks" element={<ServiceMyTasks />} />
+        <Route path="/serviceAssignedTasks/" element={<ServiceMyAssignTasksTable />} />
+        <Route path="/serviceScheduleClass/" element={<ServiceScheduleClass />} />
+        <Route path="/serviceSupport/add" element={<ServiceSupport />} />
+        <Route path="/serviceSupport/" element={<ServiceSupportRequest />} />
+        <Route path="/serviceMessageStatus/" element={<ServiceMessageStusTrackPage />} />
+        <Route path="/servicekids" element={<ServiceKids />} />
+        <Route path="/servicePrograms" element={<ServicePrograms />} />
+        <Route path="/serviceDashboard" element={<ServiceDashboard />} />
+        <Route path="/serviceLogin" element={<ServiceLogin />} />
+
+
+
+
+
+
+
+
+
+
+        <Route path="/renewalDashboard" element={<RenewalDashboard />} />
+        <Route path="/renewalProfile" element={<RenewalProfile />} />
+        <Route path="/renewalAttendance" element={<RenewalAttendance />} />
+        <Route path="/renewalLeaves" element={<RenewalLeaves />} />
+        <Route path="/renewalLeaves/add" element={<RenewalLeavesAdd />} />
+        <Route path="/renewalInvoices" element={<RenewalInvoice />} />
+        <Route path="/renewalFeedback" element={<RenewalFeedback />} />
+        <Route path="/renewalAttendanceReport" element={<RenewalAttendanceReport />} />
+        <Route path="/renewalMyTasks/assigntask" element={<RenewalMyAssignTasks />} />
+        <Route path="/renewalMyTasks" element={<RenewalMyTasks />} />
+        <Route path="/renewalAssignedTasks/" element={<RenewalMyAssignTasksTable />} />
+        <Route path="/renewalScheduleClass/" element={<RenewalScheduleClass />} />
+        <Route path="/renewalSupport/add" element={<RenewalSupport />} />
+        <Route path="/renewalSupport/" element={<RenewalSupportRequest />} />
+        <Route path="/renewalMessageStatus/" element={<RenewalMessageStusTrackPage />} />
+        <Route path="/renewalKids" element={<RenewalKids />} />
+        <Route path="/renewalPrograms" element={<RenewalPrograms />} />
+        <Route path="/renewalReferrals" element={<RenewalReferal />} />
+        <Route path="/renewalParents" element={<RenewalParents />} />
+        <Route path="/renewalRenewals" element={<RenewalRenewal />} />
+        <Route path="/renewalLogin" element={<RenewalLogin />} />
+
+
+
+
+
+
+        <Route path="/coachDashboard" element={<CoachDashboard />} />
+        <Route path="/coachProfile" element={<CoachProfile />} />
+        <Route path="/coachAttendance" element={<CoachAttendance />} />
+        <Route path="/coachLeaves" element={<CoachLeaves />} />
+        <Route path="/coachLeaves/add" element={<CoachLeavesAdd />} />
+        <Route path="/coachInvoices" element={<CoachInvoice />} />
+        <Route path="/coachFeedback" element={<CoachFeedback />} />
+        <Route path="/coachAttendanceReport" element={<CoachAttendanceReport />} />
+        <Route path="/coachMyTasks/assigntask" element={<CoachMyAssignTasks />} />
+        <Route path="/coachMyTasks" element={<CoachMyTasks />} />
+        <Route path="/coachAssignedTasks/" element={<CoachMyAssignTasksTable />} />
+        <Route path="/coachScheduleClass/" element={<CoachScheduleClass />} />
+        <Route path="/coachSupport/add" element={<CoachSupport />} />
+        <Route path="/coachSupport/" element={<CoachSupportRequest />} />
+        <Route path="/coachFeedaback/add" element={<CoachFeedbackAdd />} />
+        <Route path="/coachLogin" element={<CoachLogin />} />
+
+
+
+
+
+
+
+
+        <Route path="/marketingDashboard" element={<MarketingDashboard />} />
+        <Route path="/marketingProfile" element={<MarketingProfile />} />
+        <Route path="/marketingAttendance" element={<MarketingAttendance />} />
+        <Route path="/marketingLeaves" element={<MarketingLeaves />} />
+        <Route path="/marketingLeaves/add" element={<MarketingLeavesAdd />} />
+        <Route path="/marketingEnquiries" element={<MarketingEnquiry />} />
+        <Route path="/marketingFeedback" element={<MarketingFeedback />} />
+        <Route path="/marketingAttendanceReport" element={<MarketingAttendanceReport />} />
+        {/* <Route path="/marketingScheduleClass/" element={<MarketingScheduleClass />} /> */}
+        <Route path="/marketingSupport/add" element={<MarketingSupport />} />
+        <Route path="/marketingSupport/" element={<MarketingSupportRequest />} />
+
+        <Route path="/marketingLogin" element={<MarketingLogin />} />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
         

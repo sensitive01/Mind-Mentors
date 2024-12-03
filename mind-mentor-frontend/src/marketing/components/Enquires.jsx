@@ -1,19 +1,19 @@
 import {
-  Box,
-  Button,
-  createTheme,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  Fade,
-  Grid,
-  Paper,
-  Slide,
-  TextField,
-  ThemeProvider,
-  Typography
+    Box,
+    Button,
+    createTheme,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Divider,
+    Fade,
+    Grid,
+    Paper,
+    Slide,
+    TextField,
+    ThemeProvider,
+    Typography
 } from '@mui/material';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
@@ -23,9 +23,8 @@ import { alpha } from '@mui/material/styles';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom'; // Import Link for navigation
+// import { fetchAllEnquiries } from '../../../api/service/employee/EmployeeRenewal'; // Adjust the import path as necessary
 import columns from './Columns'; // Import columns from the separate file
-import data from './Enquiry';
-// import { fetchAllEnquiries } from '../../api/service/employee/EmployeeService'; // Adjust the import path as necessary
 
 // Updated modern color scheme
 const theme = createTheme({
@@ -118,20 +117,20 @@ const Enquiries = () => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true); // State to manage loading
 
-  // useEffect(() => {
-  //   const loadLeaves = async () => {
-  //     try {
-  //       const data = await fetchAllEnquiries();
-  //       setRows(data);
-  //     } catch (err) {
-  //       setError('Failed to fetch Enquiries. Please try again later.');
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
+  useEffect(() => {
+    const loadLeaves = async () => {
+      try {
+        const data = await fetchAllEnquiries();
+        setRows(data);
+      } catch (err) {
+        setError('Failed to fetch Enquiries. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  //   loadLeaves();
-  // }, []);
+    loadLeaves();
+  }, []);
   const [noteDialog, setNoteDialog] = useState({
     open: false,
     rowData: null,
@@ -206,7 +205,7 @@ const Enquiries = () => {
                 variant="contained"
                 color="primary"
                 component={Link}
-                to="/employee-operation-enquiry-form"
+                // to="/employee-operation-enquiry-form"
               >
                 + Enquire Details
               </Button>

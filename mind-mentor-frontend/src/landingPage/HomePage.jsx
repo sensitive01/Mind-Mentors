@@ -16,7 +16,7 @@ const HomePage = () => {
       title: 'Kid',
       icon: Baby,
       description: 'Access your activities, games, and learning materials',
-      path: '/kids/login', // Adjust path as needed for kid login
+      path: '#', // Adjust path as needed for kid login
       color: 'green'
     },
     {
@@ -27,11 +27,32 @@ const HomePage = () => {
       color: 'purple'
     },
     {
-      title: 'CenterAdmin',
+      title: 'Service Delivery',
       icon: Briefcase,
       description: 'Manage schedules and coordinate activities',
-      path: '/centeradmin-login',
-      color: 'red'
+      path: '/serviceLogin',
+      color: 'blue'
+    },
+    {
+      title: 'Renewal Associate',
+      icon: Briefcase,
+      description: 'Manage schedules and coordinate activities',
+      path: '/renewalLogin',
+      color: 'green'
+    },
+    {
+      title: 'Coach',
+      icon: Briefcase,
+      description: 'Manage schedules and coordinate activities',
+      path: '/coachLogin',
+      color: 'purple'
+    },
+    {
+      title: 'Marketing Associate',
+      icon: Briefcase,
+      description: 'Manage schedules and coordinate activities',
+      path: '/marketingLogin',
+      color: 'blue'
     }
   ];
 
@@ -54,20 +75,14 @@ const HomePage = () => {
         hover: 'hover:bg-purple-600',
         light: 'bg-purple-50',
         text: 'text-purple-500'
-      },
-      red: {
-        bg: 'bg-green-500',
-        hover: 'hover:bg-green-600',
-        light: 'bg-green-50',
-        text: 'text-green-500'
-      },
+      }
     };
     return colors[color];
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className=" mx-auto px-4 py-12">
+      <div className="max-w-6xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="text-center mb-16">
           <div className="flex justify-center mb-6">
@@ -84,7 +99,7 @@ const HomePage = () => {
         </div>
 
         {/* User Type Cards */}
-        <div className="grid md:grid-cols-4 gap-8">
+        <div className="grid md:grid-cols-3 gap-8">
           {userTypes.map((userType) => {
             const colors = getColorClasses(userType.color);
             return (

@@ -19,14 +19,13 @@ import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
+import React, { useEffect, useState } from 'react';
+import columns from './TaskColumn'; // Import columns from the separate file
+import tasks from './Tasks';
+import { Link } from 'react-router-dom'; // Import Link for navigation
+
 import { alpha } from '@mui/material/styles';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom'; // Import Link for navigation
-import columns from './Columns'; // Import columns from the separate file
-import data from './Enquiry';
-// import { fetchAllEnquiries } from '../../api/service/employee/EmployeeService'; // Adjust the import path as necessary
-
 // Updated modern color scheme
 const theme = createTheme({
   palette: {
@@ -89,6 +88,7 @@ const theme = createTheme({
     },
   },
 });
+
 const DetailView = ({ data }) => (
   <Grid container spacing={3} sx={{ p: 2 }}>
     {Object.entries(data).map(([key, value]) => (
@@ -114,38 +114,32 @@ const DetailView = ({ data }) => (
     ))}
   </Grid>
 );
-const Enquiries = () => {
+
+const Prospects = () => {
+
   const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true); // State to manage loading
 
-  // useEffect(() => {
-  //   const loadLeaves = async () => {
-  //     try {
-  //       const data = await fetchAllEnquiries();
-  //       setRows(data);
-  //     } catch (err) {
-  //       setError('Failed to fetch Enquiries. Please try again later.');
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   loadLeaves();
-  // }, []);
+  useEffect(() => {
+    setRows(tasks); // Set the imported data into the state
+  }, []);
   const [noteDialog, setNoteDialog] = useState({
     open: false,
     rowData: null,
     noteText: ''
   });
+
   const [viewDialog, setViewDialog] = useState({
     open: false,
     rowData: null
   });
+
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
     pageSize: 5,
   });
+
   const [editRowsModel, setEditRowsModel] = useState({});
+
   const handleStatusToggle = (id) => {
     setRows(rows.map(row => {
       if (row.id === id) {
@@ -159,6 +153,7 @@ const Enquiries = () => {
       return row;
     }));
   };
+
   const handleNoteSave = () => {
     if (noteDialog.rowData) {
       setRows(rows.map(row =>
@@ -169,25 +164,12 @@ const Enquiries = () => {
       setNoteDialog({ open: false, rowData: null, noteText: '' });
     }
   };
-  const handleRowEditStop = (params, event) => {
-    // Prevent default row edit stop behavior
-    event.defaultMuiPrevented = true;
-  };
-  const handleProcessRowUpdate = (newRow, oldRow) => {
-    // Update the rows state with the edited row
-    const updatedRows = rows.map((row) =>
-      row.id === newRow.id ? newRow : row
-    );
-    setRows(updatedRows);
-    return newRow;
-  };
-  const handleProcessRowUpdateError = (error) => {
-    console.error('Row update error:', error);
-  };
+
+
   return (
     <ThemeProvider theme={theme}>
       <Fade in={true}>
-        <Box sx={{ width: '100%', height: '100%', p: 3, ml: "auto" }}>
+        <Box sx={{ width: '100%', height: '100%', p: 3 }}>
           <Paper
             elevation={0}
             sx={{
@@ -200,35 +182,27 @@ const Enquiries = () => {
           >
             <Box mb={3} display="flex" justifyContent="space-between" alignItems="center">
               <Typography variant="h5" gutterBottom sx={{ color: 'text.primary', fontWeight: 600, mb: 3 }}>
-                Enquiries
+                My Tasks
               </Typography>
               <Button
                 variant="contained"
                 color="primary"
                 component={Link}
-                to="/employee-operation-enquiry-form"
+                to="/serviceMyTasks/assigntask"
               >
-                + Enquire Details
+                + My Task
               </Button>
             </Box>
+
             <DataGrid
+
               rows={rows}
-              columns={columns(theme, handleStatusToggle, setViewDialog, setNoteDialog)}
+              columns={columns(theme, handleStatusToggle, setViewDialog, setNoteDialog)} // Pass necessary functions as parameters
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel}
               pageSizeOptions={[5, 10, 25]}
               checkboxSelection
               disableRowSelectionOnClick
-              editMode="row"
-              getRowId={(row) => row._id} // Specify the unique id property
-              onRowDoubleClick={(params) => {
-                setViewDialog({ open: true, rowData: params.row });
-                // Enable editing on double click
-                params.row.isEditable = true;
-              }}
-              onRowEditStop={handleRowEditStop}
-              processRowUpdate={handleProcessRowUpdate}
-              onProcessRowUpdateError={handleProcessRowUpdateError}
               slots={{ toolbar: GridToolbar }}
               slotProps={{
                 toolbar: {
@@ -237,7 +211,8 @@ const Enquiries = () => {
                 },
               }}
               sx={{
-                height: 500,
+                height: 500, // Fixed height for the table
+
                 '& .MuiDataGrid-cell:focus': {
                   outline: 'none',
                 },
@@ -249,13 +224,6 @@ const Enquiries = () => {
                   color: 'white',
                   fontWeight: 600,
                 },
-                '& .MuiDataGrid-footerContainer': {
-                  display: 'flex',
-                  justifyContent: 'flex-end',
-                },
-                '& .MuiDataGrid-root': {
-                  overflow: 'hidden',
-                },
                 '& .MuiCheckbox-root.Mui-checked': {
                   color: '#FFFFFF',
                 },
@@ -264,6 +232,7 @@ const Enquiries = () => {
                 },
               }}
             />
+
             {/* View Dialog */}
             <Dialog
               open={viewDialog.open}
@@ -285,6 +254,7 @@ const Enquiries = () => {
                 <DetailView data={viewDialog.rowData || {}} />
               </DialogContent>
               <Divider sx={{ borderColor: '#aa88be' }} />
+
               <DialogActions sx={{ p: 2.5 }}>
                 <Button
                   class="px-8 py-3 bg-[#642b8f] text-white rounded-lg font-medium hover:bg-[#aa88be] transition-colors shadow-lg hover:shadow-xl"
@@ -299,6 +269,7 @@ const Enquiries = () => {
                 </Button>
               </DialogActions>
             </Dialog>
+
             {/* Notes Dialog */}
             <Dialog
               open={noteDialog.open}
@@ -319,11 +290,14 @@ const Enquiries = () => {
                   color: '#ffffff',
                   fontWeight: 600,
                   background: 'linear-gradient(to right, #642b8f, #aa88be)', // Apply the gradient background
+
+
                 }}>
                 Add Note
               </DialogTitle>
               <Divider />
               <DialogContent>
+
                 {/* Enquiry Stage Select Box */}
                 <FormControl fullWidth sx={{ mt: 2 }}>
                   <InputLabel>Enquiry Stage</InputLabel>
@@ -338,6 +312,7 @@ const Enquiries = () => {
                     <MenuItem value="Converted">Converted</MenuItem>
                   </Select>
                 </FormControl>
+
                 {/* Notes To Field */}
                 <TextField
                   label="Notes To"
@@ -346,6 +321,7 @@ const Enquiries = () => {
                   fullWidth
                   sx={{ mt: 2 }}
                 />
+
                 <TextField
                   label="Note"
                   value={noteDialog.noteText}
@@ -358,6 +334,7 @@ const Enquiries = () => {
               </DialogContent>
               <Divider sx={{ borderColor: '#aa88be' }} />
               <DialogActions sx={{ p: 2.5 }}>
+
                 <Button
                   onClick={handleNoteSave}
                   variant="contained"
@@ -371,6 +348,7 @@ const Enquiries = () => {
                 >
                   Save Note
                 </Button>
+
                 <Button
                   class="px-8 py-3 bg-white border-2 border-[#642b8f] text-[#642b8f] rounded-lg font-medium hover:bg-[#efe8f0] transition-colors"
                   onClick={() => setNoteDialog({ open: false, rowData: null, noteText: '', enquiryStage: '', notesTo: '', parents: '' })}
@@ -385,11 +363,12 @@ const Enquiries = () => {
                 </Button>
               </DialogActions>
             </Dialog>
+
           </Paper>
         </Box>
       </Fade>
     </ThemeProvider>
   );
 };
-export default Enquiries;
 
+export default Prospects;

@@ -25,7 +25,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom'; // Import Link for navigation
 import columns from './Columns'; // Import columns from the separate file
 import data from './Enquiry';
-// import { fetchAllEnquiries } from '../../api/service/employee/EmployeeService'; // Adjust the import path as necessary
+import { fetchAllEnquiries } from '../../../api/service/employee/EmployeeService'; // Adjust the import path as necessary
 
 // Updated modern color scheme
 const theme = createTheme({
@@ -118,20 +118,20 @@ const Enquiries = () => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true); // State to manage loading
 
-  // useEffect(() => {
-  //   const loadLeaves = async () => {
-  //     try {
-  //       const data = await fetchAllEnquiries();
-  //       setRows(data);
-  //     } catch (err) {
-  //       setError('Failed to fetch Enquiries. Please try again later.');
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
+  useEffect(() => {
+    const loadLeaves = async () => {
+      try {
+        const data = await fetchAllEnquiries();
+        setRows(data);
+      } catch (err) {
+        setError('Failed to fetch Enquiries. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  //   loadLeaves();
-  // }, []);
+    loadLeaves();
+  }, []);
   const [noteDialog, setNoteDialog] = useState({
     open: false,
     rowData: null,
