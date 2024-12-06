@@ -1,15 +1,24 @@
-import { useState } from 'react';
-import { TextField, MenuItem, Select, InputLabel, FormControl, Grid, Button, Typography } from '@mui/material';
+import { useState } from "react";
+import {
+  TextField,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
+  Grid,
+  Button,
+  Typography,
+} from "@mui/material";
 
 const TaskModule = () => {
-  const [programs, setPrograms] = useState([{ program: '', level: '' }]);
-  const availablePrograms = ['Chess', 'Rubix', 'Art', 'Dance', 'Music'];
-  const [category, setCategory] = useState('');
-  const [request, setRequest] = useState('');
+  const [programs, setPrograms] = useState([{ program: "", level: "" }]);
+  const availablePrograms = ["Chess", "Rubix", "Art", "Dance", "Music"];
+  const [category, setCategory] = useState("");
+  const [request, setRequest] = useState("");
   const [attachment, setAttachment] = useState(null);
 
   const addProgram = () => {
-    setPrograms([...programs, { program: '', level: '' }]);
+    setPrograms([...programs, { program: "", level: "" }]);
   };
 
   const removeProgram = (index) => {
@@ -26,7 +35,9 @@ const TaskModule = () => {
     const selectedPrograms = programs
       .map((p) => p.program)
       .filter((p) => p !== currentProgram);
-    return availablePrograms.filter((program) => !selectedPrograms.includes(program));
+    return availablePrograms.filter(
+      (program) => !selectedPrograms.includes(program)
+    );
   };
 
   const handleCategoryChange = (event) => {
@@ -46,30 +57,29 @@ const TaskModule = () => {
       <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-xl overflow-hidden">
         {/* Header Section */}
         <div className="bg-gradient-to-r from-[#642b8f] to-[#aa88be] p-8 text-white">
-          <h2 className="text-3xl font-bold mb-2">MsgKart Status Checker   </h2>
-          <p className="text-sm opacity-90">Please fill in the required information below</p>
+          <h2 className="text-3xl font-bold mb-2">MsgKart Status Checker </h2>
+          <p className="text-sm opacity-90">
+            Please fill in the required information below
+          </p>
         </div>
-  
+
         <form className="p-8">
           <div className="space-y-8">
-
-              {/* Request Textarea */}
+            {/* Request Textarea */}
             <div className="space-y-4">
               <label className="block text-sm font-medium text-[#642b8f]">
-                Message Id 
+                Message Id
               </label>
               <textarea
-              row={1}
+                row={1}
                 value={request}
                 onChange={handleRequestChange}
                 className="w-full p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors resize-none"
                 placeholder="Enter your Message/ ticket details here..."
               />
             </div>
-
-           
           </div>
-  
+
           {/* Form Buttons */}
           <div className="flex justify-center gap-6 mt-8">
             <button

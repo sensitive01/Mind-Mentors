@@ -1,13 +1,15 @@
 import axios from "axios";
 
 export const operationDeptInstance = axios.create({
-  baseURL: import.meta.env.VITE_BASE_URL, // Base API URL from environment variable
+  baseURL: import.meta.env.VITE_EMPLOYEE_BASE_ROUTE,
 });
 
 operationDeptInstance.interceptors.request.use(
   (config) => {
     const operationToken = localStorage.getItem("operationAccessToken");
-    const token = operationToken ? JSON.parse(operationToken).accessToken : null;
+    const token = operationToken
+      ? JSON.parse(operationToken).accessToken
+      : null;
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

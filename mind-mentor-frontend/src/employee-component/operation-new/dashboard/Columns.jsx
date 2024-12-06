@@ -1,103 +1,113 @@
 // columns.js
-import { alpha } from '@mui/material/styles';
-import { Zoom, Fade, Grow, Box, Chip, Switch, IconButton } from '@mui/material';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import NoteAddIcon from '@mui/icons-material/NoteAdd';
+import { alpha } from "@mui/material/styles";
+import { Zoom, Fade, Grow, Box, Chip, Switch, IconButton } from "@mui/material";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import NoteAddIcon from "@mui/icons-material/NoteAdd";
 
 const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog) => [
   {
-    field: 'rollNo',
-    headerName: 'Roll No',
+    field: "parentFirstName",
+    headerName: "Parent First Name",
+    width: 180,
+    editable: true,
+  },
+  {
+    field: "parentLastName",
+    headerName: "Parent Last Name",
+    width: 180,
+    editable: true,
+  },
+  {
+    field: "kidFirstName",
+    headerName: "Kid First Name",
+    width: 180,
+    editable: true,
+  },
+  {
+    field: "kidLastName",
+    headerName: "Kid Last Name",
+    width: 180,
+    editable: true,
+  },
+  {
+    field: "kidsAge",
+    headerName: "Kid Age",
+    type: "number",
     width: 100,
     editable: true,
   },
   {
-    field: 'name',
-    headerName: 'Name',
-    width: 180,
-    editable: true,
-  },
-  {
-    field: 'age',
-    headerName: 'Age',
-    type: 'number',
-    width: 100,
-    editable: true,
-  },
-  {
-    field: 'registeredDate',
-    headerName: 'Registered Date',
-    width: 150,
-    editable: true,
-  },
-  {
-    field: 'lastInteractionTime',
-    headerName: 'Last Interaction Time',
-    width: 180,
-    editable: true,
-  },
-  {
-    field: 'lastInteractedWith',
-    headerName: 'Last Interacted With',
-    width: 180,
-    editable: true,
-  },
-  {
-    field: 'leadSource',
-    headerName: 'Lead Source',
-    width: 150,
-    editable: true,
-  },
-  {
-    field: 'programs',
-    headerName: 'Programs',
-    width: 150,
-    editable: true,
-    renderCell: (params) => (
-      <Zoom in={true}>
-        <Chip
-          label={params.value}
-          size="small"
-          sx={{
-            bgcolor: alpha(theme.palette.primary.main, 0.1),
-            color: theme.palette.primary.main,
-          }}
-        />
-      </Zoom>
-    ),
-  },
-  {
-    field: 'stageTag',
-    headerName: 'Stage Tag',
+    field: "kidsGender",
+    headerName: "Kid Gender",
     width: 120,
     editable: true,
   },
   {
-    field: 'parentEmail',
-    headerName: 'Parent Email',
+    field: "whatsappNumber",
+    headerName: "WhatsApp Number",
+    width: 180,
+    editable: true,
+  },
+  {
+    field: "email",
+    headerName: "Email",
     width: 200,
     editable: true,
   },
   {
-    field: 'enrolledCenter',
-    headerName: 'Enrolled Center',
+    field: "message",
+    headerName: "Message",
+    width: 250,
+    editable: true,
+  },
+  {
+    field: "source",
+    headerName: "Source",
     width: 150,
     editable: true,
   },
   {
-    field: 'allotedCenter',
-    headerName: 'Alloted Center',
-    width: 150,
+    field: "programs",
+    headerName: "Programs",
+    width: 250,
+    renderCell: (params) => (
+      <Box in={true}>
+        {params.value.map((prog, index) => (
+          <Chip
+            key={index}
+            label={`${prog.program} (${prog.level})`}
+            size="small"
+            sx={{
+              bgcolor: alpha(theme.palette.primary.main, 0.1),
+              color: theme.palette.primary.main,
+              marginRight: 1,
+            }}
+          />
+        ))}
+      </Box>
+    ),
+  },
+  {
+    field: "schoolName",
+    headerName: "School Name",
+    width: 200,
     editable: true,
   },
   {
-    field: 'country',
-    headerName: 'Country',
-    width: 150,
+    field: "address",
+    headerName: "Address",
+    width: 250,
     editable: true,
   },
   {
-    field: 'status',
+    field: "schoolPincode",
+    headerName: "School Pincode",
+    width: 150,
+    editable: true,
+  },
+
+  {
+    field: 'enquiryStatus',
     headerName: 'Status',
     width: 150,
     renderCell: (params) => (
@@ -107,7 +117,7 @@ const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog) => [
             display: 'flex',
             alignItems: 'center',
             gap: 1,
-                       color: params.value === 'Warm'
+                       color: params.value === 'warm'
               ? '#F59E0B'
               : '#642b8f',
             padding: '4px 12px',
@@ -118,8 +128,8 @@ const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog) => [
           {params.value}
           <Switch
             size="small"
-            checked={params.value === 'Warm'}
-            onChange={() => handleStatusToggle(params.row.id)}
+            checked={params.value === 'warm'}
+            onChange={() => handleStatusToggle(params.row._id)}
             onClick={(e) => e.stopPropagation()}
             sx={{
               '& .MuiSwitch-switchBase.Mui-checked': {
@@ -138,12 +148,24 @@ const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog) => [
     ),
   },
   {
-    field: 'actions',
-    headerName: 'Actions',
+    field: "createdAt",
+    headerName: "Created At",
+    width: 200,
+    valueFormatter: (params) => new Date(params.value).toLocaleString(),
+  },
+  {
+    field: "updatedAt",
+    headerName: "Updated At",
+    width: 200,
+    valueFormatter: (params) => new Date(params.value).toLocaleString(),
+  },
+  {
+    field: "actions",
+    headerName: "Actions",
     width: 150,
     renderCell: (params) => (
-      <Box 
-        sx={{ display: 'flex', gap: 1 }}
+      <Box
+        sx={{ display: "flex", gap: 1 }}
         onClick={(e) => e.stopPropagation()} // Prevent row-wide click
       >
         <Grow in={true}>
@@ -151,30 +173,29 @@ const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog) => [
             size="small"
             onClick={() => setViewDialog({ open: true, rowData: params.row })}
             sx={{
-              color: '#F59E0B',
-              '&:hover': {
+              color: "#F59E0B",
+              "&:hover": {
                 backgroundColor: alpha(theme.palette.primary.main, 0.1),
               },
             }}
           >
-            {/* <VisibilityIcon fontSize="small" /> */}
+            <VisibilityIcon fontSize="small" />
           </IconButton>
         </Grow>
-        <Grow in={true} style={{ transformOrigin: '0 0 0' }}>
+        <Grow in={true} style={{ transformOrigin: "0 0 0" }}>
           <IconButton
             size="small"
             onClick={() => {
-              // Close view dialog if open before opening note dialog
               setViewDialog({ open: false, rowData: null });
               setNoteDialog({
                 open: true,
                 rowData: params.row,
-                noteText: params.row.notes || '',
+                noteText: params.row.notes || "",
               });
             }}
             sx={{
-              color: '#642b8f',
-              '&:hover': {
+              color: "#642b8f",
+              "&:hover": {
                 backgroundColor: alpha(theme.palette.secondary.main, 0.1),
               },
             }}
@@ -186,5 +207,6 @@ const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog) => [
     ),
   },
 ];
-
 export default columns;
+
+

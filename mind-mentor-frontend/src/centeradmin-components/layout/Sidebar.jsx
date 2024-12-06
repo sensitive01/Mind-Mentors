@@ -141,7 +141,7 @@ const ModernSidebar = () => {
       icon: <KidsIcon />, 
       text: 'Kids', 
       color: iconColors.kids, 
-      path: '#'
+      path: '/centeradmin-kids'
     },
     { 
       icon: <AttendanceIcon />, 
@@ -201,7 +201,7 @@ const ModernSidebar = () => {
         { 
           icon: <TaskIcon />, 
           text: 'Tasks Assigned By Me', 
-          path: '/centeradmin-tasks/assigntask'
+          path: '/centeradmin-tasks/assignedtasks'
         }
       ],
       open: openTasks,

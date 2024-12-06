@@ -12,8 +12,14 @@ const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog) => [
     editable: true,
   },
   {
+    field: 'createdAt',
+    headerName: 'Created At',
+    width: 100,
+    editable: true,
+  },
+  {
     field: 'taskTime',
-    headerName: 'Task Time',
+    headerName: 'Task Due Date & Time',
     width: 180,
     editable: true,
   },
@@ -30,7 +36,7 @@ const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog) => [
     editable: true,
   },
   {
-    field: 'assignedRole',
+    field: 'assignedTo',
     headerName: 'Assigned Role',
     width: 150,
     editable: true,

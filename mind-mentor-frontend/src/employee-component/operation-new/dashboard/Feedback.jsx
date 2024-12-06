@@ -7,7 +7,6 @@ import {
 } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import React, { useState } from 'react';
-
 const theme = createTheme({
   palette: {
     primary: {
@@ -39,7 +38,6 @@ const theme = createTheme({
     },
   },
 });
-
 const feedbackColumns = [
   { field: 'sno', headerName: 'S.No', width: 80 },
   { field: 'studentID', headerName: 'Student ID', width: 120 },
@@ -49,7 +47,6 @@ const feedbackColumns = [
   { field: 'feedback', headerName: 'Feedback', width: 250 },
   { field: 'remarks', headerName: 'Remarks', width: 200 },
 ];
-
 const feedbackData = [
   {
     id: 1,
@@ -73,10 +70,8 @@ const feedbackData = [
   },
   // Add more rows as needed
 ];
-
 const CoachFeedback = () => {
   const [rows, setRows] = useState(feedbackData);
-
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ width: '100%', height: '100%', p: 3 }}>
@@ -102,7 +97,6 @@ const CoachFeedback = () => {
             Coach Feedback Report
           </Typography>
           <DataGrid
-          
             rows={rows}
             columns={feedbackColumns}
             checkboxSelection
@@ -116,7 +110,6 @@ const CoachFeedback = () => {
             }}
             sx={{
               height: 500, // Fixed height for the table
-
               '& .MuiDataGrid-cell:focus': {
                 outline: 'none',
               },
@@ -141,5 +134,4 @@ const CoachFeedback = () => {
     </ThemeProvider>
   );
 };
-
 export default CoachFeedback;

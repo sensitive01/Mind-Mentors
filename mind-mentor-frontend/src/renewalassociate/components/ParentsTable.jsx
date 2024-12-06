@@ -6,7 +6,8 @@ import {
     Typography
   } from '@mui/material';
   import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-  import React, { useState } from 'react';
+  import React, { useEffect, useState } from 'react';
+import { getParentData } from '../../api/service/employee/EmployeeService';
   
   const theme = createTheme({
     palette: {
@@ -78,6 +79,16 @@ import {
   
   const Prospects = () => {
     const [rows, setRows] = useState(tasks); // Set the rows data
+
+    useEffect(()=>{
+      const fetchKidsData = async()=>{
+        const response = await getParentData()
+        console.log("parents",response)
+
+      }
+      fetchKidsData()
+
+    },[])
   
     return (
       <ThemeProvider theme={theme}>

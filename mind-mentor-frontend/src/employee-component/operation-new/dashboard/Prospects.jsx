@@ -107,23 +107,23 @@ const handleNoteSave = () => {
     setNoteDialog({ open: false, rowData: null, noteText: '' });
   }
 };
-const handleRowEditStop = (params, event) => {
-  // Prevent default row edit stop behavior
-  event.defaultMuiPrevented = true;
-};
+// const handleRowEditStop = (params, event) => {
+//   // Prevent default row edit stop behavior
+//   event.defaultMuiPrevented = true;
+// };
 
-const handleProcessRowUpdate = (newRow, oldRow) => {
-  // Update the rows state with the edited row
-  const updatedRows = rows.map((row) => 
-    row.id === newRow.id ? newRow : row
-  );
-  setRows(updatedRows);
-  return newRow;
-};
+// const handleProcessRowUpdate = (newRow, oldRow) => {
+//   // Update the rows state with the edited row
+//   const updatedRows = rows.map((row) => 
+//     row.id === newRow.id ? newRow : row
+//   );
+//   setRows(updatedRows);
+//   return newRow;
+// };
 
-const handleProcessRowUpdateError = (error) => {
-  console.error('Row update error:', error);
-};
+// const handleProcessRowUpdateError = (error) => {
+//   console.error('Row update error:', error);
+// };
 return (
   <ThemeProvider theme={theme}>
     <Fade in={true}>
@@ -164,9 +164,9 @@ return (
               // Enable editing on double click
               params.row.isEditable = true;
             }}
-            onRowEditStop={handleRowEditStop}
-            processRowUpdate={handleProcessRowUpdate}
-            onProcessRowUpdateError={handleProcessRowUpdateError}
+            // onRowEditStop={handleRowEditStop}
+            // processRowUpdate={handleProcessRowUpdate}
+            // onProcessRowUpdateError={handleProcessRowUpdateError}
             slots={{ toolbar: GridToolbar }}
             slotProps={{
               toolbar: {

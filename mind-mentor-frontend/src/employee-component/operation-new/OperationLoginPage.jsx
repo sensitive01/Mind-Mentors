@@ -54,6 +54,7 @@ const OperationLoginPage = () => {
     e.preventDefault();
     try {
       const response = await operationPasswordVerification(email, password);
+      console.log(response)
       if (response.status === 200) {
         toast.success(response.data.message);
         localStorage.setItem("email", response.data.email || "image.png");

@@ -433,6 +433,7 @@ const KidsLoginPage = () => {
     const hardcodedPassword = "12345678";
 
     if (email === hardcodedEmail && password === hardcodedPassword) {
+      localStorage.setItem("email",hardcodedEmail)
        navigate("/renewalDashboard");
       console.log("Login successful! Navigating to the next screen...");
     } else {

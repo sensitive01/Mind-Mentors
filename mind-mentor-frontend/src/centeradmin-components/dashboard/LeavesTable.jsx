@@ -258,7 +258,8 @@ import { alpha } from '@mui/material/styles';
 import { DataGrid, GridActionsCellItem, GridToolbar } from '@mui/x-data-grid';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchAllLeaves } from '../../api/service/employee/EmployeeService'; // Adjust the import path as necessary
+import { fetchAllLeaves } from '../../api/service/employee/EmployeeService';
+
 
 const theme = createTheme({
   palette: {
@@ -331,6 +332,8 @@ const DetailView = ({ data }) => (
   </Grid>
 );
 const EmployeeLeaveManagement = () => {
+  const empEmail = localStorage.getItem("email")
+  console.log(empEmail)
   const [rows, setRows] = useState([]);
   const [noteDialog, setNoteDialog] = useState({ open: false, rowData: null, noteText: '' });
   const [viewDialog, setViewDialog] = useState({ open: false, rowData: null });
@@ -341,7 +344,7 @@ const EmployeeLeaveManagement = () => {
   useEffect(() => {
     const loadLeaves = async () => {
       try {
-        const data = await fetchAllLeaves();
+        const data = await fetchAllLeaves(empEmail);
         setRows(data);
       } catch (err) {
         setError('Failed to fetch leaves. Please try again later.');
@@ -389,7 +392,7 @@ const EmployeeLeaveManagement = () => {
               variant="contained"
               color="primary"
               component={Link}
-              to="/employee-operation/leaves/add"
+              to="/centeradmin/leaves/add"
             >
               + Apply Leave
             </Button>

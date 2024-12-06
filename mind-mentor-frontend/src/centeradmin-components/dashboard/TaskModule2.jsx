@@ -1,31 +1,85 @@
-import { useState } from 'react';
-import { TextField, MenuItem, Select, InputLabel, FormControl, Grid, Button, Typography } from '@mui/material';
-import { Link } from 'react-router-dom'; // Import Link for navigation
+import React, { useState } from "react";
+import { Button } from "@mui/material";
+import { Link, useNavigate } from "react-router-dom";
+import { createTasks } from "../../api/service/employee/EmployeeService";
+
 
 
 const TaskModule = () => {
-  const [programs, setPrograms] = useState([{ program: '', level: '' }]);
-  const availablePrograms = ['Chess', 'Rubix', 'Art', 'Dance', 'Music'];
+  const empEmail = localStorage.getItem("email")
+  const navigate = useNavigate()
+  // State to manage form inputs
+  const [formData, setFormData] = useState({
+    kidsRelatedTo: "",
+    task: "",
+    taskDate: "",
+    taskTime: "",
+    assignedTo: "",
+    assignedBy:empEmail||""
+  });
 
-  const addProgram = () => {
-    setPrograms([...programs, { program: '', level: '' }]);
+  // State to manage form submission and display
+  const [submissionStatus, setSubmissionStatus] = useState({
+    submitted: false,
+    message: "",
+  });
+
+  // Handle input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
   };
 
-  const removeProgram = (index) => {
-    setPrograms(programs.filter((_, i) => i !== index));
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log("Form data", formData);
+
+    // Validate form fields
+    const { kidsRelatedTo, task, taskDate, taskTime, assignedTo } = formData;
+
+    if (!kidsRelatedTo || !task || !taskDate || !taskTime || !assignedTo) {
+      setSubmissionStatus({
+        submitted: true,
+        message: "Please fill in all required fields.",
+      });
+      return;
+    }
+
+    await createTasks(formData);
+    // If all fields are filled, show success message
+    setSubmissionStatus({
+      submitted: true,
+      message: `Task Successfully Assigned to ${assignedTo} for ${kidsRelatedTo} on ${taskDate} at ${taskTime}`,
+    });
+   
+
+    // Optional: Reset form after submission
+    setFormData({
+      kidsRelatedTo: "",
+      task: "",
+      taskDate: "",
+      taskTime: "",
+      assignedTo: "",
+    });
   };
 
-  const handleProgramChange = (index, field, value) => {
-    const newPrograms = [...programs];
-    newPrograms[index][field] = value;
-    setPrograms(newPrograms);
-  };
-
-  const getAvailableProgramOptions = (currentProgram) => {
-    const selectedPrograms = programs
-      .map((p) => p.program)
-      .filter((p) => p !== currentProgram);
-    return availablePrograms.filter((program) => !selectedPrograms.includes(program));
+  // Reset form and submission status
+  const handleReset = () => {
+    setFormData({
+      kidsRelatedTo: "",
+      task: "",
+      taskDate: "",
+      taskTime: "",
+      assignedTo: "",
+    });
+    setSubmissionStatus({
+      submitted: false,
+      message: "",
+    });
   };
 
   return (
@@ -33,20 +87,39 @@ const TaskModule = () => {
       <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-xl overflow-hidden">
         {/* Header Section */}
         <div className="bg-gradient-to-r from-[#642b8f] to-[#aa88be] p-8 text-white flex justify-between items-center">
-        <div>
-        <h2 className="text-3xl font-bold mb-2">Task Assignment Form</h2>
-          <p className="text-sm opacity-90">Please fill in the required information below</p>
+          <div>
+            <h2 className="text-3xl font-bold mb-2">Task Assignment Form</h2>
+            <p className="text-sm opacity-90">
+              Please fill in the required information below
+            </p>
+          </div>
+          <Button
+            variant="contained"
+            color="#642b8f"
+            component={Link}
+            to="/employee-operation-tasks/tasks"
+          >
+            View Tasks
+          </Button>
         </div>
-        <Button
-    variant="contained"
-    color="#642b8f"
-    component={Link}
-    to="/employee-operation-tasks/tasks" 
-    >
-       View Tasks
-  </Button>
-</div>
-        <form className="p-8">
+
+        {/* Submission Status Message */}
+        {submissionStatus.submitted && (
+          <div
+            className={`
+            p-4 m-4 rounded-lg text-center font-medium 
+            ${
+              submissionStatus.message.includes("Successfully")
+                ? "bg-green-100 text-green-800"
+                : "bg-red-100 text-red-800"
+            }
+          `}
+          >
+            {submissionStatus.message}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} onReset={handleReset} className="p-8">
           <div className="space-y-8">
             {/* Kids Related To */}
             <div className="space-y-4">
@@ -54,6 +127,9 @@ const TaskModule = () => {
                 Kids Related To
               </label>
               <select
+                name="kidsRelatedTo"
+                value={formData.kidsRelatedTo}
+                onChange={handleInputChange}
                 className="w-full p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors bg-white"
               >
                 <option value="">-Select-</option>
@@ -62,59 +138,71 @@ const TaskModule = () => {
                 <option value="groupC">Group C</option>
               </select>
             </div>
-  
+
             {/* Task */}
             <div className="space-y-4">
               <label className="block text-sm font-medium text-[#642b8f]">
                 Task
               </label>
               <textarea
+                name="task"
+                value={formData.task}
+                onChange={handleInputChange}
                 rows={4}
                 className="w-full p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors resize-none"
                 placeholder="Enter task description here..."
               />
             </div>
-  
+
             {/* Task Time */}
             <div className="flex gap-4">
               <div className="flex-1 space-y-4">
-              <label className="block text-sm font-medium text-[#642b8f]">
+                <label className="block text-sm font-medium text-[#642b8f]">
                   Task Date
                 </label>
                 <input
                   type="date"
+                  name="taskDate"
+                  value={formData.taskDate}
+                  onChange={handleInputChange}
                   className="w-full p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors"
                 />
-
-
               </div>
               <div className="flex-1 space-y-4">
-              <label className="block text-sm font-medium text-[#642b8f]">
+                <label className="block text-sm font-medium text-[#642b8f]">
                   Task Time
                 </label>
                 <input
                   type="time"
+                  name="taskTime"
+                  value={formData.taskTime}
+                  onChange={handleInputChange}
                   className="w-full p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors"
                 />
               </div>
             </div>
-  
+
             {/* Assigned To */}
             <div className="space-y-4">
               <label className="block text-sm font-medium text-[#642b8f]">
                 Assigned To
               </label>
               <select
+                name="assignedTo"
+                value={formData.assignedTo}
+                onChange={handleInputChange}
                 className="w-full p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors bg-white"
               >
                 <option value="">-Select-</option>
-                <option value="teacher1">Teacher 1</option>
-                <option value="teacher2">Teacher 2</option>
-                <option value="teacher3">Teacher 3</option>
+                <option value="marketingassociate@mindmentorz.com">Marketing</option>
+                <option value="coach@mindmentorz.com">Coach</option>
+                <option value="operations@mindmentoz.com">Operations</option>
+                <option value="serviceDelivery@mindmentorz.com">Service delivery</option>
+
               </select>
             </div>
           </div>
-  
+
           {/* Form Buttons */}
           <div className="flex justify-center gap-6 mt-8">
             <button
@@ -134,7 +222,6 @@ const TaskModule = () => {
       </div>
     </div>
   );
-  
 };
 
 export default TaskModule;

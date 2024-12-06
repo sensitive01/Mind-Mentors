@@ -1,3 +1,4 @@
+
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import {
@@ -12,20 +13,23 @@ import {
   Paper,
   TextField,
   ThemeProvider,
-  Typography
+  Typography,
+  CircularProgress,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { DataGrid, GridActionsCellItem, GridToolbar } from '@mui/x-data-grid';
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom'; // Import Link for navigation
+import { Link } from 'react-router-dom';
+import { fetchAllLeaves } from '../../api/service/employee/EmployeeService';
+
 
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#642b8f', // Indigo
+      main: '#642b8f',
     },
     secondary: {
-      main: '#EC4899', // Pink
+      main: '#EC4899',
     },
     background: {
       default: '#F1F5F9',
@@ -37,28 +41,7 @@ const theme = createTheme({
   },
 });
 
-const leaveData = [
-  {
-    id: 1,
-    employeeName: 'John Doe',
-    leaveType: 'Sick Leave',
-    leaveStartDate: '2024-11-01',
-    leaveEndDate: '2024-11-05',
-    status: 'Approved',
-    notes: 'Sick due to fever',
-  },
-  {
-    id: 2,
-    employeeName: 'Jane Smith',
-    leaveType: 'Vacation',
-    leaveStartDate: '2024-12-10',
-    leaveEndDate: '2024-12-15',
-    status: 'Pending',
-    notes: 'Vacation in Bali',
-  },
-  // More leave data can go here
-];
-
+// Columns definition remains the same...
 const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog) => [
   { field: 'id', headerName: 'ID', width: 70 },
   { field: 'employeeName', headerName: 'Employee Name', width: 200 },
@@ -92,7 +75,6 @@ const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog) => [
     ),
   },
 ];
-
 const DetailView = ({ data }) => (
   <Grid container spacing={3} sx={{ p: 2 }}>
     {Object.entries(data).map(([key, value]) => (
@@ -111,18 +93,32 @@ const DetailView = ({ data }) => (
     ))}
   </Grid>
 );
-
 const EmployeeLeaveManagement = () => {
+  const empEmail = localStorage.getItem("email")
+  console.log(empEmail)
   const [rows, setRows] = useState([]);
   const [noteDialog, setNoteDialog] = useState({ open: false, rowData: null, noteText: '' });
   const [viewDialog, setViewDialog] = useState({ open: false, rowData: null });
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 5 });
-  const [editRowsModel, setEditRowsModel] = useState({});
+  const [loading, setLoading] = useState(true); // State to manage loading
+  const [error, setError] = useState(null); // State to manage errors
 
   useEffect(() => {
-    setRows(leaveData); // Set the imported leave data into the state
+    const loadLeaves = async () => {
+      try {
+        const data = await fetchAllLeaves(empEmail);
+        setRows(data);
+      } catch (err) {
+        setError('Failed to fetch leaves. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadLeaves();
   }, []);
 
+  // handleStatusToggle and handleNoteSave remain the same...
   const handleStatusToggle = (id) => {
     setRows(rows.map(row => {
       if (row.id === id) {
@@ -146,28 +142,35 @@ const EmployeeLeaveManagement = () => {
       setNoteDialog({ open: false, rowData: null, noteText: '' });
     }
   };
-
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ width: '100%', height: '100%', p: 3 }}>
         <Paper elevation={0} sx={{ p: 3, backgroundColor: 'background.paper', borderRadius: 3, height: 650, boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.05)' }}>
           <Box mb={3} display="flex" justifyContent="space-between" alignItems="center">
             <Typography variant="h5" gutterBottom sx={{ color: '#000', fontWeight: 600, mb: 3 }}>
-              Marketing Associate Leave Management
-
+              Employee Leave Management
             </Typography>
             <Button
               variant="contained"
               color="primary"
               component={Link}
-              to="/RenewalLeaves/add"
+              to="/renewalLeaves/add"
             >
               + Apply Leave
             </Button>
           </Box>
-          <DataGrid
+
+          {loading ? (
+            <Box display="flex" justifyContent="center" alignItems="center" height="500px">
+              <CircularProgress />
+            </Box>
+          ) : error ? (
+            <Typography color="error" align="center">{error}</Typography>
+          ) : (
+            <DataGrid
             rows={rows}
             columns={columns(theme, handleStatusToggle, setViewDialog, setNoteDialog)}
+            getRowId={(row) => row._id} // Specify _id as the unique identifier
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}
             pageSizeOptions={[5, 10, 25]}
@@ -181,8 +184,7 @@ const EmployeeLeaveManagement = () => {
               },
             }}
             sx={{
-              height: 500, // Fixed height for the table
-
+              height: 500,
               '& .MuiDataGrid-cell:focus': { outline: 'none' },
               '& .MuiDataGrid-row:hover': { backgroundColor: alpha(theme.palette.primary.main, 0.04) },
               '& .MuiDataGrid-columnHeader': {
@@ -196,9 +198,9 @@ const EmployeeLeaveManagement = () => {
               '& .MuiDataGrid-columnHeader .MuiCheckbox-root': {
                 color: '#FFFFFF',
               },
-
             }}
           />
+          )}
 
           {/* View Dialog */}
           <Dialog open={viewDialog.open} onClose={() => setViewDialog({ open: false, rowData: null })} maxWidth="md" fullWidth>
@@ -235,4 +237,3 @@ const EmployeeLeaveManagement = () => {
 };
 
 export default EmployeeLeaveManagement;
-

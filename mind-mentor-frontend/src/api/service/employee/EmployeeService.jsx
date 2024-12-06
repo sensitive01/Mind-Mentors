@@ -42,8 +42,8 @@ export const createLeave = async (formData) => {
 };
 
 // Get All Leaves
-export const fetchAllLeaves = async () => {
-  const response = await operationDeptInstance.get("/leaves-form");
+export const fetchAllLeaves = async (empEmail) => {
+  const response = await operationDeptInstance.get(`/leaves-form?email=${empEmail}`);
   return response.data;
 };
 
@@ -95,13 +95,20 @@ export const markAttendance = async (formData) => {
 
 // Create Enquiry
 export const createTasks = async (formData) => {
-  const response = await operationDeptInstance.post("/enquiry-form", formData);
+  const response = await operationDeptInstance.post("/tasks", formData);
   return response.data;
 };
 
 // Get All Enquiries
 export const fetchAllTasks = async () => {
-  const response = await operationDeptInstance.get("/enquiry-form");
+  const response = await operationDeptInstance.get("/tasks");
+  return response.data;
+};
+
+
+
+export const fetchMyTasks = async (email) => {
+  const response = await operationDeptInstance.get(`/my-tasks/${email}`);
   return response.data;
 };
 
@@ -116,6 +123,18 @@ export const deleteTasks = async (id) => {
   const response = await operationDeptInstance.delete(`/enquiry-form/${id}`);
   return response.data;
 };
+
+export const getKidData = async () => {
+  const response = await operationDeptInstance.get(`/get-kids-data`);
+  return response.data;
+};
+
+
+export const getParentData = async () => {
+  const response = await operationDeptInstance.get(`/get-parent-data`);
+  return response.data;
+};
+
 
 
 

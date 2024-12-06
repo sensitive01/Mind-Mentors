@@ -1,11 +1,9 @@
 import { Calendar, Edit, Link as LinkIcon, Mail, MapPin, Save, X } from 'lucide-react';
 import React, { useState } from 'react';
-
 const ProfileView = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [showSaveMessage, setShowSaveMessage] = useState(false);
-  
   const initialProfile = {
     name: "Operations Mindmentoz",
     role: "Operational Manager at MindMentoz",
@@ -21,29 +19,24 @@ const ProfileView = () => {
       { label: "Followers", value: "2.3k" }
     ]
   };
-
   const [profile, setProfile] = useState(initialProfile);
   const [editedProfile, setEditedProfile] = useState(initialProfile);
-
   const handleSave = () => {
     setProfile(editedProfile);
     setIsEditing(false);
     setShowSaveMessage(true);
     setTimeout(() => setShowSaveMessage(false), 3000);
   };
-
   const handleCancel = () => {
     setEditedProfile(profile);
     setIsEditing(false);
   };
-
   const handleChange = (field, value) => {
     setEditedProfile(prev => ({
       ...prev,
       [field]: value
     }));
   };
-
   return (
     <div className="w-full max-w-3xl mx-auto relative" style={{marginTop:'50px'}} >
       {/* Save Message Toast */}
@@ -54,7 +47,6 @@ const ProfileView = () => {
       >
         Profile saved successfully!
       </div>
-
       <div 
         className={`bg-white rounded-lg shadow-lg overflow-hidden transition-all duration-500 transform ${
           isHovered ? 'scale-[1.02]' : 'scale-100'
@@ -80,7 +72,6 @@ const ProfileView = () => {
             </div>
           </div>
         </div>
-
         {/* Profile Content */}
         <div className="pt-20 px-8 pb-8">
           <div className="flex justify-between items-start mb-6">
@@ -131,7 +122,6 @@ const ProfileView = () => {
               )}
             </div>
           </div>
-
           {isEditing ? (
             <textarea
               value={editedProfile.bio}
@@ -141,7 +131,6 @@ const ProfileView = () => {
           ) : (
             <p className="text-gray-700 mb-6">{profile.bio}</p>
           )}
-
           {/* Stats */}
           <div className="grid grid-cols-3 gap-4 mb-6">
             {profile.stats.map((stat, index) => (
@@ -154,7 +143,6 @@ const ProfileView = () => {
               </div>
             ))}
           </div>
-
           {/* Contact Info */}
           <div className="space-y-3">
             {[
@@ -183,5 +171,4 @@ const ProfileView = () => {
     </div>
   );
 };
-
 export default ProfileView;

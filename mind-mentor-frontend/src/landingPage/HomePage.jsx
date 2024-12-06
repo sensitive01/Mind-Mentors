@@ -53,6 +53,13 @@ const HomePage = () => {
       description: 'Manage schedules and coordinate activities',
       path: '/marketingLogin',
       color: 'blue'
+    },
+    {
+      title: 'Centre Admin',
+      icon: Briefcase,
+      description: 'Manage schedules and coordinate activities',
+      path: '/centeradmin-login',
+      color: 'green'
     }
   ];
 

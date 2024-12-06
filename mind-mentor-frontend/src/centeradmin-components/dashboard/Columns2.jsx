@@ -6,7 +6,7 @@ import NoteAddIcon from '@mui/icons-material/NoteAdd';
 
 const columns = (theme,  setViewDialog, setNoteDialog) => [
   {
-    field: 'rollNo',
+    field: 'rollNos',
     headerName: 'Roll No',
     width: 100,
     editable: true,
@@ -96,47 +96,47 @@ const columns = (theme,  setViewDialog, setNoteDialog) => [
     width: 150,
     editable: true,
   },
-  // {
-  //   field: 'Status',
-  //   headerName: 'Prospect Status',
-  //   width: 200,
-  //   renderCell: (params) => (
-  //     <Fade in={true}>
-  //       <Box
-  //         sx={{
-  //           display: 'flex',
-  //           alignItems: 'center',
-  //           gap: 1,
-  //           padding: '4px 12px',
-  //           borderRadius: '20px',
-  //           transition: 'all 0.3s ease',
-  //           color: params.value === 'Warm'
-  //             ? '#F59E0B'
-  //             : params.value === 'Cold'
-  //             ? '#642b8f'
-  //             : '#0B84F5',
-  //         }}
-  //       >
-  //         <Select
-  //           value={params.value}
-  //           onChange={(event) => handleStatusChange(params.row.id, event.target.value)}
-  //           sx={{
-  //             backgroundColor: '#f4f4f4',
-  //             borderRadius: '8px',
-  //             fontSize: '0.875rem',
-  //             '& .MuiSelect-select': {
-  //               padding: '4px 8px',
-  //             },
-  //           }}
-  //         >
-  //           <MenuItem value="Cold">Cold</MenuItem>
-  //           <MenuItem value="Warm">Warm</MenuItem>
-  //           <MenuItem value="Schedule Demo">Schedule Demo</MenuItem>
-  //         </Select>
-  //       </Box>
-  //     </Fade>
-  //   ),
-  // },
+  {
+    field: 'Status',
+    headerName: 'Prospect Status',
+    width: 200,
+    renderCell: (params) => (
+      <Fade in={true}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            padding: '4px 12px',
+            borderRadius: '20px',
+            transition: 'all 0.3s ease',
+            color: params.value === 'Warm'
+              ? '#F59E0B'
+              : params.value === 'Cold'
+              ? '#642b8f'
+              : '#0B84F5',
+          }}
+        >
+          <Select
+            value={params.value}
+            onChange={(event) => handleStatusChange(params.row.id, event.target.value)}
+            sx={{
+              backgroundColor: '#f4f4f4',
+              borderRadius: '8px',
+              fontSize: '0.875rem',
+              '& .MuiSelect-select': {
+                padding: '4px 8px',
+              },
+            }}
+          >
+            <MenuItem value="Cold">Cold</MenuItem>
+            <MenuItem value="Warm">Warm</MenuItem>
+            <MenuItem value="Schedule Demo">Schedule Demo</MenuItem>
+          </Select>
+        </Box>
+      </Fade>
+    ),
+  },
   
   {
     field: 'actions',

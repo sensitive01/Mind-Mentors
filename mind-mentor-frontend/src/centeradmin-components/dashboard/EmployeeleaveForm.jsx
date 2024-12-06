@@ -60,12 +60,11 @@
 //     variant="contained"
 //     color="#642b8f"
 //     component={Link}
-//     to="/employee-operation/leaves/" 
+//     to="/employee-operation/leaves/"
 //     >
 //        View Leaves
 //   </Button>
 // </div>
-
 
 //         <form className="p-8">
 //           <div className="space-y-8">
@@ -172,22 +171,43 @@
 
 // export default EmployeeLeaveForm;
 
-import { Button, Divider, MenuItem, TextField } from '@mui/material';
-import { DataGrid } from '@mui/x-data-grid';
-import { Trash } from 'lucide-react';
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { createLeave } from '../../api/service/employee/EmployeeService';
+import { Button, Divider, MenuItem, TextField } from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
+import { Trash } from "lucide-react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { createLeave } from "../../api/service/employee/EmployeeService";
+
 
 const EmployeeLeaveForm = () => {
-  const [leaveDetails, setLeaveDetails] = useState([{ id: 1, employeeName: '', leaveType: '', leaveStartDate: '', leaveEndDate: '' }]);
-  const leaveTypes = ['Sick Leave', 'Casual Leave', 'Paid Leave', 'Unpaid Leave'];
+  const empEmail = localStorage.getItem("email");
+  const [leaveDetails, setLeaveDetails] = useState([
+    {
+      id: 1,
+      employeeName: "",
+      leaveType: "",
+      leaveStartDate: "",
+      leaveEndDate: "",
+    },
+  ]);
+  const leaveTypes = [
+    "Sick Leave",
+    "Casual Leave",
+    "Paid Leave",
+    "Unpaid Leave",
+  ];
   const [loading, setLoading] = useState(false);
 
   const addLeaveDetail = () => {
     setLeaveDetails([
       ...leaveDetails,
-      { id: leaveDetails.length + 1, employeeName: '', leaveType: '', leaveStartDate: '', leaveEndDate: '' }
+      {
+        id: leaveDetails.length + 1,
+        employeeName: "",
+        leaveType: "",
+        leaveStartDate: "",
+        leaveEndDate: "",
+      },
     ]);
   };
 
@@ -209,12 +229,18 @@ const EmployeeLeaveForm = () => {
     try {
       for (let leave of leaveDetails) {
         // Only process non-empty leave details
-        if (leave.employeeName && leave.leaveType && leave.leaveStartDate && leave.leaveEndDate) {
+        if (
+          leave.employeeName &&
+          leave.leaveType &&
+          leave.leaveStartDate &&
+          leave.leaveEndDate
+        ) {
           const leaveData = {
             employeeName: leave.employeeName,
             leaveType: leave.leaveType,
             leaveStartDate: leave.leaveStartDate,
-            leaveEndDate: leave.leaveEndDate
+            leaveEndDate: leave.leaveEndDate,
+            empEmail,
           };
 
           // Create new leave (no update logic)
@@ -223,7 +249,15 @@ const EmployeeLeaveForm = () => {
       }
 
       // Reset leave details after submission
-      setLeaveDetails([{ id: 1, employeeName: '', leaveType: '', leaveStartDate: '', leaveEndDate: '' }]);
+      setLeaveDetails([
+        {
+          id: 1,
+          employeeName: "",
+          leaveType: "",
+          leaveStartDate: "",
+          leaveEndDate: "",
+        },
+      ]);
       alert("Leave details submitted successfully!");
     } catch (error) {
       alert("Error while submitting leave details. Please try again.");
@@ -233,14 +267,14 @@ const EmployeeLeaveForm = () => {
   };
 
   const columns = [
-    { field: 'id', headerName: 'ID', width: 70 },
-    { field: 'employeeName', headerName: 'Employee Name', width: 200 },
-    { field: 'leaveType', headerName: 'Leave Type', width: 150 },
-    { field: 'leaveStartDate', headerName: 'Leave Start Date', width: 150 },
-    { field: 'leaveEndDate', headerName: 'Leave End Date', width: 150 },
+    { field: "id", headerName: "ID", width: 70 },
+    { field: "employeeName", headerName: "Employee Name", width: 200 },
+    { field: "leaveType", headerName: "Leave Type", width: 150 },
+    { field: "leaveStartDate", headerName: "Leave Start Date", width: 150 },
+    { field: "leaveEndDate", headerName: "Leave End Date", width: 150 },
     {
-      field: 'actions',
-      headerName: 'Actions',
+      field: "actions",
+      headerName: "Actions",
       width: 100,
       renderCell: (params) => (
         <button
@@ -250,8 +284,8 @@ const EmployeeLeaveForm = () => {
         >
           <Trash className="h-5 w-5" />
         </button>
-      )
-    }
+      ),
+    },
   ];
 
   return (
@@ -260,7 +294,9 @@ const EmployeeLeaveForm = () => {
         <div className="bg-gradient-to-r from-[#642b8f] to-[#aa88be] p-8 text-white flex justify-between items-center">
           <div>
             <h2 className="text-3xl font-bold mb-2">Employee Leave Form</h2>
-            <p className=" text-sm opacity-90">Please fill in the details for your leave request</p>
+            <p className=" text-sm opacity-90">
+              Please fill in the details for your leave request
+            </p>
           </div>
           <Button
             variant="contained"
@@ -273,14 +309,16 @@ const EmployeeLeaveForm = () => {
         </div>
 
         <form className="p-8" onSubmit={handleSubmit}>
-          <div class ="space-y-8">
+          <div class="space-y-8">
             <h3 className="text-[#642b8f] font-semibold text-lg pb-2 border-b-2 border-[#f8a213]">
               Leave Details
             </h3>
             {leaveDetails.map((leave, index) => (
               <div key={leave.id} className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-[#642b8f]">Leave {index + 1}</label>
+                  <label className="text-sm font-medium text-[#642b8f]">
+                    Leave {index + 1}
+                  </label>
                   {leaveDetails.length > 1 && (
                     <button
                       type="button"
@@ -296,14 +334,22 @@ const EmployeeLeaveForm = () => {
                     label="Employee Name"
                     variant="outlined"
                     value={leave.employeeName}
-                    onChange={(e) => handleLeaveChange(leave.id, 'employeeName', e.target.value)}
+                    onChange={(e) =>
+                      handleLeaveChange(
+                        leave.id,
+                        "employeeName",
+                        e.target.value
+                      )
+                    }
                     fullWidth
                   />
                   <TextField
                     select
                     label="Leave Type"
                     value={leave.leaveType}
-                    onChange={(e) => handleLeaveChange(leave.id, 'leaveType', e.target.value)}
+                    onChange={(e) =>
+                      handleLeaveChange(leave.id, "leaveType", e.target.value)
+                    }
                     fullWidth
                   >
                     {leaveTypes.map((type) => (
@@ -317,7 +363,13 @@ const EmployeeLeaveForm = () => {
                     label="Leave Start Date"
                     variant="outlined"
                     value={leave.leaveStartDate}
-                    onChange={(e) => handleLeaveChange(leave.id, 'leaveStartDate', e.target.value)}
+                    onChange={(e) =>
+                      handleLeaveChange(
+                        leave.id,
+                        "leaveStartDate",
+                        e.target.value
+                      )
+                    }
                     fullWidth
                     InputLabelProps={{ shrink: true }}
                   />
@@ -326,7 +378,13 @@ const EmployeeLeaveForm = () => {
                     label="Leave End Date"
                     variant="outlined"
                     value={leave.leaveEndDate}
-                    onChange={(e) => handleLeaveChange(leave.id, 'leaveEndDate', e.target.value)}
+                    onChange={(e) =>
+                      handleLeaveChange(
+                        leave.id,
+                        "leaveEndDate",
+                        e.target.value
+                      )
+                    }
                     fullWidth
                     InputLabelProps={{ shrink: true }}
                   />
@@ -344,7 +402,7 @@ const EmployeeLeaveForm = () => {
 
           <Divider className="my-6" />
 
-          <div style={{ height: 400, width: '100%' }}>
+          <div style={{ height: 400, width: "100%" }}>
             <DataGrid
               rows={leaveDetails}
               columns={columns}
@@ -360,7 +418,7 @@ const EmployeeLeaveForm = () => {
               disabled={loading}
               className="px-8 py-3 bg-[#642b8f] text-white rounded-lg font-medium hover:bg-[#aa88be] transition-colors shadow-lg hover:shadow-xl"
             >
-              {loading ? 'Submitting...' : 'Submit Leave Request'}
+              {loading ? "Submitting..." : "Submit Leave Request"}
             </button>
             <button
               type="reset"

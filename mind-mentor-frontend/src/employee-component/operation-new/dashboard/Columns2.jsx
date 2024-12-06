@@ -6,7 +6,7 @@ import NoteAddIcon from '@mui/icons-material/NoteAdd';
 
 const columns = (theme,  setViewDialog, setNoteDialog) => [
   {
-    field: 'rollNo',
+    field: 'rollNos',
     headerName: 'Roll No',
     width: 100,
     editable: true,

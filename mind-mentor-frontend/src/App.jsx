@@ -87,6 +87,7 @@ import CenterInvoicePage from "./pages/centeradmin/CenterInvoicePage";
 import CenterStudentReport from "./pages/centeradmin/CenterStudentReport";
 import CenterCoachFeedback from "./pages/centeradmin/CenterCoachFeedback";
 import CenterLoginPage from "./centeradmin-components/CenterLoginPage";
+import CenterAdminKidsPage from "./pages/centeradmin/CenterAdminKidsPage";
 
 
 
@@ -302,6 +303,7 @@ function App() {
         <Route path="/serviceMyTasks/assigntask" element={<ServiceMyAssignTasks />} />
         <Route path="/serviceMyTasks" element={<ServiceMyTasks />} />
         <Route path="/serviceAssignedTasks/" element={<ServiceMyAssignTasksTable />} />
+
         <Route path="/serviceScheduleClass/" element={<ServiceScheduleClass />} />
         <Route path="/serviceSupport/add" element={<ServiceSupport />} />
         <Route path="/serviceSupport/" element={<ServiceSupportRequest />} />
@@ -418,6 +420,8 @@ function App() {
         <Route path="/centeradmin/referal" element={<CenterReferalPage/>} />
         <Route path="/centeradmin-tasks/assigntask" element={<CenterTaskAssignByMePage/>} />
         <Route path="/centeradmin-tasks/assignedtasks" element={<CenterAssigneTasksPage/>} />
+        <Route path="/centeradmin-kids" element={<CenterAdminKidsPage/>} />
+
 
         <Route path="/centeradmin-tasks/tasks" element={<CenterTasksPage/>} />
         <Route path="/centeradmin-tasks/support/add" element={<CenterSupportPage/>} />

@@ -1,19 +1,19 @@
 import {
-    Box,
-    Button,
-    createTheme,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    Divider,
-    Fade,
-    Grid,
-    Paper,
-    Slide,
-    TextField,
-    ThemeProvider,
-    Typography
+  Box,
+  Button,
+  createTheme,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  Fade,
+  Grid,
+  Paper,
+  Slide,
+  TextField,
+  ThemeProvider,
+  Typography
 } from '@mui/material';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
@@ -23,8 +23,9 @@ import { alpha } from '@mui/material/styles';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom'; // Import Link for navigation
-// import { fetchAllEnquiries } from '../../../api/service/employee/EmployeeRenewal'; // Adjust the import path as necessary
 import columns from './Columns'; // Import columns from the separate file
+import data from './Enquiry';
+import { fetchAllEnquiries, updateEnquiryStatus } from '../../api/service/employee/EmployeeService';
 
 // Updated modern color scheme
 const theme = createTheme({
@@ -105,7 +106,15 @@ const DetailView = ({ data }) => (
               {key.replace(/([A-Z])/g, ' $1').toUpperCase()}
             </Typography>
             <Typography variant="body1" color="text.primary">
-              {value || 'N/A'}
+              {Array.isArray(value) ? (
+                value.map((prog) => `${prog.program} (${prog.level})`).join(', ')
+              ) : (
+                typeof value === 'object' && value !== null ? (
+                  'N/A' // or handle specific object cases if needed
+                ) : (
+                  value || 'N/A'
+                )
+              )}
             </Typography>
           </Box>
         </Grid>
@@ -121,6 +130,7 @@ const Enquiries = () => {
     const loadLeaves = async () => {
       try {
         const data = await fetchAllEnquiries();
+        console.log(data)
         setRows(data);
       } catch (err) {
         setError('Failed to fetch Enquiries. Please try again later.');
@@ -145,23 +155,59 @@ const Enquiries = () => {
     pageSize: 5,
   });
   const [editRowsModel, setEditRowsModel] = useState({});
-  const handleStatusToggle = (id) => {
-    setRows(rows.map(row => {
-      if (row.id === id) {
-        const newStatus = row.status === 'Warm' ? 'Cold' : 'Warm';
-        return {
-          ...row,
-          status: newStatus,
-          stageTag: newStatus
-        };
-      }
-      return row;
-    }));
-  };
+
+// Update the handleStatusToggle function if necessary
+// const handleStatusToggle = async (id) => {
+//   const rowToUpdate = rows.find(row => row._id === id);
+//   const newStatus = rowToUpdate.enquiryStatus === 'warm' ? 'cold' : 'warm';
+
+//   try {
+//     await updateEnquiryStatus(id, newStatus); // Update status setRows(rows.map(row => {
+//       if (row._id === id) {
+//         return {
+//           ...row,
+//           enquiryStatus: newStatus,
+//           stageTag: newStatus
+//         };
+//       }
+//       return row;
+//   } catch (error) {
+//     console.error("Error updating enquiry status:", error);
+//   }
+// };
+const handleStatusToggle = async (id) => {
+  const rowToUpdate = rows.find(row => row._id === id);
+  const newStatus = rowToUpdate.enquiryStatus === 'warm' ? 'cold' : 'warm';
+
+  try {
+    // Call the API to update the status
+    const response = await updateEnquiryStatus(id, newStatus);
+    
+    // Check if the response indicates success
+    if (response.success) {
+      // Update the state only if the API call was successful
+      setRows(rows.map(row => {
+        if (row._id === id) {
+          return {
+            ...row,
+            enquiryStatus: newStatus,
+            stageTag: newStatus
+          };
+        }
+        return row;
+      }));
+    } else {
+      console.error("Failed to update status:", response.message);
+    }
+  } catch (error) {
+    console.error("Error updating enquiry status:", error);
+  }
+};
+  
   const handleNoteSave = () => {
     if (noteDialog.rowData) {
       setRows(rows.map(row =>
-        row.id === noteDialog.rowData.id
+        row._id === noteDialog.rowData._id
           ? { ...row, notes: noteDialog.noteText }
           : row
       ));
@@ -201,14 +247,14 @@ const Enquiries = () => {
               <Typography variant="h5" gutterBottom sx={{ color: 'text.primary', fontWeight: 600, mb: 3 }}>
                 Enquiries
               </Typography>
-              <Button
+              {/* <Button
                 variant="contained"
                 color="primary"
                 component={Link}
-                // to="/employee-operation-enquiry-form"
+                to=""
               >
                 + Enquire Details
-              </Button>
+              </Button> */}
             </Box>
             <DataGrid
               rows={rows}
@@ -391,4 +437,3 @@ const Enquiries = () => {
   );
 };
 export default Enquiries;
-

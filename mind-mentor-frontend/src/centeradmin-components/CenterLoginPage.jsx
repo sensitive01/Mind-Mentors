@@ -429,11 +429,12 @@ const CenterLoginPage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const hardcodedEmail = "operations@mindmentoz.com";
+    const hardcodedEmail = "centeradmin@mindmentoz.com";
     const hardcodedPassword = "12345678";
 
     if (email === hardcodedEmail && password === hardcodedPassword) {
-       navigate("/employee-operation-dashboard");
+      localStorage.setItem("email",hardcodedEmail)
+       navigate("/centeradmin-dashboard");
       console.log("Login successful! Navigating to the next screen...");
     } else {
       alert("Invalid email or password. Please try again.");
