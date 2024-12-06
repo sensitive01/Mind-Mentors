@@ -699,7 +699,7 @@ const getAllParentData = async (req, res) => {
         );
         return {
           ...parent.toObject(), // Convert Mongoose document to plain object
-          kidsData,            // Add kids data
+          kidsData,          
         };
       })
     );
