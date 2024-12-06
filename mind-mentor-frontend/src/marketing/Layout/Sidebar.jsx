@@ -145,7 +145,7 @@ const ModernSidebar = () => {
       icon: <ClassScheduleIcon />,
       text: 'Marketing Tools',
       color: iconColors.classSchedules,
-      link: '/marketingTools',
+      link: '#',
     },
 {
       icon: <AttendanceIcon />,

@@ -136,7 +136,6 @@
 
 // export default LoginPage;
 
-
 // // import { useState } from "react";
 // // import { toast } from "react-toastify";
 // // import { useNavigate } from "react-router-dom";
@@ -275,7 +274,6 @@
 
 // // export default LoginPage;
 
-
 // import { useState } from "react";
 // import { ArrowLeft, ChevronDown, Settings, ArrowRight } from "lucide-react";
 
@@ -410,10 +408,10 @@ const CenterLoginPage = () => {
   const navigate = useNavigate();
 
   const themes = {
-    sky: "bg-[#642b8f]",     // Sky blue
+    sky: "bg-[#642b8f]", // Sky blue
   };
   const textThemes = {
-    sky: "color-[#642b8f]",     // Sky blue
+    sky: "color-[#642b8f]", // Sky blue
     indigo: "text-indigo-600",
     green: "text-green-600",
     red: "text-red-600",
@@ -433,8 +431,8 @@ const CenterLoginPage = () => {
     const hardcodedPassword = "12345678";
 
     if (email === hardcodedEmail && password === hardcodedPassword) {
-      localStorage.setItem("email",hardcodedEmail)
-       navigate("/centeradmin-dashboard");
+      localStorage.setItem("email", hardcodedEmail);
+      navigate("/centeradmin-dashboard");
       console.log("Login successful! Navigating to the next screen...");
     } else {
       alert("Invalid email or password. Please try again.");
@@ -451,7 +449,7 @@ const CenterLoginPage = () => {
           <img
             src={"https://i.ibb.co/YNTRqkj/mindmentorz.png"}
             alt="mindMentorImage"
-            style={{marginTop:"-50px"}}
+            style={{ marginTop: "-50px" }}
           />
         </div>
         <div className="flex justify-between items-center">
@@ -482,7 +480,10 @@ const CenterLoginPage = () => {
       <div className="lg:w-3/5 p-8 bg-white flex items-center justify-center">
         <div className="w-full max-w-md">
           <div className="flex flex-col items-center mb-8">
-            <h2 className={`text-3xl font-bold mb-4`} style={{color:'#642b8f'}}>
+            <h2
+              className={`text-3xl font-bold mb-4`}
+              style={{ color: "#642b8f" }}
+            >
               Center Admin Login
             </h2>
           </div>
@@ -500,7 +501,7 @@ const CenterLoginPage = () => {
                   type="email"
                   id="email"
                   className="w-full max-w-lg px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
-                  placeholder="Enter your email"
+                  placeholder="centeradmin@mindmentoz.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -515,45 +516,44 @@ const CenterLoginPage = () => {
               </div>
             )}
 
-{step === 2 && (
-  <div>
-    <div className="flex items-center space-x-2 mb-1">
-      <label
-        htmlFor="password"
-        className="block text-sm font-medium text-gray-700"
-      >
-        Password
-      </label>
-      <button
-        type="button"
-        onClick={() => setStep(1)} // Go back to the email step
-        className={`text-gray-600 hover:text-gray-800 transition duration-300`}
-      >
-        <ArrowLeft size={20} /> {/* Simple Back arrow */}
-      </button>
-    </div>
+            {step === 2 && (
+              <div>
+                <div className="flex items-center space-x-2 mb-1">
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Password
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setStep(1)} // Go back to the email step
+                    className={`text-gray-600 hover:text-gray-800 transition duration-300`}
+                  >
+                    <ArrowLeft size={20} /> {/* Simple Back arrow */}
+                  </button>
+                </div>
 
-    <input
-      type="password"
-      id="password"
-      className="w-full max-w-lg px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
-      placeholder="Enter your password"
-      value={password}
-      onChange={(e) => setPassword(e.target.value)}
-      required
-    />
-    
-    <div className="flex justify-between mt-4">
-      <button
-        type="submit"
-        className={`w-full ${themes[theme]} text-white py-3 px-4 rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 transition duration-300`}
-      >
-        LOGIN →
-      </button>
-    </div>
-  </div>
-)}
+                <input
+                  type="password"
+                  id="password"
+                  className="w-full max-w-lg px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  placeholder="12345678"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
 
+                <div className="flex justify-between mt-4">
+                  <button
+                    type="submit"
+                    className={`w-full ${themes[theme]} text-white py-3 px-4 rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 transition duration-300`}
+                  >
+                    LOGIN →
+                  </button>
+                </div>
+              </div>
+            )}
           </form>
 
           <div className="mt-4 flex justify-center">

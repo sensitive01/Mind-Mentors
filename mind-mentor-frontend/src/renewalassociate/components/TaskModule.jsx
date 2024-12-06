@@ -190,7 +190,7 @@ const TaskModule = () => {
     variant="contained"
     color="#642b8f"
     component={Link}
-    to="/RenewalSupport/" 
+    to="#" 
     >
        View Support
   </Button>

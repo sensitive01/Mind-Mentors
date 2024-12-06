@@ -41,7 +41,7 @@ const TaskModule = () => {
     variant="contained"
     color="#642b8f"
     component={Link}
-    to="/RenewalMyTasks" 
+    to="#" 
     >
        View Tasks
   </Button>
