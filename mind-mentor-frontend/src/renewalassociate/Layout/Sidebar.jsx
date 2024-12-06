@@ -185,7 +185,7 @@ const ModernSidebar = () => {
       icon: <ReportsIcon />,
       text: 'Renewals',
       color: iconColors.renewals,
-      link: '/renewalRenewals',
+      link: '#',
     },
     {
       icon: <ReportsIcon />,

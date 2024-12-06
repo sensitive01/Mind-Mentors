@@ -339,7 +339,7 @@ function App() {
         <Route path="/renewalMessageStatus/" element={<RenewalMessageStusTrackPage />} />
         <Route path="/renewalKids" element={<RenewalKids />} />
         <Route path="/renewalPrograms" element={<RenewalPrograms />} />
-        <Route path="/renewalReferrals" element={<RenewalReferal />} />
+        {/* <Route path="/renewalReferrals" element={<RenewalReferal />} /> */}
         <Route path="/renewalParents" element={<RenewalParents />} />
         <Route path="/renewalRenewals" element={<RenewalRenewal />} />
         <Route path="/renewalLogin" element={<RenewalLogin />} />
