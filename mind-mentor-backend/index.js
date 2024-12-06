@@ -4,11 +4,12 @@ const app = express();
 const cookieParser = require("cookie-parser");
 
 
-const { PORT } = require("./config/variables/variables");
+// const { PORT } = require("./config/variables/variables");
 const dbConnect = require("./config/database/dbConnect")
 const parentRoute = require("./routes/parent/parentRoute")
 const operationRoute = require("./routes/employee/opertation-dept/operationDeptRoute")
 const kidRoute = require("./routes/kid/kidRoutes")
+const PORT = process.env.PORT||3001
 
 app.set("trust proxy", true);
 
