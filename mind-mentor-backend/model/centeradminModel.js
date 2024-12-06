@@ -63,11 +63,8 @@ const operationDeptSchema = new mongoose.Schema({
   // New Fields
   enquiryStatus: { type: String, enum: ['Cold', 'Warm'], default: 'Cold' }, // Cold or Warm
   notes: { type: String }, // For adding notes
-  // scheduleDemo: {
-  //   date: { type: Date },
-  //   status: { type: String, enum: ['Scheduled', 'Completed', 'Cancelled'], default: 'Scheduled' }
-  // },
   scheduleDemo: {
+    date: { type: Date },
     status: { type: String, enum: ['Scheduled', 'Completed', 'Cancelled'], default: 'Scheduled' }
   },
   referral: {
