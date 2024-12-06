@@ -9,7 +9,7 @@ const dbConnect = require("./config/database/dbConnect")
 const parentRoute = require("./routes/parent/parentRoute")
 const operationRoute = require("./routes/employee/opertation-dept/operationDeptRoute")
 const kidRoute = require("./routes/kid/kidRoutes")
-const PORT = process.env.PORT||3001
+const PORT = 3000
 
 app.set("trust proxy", true);
 
