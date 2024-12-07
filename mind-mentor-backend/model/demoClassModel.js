@@ -6,26 +6,21 @@ const demoClassSchema = new mongoose.Schema(
       {
         program: {
           type: String,
-        
         },
         programLevel: {
           type: String,
-         
-        }
-      }
+        },
+      },
     ],
     date: {
       type: Date,
-    
     },
     time: {
       type: String,
-     
     },
     parentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Parent",
-   
     },
     kidId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -33,10 +28,9 @@ const demoClassSchema = new mongoose.Schema(
       required: true,
     },
   },
-  { timestamps: true } 
+  { timestamps: true }
 );
 
-
-const DemoClass = mongoose.model("DemoClass", demoClassSchema)
+const DemoClass = mongoose.model("DemoClass", demoClassSchema);
 
 module.exports = DemoClass;

@@ -1,79 +1,59 @@
-// const mongoose = require('mongoose');
-
-// const operationDeptSchema = new mongoose.Schema({
-//   // Existing fields
-//   parentFirstName: { type: String, required: true },
-//   parentLastName: { type: String, required: true },
-//   kidFirstName: { type: String, required: true },
-//   kidLastName: { type: String, required: true },
-//   whatsappNumber: { type: String, required: true },
-//   email: { type: String, required: true },
-//   message: { type: String },
-//   source: { type: String },
-//   kidsAge: { type: Number },
-//   kidsGender: { type: String },
-//   programs: { type: String },
-//   intentionOfParents: { type: String },
-//   schoolName: { type: String },
-//   address: { type: String },
-
-//   // New Fields for Status and Notes
-//   status: {
-//     type: String,
-//     enum: ['cold', 'warm'],
-//     default: 'cold' // Default status is cold
-//   },
-//   notes: [
-//     {
-//       enquiryStageTag: { type: String, required: true },
-//       addNoteTo: { type: String, default: 'parent' },  // Default is 'parent'
-//       notes: { type: String, required: true }
-//     }
-//   ]
-// }, { timestamps: true });
-
-// module.exports = mongoose.model('OperationDept', operationDeptSchema);
-
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const ProgramSchema = new mongoose.Schema({
-  program: { type: String, required: true },
-  level: { type: String, required: true }
+  program: { type: String },
+  level: { type: String },
 });
 
-const operationDeptSchema = new mongoose.Schema({
-  parentFirstName: { type: String, required: true },
-  parentLastName: { type: String, required: true },
-  kidFirstName: { type: String, required: true },
-  kidLastName: { type: String, required: true },
-  whatsappNumber: { type: String, required: true },
-  email: { type: String, required: true },
-  message: { type: String },
-  source: { type: String },
-  kidsAge: { type: Number },
-  kidsGender: { type: String },
-  programs: {
-    type: [ProgramSchema], // Array of objects with specific schema
-    required: true
-} ,
+const operationDeptSchema = new mongoose.Schema(
+  {
+    parentFirstName: { type: String },
+    parentLastName: { type: String },
+    kidFirstName: { type: String },
+    kidLastName: { type: String },
+    whatsappNumber: { type: String },
+    email: { type: String },
+    message: { type: String },
+    source: { type: String },
+    kidsAge: { type: Number },
+    kidsGender: { type: String },
+    programs: {
+      type: [ProgramSchema],
+    },
 
- intentionOfParents: { type: String },
-  schoolName: { type: String },
-  address: { type: String },
-  schoolPincode:{ type: String },
-  // New Fields
-  enquiryStatus: { type: String, enum: ['Cold', 'Warm'], default: 'Cold' }, // Cold or Warm
-  notes: { type: String }, // For adding notes
-  // scheduleDemo: {
-  //   date: { type: Date },
-  //   status: { type: String, enum: ['Scheduled', 'Completed', 'Cancelled'], default: 'Scheduled' }
-  // },
-  scheduleDemo: {
-    status: { type: String, enum: ['Scheduled', 'Completed', 'Cancelled'], default: 'Scheduled' }
+    intentionOfParents: { type: String },
+    schoolName: { type: String },
+    address: { type: String },
+    schoolPincode: { type: String },
+
+    enquiryStatus: {
+      type: String,
+      enum: ["Pending", "Qualified Lead", "Unqualified Lead"],
+      default: "Pending",
+    },
+    enquiryType: { type: String, enum: ["warm", "cold"], default: "warm" },
+    disposition: {
+      type: String,
+      enum: ["RnR", "Call Back", "None"],
+      default: "None",
+    },
+    enquiryField:{type:String,default:"enquiryList"},
+    payment: { type: String, enum: ["Pending", "Success"], default: "Pending" },
+
+    notes: { type: String },
+    scheduleDemo: {
+      status: {
+        type: String,
+        enum: ["Pending", "Scheduled", "Completed", "Cancelled"],
+        default: "Pending",
+      },
+      sheduledDate: { type: Date },
+    },
+    referral: {
+      referredTo: { type: String },
+      referredEmail: { type: String },
+    },
   },
-  referral: {
-    referredTo: { type: String },
-    referredEmail: { type: String }
-  }
-}, { timestamps: true });
+  { timestamps: true }
+);
 
-module.exports = mongoose.model('OperationDept', operationDeptSchema);
+module.exports = mongoose.model("OperationDept", operationDeptSchema);

@@ -86,7 +86,18 @@ const enquiryFormData = async (req, res) => {
 // Get All Enquiries
 const getAllEnquiries = async (req, res) => {
   try {
-    const enquiries = await OperationDept.find();
+    const enquiries = await OperationDept.find({enquiryField:"enquiryList"});
+    console.log(enquiries);
+    res.status(200).json(enquiries);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching data" });
+  }
+};
+
+
+const getProspectsData = async (req, res) => {
+  try {
+    const enquiries = await OperationDept.find({enquiryField:"prospects"});
     console.log(enquiries);
     res.status(200).json(enquiries);
   } catch (error) {
@@ -144,7 +155,7 @@ const updateEnquiryStatus = async (req, res) => {
     const updatedEntry = await OperationDept.findByIdAndUpdate(
       { _id: id },
       {
-        enquiryStatus, // Ensuring both fields are updated
+        enquiryType:enquiryStatus, // Ensuring both fields are updated
       },
       { new: true } // Return the updated document
     );
@@ -769,5 +780,6 @@ module.exports = {
   getMyTasks,
   getAllKidData,
   getAllParentData,
-  getAllAttandanceData
+  getAllAttandanceData,
+  getProspectsData
 };

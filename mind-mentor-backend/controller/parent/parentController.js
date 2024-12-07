@@ -4,6 +4,7 @@ const demoClassModel = require("../../model/demoClassModel");
 
 const generateChessId = require("../../utils/generateChessId");
 const generateOTP = require("../../utils/generateOtp");
+const operationDeptModel = require("../../model/operationDeptModel");
 
 const parentLogin = async (req, res) => {
   try {
@@ -38,6 +39,15 @@ const parentLogin = async (req, res) => {
       });
 
       await newParent.save();
+      
+      const enqList = await operationDeptModel.create({
+        whatsappNumber: mobile,
+        parentFirstName: "Parent_New Enquiry",
+      });
+
+      console.log("Saving the data in enquiry list",enqList)
+
+      
 
       res.status(201).json({
         success: true,
