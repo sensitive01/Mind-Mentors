@@ -1,4 +1,4 @@
-import Referal from "../../superadmin/components//referal";
+import Referal from "../../superadmin/components/Referal";
 import Sidebar from "../../superadmin/Layout/Sidebar";
 import Topbar from '../../component/parent-component/parent-dashboard/layout/Topbar';
 
