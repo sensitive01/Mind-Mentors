@@ -103,7 +103,7 @@ const KidsLoginPage = () => {
                   type="email"
                   id="email"
                   className="w-full max-w-lg px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
-                  placeholder="Enter your email"
+                  placeholder="superadmin@mindmentorz.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -140,7 +140,7 @@ const KidsLoginPage = () => {
                   type="password"
                   id="password"
                   className="w-full max-w-lg px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
-                  placeholder="Enter your password"
+                  placeholder="12345678"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required

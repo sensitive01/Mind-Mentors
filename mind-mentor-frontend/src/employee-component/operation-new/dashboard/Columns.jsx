@@ -107,8 +107,8 @@ const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog) => [
   },
 
   {
-    field: 'enquiryStatus',
-    headerName: 'Status',
+    field: 'enquiryType',
+    headerName: 'Type',
     width: 150,
     renderCell: (params) => (
       <Fade in={true}>

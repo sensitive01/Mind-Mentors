@@ -140,6 +140,9 @@ export const attandaceData = async (email) => {
   return response.data;
 };
 
-
+export const fetchProspectsEnquiries = async () => {
+  const response = await operationDeptInstance.get(`/get-prospects-data`);
+  return response.data;
+};
 
 
