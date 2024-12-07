@@ -471,7 +471,7 @@ function App() {
         <Route path="/superadminEnquiries" element={<SuperadminEnquiries />} />
 
         <Route path="/superadminPrograms" element={<SuperadminPrograms />} />
-        <Route path="/superadminReferrals" element={<SuperadminReferral />} />
+        {/* <Route path="/superadminReferrals" element={<SuperadminReferral />} /> */}
         <Route path="/superadminParents" element={<SuperadminParents />} />
         <Route path="/superadminRenewals" element={<SuperadminRenewal />} />
         <Route path="/superadminLogin" element={<SuperadminLogin />} />
