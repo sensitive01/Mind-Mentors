@@ -1,4 +1,4 @@
-import Referal from "../../superadmin/components/Referal";
+import ReferralReportTable from "../../superadmin/components/Referal";
 import Sidebar from "../../superadmin/Layout/Sidebar";
 import Topbar from '../../component/parent-component/parent-dashboard/layout/Topbar';
 
@@ -13,7 +13,7 @@ const ReferalPage = () => {
       {/* Add a flex-grow class to make the enquiry form take the full width */}
       <div className="flex-1 mr-4 p-4 overflow-x-hidden">
         <Topbar/>
-        <Referal/>
+        <ReferralReportTable/>
       </div>
     </div>
   );
