@@ -60,6 +60,13 @@ const HomePage = () => {
       description: 'Manage schedules and coordinate activities',
       path: '/centeradmin-login',
       color: 'green'
+    },
+    {
+      title: ' Super Admin',
+      icon: Briefcase,
+      description: 'Manage schedules and coordinate activities',
+      path: '/superadminLogin',
+      color: 'purple'
     }
   ];
 

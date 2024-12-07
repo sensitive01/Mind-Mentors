@@ -139,12 +139,6 @@ import RenewalLogin from "./renewalassociate/components/LoginPage";
 
 
 
-
-
-
-
-
-
 import CoachLogin from "./coach/components/LoginPage";
 import CoachAttendance from './pages/coach/CoachAttendance';
 import CoachAttendanceReport from "./pages/coach/CoachAttendanceReport";
@@ -177,6 +171,56 @@ import MarketingSupportRequest from "./pages/marketing/MarketingSupportRequest";
 
 import MarketingLogin from "./marketing/components/LoginPage";
 import MarketingEnquiry from "./pages/marketing/MarketingEnquiry";
+
+
+
+
+
+import AllowDeductForm from "./pages/superadmin/AllowDeductForm";
+import AllowDeductTable from "./pages/superadmin/AllowDeductTable";
+import ChessKid from "./pages/superadmin/ChessKid";
+import SuperadminDashboard from "./pages/superadmin/SuperadminDashboard";
+import DocumentsForm from "./pages/superadmin/DocumentsForm";
+import DocumentsTable from "./pages/superadmin/DocumentsTable";
+import EmployeeForm from "./pages/superadmin/EmployeeForm";
+import EmployeeTable from "./pages/superadmin/EmployeeTable";
+import ExpenseForm from "./pages/superadmin/ExpenseForm";
+import ExpensesTable from "./pages/superadmin/Expenses";
+import HolidayTable from "./pages/superadmin/Holiday";
+import HolidayForm from "./pages/superadmin/HolidayForm";
+import NotificationForm from "./pages/superadmin/NotificationForm";
+import NotificationTable from "./pages/superadmin/NotificationTable";
+import SuperadminParents from "./pages/superadmin/SuperadminParents";
+import Participents from "./pages/superadmin/Participents";
+import Payroll from "./pages/superadmin/Payroll";
+import SuperadminAttendanceReport from "./pages/superadmin/SuperadminAttendanceReport";
+import SuperadminFeedback from "./pages/superadmin/SuperadminFeedback";
+import SuperadminInvoice from "./pages/superadmin/SuperadminInvoice";
+import SuperadminKids from "./pages/superadmin/SuperadminKids";
+import SuperadminLeaves from "./pages/superadmin/SuperadminLeaves";
+import SuperadminLeavesAdd from "./pages/superadmin/SuperadminLeavesAdd";
+import SuperadminLogin from "./superadmin/components/LoginPage";
+import SuperadminMessageStusTrackPage from "./pages/superadmin/SuperadminMessageStusTrackPage";
+import SuperadminMyAssignTasks from "./pages/superadmin/SuperadminMyAssignTasks";
+import SuperadminMyAssignTasksTable from "./pages/superadmin/SuperadminMyAssignTasksTable";
+import SuperadminMyTasks from "./pages/superadmin/SuperadminMyTasks";
+import SuperadminProfile from "./pages/superadmin/SuperadminProfile";
+import SuperadminPrograms from "./pages/superadmin/SuperadminPrograms";
+import SuperadminReferral from "./pages/superadmin/SuperadminReferal";
+import SuperadminRenewal from "./pages/superadmin/SuperadminRenewal";
+import SuperadminScheduleClass from "./pages/superadmin/SuperadminScheduleClass";
+import SuperadminSupport from "./pages/superadmin/SuperadminSupport";
+import SuperadminSupportRequest from "./pages/superadmin/SuperadminSupportRequest";
+import TournamentsForm from "./pages/superadmin/Tournaments";
+import TournamnetsTable from "./pages/superadmin/TournamnetsTable";
+import TransactionForm from "./pages/superadmin/TransactionForm";
+import TransactionTable from "./pages/superadmin/TransactionTable";
+import UserForm from "./pages/superadmin/UserForm";
+import UsersTable from "./pages/superadmin/UsersTable";
+import SuperadminAttendance from "./pages/superadmin/SuperadminAttendance";
+import SuperadminEnquiries from "./pages/superadmin/ListingEnquiries";
+
+
 
 
 
@@ -368,11 +412,6 @@ function App() {
 
 
 
-
-
-
-
-
         <Route path="/marketingDashboard" element={<MarketingDashboard />} />
         <Route path="/marketingProfile" element={<MarketingProfile />} />
         <Route path="/marketingAttendance" element={<MarketingAttendance />} />
@@ -384,29 +423,7 @@ function App() {
         {/* <Route path="/marketingScheduleClass/" element={<MarketingScheduleClass />} /> */}
         <Route path="/marketingSupport/add" element={<MarketingSupport />} />
         <Route path="/marketingSupport/" element={<MarketingSupportRequest />} />
-
         <Route path="/marketingLogin" element={<MarketingLogin />} />
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -421,8 +438,6 @@ function App() {
         <Route path="/centeradmin-tasks/assigntask" element={<CenterTaskAssignByMePage/>} />
         <Route path="/centeradmin-tasks/assignedtasks" element={<CenterAssigneTasksPage/>} />
         <Route path="/centeradmin-kids" element={<CenterAdminKidsPage/>} />
-
-
         <Route path="/centeradmin-tasks/tasks" element={<CenterTasksPage/>} />
         <Route path="/centeradmin-tasks/support/add" element={<CenterSupportPage/>} />
         <Route path="/centeradmin-tasks/supportTrack" element={<CenterMessageStusTrackPage/>} />
@@ -430,13 +445,58 @@ function App() {
         <Route path="/centeradmin/schedule" element={<CenterScheduleClass/>} />
         <Route path="/centeradmin/leaves" element={<CenterLeavesPage/>} />
         <Route path="/centeradmin/leaves/add" element={<CenterLeaveFormPage/>} />
-       
         <Route path="/centeradmin/attendance" element={<CenterAdminAttendance/>} />
         <Route path="/centeradmin/profile" element={<CenterProfile/>} />
         <Route path="/centeradmin/invoice" element={<CenterInvoicePage/>} />
         <Route path="/centeradmin/studentreport" element={<CenterStudentReport/>} />
         <Route path="/centeradmin/coachfeedback" element={<CenterCoachFeedback/>} />
 
+
+        <Route path="/superadminDashboard" element={<SuperadminDashboard />} />
+        <Route path="/superadminProfile" element={<SuperadminProfile />} />
+        <Route path="/superadminAttendance" element={<SuperadminAttendance />} />
+        <Route path="/superadminLeaves" element={<SuperadminLeaves />} />
+        <Route path="/superadminLeaves/add" element={<SuperadminLeavesAdd />} />
+        <Route path="/superadminInvoices" element={<SuperadminInvoice />} />
+        <Route path="/superadminFeedback" element={<SuperadminFeedback />} />
+        <Route path="/superadminAttendanceReport" element={<SuperadminAttendanceReport />} />
+        <Route path="/superadminMyTasks/assigntask" element={<SuperadminMyAssignTasks />} />
+        <Route path="/superadminMyTasks" element={<SuperadminMyTasks />} />
+        <Route path="/superadminAssignedTasks/" element={<SuperadminMyAssignTasksTable />} />
+        <Route path="/superadminScheduleClass/" element={<SuperadminScheduleClass />} />
+        <Route path="/superadminSupport/add" element={<SuperadminSupport />} />
+        <Route path="/superadminSupport/" element={<SuperadminSupportRequest />} />
+        <Route path="/superadminMessageStatus/" element={<SuperadminMessageStusTrackPage />} />
+        <Route path="/superadminKids" element={<SuperadminKids />} />
+        <Route path="/superadminEnquiries" element={<SuperadminEnquiries />} />
+
+        <Route path="/superadminPrograms" element={<SuperadminPrograms />} />
+        <Route path="/superadminReferrals" element={<SuperadminReferral />} />
+        <Route path="/superadminParents" element={<SuperadminParents />} />
+        <Route path="/superadminRenewals" element={<SuperadminRenewal />} />
+        <Route path="/superadminLogin" element={<SuperadminLogin />} />
+        <Route path="/notifications/add" element={<NotificationForm />} />
+        <Route path="/notifications" element={<NotificationTable />} />
+        <Route path="/employee/add" element={<EmployeeForm />} />
+        <Route path="/employees/" element={<EmployeeTable />} />
+        <Route path="/allowdeduct/add" element={<AllowDeductForm />} />
+        <Route path="/allowdeduct/" element={< AllowDeductTable />} />
+        <Route path="/payroll/" element={< Payroll />} />
+        <Route path="/transactions/" element={<TransactionTable />} />
+        <Route path="/expenses/" element={< ExpensesTable />} />
+        <Route path="/holiday/" element={< HolidayTable />} />
+        <Route path="/holiday/add" element={<HolidayForm />} />
+        <Route path="/expenses/add" element={< ExpenseForm />} />
+        <Route path="/transactions/add" element={< TransactionForm />} />
+        <Route path="/tournaments/" element={< TournamnetsTable />} />
+        <Route path="/documents/add" element={< DocumentsForm />} />
+        <Route path="/documents/" element={< DocumentsTable />} />
+        <Route path="/tournaments/add" element={< TournamentsForm />} />
+        <Route path="/users/add" element={< UserForm />} />
+        <Route path="/users/" element={< UsersTable />} />
+        <Route path="/participents/" element={< Participents />} />
+        <Route path="/chessKids/" element={< ChessKid />} />
+   
 
 
         </Routes>

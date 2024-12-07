@@ -1,7 +1,6 @@
 // columns.js
 import { alpha } from '@mui/material/styles';
-import { Zoom, Fade, Grow, Box,Select,MenuItem, Chip, Switch, IconButton } from '@mui/material';
-import VisibilityIcon from '@mui/icons-material/Visibility';
+import { Zoom, Fade, Grow, Box,Select,MenuItem, Chip, IconButton } from '@mui/material';
 import NoteAddIcon from '@mui/icons-material/NoteAdd';
 
 const columns = (theme,  setViewDialog, setNoteDialog) => [

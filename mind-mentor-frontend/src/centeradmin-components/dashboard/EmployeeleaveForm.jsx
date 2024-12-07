@@ -260,6 +260,7 @@ const EmployeeLeaveForm = () => {
       ]);
       alert("Leave details submitted successfully!");
     } catch (error) {
+      console.log(error)
       alert("Error while submitting leave details. Please try again.");
     } finally {
       setLoading(false);
@@ -309,7 +310,7 @@ const EmployeeLeaveForm = () => {
         </div>
 
         <form className="p-8" onSubmit={handleSubmit}>
-          <div class="space-y-8">
+          <div className="space-y-8">
             <h3 className="text-[#642b8f] font-semibold text-lg pb-2 border-b-2 border-[#f8a213]">
               Leave Details
             </h3>
