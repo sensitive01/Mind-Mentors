@@ -716,7 +716,17 @@ const getAllParentData = async (req, res) => {
 
 
 
+const getAllAttandanceData = async(req,res)=>{
+  try{
+    const {id} = req.params
+    console.log(id)
+  
 
+  }catch(err){
+    console.log("Error in fetching the attandance",err)
+  }
+
+}
 
 
 
@@ -758,5 +768,6 @@ module.exports = {
   fetchAttendance,
   getMyTasks,
   getAllKidData,
-  getAllParentData
+  getAllParentData,
+  getAllAttandanceData
 };

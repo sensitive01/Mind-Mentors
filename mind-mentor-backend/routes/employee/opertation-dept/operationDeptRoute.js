@@ -39,6 +39,9 @@ operationRoute.delete('/tasks/:id', operationController.deleteTask);
 operationRoute.get('/get-kids-data', operationController.getAllKidData);
 operationRoute.get('/get-parent-data', operationController.getAllParentData);
 
+operationRoute.get('/get-attandance-data/:id', operationController.getAllAttandanceData);
+
+
 
 
 module.exports = operationRoute;
