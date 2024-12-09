@@ -3,13 +3,13 @@ import { operationDeptInstance } from "../../axios/operationDeptInstance";
 // Email Verification
 export const employeeEmailVerification = async (email) => {
   const response = await operationDeptInstance.post("/email-verification", { email });
-  return response.data;
+  return response;
 };
 
 // Password Verification
-export const operationPasswordVerification = async (password) => {
-  const response = await operationDeptInstance.post("/password-verification", { password });
-  return response.data;
+export const operationPasswordVerification = async (email,password) => {
+  const response = await operationDeptInstance.post("/password-verification", { email,password });
+  return response;
 };
 
 // Create Enquiry
@@ -145,4 +145,26 @@ export const fetchProspectsEnquiries = async () => {
   return response.data;
 };
 
+
+export const getProspectsStudents = async () => {
+  const response = await operationDeptInstance.get(`/get-prospects-student-data`);
+  return response.data;
+};
+
+
+export const seduleDemoClass = async (email,data) => {
+  const response = await operationDeptInstance.post(`/shedule-demo-class/${email}`,{data});
+  return response.data;
+};
+
+
+export const getAllSheduleClass = async () => {
+  const response = await operationDeptInstance.get(`/get-shedule-demo-class`);
+  return response;
+};
+
+export const moveToProspects = async (id) => {
+  const response = await operationDeptInstance.put(`/move-to-prospects/${id}`);
+  return response;
+};
 

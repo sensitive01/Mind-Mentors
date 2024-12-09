@@ -27,7 +27,9 @@ import columns from "./Columns"; // Import columns from the separate file
 import data from "./Enquiry";
 import {
   fetchAllEnquiries,
+  moveToProspects,
   updateEnquiryStatus,
+  addNotes,
 } from "../../../api/service/employee/EmployeeService"; // Adjust the import path as necessary
 
 // Updated modern color scheme
@@ -92,11 +94,84 @@ const theme = createTheme({
     },
   },
 });
+
 const DetailView = ({ data }) => (
   <Grid container spacing={3} sx={{ p: 2 }}>
-    {Object.entries(data).map(
-      ([key, value]) =>
-        key !== "id" && (
+    {Object.entries(data).map(([key, value]) => {
+      // Avoid displaying 'id' key in the view
+      if (key !== "id") {
+        // Format the key to be more readable (e.g., 'firstName' -> 'First Name')
+        const formattedKey = key.replace(/([A-Z])/g, " $1").toUpperCase();
+
+        // Handling 'scheduleDemo' separately to show its 'status'
+        if (key === "scheduleDemo") {
+          return (
+            <Grid item xs={12} sm={6} md={4} key={key}>
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  bgcolor: alpha(theme.palette.primary.main, 0.04),
+                  height: "100%",
+                }}
+              >
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ mb: 1, display: "block" }}
+                >
+                  SCHEDULED DEMO
+                </Typography>
+                <Typography variant="body1" color="text.primary">
+                  {value?.status || "N/A"}{" "}
+                  {/* Display status or "N/A" if missing */}
+                </Typography>
+              </Box>
+            </Grid>
+          );
+        }
+
+        // Handling 'logs' separately to display individual log actions with index
+        if (key === "logs" && Array.isArray(value)) {
+          return (
+            <Grid item xs={12} sm={6} md={4} key={key}>
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  bgcolor: alpha(theme.palette.primary.main, 0.04),
+                  height: "100%",
+                }}
+              >
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ mb: 1, display: "block" }}
+                >
+                  LOGS
+                </Typography>
+                <Typography variant="body1" color="text.primary">
+                  {value.length > 0
+                    ? value.map((log, index) => (
+                        <div key={log._id}>
+                          <strong>
+                            {index + 1}. {log.action}
+                          </strong>{" "}
+                          {/* Display index starting from 1 */}
+                          <Typography variant="caption" color="text.secondary">
+                            {new Date(log.createdAt).toLocaleString()}
+                          </Typography>
+                        </div>
+                      ))
+                    : "No logs available"}
+                </Typography>
+              </Box>
+            </Grid>
+          );
+        }
+
+        // Format and display other fields
+        return (
           <Grid item xs={12} sm={6} md={4} key={key}>
             <Box
               sx={{
@@ -111,23 +186,27 @@ const DetailView = ({ data }) => (
                 color="text.secondary"
                 sx={{ mb: 1, display: "block" }}
               >
-                {key.replace(/([A-Z])/g, " $1").toUpperCase()}
+                {formattedKey}
               </Typography>
               <Typography variant="body1" color="text.primary">
                 {Array.isArray(value)
                   ? value
                       .map((prog) => `${prog.program} (${prog.level})`)
                       .join(", ")
-                  : typeof value === "object" && value !== null
-                  ? "N/A" // or handle specific object cases if needed
-                  : value || "N/A"}
+                  : value && typeof value === "object" && value !== null
+                  ? "N/A" // Handle objects or complex structures if required
+                  : value || "N/A"}{" "}
+                {/* Display N/A for null, undefined, or empty values */}
               </Typography>
             </Box>
           </Grid>
-        )
-    )}
+        );
+      }
+      return null;
+    })}
   </Grid>
 );
+
 const Enquiries = () => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true); // State to manage loading
@@ -147,10 +226,12 @@ const Enquiries = () => {
 
     loadLeaves();
   }, []);
-  const [noteDialog, setNoteDialog] = useState({
+  const [noteDialog, enquiryStatus] = useState({
     open: false,
     rowData: null,
     noteText: "",
+    disposition: "",
+    enquiryStatus: "",
   });
   const [viewDialog, setViewDialog] = useState({
     open: false,
@@ -192,19 +273,71 @@ const Enquiries = () => {
       console.error("Error updating enquiry status:", error);
     }
   };
-
-  const handleNoteSave = () => {
+  const handleNoteSave = async () => {
     if (noteDialog.rowData) {
-      setRows(
-        rows.map((row) =>
-          row._id === noteDialog.rowData._id
-            ? { ...row, notes: noteDialog.noteText }
+      const updatedNotes = noteDialog.noteText; // Get the notes from the dialog
+      const id = noteDialog.rowData._id; // Get the ID of the row to update
+      let updatedEnquiryStatus = noteDialog.enquiryStatus; // Get enquiry status
+      let updatedDisposition = noteDialog.disposition; // Get disposition
+  
+      // Log the values to ensure they are correct
+      console.log("Updated Notes:", updatedNotes);
+      console.log("Updated Enquiry Status:", updatedEnquiryStatus);
+      console.log("Updated Disposition:", updatedDisposition);
+  
+      // Ensure enquiryStatus and disposition have valid values
+      const validEnquiryStatus = ["Pending", "Qualified Lead", "Unqualified Lead"];
+      const validDisposition = ["RnR", "Call Back", "None"];
+  
+      // Apply default values if enquiryStatus or disposition are empty
+      if (!validEnquiryStatus.includes(updatedEnquiryStatus)) {
+        updatedEnquiryStatus = "Pending"; // Default value for enquiryStatus
+      }
+      if (!validDisposition.includes(updatedDisposition)) {
+        updatedDisposition = "None"; // Default value for disposition
+      }
+  
+      // Update the local state
+      setRows((prevRows) =>
+        prevRows.map((row) =>
+          row._id === id
+            ? {
+                ...row,
+                notes: updatedNotes,
+                enquiryStatus: updatedEnquiryStatus,
+                disposition: updatedDisposition,
+              }
             : row
         )
       );
-      setNoteDialog({ open: false, rowData: null, noteText: "" });
+  
+      // Call the API to save the notes
+      try {
+        await addNotes(id, {
+          notes: updatedNotes,
+          enquiryStatus: updatedEnquiryStatus,
+          disposition: updatedDisposition,
+        }); // Pass all fields correctly
+        console.log("Notes saved successfully");
+      } catch (error) {
+        console.error("Error saving notes:", error);
+      }
+  
+      // Reset the note dialog state properly
+      setNoteDialog({
+        open: false,
+        rowData: null,
+        noteText: "",
+        enquiryStatus: "", // Reset enquiryStatus
+        disposition: "", // Reset disposition
+      });
+      console.log("setting rows", rows);
     }
   };
+  
+  
+
+
   const handleRowEditStop = (params, event) => {
     // Prevent default row edit stop behavior
     event.defaultMuiPrevented = true;
@@ -219,6 +352,12 @@ const Enquiries = () => {
   };
   const handleProcessRowUpdateError = (error) => {
     console.error("Row update error:", error);
+  };
+
+  const handleMoveProspects = async (id) => {
+    console.log(id);
+    const respose = await moveToProspects(id);
+    console.log(respose);
   };
   return (
     <ThemeProvider theme={theme}>
@@ -262,7 +401,8 @@ const Enquiries = () => {
                 theme,
                 handleStatusToggle,
                 setViewDialog,
-                setNoteDialog
+                enquiryStatus,
+                handleMoveProspects
               )}
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel}
@@ -355,13 +495,12 @@ const Enquiries = () => {
             <Dialog
               open={noteDialog.open}
               onClose={() =>
-                setNoteDialog({
+                enquiryStatus({
                   open: false,
                   rowData: null,
                   noteText: "",
-                  enquiryStage: "",
-                  notesTo: "",
-                  parents: "",
+                  enquiryStatus: "",
+                  disposition: "",
                 })
               }
               maxWidth="sm"
@@ -390,39 +529,46 @@ const Enquiries = () => {
                 <FormControl fullWidth sx={{ mt: 2 }}>
                   <InputLabel>Enquiry Stage</InputLabel>
                   <Select
-                    value={noteDialog.enquiryStage}
+                    value={noteDialog.enquiryStatus}
                     onChange={(e) =>
-                      setNoteDialog((prev) => ({
+                      enquiryStatus((prev) => ({
                         ...prev,
-                        enquiryStage: e.target.value,
+                        enquiryStatus: e.target.value,
                       }))
                     }
                     label="Enquiry Stage"
                   >
-                    <MenuItem value="New">New</MenuItem>
-                    <MenuItem value="Follow-Up">Follow-Up</MenuItem>
-                    <MenuItem value="Closed">Closed</MenuItem>
-                    <MenuItem value="Converted">Converted</MenuItem>
+                    <MenuItem value="Pending">Pending</MenuItem>
+                    <MenuItem value="Qualified Lead">Qualified Lead</MenuItem>
+                    <MenuItem value="Unqualified Lead">
+                      Unqualified Lead
+                    </MenuItem>
                   </Select>
                 </FormControl>
-                {/* Notes To Field */}
-                <TextField
-                  label="Notes To"
-                  value={noteDialog.notesTo}
-                  onChange={(e) =>
-                    setNoteDialog((prev) => ({
-                      ...prev,
-                      notesTo: e.target.value,
-                    }))
-                  }
-                  fullWidth
-                  sx={{ mt: 2 }}
-                />
+
+                <FormControl fullWidth sx={{ mt: 2 }}>
+                  <InputLabel>Disposition</InputLabel>
+                  <Select
+                    value={noteDialog.disposition}
+                    onChange={(e) =>
+                      enquiryStatus((prev) => ({
+                        ...prev,
+                        disposition: e.target.value,
+                      }))
+                    }
+                    label="Disposition"
+                  >
+                    <MenuItem value="RnR">RnR</MenuItem>
+                    <MenuItem value="Call Back">Call Back</MenuItem>
+                    <MenuItem value="None">None</MenuItem>
+                  </Select>
+                </FormControl>
+
                 <TextField
                   label="Note"
                   value={noteDialog.noteText}
                   onChange={(e) =>
-                    setNoteDialog((prev) => ({
+                    enquiryStatus((prev) => ({
                       ...prev,
                       noteText: e.target.value,
                     }))
@@ -438,7 +584,7 @@ const Enquiries = () => {
                 <Button
                   onClick={handleNoteSave}
                   variant="contained"
-                  class="px-8 py-3 bg-[#642b8f] text-white rounded-lg font-medium hover:bg-[#aa88be] transition-colors shadow-lg hover:shadow-xl"
+                  className="px-8 py-3 bg-[#642b8f] text-white rounded-lg font-medium hover:bg-[#aa88be] transition-colors shadow-lg hover:shadow-xl"
                   sx={{
                     bgcolor: "primary.main",
                     "&:hover": {
@@ -449,15 +595,14 @@ const Enquiries = () => {
                   Save Note
                 </Button>
                 <Button
-                  class="px-8 py-3 bg-white border-2 border-[#642b8f] text-[#642b8f] rounded-lg font-medium hover:bg-[#efe8f0] transition-colors"
+                  className="px-8 py-3 bg-white border-2 border-[#642b8f] text-[#642b8f] rounded-lg font-medium hover:bg-[#efe8f0] transition-colors"
                   onClick={() =>
-                    setNoteDialog({
+                    enquiryStatus({
                       open: false,
                       rowData: null,
                       noteText: "",
-                      enquiryStage: "",
-                      notesTo: "",
-                      parents: "",
+                      enquiryStatus: "",
+                      disposition: "",
                     })
                   }
                   variant="outlined"

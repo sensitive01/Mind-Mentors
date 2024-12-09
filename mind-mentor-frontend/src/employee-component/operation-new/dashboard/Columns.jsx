@@ -1,10 +1,11 @@
 // columns.js
 import { alpha } from "@mui/material/styles";
-import { Zoom, Fade, Grow, Box, Chip, Switch, IconButton } from "@mui/material";
+import { Zoom, Fade, Grow, Box, Chip, Switch, IconButton, Tooltip } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import NoteAddIcon from "@mui/icons-material/NoteAdd";
+import { DownloadIcon } from "lucide-react";
 
-const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog) => [
+const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog,handleMoveProspects) => [
   {
     field: "parentFirstName",
     headerName: "Parent First Name",
@@ -107,38 +108,36 @@ const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog) => [
   },
 
   {
-    field: 'enquiryType',
-    headerName: 'Type',
+    field: "enquiryType",
+    headerName: "Type",
     width: 150,
     renderCell: (params) => (
       <Fade in={true}>
         <Box
           sx={{
-            display: 'flex',
-            alignItems: 'center',
+            display: "flex",
+            alignItems: "center",
             gap: 1,
-                       color: params.value === 'warm'
-              ? '#F59E0B'
-              : '#642b8f',
-            padding: '4px 12px',
-            borderRadius: '20px',
-            transition: 'all 0.3s ease',
+            color: params.value === "warm" ? "#F59E0B" : "#642b8f",
+            padding: "4px 12px",
+            borderRadius: "20px",
+            transition: "all 0.3s ease",
           }}
         >
           {params.value}
           <Switch
             size="small"
-            checked={params.value === 'warm'}
+            checked={params.value === "warm"}
             onChange={() => handleStatusToggle(params.row._id)}
             onClick={(e) => e.stopPropagation()}
             sx={{
-              '& .MuiSwitch-switchBase.Mui-checked': {
-                color: '#642b8f',
-                '&:hover': {
+              "& .MuiSwitch-switchBase.Mui-checked": {
+                color: "#642b8f",
+                "&:hover": {
                   // backgroundColor: alpha(theme.palette.warm.main, 0.1),
                 },
               },
-              '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
                 // backgroundColor: theme.palette.warm.main,
               },
             }}
@@ -162,12 +161,13 @@ const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog) => [
   {
     field: "actions",
     headerName: "Actions",
-    width: 150,
+    width: 200,
     renderCell: (params) => (
       <Box
         sx={{ display: "flex", gap: 1 }}
         onClick={(e) => e.stopPropagation()} // Prevent row-wide click
       >
+        {/* View Button */}
         <Grow in={true}>
           <IconButton
             size="small"
@@ -182,6 +182,8 @@ const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog) => [
             <VisibilityIcon fontSize="small" />
           </IconButton>
         </Grow>
+  
+        {/* Add Note Button */}
         <Grow in={true} style={{ transformOrigin: "0 0 0" }}>
           <IconButton
             size="small"
@@ -203,10 +205,27 @@ const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog) => [
             <NoteAddIcon fontSize="small" />
           </IconButton>
         </Grow>
+  
+        {/* Move to Prospects Button */}
+        <Grow in={true}>
+          <Tooltip title="Move to Prospects" arrow>
+            <IconButton
+              size="small"
+              onClick={()=>handleMoveProspects(params.row._id)}
+              sx={{
+                color: "#1D4ED8",
+                "&:hover": {
+                  backgroundColor: alpha(theme.palette.info.main, 0.1),
+                },
+              }}
+            >
+              <DownloadIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Grow>
       </Box>
     ),
-  },
+  }
+  
 ];
 export default columns;
-
-

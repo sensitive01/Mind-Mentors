@@ -95,9 +95,81 @@ const theme = createTheme({
 });
 const DetailView = ({ data }) => (
   <Grid container spacing={3} sx={{ p: 2 }}>
-    {Object.entries(data).map(
-      ([key, value]) =>
-        key !== "id" && (
+    {Object.entries(data).map(([key, value]) => {
+      // Avoid displaying 'id' key in the view
+      if (key !== "id") {
+        // Format the key to be more readable (e.g., 'firstName' -> 'First Name')
+        const formattedKey = key.replace(/([A-Z])/g, " $1").toUpperCase();
+
+        // Handling 'scheduleDemo' separately to show its 'status'
+        if (key === "scheduleDemo") {
+          return (
+            <Grid item xs={12} sm={6} md={4} key={key}>
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  bgcolor: alpha(theme.palette.primary.main, 0.04),
+                  height: "100%",
+                }}
+              >
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ mb: 1, display: "block" }}
+                >
+                  SCHEDULED DEMO
+                </Typography>
+                <Typography variant="body1" color="text.primary">
+                  {value?.status || "N/A"}{" "}
+                  {/* Display status or "N/A" if missing */}
+                </Typography>
+              </Box>
+            </Grid>
+          );
+        }
+
+        // Handling 'logs' separately to display individual log actions with index
+        if (key === "logs" && Array.isArray(value)) {
+          return (
+            <Grid item xs={12} sm={6} md={4} key={key}>
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  bgcolor: alpha(theme.palette.primary.main, 0.04),
+                  height: "100%",
+                }}
+              >
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ mb: 1, display: "block" }}
+                >
+                  LOGS
+                </Typography>
+                <Typography variant="body1" color="text.primary">
+                  {value.length > 0
+                    ? value.map((log, index) => (
+                        <div key={log._id}>
+                          <strong>
+                            {index + 1}. {log.action}
+                          </strong>{" "}
+                          {/* Display index starting from 1 */}
+                          <Typography variant="caption" color="text.secondary">
+                            {new Date(log.createdAt).toLocaleString()}
+                          </Typography>
+                        </div>
+                      ))
+                    : "No logs available"}
+                </Typography>
+              </Box>
+            </Grid>
+          );
+        }
+
+        // Format and display other fields
+        return (
           <Grid item xs={12} sm={6} md={4} key={key}>
             <Box
               sx={{
@@ -112,21 +184,24 @@ const DetailView = ({ data }) => (
                 color="text.secondary"
                 sx={{ mb: 1, display: "block" }}
               >
-                {key.replace(/([A-Z])/g, " $1").toUpperCase()}
+                {formattedKey}
               </Typography>
               <Typography variant="body1" color="text.primary">
                 {Array.isArray(value)
                   ? value
                       .map((prog) => `${prog.program} (${prog.level})`)
                       .join(", ")
-                  : typeof value === "object" && value !== null
-                  ? "N/A" // or handle specific object cases if needed
-                  : value || "N/A"}
+                  : value && typeof value === "object" && value !== null
+                  ? "N/A" // Handle objects or complex structures if required
+                  : value || "N/A"}{" "}
+                {/* Display N/A for null, undefined, or empty values */}
               </Typography>
             </Box>
           </Grid>
-        )
-    )}
+        );
+      }
+      return null;
+    })}
   </Grid>
 );
 const Enquiries = () => {

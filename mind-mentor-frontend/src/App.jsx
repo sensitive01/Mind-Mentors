@@ -219,6 +219,7 @@ import UserForm from "./pages/superadmin/UserForm";
 import UsersTable from "./pages/superadmin/UsersTable";
 import SuperadminAttendance from "./pages/superadmin/SuperadminAttendance";
 import SuperadminEnquiries from "./pages/superadmin/ListingEnquiries";
+import DemoClassShedulePage from "./pages/employee/operation-employee/DemoClassShedulePage";
 
 
 
@@ -331,6 +332,8 @@ function App() {
         <Route path="/employee-operation/invoice" element={<InvoicePage/>} />
         <Route path="/employee-operation/studentreport" element={<StudentReport/>} />
         <Route path="/employee-operation/coachfeedback" element={<CoachFeedback/>} />
+        <Route path="/employee-operation/demoSheduleForm" element={<DemoClassShedulePage/>} />
+
 
 
 

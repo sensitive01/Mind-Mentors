@@ -1,8 +1,9 @@
 // columns.js
 import { alpha } from '@mui/material/styles';
-import { Zoom, Fade, Grow, Box, Chip, Switch, IconButton } from '@mui/material';
+import { Zoom, Fade, Grow, Box, Button, Chip, Switch, IconButton } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import NoteAddIcon from '@mui/icons-material/NoteAdd';
+import { useNavigate } from "react-router-dom";
 
 const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog) => [
   {
@@ -140,7 +141,7 @@ const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog) => [
   {
     field: 'actions',
     headerName: 'Actions',
-    width: 150,
+    width: 1500,
     renderCell: (params) => (
       <Box 
         sx={{ display: 'flex', gap: 1 }}
@@ -181,6 +182,19 @@ const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog) => [
           >
             <NoteAddIcon fontSize="small" />
           </IconButton>
+          <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => navigate("/employee-operation/demoSheduleForm")}
+          sx={{
+            backgroundColor: customColors.primary,
+            "&:hover": {
+              backgroundColor: customColors.secondary,
+            },
+          }}
+        >
+          Schedule New Class
+        </Button>
         </Grow>
       </Box>
     ),
