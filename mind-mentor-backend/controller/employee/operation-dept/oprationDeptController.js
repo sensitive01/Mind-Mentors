@@ -2,22 +2,90 @@ const OperationDept = require("../../../model/operationDeptModel");
 const leaves = require("../../../model/leavesModel");
 const attendance = require("../../../model/attendanceModel");
 const Task = require("../../../model/taskModel");
-const kidSchema = require("../../../model/kidModel")
-const parentSchema =require("../../../model/parentModel")
+const kidSchema = require("../../../model/kidModel");
+const parentSchema = require("../../../model/parentModel");
+const DemoClass = require("../../../model/demoClassModel");
+const Parent = require("../../../model/parentModel");
+const generateChessId = require("../../../utils/generateChessId");
+const generateOTP = require("../../../utils/generateOtp");
+const Employee = require("../../../model/employeeModel");
 
 // Email Verification
+
+const registerEmployee = async (req, res) => {
+  try {
+    // Extract employee details from the request body
+    const { name, email, password, department, role } = req.body;
+
+    // Validate the input
+    if (!name || !email || !password || !department) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
+    }
+
+    // Check if the email already exists
+    const existingEmployee = await Employee.findOne({ email });
+    if (existingEmployee) {
+      return res.status(409).json({
+        success: false,
+        message: "Email is already registered",
+      });
+    }
+
+    // Create a new employee
+    const newEmployee = new Employee({
+      name,
+      email,
+      password,
+      department,
+      role: role || "employee", // Default role is "employee"
+    });
+
+    // Save the employee to the database
+    await newEmployee.save();
+
+    // Return a success response
+    res.status(201).json({
+      success: true,
+      message: "Employee registered successfully",
+      data: {
+        id: newEmployee._id,
+        name: newEmployee.name,
+        email: newEmployee.email,
+        department: newEmployee.department,
+        role: newEmployee.role,
+        status: newEmployee.status,
+      },
+    });
+  } catch (error) {
+    console.error("Error registering employee:", error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while registering the employee",
+    });
+  }
+};
+
 const operationEmailVerification = async (req, res) => {
   try {
     console.log("Welcome to operation employee verification", req.body);
 
-    const operationEmail = "operationdept@gmail.com";
     const { email } = req.body;
+    console.log(email);
+    const data = await Employee.find();
+    console.log(data);
 
-    if (operationEmail === email) {
+    const operationEmail = await Employee.findOne({ email: email });
+    console.log("operationEmail", operationEmail);
+
+    if (operationEmail) {
       console.log("Email exists");
       return res.status(200).json({
         success: true,
         message: "Email verification successful. Employee exists.",
+        operationEmail
       });
     } else {
       console.log("No details found");
@@ -40,13 +108,18 @@ const operationPasswordVerification = async (req, res) => {
   try {
     console.log("Welcome to verify operation dept password", req.body);
 
-    const orgPassword = "operationdept@123";
-    const { password } = req.body;
+    const { password, email } = req.body;
 
-    if (password === orgPassword) {
+    const operationEmail = await Employee.findOne({
+      email: email,
+      password: password,
+    });
+
+    if (operationEmail) {
       return res.status(200).json({
         success: true,
         message: "Password verification successful.",
+        operationEmail,
       });
     } else {
       return res.status(401).json({
@@ -67,6 +140,17 @@ const operationPasswordVerification = async (req, res) => {
 const enquiryFormData = async (req, res) => {
   try {
     const formData = req.body;
+    const { employeeId, employeeName } = req.body;
+
+    const logEntry = {
+      employeeId,
+      employeeName,
+      action: `Enquiry form submitted by operation department on ${new Date().toLocaleString()}`,
+      createdAt: new Date(),
+    };
+
+    formData.logs = [logEntry];
+
     const newEntry = await OperationDept.create(formData);
 
     res.status(201).json({
@@ -83,10 +167,113 @@ const enquiryFormData = async (req, res) => {
   }
 };
 
+const updateProspectData = async (req, res) => {
+  try {
+    console.log("..........................................");
+    console.log("Prospects");
+
+    const { id } = req.params;
+    const enquiryData = await OperationDept.findOne({ _id: id });
+    console.log(enquiryData);
+    console.log("..........................................");
+    const {
+      updateFields,
+      employeeId,
+      employeeName,
+      comments,
+      state,
+      formData,
+    } = req.body;
+
+    // 1. Handle Parent Registration
+    let parentData = await parentSchema.findOne({
+      parentMobile: enquiryData.whatsappNumber,
+    });
+
+    // If Parent doesn't exist, create a new one
+    if (!parentData) {
+      parentData = new parentSchema({
+        parentName: enquiryData.parentFirstName,
+        parentEmail: enquiryData.email,
+        parentMobile: enquiryData.whatsappNumber,
+
+        kids: [], // Will update later after creating the kid
+        type: "new", // Assuming it's a new parent
+        status: "Active", // Active status
+      });
+
+      // Save the new Parent
+      await parentData.save();
+    }
+
+    // 2. Handle Kid Registration
+    const chessId = generateChessId(); // Assuming you have a function to generate a unique ID for the kid
+    const kidPin = generateOTP(); // Assuming you have a function to generate OTP for the kid
+
+    // Create new Kid
+    const newKid = new kidSchema({
+      kidsName: enquiryData.kidFirstName,
+      age: enquiryData.kidsAge,
+      gender: enquiryData.kidsGender,
+      schoolName: enquiryData.schoolName,
+      address: enquiryData.address,
+      pincode: enquiryData.pincode,
+      parentId: parentData._id, // Link the Kid to the Parent
+    });
+
+    // Save the new Kid
+    await newKid.save();
+
+    // 3. Update the Parent with the Kid's ID
+    parentData.kids.push({ kidId: newKid._id });
+    await parentData.save();
+
+    // 4. Create Log Entry for the Operation Department Action
+    const logEntry = {
+      employeeId,
+      employeeName,
+      comments,
+      action: `Enquiry moved to prospects by operation department on ${new Date().toLocaleString()}`,
+      createdAt: new Date(),
+    };
+
+    // 5. Update the OperationDept Entry
+    const updatedEntry = await OperationDept.findByIdAndUpdate(
+      { _id: id },
+      {
+        $set: { ...updateFields, enquiryField: "prospects" },
+        $push: { logs: logEntry },
+      },
+      { new: true }
+    );
+
+    console.log("updatedEntry", updatedEntry);
+
+    if (!updatedEntry) {
+      return res.status(404).json({ message: "Prospect data not found" });
+    }
+
+    // Return Success Response
+    res.status(200).json({
+      success: true,
+      message: "Prospect data updated successfully and moved to prospects",
+      data: updatedEntry,
+      parentData: parentData,
+      kidData: newKid,
+    });
+  } catch (error) {
+    console.error("Error updating prospect data", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update prospect data. Please try again later.",
+    });
+  }
+};
+
 // Get All Enquiries
 const getAllEnquiries = async (req, res) => {
   try {
-    const enquiries = await OperationDept.find({enquiryField:"enquiryList"});
+    const enquiries = await OperationDept.find({ enquiryField: "enquiryList" });
     console.log(enquiries);
     res.status(200).json(enquiries);
   } catch (error) {
@@ -94,10 +281,9 @@ const getAllEnquiries = async (req, res) => {
   }
 };
 
-
 const getProspectsData = async (req, res) => {
   try {
-    const enquiries = await OperationDept.find({enquiryField:"prospects"});
+    const enquiries = await OperationDept.find({ enquiryField: "prospects" });
     console.log(enquiries);
     res.status(200).json(enquiries);
   } catch (error) {
@@ -140,8 +326,7 @@ const updateEnquiryStatus = async (req, res) => {
   try {
     console.log("Status update", req.body);
     const { id } = req.params;
-    const { enquiryStatus } = req.body;
-    console.log(enquiryStatus, id);
+    const { enquiryStatus, employeeId, employeeName } = req.body;
 
     // Validate status
     if (!["cold", "warm"].includes(enquiryStatus)) {
@@ -151,11 +336,34 @@ const updateEnquiryStatus = async (req, res) => {
       });
     }
 
-    // Update the status of the enquiry, including both `status` and `enquiryStatus`
+    // Fetch the current entry to get the old status
+    const existingEntry = await OperationDept.findById(id);
+    if (!existingEntry) {
+      return res.status(404).json({ message: "Enquiry not found" });
+    }
+
+    const previousStatus = existingEntry.enquiryType || "unknown";
+
+    // Format the current date and time
+    const formattedDateTime = new Intl.DateTimeFormat("en-US", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(new Date());
+
+    // Create log entry
+    const logEntry = {
+      employeeId,
+      employeeName,
+      action: `Enquiry status updated from '${previousStatus}' to '${enquiryStatus}' on ${formattedDateTime}`,
+      createdAt: new Date(),
+    };
+
+    // Update the status of the enquiry and append the log
     const updatedEntry = await OperationDept.findByIdAndUpdate(
       { _id: id },
       {
-        enquiryType:enquiryStatus, // Ensuring both fields are updated
+        enquiryType: enquiryStatus,
+        $push: { logs: logEntry },
       },
       { new: true } // Return the updated document
     );
@@ -167,13 +375,16 @@ const updateEnquiryStatus = async (req, res) => {
     // Send success response with updated data
     res.status(200).json({
       success: true,
-      message: "Enquiry status updated successfully",
+      message: `Enquiry status updated successfully from '${previousStatus}' to '${enquiryStatus}' on ${formattedDateTime}`,
       data: updatedEntry, // Returning the updated document
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error updating enquiry status", error: error.message });
+    console.error("Error updating enquiry status", error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating enquiry status",
+      error: error.message,
+    });
   }
 };
 
@@ -268,21 +479,99 @@ const addNotes = async (req, res) => {
   try {
     const { id } = req.params;
     const { notes } = req.body;
+
+    const { enquiryStatus, disposition } = notes;
+
+    console.log("checking==>", notes);
+
+    // Ensure that notes is a string
+    let notesToSave = notes;
+    if (typeof notes === "object") {
+      notesToSave = notes.notes || "";
+    }
+
+    // Validate enquiryStatus and disposition
+    const validEnquiryStatus = [
+      "Pending",
+      "Qualified Lead",
+      "Unqualified Lead",
+    ];
+    const validDisposition = ["RnR", "Call Back", "None"];
+
+    if (enquiryStatus && !validEnquiryStatus.includes(enquiryStatus)) {
+      return res.status(400).json({ message: "Invalid enquiryStatus value" });
+    }
+
+    if (disposition && !validDisposition.includes(disposition)) {
+      return res.status(400).json({ message: "Invalid disposition value" });
+    }
+
+    // Fetch the current entry to compare changes
+    const currentEntry = await OperationDept.findById(id);
+    if (!currentEntry) {
+      return res.status(404).json({ message: "Enquiry not found" });
+    }
+
+    // Prepare logs for changes
+    const logs = [];
+    const actionDescription = []; // For a summary of changes
+
+    if (notesToSave !== currentEntry.notes) {
+      logs.push({
+        employeeId: req.user?.id, // Assuming user ID is available in the request
+        employeeName: req.user?.name, // Assuming user name is available in the request
+        comment: `Updated notes from "${currentEntry.notes}" to "${notesToSave}"`,
+        action: `Updated notes from "${currentEntry.notes}" to "${notesToSave}"`,
+      });
+      actionDescription.push("Notes Updated");
+    }
+
+    if (enquiryStatus && enquiryStatus !== currentEntry.enquiryStatus) {
+      logs.push({
+        employeeId: req.user?.id,
+        employeeName: req.user?.name,
+        comment: `Changed enquiryStatus from "${currentEntry.enquiryStatus}" to "${enquiryStatus}"`,
+        action: `Changed enquiryStatus from "${currentEntry.enquiryStatus}" to "${enquiryStatus}"`,
+      });
+      actionDescription.push("Enquiry Status Updated");
+    }
+
+    if (disposition && disposition !== currentEntry.disposition) {
+      logs.push({
+        employeeId: req.user?.id,
+        employeeName: req.user?.name,
+        comment: `Changed disposition from "${currentEntry.disposition}" to "${disposition}"`,
+        action: `Changed disposition from "${currentEntry.disposition}" to "${disposition}"`,
+      });
+      actionDescription.push("Disposition Updated");
+    }
+
+    // Update the OperationDept entry
     const updatedEntry = await OperationDept.findByIdAndUpdate(
       id,
-      { notes },
+      {
+        notes: notesToSave,
+        enquiryStatus: enquiryStatus || "Pending",
+        disposition: disposition || "None",
+        $push: { logs: { $each: logs } }, // Append logs to the logs array
+      },
       { new: true }
     );
+
     if (!updatedEntry) {
       return res.status(404).json({ message: "Enquiry not found" });
     }
+
+    // Respond with success
     res.status(200).json({
       success: true,
-      message: "Notes added successfully",
+      message: `Enquiry updated successfully. Actions performed: ${actionDescription.join(
+        ", "
+      )}`,
       data: updatedEntry,
     });
   } catch (error) {
-    console.error("Error adding notes", error);
+    console.error("Error adding notes:", error);
     res.status(500).json({ message: "Error adding notes" });
   }
 };
@@ -371,7 +660,6 @@ const createAttendance = async (req, res) => {
 
     // Check if attendance for today is already recorded
     const existingAttendance = await attendance.findOne({
-      
       attendanceDate: today,
       employeeEmail: email,
     });
@@ -389,13 +677,12 @@ const createAttendance = async (req, res) => {
       attendanceDate: today,
       time: currentTime, // Use current time for the attendance
       employeeName,
-      status: "Present",      
+      status: "Present",
       employeeEmail: email,
-
     };
 
     const newAttendance = await attendance.create(attendanceData);
-    console.log(newAttendance,email)
+    console.log(newAttendance, email);
     res.status(201).json({
       success: true,
       message: "Attendance recorded successfully.",
@@ -669,17 +956,15 @@ const getAllKidData = async (req, res) => {
     // Fetch all kids data (excluding `kidPin`)
     const kidsData = await kidSchema.find({}, { kidPin: 0 });
 
- 
     const kidsWithParentData = await Promise.all(
       kidsData.map(async (kid) => {
-     
         const parentData = await parentSchema.findOne(
           { _id: kid.parentId },
-          { parentName: 1,parentEmail:1,parentMobile:1 } 
+          { parentName: 1, parentEmail: 1, parentMobile: 1 }
         );
         return {
-          ...kid.toObject(), 
-          parentData,       
+          ...kid.toObject(),
+          parentData,
         };
       })
     );
@@ -693,7 +978,6 @@ const getAllKidData = async (req, res) => {
     res.status(500).json({ error: "An error occurred while fetching data" });
   }
 };
-
 
 const getAllParentData = async (req, res) => {
   try {
@@ -710,7 +994,7 @@ const getAllParentData = async (req, res) => {
         );
         return {
           ...parent.toObject(), // Convert Mongoose document to plain object
-          kidsData,          
+          kidsData,
         };
       })
     );
@@ -725,35 +1009,219 @@ const getAllParentData = async (req, res) => {
   }
 };
 
+const getProspectsStudentsData = async (req, res) => {
+  try {
+    const prospectData = await OperationDept.find(
+      { enquiryField: "prospects" },
+      {
+        parentFirstName: 1,
+        kidFirstName: 1,
+        programs: 1,
+        whatsappNumber: 1,
+        email: 1,
+      }
+    );
 
+    if (!prospectData || prospectData.length === 0) {
+      return res.status(404).json({ message: "No prospect data found" });
+    }
 
-const getAllAttandanceData = async(req,res)=>{
-  try{
-    const {id} = req.params
-    console.log(id)
-  
-
-  }catch(err){
-    console.log("Error in fetching the attandance",err)
+    res.status(200).json({
+      success: true,
+      message: "Prospect data retrieved successfully",
+      data: prospectData,
+    });
+  } catch (err) {
+    console.error("Error in getting prospects data", err);
+    res.status(500).json({
+      success: false,
+      message: "Error in retrieving prospect data",
+      error: err.message,
+    });
   }
+};
 
-}
+const scheduleDemoClass = async (req, res) => {
+  try {
+    console.log(req.params, req.body);
+    const { id } = req.params;
+    const { date, time, selectedProgram, email } = req.body.data;
 
+    // Validate required fields
+    if (!date || !time || !selectedProgram) {
+      return res.status(400).json({ message: "Missing required fields." });
+    }
 
+    // Find the parent and kid data
+    const parentData = await Parent.findOne({ parentEmail: email }, { _id: 1 });
+    // if (!parentData) {
+    //   return res.status(404).json({ message: "Parent not found." });
+    // }
 
+    const kidsData = await kidSchema.findOne(
+      { parentId: parentData._id },
+      { _id: 1 }
+    );
+    if (!kidsData) {
+      return res.status(404).json({ message: "Kid not found." });
+    }
 
+    // Check for existing demo classes for the same date and time
+    const existingClasses = await DemoClass.find({ date, time });
+    const count = existingClasses.length;
 
+    if (count > 0) {
+      return res.status(400).json({
+        message: `A demo class is already scheduled for this date and time. Current count: ${count}.`,
+        existingClasses,
+      });
+    }
 
+    // Create and save the demo class document
+    const demoClass = await DemoClass.create({
+      date,
+      time,
+      programs: [
+        {
+          program: selectedProgram.program,
+          programLevel: selectedProgram.level,
+        },
+      ],
+      kidId: kidsData._id,
+      parentId: parentData._id,
+      scheduledByName: id,
+      scheduledById: id,
+    });
 
+    // Respond with the created document
+    res.status(201).json({
+      message: "Demo class scheduled successfully",
+      data: demoClass,
+    });
+  } catch (err) {
+    console.error("Error scheduling demo class:", err);
+    res.status(500).json({
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
 
+const getAllAttandanceData = async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log(id);
+  } catch (err) {
+    console.log("Error in fetching the attandance", err);
+  }
+};
 
+const getAllSheduleClass = async (req, res) => {
+  try {
+    // Get all demo classes from the database
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normalize the time to start of the day
 
+    const scheduleData = await DemoClass.find({
+      date: { $gte: today },
+    });
 
+    console.log(scheduleData);
 
+    // Initialize the grouped schedule by day of the week (Monday to Saturday)
+    const groupedSchedule = {
+      Monday: [],
+      Tuesday: [],
+      Wednesday: [],
+      Thursday: [],
+      Friday: [],
+      Saturday: [],
+    };
 
+    // Helper to map day numbers to day names
+    const daysOfWeek = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
 
+    // Loop through the schedule data to group by day of the week
+    scheduleData.forEach((schedule) => {
+      const dayOfWeek = daysOfWeek[new Date(schedule.date).getDay()];
 
+      // If the day is Sunday, skip it
+      if (dayOfWeek === "Sunday") return;
 
+      const dateKey = new Date(schedule.date).toISOString().split("T")[0]; // Only the date part (e.g., "2024-12-18")
+      const timeKey = schedule.time; // Time (e.g., "12:00 PM - 2:00 PM")
+
+      // Create a unique key by combining date and time
+      const key = `${dateKey} ${timeKey}`;
+
+      // Initialize the group if it doesn't exist
+      const group = groupedSchedule[dayOfWeek].find((item) => item.key === key);
+      if (!group) {
+        groupedSchedule[dayOfWeek].push({
+          key,
+          date: dateKey,
+          time: timeKey,
+          subject: `${schedule.programs[0].program}: ${schedule.programs[0].programLevel}`,
+          teacher: schedule.coachName || "N/A",
+          students: [], // Initialize an empty list of students
+        });
+      }
+
+      // Add the student (or participant) to the group
+      const groupToUpdate = groupedSchedule[dayOfWeek].find(
+        (item) => item.key === key
+      );
+      groupToUpdate.students.push({
+        kidId: schedule.kidId, // You can also include more student info here if needed
+      });
+    });
+
+    // Format the result by counting the number of students in each group
+    const result = [];
+
+    // Collect the result for each day (Monday to Saturday)
+    Object.keys(groupedSchedule).forEach((day) => {
+      // If there are no classes for the day, make sure to add it with an empty array
+      if (groupedSchedule[day].length === 0) {
+        result.push({
+          day: day,
+          date: null,
+          time: null,
+          subject: "No classes scheduled",
+          teacher: "N/A",
+          studentCount: 0,
+        });
+      } else {
+        groupedSchedule[day].forEach((group) => {
+          result.push({
+            day: day,
+            date: group.date,
+            time: group.time,
+            subject: group.subject,
+            teacher: group.teacher,
+            studentCount: group.students.length, // Count the number of students
+          });
+        });
+      }
+    });
+
+    // Return the grouped schedule with student count
+    res.status(200).json(result);
+  } catch (err) {
+    console.error("Error in getting the demo class", err);
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: err.message });
+  }
+};
 
 module.exports = {
   operationEmailVerification,
@@ -781,5 +1249,10 @@ module.exports = {
   getAllKidData,
   getAllParentData,
   getAllAttandanceData,
-  getProspectsData
+  getProspectsData,
+  getProspectsStudentsData,
+  scheduleDemoClass,
+  getAllSheduleClass,
+  updateProspectData,
+  registerEmployee,
 };

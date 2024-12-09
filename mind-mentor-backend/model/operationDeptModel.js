@@ -1,7 +1,16 @@
 const mongoose = require("mongoose");
+
 const ProgramSchema = new mongoose.Schema({
   program: { type: String },
   level: { type: String },
+});
+
+const logSchema = new mongoose.Schema({
+  employeeId: { type: mongoose.Schema.Types.ObjectId, },
+  employeeName: { type: String, },
+  comment: { type: String },
+  action: { type: String },
+  createdAt: { type: Date, default: Date.now },
 });
 
 const operationDeptSchema = new mongoose.Schema(
@@ -30,13 +39,14 @@ const operationDeptSchema = new mongoose.Schema(
       enum: ["Pending", "Qualified Lead", "Unqualified Lead"],
       default: "Pending",
     },
+
     enquiryType: { type: String, enum: ["warm", "cold"], default: "warm" },
     disposition: {
       type: String,
       enum: ["RnR", "Call Back", "None"],
       default: "None",
     },
-    enquiryField:{type:String,default:"enquiryList"},
+    enquiryField: { type: String, default: "enquiryList" },
     payment: { type: String, enum: ["Pending", "Success"], default: "Pending" },
 
     notes: { type: String },
@@ -52,6 +62,8 @@ const operationDeptSchema = new mongoose.Schema(
       referredTo: { type: String },
       referredEmail: { type: String },
     },
+
+    logs: [logSchema], 
   },
   { timestamps: true }
 );

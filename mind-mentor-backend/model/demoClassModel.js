@@ -2,6 +2,12 @@ const mongoose = require("mongoose");
 
 const demoClassSchema = new mongoose.Schema(
   {
+    date: {
+      type: Date,
+    },
+    time: {
+      type: String,
+    },
     programs: [
       {
         program: {
@@ -12,12 +18,6 @@ const demoClassSchema = new mongoose.Schema(
         },
       },
     ],
-    date: {
-      type: Date,
-    },
-    time: {
-      type: String,
-    },
     parentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Parent",
@@ -25,7 +25,25 @@ const demoClassSchema = new mongoose.Schema(
     kidId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Kid",
-      required: true,
+ 
+    },
+    coachName: {
+      type: String,
+    
+    },
+    coachId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Coach",
+
+    },
+    scheduledByName: {
+      type: String, 
+    
+    },
+    scheduledById: {
+      type: String
+    
+     
     },
   },
   { timestamps: true }

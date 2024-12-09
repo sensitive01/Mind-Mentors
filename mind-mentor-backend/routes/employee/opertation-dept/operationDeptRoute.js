@@ -3,6 +3,9 @@ const operationRoute = express.Router();
 const operationController = require("../../../controller/employee/operation-dept/oprationDeptController");
 
 // Email & Password Verification
+
+operationRoute.post("/register",operationController.registerEmployee)
+
 operationRoute.post(
   "/email-verification",
   operationController.operationEmailVerification
@@ -15,6 +18,9 @@ operationRoute.post(
 // Enquiry Form CRUD
 operationRoute.post("/enquiry-form", operationController.enquiryFormData);
 operationRoute.get("/enquiry-form", operationController.getAllEnquiries);
+operationRoute.put("/move-to-prospects/:id", operationController.updateProspectData);
+
+
 operationRoute.put("/enquiry-form/:id", operationController.updateEnquiry);
 operationRoute.delete("/enquiry-form/:id", operationController.deleteEnquiry);
 // Enquiry Form CRUD
@@ -50,6 +56,16 @@ operationRoute.get("/get-kids-data", operationController.getAllKidData);
 operationRoute.get("/get-parent-data", operationController.getAllParentData);
 
 operationRoute.get("/get-prospects-data", operationController.getProspectsData);
+
+operationRoute.get("/get-prospects-student-data", operationController.getProspectsStudentsData);
+
+
+operationRoute.post("/shedule-demo-class/:id", operationController.scheduleDemoClass);
+
+operationRoute.get("/get-shedule-demo-class", operationController.getAllSheduleClass);
+
+
+
 
 
 operationRoute.get(
