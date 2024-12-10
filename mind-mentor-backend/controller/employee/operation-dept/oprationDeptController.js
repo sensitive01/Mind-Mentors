@@ -571,7 +571,7 @@ const scheduleDemo = async (req, res) => {
 const addNotes = async (req, res) => {
   try {
     const { id } = req.params; // Enquiry ID
-    const { notes, empId } = req.body; // Notes and employee ID
+    const { notes, empId } = req.body;
     const { enquiryStatus, disposition } = notes;
 
     // Fetch employee details
@@ -622,7 +622,7 @@ const addNotes = async (req, res) => {
         employeeId: empId,
         employeeName: empData.name,
         comment: `Updated notes from "${currentEntry.notes}" to "${notesToSave}"`,
-        action: `Updated notes`,
+        action: ` ${empData.name} updated notes from "${currentEntry.notes}" to "${notesToSave}"`,
         createdAt: new Date(),
       });
       actionDescription.push("Notes Updated");
@@ -633,7 +633,7 @@ const addNotes = async (req, res) => {
         employeeId: empId,
         employeeName: empData.name,
         comment: `Changed enquiryStatus from "${currentEntry.enquiryStatus}" to "${enquiryStatus}"`,
-        action: `Updated enquiry status`,
+        action: ` ${empData.name} Updated enquiry status from "${currentEntry.enquiryStatus}" to "${enquiryStatus}" `,
         createdAt: new Date(),
       });
       actionDescription.push("Enquiry Status Updated");
@@ -644,7 +644,7 @@ const addNotes = async (req, res) => {
         employeeId: empId,
         employeeName: empData.name,
         comment: `Changed disposition from "${currentEntry.disposition}" to "${disposition}"`,
-        action: `Updated disposition`,
+        action: `${empData.name} Updated disposition from "${currentEntry.disposition}" to "${disposition}" `,
         createdAt: new Date(),
       });
       actionDescription.push("Disposition Updated");
@@ -1136,7 +1136,7 @@ const getProspectsStudentsData = async (req, res) => {
         programs: 1,
         whatsappNumber: 1,
         email: 1,
-        logs:1
+        logs: 1,
       }
     );
 
@@ -1164,10 +1164,9 @@ const scheduleDemoClass = async (req, res) => {
     console.log(req.params, req.body);
 
     const { id } = req.params;
-    const { date, time, selectedProgram, email,_id,kidFirstName} = req.body.data;
-    console.log("_id",_id)
-
-    
+    const { date, time, selectedProgram, email, _id, kidFirstName } =
+      req.body.data;
+    console.log("_id", _id);
 
     if (!date || !time || !selectedProgram) {
       return res.status(400).json({ message: "Missing required fields." });
@@ -1220,50 +1219,48 @@ const scheduleDemoClass = async (req, res) => {
       parentId: parentData._id,
       scheduledByName: empData.name,
       scheduledById: id,
-      enqId:_id
+      enqId: _id,
     });
 
-    const logId = await OperationDept.findOne({_id:_id},{logs:1})
-    console.log('logs data',logId)
-
+    const logId = await OperationDept.findOne({ _id: _id }, { logs: 1 });
+    console.log("logs data", logId);
 
     const logs = [
       {
         employeeId: id,
         employeeName: empData.name,
 
-        action: `Demo class is sheduled for ${kidFirstName} with ${selectedProgram.program} (Level: ${selectedProgram.level}) on ${date} at ${time} by  ${
+        action: `Demo class is sheduled for ${kidFirstName} with ${
+          selectedProgram.program
+        } (Level: ${selectedProgram.level}) on ${date} at ${time} by  ${
           empData.name
         } on ${new Date().toLocaleString()}`,
         createdAt: new Date(),
       },
     ];
 
-
-  
     const updatedEnquiry = await enquiryLogs.findOneAndUpdate(
       { _id: logId.logs },
       {
         $push: {
-          logs: logs, 
+          logs: logs,
         },
       },
-      { new: true } 
+      { new: true }
     );
 
-    
     const updateStatus = await OperationDept.findByIdAndUpdate(
-       _id, 
+      _id,
       {
         $set: {
-          "scheduleDemo.status": "Sheduled", 
+          "scheduleDemo.status": "Sheduled",
         },
       },
-      { new: true } 
+      { new: true }
     );
-    
-    console.log("id",updateStatus,_id)
-    
+
+    console.log("id", updateStatus, _id);
+
     if (!updatedEnquiry) {
       return res
         .status(404)
@@ -1411,29 +1408,18 @@ const fetchAllLogs = async (req, res) => {
     }
 
     // Extracting only the `createdAt` and `action` fields
-    const logs = logsData.logs.map(log => ({
-      createdAt: moment(log.createdAt).format('DD-MM-YY'), // Format the date to dd-mm-yy
+    const logs = logsData.logs.map((log) => ({
+      createdAt: moment(log.createdAt).format("DD-MM-YY"), // Format the date to dd-mm-yy
       action: log.action,
     }));
 
     return res.status(200).json(logs);
   } catch (err) {
-    return res.status(500).json({ message: "Error in fetching the logs", error: err.message });
+    return res
+      .status(500)
+      .json({ message: "Error in fetching the logs", error: err.message });
   }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 module.exports = {
   operationEmailVerification,
@@ -1467,5 +1453,5 @@ module.exports = {
   getAllSheduleClass,
   updateProspectData,
   registerEmployee,
-  fetchAllLogs
+  fetchAllLogs,
 };
