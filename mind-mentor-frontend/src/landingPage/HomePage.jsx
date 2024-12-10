@@ -16,7 +16,7 @@ const HomePage = () => {
       title: 'Kid',
       icon: Baby,
       description: 'Access your activities, games, and learning materials',
-      path: '#', // Adjust path as needed for kid login
+      path: '/kids/login', // Adjust path as needed for kid login
       color: 'green'
     },
     {
