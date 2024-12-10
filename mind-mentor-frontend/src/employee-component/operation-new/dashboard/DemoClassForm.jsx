@@ -27,7 +27,7 @@ const customColors = {
 };
 
 const DemoClassForm = () => {
-  const empEmail = localStorage.getItem("email");
+  const empId = localStorage.getItem("empId");
   const navigate = useNavigate();
   const [prospectData, setProspectData] = useState([]);
   const [newClassForm, setNewClassForm] = useState({
@@ -44,6 +44,7 @@ const DemoClassForm = () => {
     },
     date: "",
     time: "",
+   
   });
   const [isDialogOpen, setIsDialogOpen] = useState(true);
 
@@ -72,6 +73,7 @@ const DemoClassForm = () => {
           program: "",
           level: "",
           _id: "",
+          logs: "",
         },
         date: prev.date,
         time: prev.time,
@@ -123,6 +125,7 @@ const DemoClassForm = () => {
       selectedProgram,
       date,
       time,
+      
     } = newClassForm;
 
     // Validation
@@ -150,11 +153,10 @@ const DemoClassForm = () => {
     // Console log the complete class details
     console.log("Scheduled class details:", newClass);
 
-    const response = await seduleDemoClass(empEmail, newClass);
+    const response = await seduleDemoClass(empId, newClass);
 
     console.log(response);
-    if(response && response.data){
-
+    if (response && response.data) {
       navigate("/employee-operation/schedule");
     }
   };

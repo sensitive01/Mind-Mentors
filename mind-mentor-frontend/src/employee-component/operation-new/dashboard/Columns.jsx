@@ -1,11 +1,27 @@
 // columns.js
 import { alpha } from "@mui/material/styles";
-import { Zoom, Fade, Grow, Box, Chip, Switch, IconButton, Tooltip } from "@mui/material";
+import {
+  Zoom,
+  Fade,
+  Grow,
+  Box,
+  Chip,
+  Switch,
+  IconButton,
+  Tooltip,
+} from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import NoteAddIcon from "@mui/icons-material/NoteAdd";
-import { DownloadIcon } from "lucide-react";
+import { DownloadIcon, HistoryIcon } from "lucide-react";
 
-const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog,handleMoveProspects) => [
+const columns = (
+  theme,
+  handleStatusToggle,
+  setViewDialog,
+  setNoteDialog,
+  handleMoveProspects,
+  handleShowLogs
+) => [
   {
     field: "parentFirstName",
     headerName: "Parent First Name",
@@ -161,13 +177,12 @@ const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog,handleM
   {
     field: "actions",
     headerName: "Actions",
-    width: 200,
+    width: 250,
     renderCell: (params) => (
       <Box
         sx={{ display: "flex", gap: 1 }}
-        onClick={(e) => e.stopPropagation()} // Prevent row-wide click
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* View Button */}
         <Grow in={true}>
           <IconButton
             size="small"
@@ -182,7 +197,7 @@ const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog,handleM
             <VisibilityIcon fontSize="small" />
           </IconButton>
         </Grow>
-  
+
         {/* Add Note Button */}
         <Grow in={true} style={{ transformOrigin: "0 0 0" }}>
           <IconButton
@@ -205,13 +220,13 @@ const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog,handleM
             <NoteAddIcon fontSize="small" />
           </IconButton>
         </Grow>
-  
+
         {/* Move to Prospects Button */}
         <Grow in={true}>
           <Tooltip title="Move to Prospects" arrow>
             <IconButton
               size="small"
-              onClick={()=>handleMoveProspects(params.row._id)}
+              onClick={() => handleMoveProspects(params.row._id)}
               sx={{
                 color: "#1D4ED8",
                 "&:hover": {
@@ -223,9 +238,27 @@ const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog,handleM
             </IconButton>
           </Tooltip>
         </Grow>
+
+        {/* Logs Button */}
+        <Grow in={true}>
+          <Tooltip title="Logs" arrow>
+            <IconButton
+              size="small"
+              onClick={() => handleShowLogs(params.row._id)} // Add your logs handler function here
+              sx={{
+                color: "#0F172A",
+                "&:hover": {
+                  backgroundColor: alpha(theme.palette.text.primary, 0.1),
+                },
+              }}
+            >
+              <HistoryIcon fontSize="small" />{" "}
+              {/* Use any relevant icon for logs */}
+            </IconButton>
+          </Tooltip>
+        </Grow>
       </Box>
     ),
-  }
-  
+  },
 ];
 export default columns;

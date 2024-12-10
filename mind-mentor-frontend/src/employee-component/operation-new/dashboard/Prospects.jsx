@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import {
   Box,
   Button,
@@ -21,37 +22,38 @@ import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import { alpha } from "@mui/material/styles";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom"; // Import Link for navigation
-import columns from "./Columns"; // Import columns from the separate file
-import data from "./Enquiry";
-import {
-  fetchAllEnquiries,
-  fetchProspectsEnquiries,
-  updateEnquiryStatus,
-} from "../../../api/service/employee/EmployeeService"; // Adjust the import path as necessary
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import columns from "./Columns";
 
-// Updated modern color scheme
+import {
+  
+  
+  updateEnquiryStatus,
+  addNotes,
+  fetchProspectsEnquiries
+} from "../../../api/service/employee/EmployeeService";
+
 const theme = createTheme({
   palette: {
     primary: {
-      main: "#642b8f", // Indigo
-      // main: '#f8a213', // Indigo
+      main: "#642b8f",
+
       light: "#818CF8",
       dark: "#4F46E5",
     },
     secondary: {
-      main: "#EC4899", // Pink
+      main: "#EC4899",
       light: "#F472B6",
       dark: "#DB2777",
     },
     warm: {
-      main: "#F59E0B", // Amber
+      main: "#F59E0B",
       light: "#FCD34D",
       dark: "#D97706",
     },
     cold: {
-      main: "#3B82F6", // Blue
+      main: "#3B82F6",
       light: "#60A5FA",
       dark: "#2563EB",
     },
@@ -93,15 +95,13 @@ const theme = createTheme({
     },
   },
 });
+
 const DetailView = ({ data }) => (
   <Grid container spacing={3} sx={{ p: 2 }}>
     {Object.entries(data).map(([key, value]) => {
-      // Avoid displaying 'id' key in the view
       if (key !== "id") {
-        // Format the key to be more readable (e.g., 'firstName' -> 'First Name')
         const formattedKey = key.replace(/([A-Z])/g, " $1").toUpperCase();
 
-        // Handling 'scheduleDemo' separately to show its 'status'
         if (key === "scheduleDemo") {
           return (
             <Grid item xs={12} sm={6} md={4} key={key}>
@@ -122,14 +122,12 @@ const DetailView = ({ data }) => (
                 </Typography>
                 <Typography variant="body1" color="text.primary">
                   {value?.status || "N/A"}{" "}
-                  {/* Display status or "N/A" if missing */}
                 </Typography>
               </Box>
             </Grid>
           );
         }
 
-        // Handling 'logs' separately to display individual log actions with index
         if (key === "logs" && Array.isArray(value)) {
           return (
             <Grid item xs={12} sm={6} md={4} key={key}>
@@ -155,7 +153,6 @@ const DetailView = ({ data }) => (
                           <strong>
                             {index + 1}. {log.action}
                           </strong>{" "}
-                          {/* Display index starting from 1 */}
                           <Typography variant="caption" color="text.secondary">
                             {new Date(log.createdAt).toLocaleString()}
                           </Typography>
@@ -168,7 +165,6 @@ const DetailView = ({ data }) => (
           );
         }
 
-        // Format and display other fields
         return (
           <Grid item xs={12} sm={6} md={4} key={key}>
             <Box
@@ -192,9 +188,8 @@ const DetailView = ({ data }) => (
                       .map((prog) => `${prog.program} (${prog.level})`)
                       .join(", ")
                   : value && typeof value === "object" && value !== null
-                  ? "N/A" // Handle objects or complex structures if required
+                  ? "N/A"
                   : value || "N/A"}{" "}
-                {/* Display N/A for null, undefined, or empty values */}
               </Typography>
             </Box>
           </Grid>
@@ -204,18 +199,21 @@ const DetailView = ({ data }) => (
     })}
   </Grid>
 );
+
 const Enquiries = () => {
+  const navigate = useNavigate();
+  const empId = localStorage.getItem("empId");
   const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true); // State to manage loading
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadLeaves = async () => {
       try {
-        const data = await fetchProspectsEnquiries();
+        const data = await  fetchProspectsEnquiries();
         console.log(data);
         setRows(data);
       } catch (err) {
-        setError("Failed to fetch Enquiries. Please try again later.");
+        console.log("Failed to fetch Enquiries. Please try again later.", err);
       } finally {
         setLoading(false);
       }
@@ -223,10 +221,12 @@ const Enquiries = () => {
 
     loadLeaves();
   }, []);
-  const [noteDialog, setNoteDialog] = useState({
+  const [noteDialog, enquiryStatus] = useState({
     open: false,
     rowData: null,
     noteText: "",
+    disposition: "",
+    enquiryStatus: "",
   });
   const [viewDialog, setViewDialog] = useState({
     open: false,
@@ -236,19 +236,15 @@ const Enquiries = () => {
     page: 0,
     pageSize: 5,
   });
-  const [editRowsModel, setEditRowsModel] = useState({});
 
   const handleStatusToggle = async (id) => {
     const rowToUpdate = rows.find((row) => row._id === id);
     const newStatus = rowToUpdate.enquiryType === "warm" ? "cold" : "warm";
 
     try {
-      // Call the API to update the status
-      const response = await updateEnquiryStatus(id, newStatus);
+      const response = await updateEnquiryStatus(id, newStatus, empId);
 
-      // Check if the response indicates success
       if (response.success) {
-        // Update the state only if the API call was successful
         setRows(
           rows.map((row) => {
             if (row._id === id) {
@@ -268,25 +264,63 @@ const Enquiries = () => {
       console.error("Error updating enquiry status:", error);
     }
   };
-
-  const handleNoteSave = () => {
+  const handleNoteSave = async () => {
     if (noteDialog.rowData) {
-      setRows(
-        rows.map((row) =>
-          row._id === noteDialog.rowData._id
-            ? { ...row, notes: noteDialog.noteText }
+      const updatedNotes = noteDialog.noteText;
+      const id = noteDialog.rowData._id;
+      let updatedEnquiryStatus = noteDialog.enquiryStatus;
+      let updatedDisposition = noteDialog.disposition;
+
+      console.log("Updated Notes:", updatedNotes);
+      console.log("Updated Enquiry Status:", updatedEnquiryStatus);
+      console.log("Updated Disposition:", updatedDisposition);
+
+      const validEnquiryStatus = [
+        "Pending",
+        "Qualified Lead",
+        "Unqualified Lead",
+      ];
+      const validDisposition = ["RnR", "Call Back", "None"];
+
+      if (!validEnquiryStatus.includes(updatedEnquiryStatus)) {
+        updatedEnquiryStatus = "Pending";
+      }
+      if (!validDisposition.includes(updatedDisposition)) {
+        updatedDisposition = "None";
+      }
+
+      setRows((prevRows) =>
+        prevRows.map((row) =>
+          row._id === id
+            ? {
+                ...row,
+                notes: updatedNotes,
+                enquiryStatus: updatedEnquiryStatus,
+                disposition: updatedDisposition,
+              }
             : row
         )
       );
-      setNoteDialog({ open: false, rowData: null, noteText: "" });
+
+      try {
+        await addNotes(id, empId, {
+          notes: updatedNotes,
+          enquiryStatus: updatedEnquiryStatus,
+          disposition: updatedDisposition,
+        });
+        console.log("Notes saved successfully");
+      } catch (error) {
+        console.error("Error saving notes:", error);
+      }
+
+      console.log("setting rows", rows);
     }
   };
+
   const handleRowEditStop = (params, event) => {
-    // Prevent default row edit stop behavior
     event.defaultMuiPrevented = true;
   };
-  const handleProcessRowUpdate = (newRow, oldRow) => {
-    // Update the rows state with the edited row
+  const handleProcessRowUpdate = (newRow) => {
     const updatedRows = rows.map((row) =>
       row.id === newRow.id ? newRow : row
     );
@@ -296,6 +330,18 @@ const Enquiries = () => {
   const handleProcessRowUpdateError = (error) => {
     console.error("Row update error:", error);
   };
+
+  const handleMoveProspects = async (id) => {
+    console.log(id);
+    const respose = await moveToProspects(id, empId);
+    console.log(respose);
+  };
+
+  const handleShowLogs = (id) => {
+    console.log("Handle logs ", id);
+    navigate(`/showCompleteLogs/${id}`);
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <Fade in={true}>
@@ -338,7 +384,9 @@ const Enquiries = () => {
                 theme,
                 handleStatusToggle,
                 setViewDialog,
-                setNoteDialog
+                enquiryStatus,
+                handleMoveProspects,
+                handleShowLogs
               )}
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel}
@@ -346,10 +394,10 @@ const Enquiries = () => {
               checkboxSelection
               disableRowSelectionOnClick
               editMode="row"
-              getRowId={(row) => row._id} // Specify the unique id property
+              getRowId={(row) => row._id}
               onRowDoubleClick={(params) => {
                 setViewDialog({ open: true, rowData: params.row });
-                // Enable editing on double click
+
                 params.row.isEditable = true;
               }}
               onRowEditStop={handleRowEditStop}
@@ -390,7 +438,7 @@ const Enquiries = () => {
                 },
               }}
             />
-            {/* View Dialog */}
+
             <Dialog
               open={viewDialog.open}
               onClose={() => setViewDialog({ open: false, rowData: null })}
@@ -431,13 +479,12 @@ const Enquiries = () => {
             <Dialog
               open={noteDialog.open}
               onClose={() =>
-                setNoteDialog({
+                enquiryStatus({
                   open: false,
                   rowData: null,
                   noteText: "",
-                  enquiryStage: "",
-                  notesTo: "",
-                  parents: "",
+                  enquiryStatus: "",
+                  disposition: "",
                 })
               }
               maxWidth="sm"
@@ -446,8 +493,8 @@ const Enquiries = () => {
               TransitionProps={{ direction: "up" }}
               BackdropProps={{
                 sx: {
-                  backgroundColor: "rgba(0, 0, 0, 0.5)", // Adds a semi-transparent black color
-                  backdropFilter: "blur(4px)", // Applies a blur effect to the backdrop
+                  backgroundColor: "rgba(0, 0, 0, 0.5)",
+                  backdropFilter: "blur(4px)",
                 },
               }}
             >
@@ -455,7 +502,7 @@ const Enquiries = () => {
                 sx={{
                   color: "#ffffff",
                   fontWeight: 600,
-                  background: "linear-gradient(to right, #642b8f, #aa88be)", // Apply the gradient background
+                  background: "linear-gradient(to right, #642b8f, #aa88be)",
                 }}
               >
                 Add Note
@@ -466,39 +513,46 @@ const Enquiries = () => {
                 <FormControl fullWidth sx={{ mt: 2 }}>
                   <InputLabel>Enquiry Stage</InputLabel>
                   <Select
-                    value={noteDialog.enquiryStage}
+                    value={noteDialog.enquiryStatus}
                     onChange={(e) =>
-                      setNoteDialog((prev) => ({
+                      enquiryStatus((prev) => ({
                         ...prev,
-                        enquiryStage: e.target.value,
+                        enquiryStatus: e.target.value,
                       }))
                     }
                     label="Enquiry Stage"
                   >
-                    <MenuItem value="New">New</MenuItem>
-                    <MenuItem value="Follow-Up">Follow-Up</MenuItem>
-                    <MenuItem value="Closed">Closed</MenuItem>
-                    <MenuItem value="Converted">Converted</MenuItem>
+                    <MenuItem value="Pending">Pending</MenuItem>
+                    <MenuItem value="Qualified Lead">Qualified Lead</MenuItem>
+                    <MenuItem value="Unqualified Lead">
+                      Unqualified Lead
+                    </MenuItem>
                   </Select>
                 </FormControl>
-                {/* Notes To Field */}
-                <TextField
-                  label="Notes To"
-                  value={noteDialog.notesTo}
-                  onChange={(e) =>
-                    setNoteDialog((prev) => ({
-                      ...prev,
-                      notesTo: e.target.value,
-                    }))
-                  }
-                  fullWidth
-                  sx={{ mt: 2 }}
-                />
+
+                <FormControl fullWidth sx={{ mt: 2 }}>
+                  <InputLabel>Disposition</InputLabel>
+                  <Select
+                    value={noteDialog.disposition}
+                    onChange={(e) =>
+                      enquiryStatus((prev) => ({
+                        ...prev,
+                        disposition: e.target.value,
+                      }))
+                    }
+                    label="Disposition"
+                  >
+                    <MenuItem value="RnR">RnR</MenuItem>
+                    <MenuItem value="Call Back">Call Back</MenuItem>
+                    <MenuItem value="None">None</MenuItem>
+                  </Select>
+                </FormControl>
+
                 <TextField
                   label="Note"
                   value={noteDialog.noteText}
                   onChange={(e) =>
-                    setNoteDialog((prev) => ({
+                    enquiryStatus((prev) => ({
                       ...prev,
                       noteText: e.target.value,
                     }))
@@ -514,7 +568,7 @@ const Enquiries = () => {
                 <Button
                   onClick={handleNoteSave}
                   variant="contained"
-                  class="px-8 py-3 bg-[#642b8f] text-white rounded-lg font-medium hover:bg-[#aa88be] transition-colors shadow-lg hover:shadow-xl"
+                  className="px-8 py-3 bg-[#642b8f] text-white rounded-lg font-medium hover:bg-[#aa88be] transition-colors shadow-lg hover:shadow-xl"
                   sx={{
                     bgcolor: "primary.main",
                     "&:hover": {
@@ -525,15 +579,14 @@ const Enquiries = () => {
                   Save Note
                 </Button>
                 <Button
-                  class="px-8 py-3 bg-white border-2 border-[#642b8f] text-[#642b8f] rounded-lg font-medium hover:bg-[#efe8f0] transition-colors"
+                  className="px-8 py-3 bg-white border-2 border-[#642b8f] text-[#642b8f] rounded-lg font-medium hover:bg-[#efe8f0] transition-colors"
                   onClick={() =>
-                    setNoteDialog({
+                    enquiryStatus({
                       open: false,
                       rowData: null,
                       noteText: "",
-                      enquiryStage: "",
-                      notesTo: "",
-                      parents: "",
+                      enquiryStatus: "",
+                      disposition: "",
                     })
                   }
                   variant="outlined"

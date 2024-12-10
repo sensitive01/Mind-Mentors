@@ -65,8 +65,8 @@ export const updateProspectStatus = async (id, enquiryStatus) => {
   return response.data;
 };
 // Update Prospect Status
-export const updateEnquiryStatus = async (id, enquiryStatus) => {
-  const response = await operationDeptInstance.put(`/enquiry-status/${id}`, { enquiryStatus });
+export const updateEnquiryStatus = async (id, enquiryStatus,empId) => {
+  const response = await operationDeptInstance.put(`/enquiry-status/${id}`, { enquiryStatus,empId });
   return response.data;
 };
 // Schedule Demo
@@ -76,8 +76,8 @@ export const scheduleDemo = async (id, scheduleData) => {
 };
 
 // Add Notes
-export const addNotes = async (id, notes) => {
-  const response = await operationDeptInstance.put(`/add-notes/${id}`, { notes });
+export const addNotes = async (id,empId, notes) => {
+  const response = await operationDeptInstance.put(`/add-notes/${id}`, { notes,empId });
   return response.data;
 };
 
@@ -152,8 +152,8 @@ export const getProspectsStudents = async () => {
 };
 
 
-export const seduleDemoClass = async (email,data) => {
-  const response = await operationDeptInstance.post(`/shedule-demo-class/${email}`,{data});
+export const seduleDemoClass = async (empId,data) => {
+  const response = await operationDeptInstance.post(`/shedule-demo-class/${empId}`,{data});
   return response.data;
 };
 
@@ -163,8 +163,13 @@ export const getAllSheduleClass = async () => {
   return response;
 };
 
-export const moveToProspects = async (id) => {
-  const response = await operationDeptInstance.put(`/move-to-prospects/${id}`);
+export const moveToProspects = async (id,empId) => {
+  const response = await operationDeptInstance.put(`/move-to-prospects/${id}`,{empId});
   return response;
 };
 
+
+export const fetchAllLogs = async (id) => {
+  const response = await operationDeptInstance.get(`/fetch-all-logs/${id}`);
+  return response;
+};

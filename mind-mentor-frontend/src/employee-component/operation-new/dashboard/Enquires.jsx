@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import {
   Box,
   Button,
@@ -21,38 +22,38 @@ import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import { alpha } from "@mui/material/styles";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom"; // Import Link for navigation
-import columns from "./Columns"; // Import columns from the separate file
-import data from "./Enquiry";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import columns from "./Columns";
+
 import {
   fetchAllEnquiries,
   moveToProspects,
   updateEnquiryStatus,
   addNotes,
-} from "../../../api/service/employee/EmployeeService"; // Adjust the import path as necessary
+  fetchProspectsEnquiries
+} from "../../../api/service/employee/EmployeeService";
 
-// Updated modern color scheme
 const theme = createTheme({
   palette: {
     primary: {
-      main: "#642b8f", // Indigo
-      // main: '#f8a213', // Indigo
+      main: "#642b8f",
+
       light: "#818CF8",
       dark: "#4F46E5",
     },
     secondary: {
-      main: "#EC4899", // Pink
+      main: "#EC4899",
       light: "#F472B6",
       dark: "#DB2777",
     },
     warm: {
-      main: "#F59E0B", // Amber
+      main: "#F59E0B",
       light: "#FCD34D",
       dark: "#D97706",
     },
     cold: {
-      main: "#3B82F6", // Blue
+      main: "#3B82F6",
       light: "#60A5FA",
       dark: "#2563EB",
     },
@@ -98,12 +99,9 @@ const theme = createTheme({
 const DetailView = ({ data }) => (
   <Grid container spacing={3} sx={{ p: 2 }}>
     {Object.entries(data).map(([key, value]) => {
-      // Avoid displaying 'id' key in the view
       if (key !== "id") {
-        // Format the key to be more readable (e.g., 'firstName' -> 'First Name')
         const formattedKey = key.replace(/([A-Z])/g, " $1").toUpperCase();
 
-        // Handling 'scheduleDemo' separately to show its 'status'
         if (key === "scheduleDemo") {
           return (
             <Grid item xs={12} sm={6} md={4} key={key}>
@@ -124,14 +122,12 @@ const DetailView = ({ data }) => (
                 </Typography>
                 <Typography variant="body1" color="text.primary">
                   {value?.status || "N/A"}{" "}
-                  {/* Display status or "N/A" if missing */}
                 </Typography>
               </Box>
             </Grid>
           );
         }
 
-        // Handling 'logs' separately to display individual log actions with index
         if (key === "logs" && Array.isArray(value)) {
           return (
             <Grid item xs={12} sm={6} md={4} key={key}>
@@ -157,7 +153,6 @@ const DetailView = ({ data }) => (
                           <strong>
                             {index + 1}. {log.action}
                           </strong>{" "}
-                          {/* Display index starting from 1 */}
                           <Typography variant="caption" color="text.secondary">
                             {new Date(log.createdAt).toLocaleString()}
                           </Typography>
@@ -170,7 +165,6 @@ const DetailView = ({ data }) => (
           );
         }
 
-        // Format and display other fields
         return (
           <Grid item xs={12} sm={6} md={4} key={key}>
             <Box
@@ -194,9 +188,8 @@ const DetailView = ({ data }) => (
                       .map((prog) => `${prog.program} (${prog.level})`)
                       .join(", ")
                   : value && typeof value === "object" && value !== null
-                  ? "N/A" // Handle objects or complex structures if required
+                  ? "N/A"
                   : value || "N/A"}{" "}
-                {/* Display N/A for null, undefined, or empty values */}
               </Typography>
             </Box>
           </Grid>
@@ -208,8 +201,10 @@ const DetailView = ({ data }) => (
 );
 
 const Enquiries = () => {
+  const navigate = useNavigate();
+  const empId = localStorage.getItem("empId");
   const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true); // State to manage loading
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadLeaves = async () => {
@@ -218,7 +213,7 @@ const Enquiries = () => {
         console.log(data);
         setRows(data);
       } catch (err) {
-        setError("Failed to fetch Enquiries. Please try again later.");
+        console.log("Failed to fetch Enquiries. Please try again later.", err);
       } finally {
         setLoading(false);
       }
@@ -241,19 +236,15 @@ const Enquiries = () => {
     page: 0,
     pageSize: 5,
   });
-  const [editRowsModel, setEditRowsModel] = useState({});
 
   const handleStatusToggle = async (id) => {
     const rowToUpdate = rows.find((row) => row._id === id);
     const newStatus = rowToUpdate.enquiryType === "warm" ? "cold" : "warm";
 
     try {
-      // Call the API to update the status
-      const response = await updateEnquiryStatus(id, newStatus);
+      const response = await updateEnquiryStatus(id, newStatus, empId);
 
-      // Check if the response indicates success
       if (response.success) {
-        // Update the state only if the API call was successful
         setRows(
           rows.map((row) => {
             if (row._id === id) {
@@ -275,29 +266,29 @@ const Enquiries = () => {
   };
   const handleNoteSave = async () => {
     if (noteDialog.rowData) {
-      const updatedNotes = noteDialog.noteText; // Get the notes from the dialog
-      const id = noteDialog.rowData._id; // Get the ID of the row to update
-      let updatedEnquiryStatus = noteDialog.enquiryStatus; // Get enquiry status
-      let updatedDisposition = noteDialog.disposition; // Get disposition
-  
-      // Log the values to ensure they are correct
+      const updatedNotes = noteDialog.noteText;
+      const id = noteDialog.rowData._id;
+      let updatedEnquiryStatus = noteDialog.enquiryStatus;
+      let updatedDisposition = noteDialog.disposition;
+
       console.log("Updated Notes:", updatedNotes);
       console.log("Updated Enquiry Status:", updatedEnquiryStatus);
       console.log("Updated Disposition:", updatedDisposition);
-  
-      // Ensure enquiryStatus and disposition have valid values
-      const validEnquiryStatus = ["Pending", "Qualified Lead", "Unqualified Lead"];
+
+      const validEnquiryStatus = [
+        "Pending",
+        "Qualified Lead",
+        "Unqualified Lead",
+      ];
       const validDisposition = ["RnR", "Call Back", "None"];
-  
-      // Apply default values if enquiryStatus or disposition are empty
+
       if (!validEnquiryStatus.includes(updatedEnquiryStatus)) {
-        updatedEnquiryStatus = "Pending"; // Default value for enquiryStatus
+        updatedEnquiryStatus = "Pending";
       }
       if (!validDisposition.includes(updatedDisposition)) {
-        updatedDisposition = "None"; // Default value for disposition
+        updatedDisposition = "None";
       }
-  
-      // Update the local state
+
       setRows((prevRows) =>
         prevRows.map((row) =>
           row._id === id
@@ -310,40 +301,26 @@ const Enquiries = () => {
             : row
         )
       );
-  
-      // Call the API to save the notes
+
       try {
-        await addNotes(id, {
+        await addNotes(id, empId, {
           notes: updatedNotes,
           enquiryStatus: updatedEnquiryStatus,
           disposition: updatedDisposition,
-        }); // Pass all fields correctly
+        });
         console.log("Notes saved successfully");
       } catch (error) {
         console.error("Error saving notes:", error);
       }
-  
-      // Reset the note dialog state properly
-      setNoteDialog({
-        open: false,
-        rowData: null,
-        noteText: "",
-        enquiryStatus: "", // Reset enquiryStatus
-        disposition: "", // Reset disposition
-      });
+
       console.log("setting rows", rows);
     }
   };
-  
-  
-
 
   const handleRowEditStop = (params, event) => {
-    // Prevent default row edit stop behavior
     event.defaultMuiPrevented = true;
   };
-  const handleProcessRowUpdate = (newRow, oldRow) => {
-    // Update the rows state with the edited row
+  const handleProcessRowUpdate = (newRow) => {
     const updatedRows = rows.map((row) =>
       row.id === newRow.id ? newRow : row
     );
@@ -356,9 +333,15 @@ const Enquiries = () => {
 
   const handleMoveProspects = async (id) => {
     console.log(id);
-    const respose = await moveToProspects(id);
+    const respose = await moveToProspects(id, empId);
     console.log(respose);
   };
+
+  const handleShowLogs = (id) => {
+    console.log("Handle logs ", id);
+    navigate(`/showCompleteLogs/${id}`);
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <Fade in={true}>
@@ -402,7 +385,8 @@ const Enquiries = () => {
                 handleStatusToggle,
                 setViewDialog,
                 enquiryStatus,
-                handleMoveProspects
+                handleMoveProspects,
+                handleShowLogs
               )}
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel}
@@ -410,10 +394,10 @@ const Enquiries = () => {
               checkboxSelection
               disableRowSelectionOnClick
               editMode="row"
-              getRowId={(row) => row._id} // Specify the unique id property
+              getRowId={(row) => row._id}
               onRowDoubleClick={(params) => {
                 setViewDialog({ open: true, rowData: params.row });
-                // Enable editing on double click
+
                 params.row.isEditable = true;
               }}
               onRowEditStop={handleRowEditStop}
@@ -454,7 +438,7 @@ const Enquiries = () => {
                 },
               }}
             />
-            {/* View Dialog */}
+
             <Dialog
               open={viewDialog.open}
               onClose={() => setViewDialog({ open: false, rowData: null })}
@@ -509,8 +493,8 @@ const Enquiries = () => {
               TransitionProps={{ direction: "up" }}
               BackdropProps={{
                 sx: {
-                  backgroundColor: "rgba(0, 0, 0, 0.5)", // Adds a semi-transparent black color
-                  backdropFilter: "blur(4px)", // Applies a blur effect to the backdrop
+                  backgroundColor: "rgba(0, 0, 0, 0.5)",
+                  backdropFilter: "blur(4px)",
                 },
               }}
             >
@@ -518,7 +502,7 @@ const Enquiries = () => {
                 sx={{
                   color: "#ffffff",
                   fontWeight: 600,
-                  background: "linear-gradient(to right, #642b8f, #aa88be)", // Apply the gradient background
+                  background: "linear-gradient(to right, #642b8f, #aa88be)",
                 }}
               >
                 Add Note

@@ -220,6 +220,10 @@ import UsersTable from "./pages/superadmin/UsersTable";
 import SuperadminAttendance from "./pages/superadmin/SuperadminAttendance";
 import SuperadminEnquiries from "./pages/superadmin/ListingEnquiries";
 import DemoClassShedulePage from "./pages/employee/operation-employee/DemoClassShedulePage";
+import ShowAllEnquiryLogs from "./pages/employee/operation-employee/ShowAllEnquiryLogs";
+import MarketingCompleteLogs from "./pages/marketing/MarketingCompleteLogs";
+import CenterAdminEnquiryLogs from "./pages/centeradmin/CenterAdminEnquiryLogs";
+import SuperAdminEnquiryLogs from "./pages/superadmin/SuperAdminEnquiryLogs";
 
 
 
@@ -333,6 +337,8 @@ function App() {
         <Route path="/employee-operation/studentreport" element={<StudentReport/>} />
         <Route path="/employee-operation/coachfeedback" element={<CoachFeedback/>} />
         <Route path="/employee-operation/demoSheduleForm" element={<DemoClassShedulePage/>} />
+        <Route path="/showCompleteLogs/:id" element={< ShowAllEnquiryLogs/>} />
+
 
 
 
@@ -427,6 +433,8 @@ function App() {
         <Route path="/marketingSupport/add" element={<MarketingSupport />} />
         <Route path="/marketingSupport/" element={<MarketingSupportRequest />} />
         <Route path="/marketingLogin" element={<MarketingLogin />} />
+        <Route path="/showCompleteLogsMarketing/:id" element={< MarketingCompleteLogs/>} />
+
 
 
 
@@ -453,6 +461,8 @@ function App() {
         <Route path="/centeradmin/invoice" element={<CenterInvoicePage/>} />
         <Route path="/centeradmin/studentreport" element={<CenterStudentReport/>} />
         <Route path="/centeradmin/coachfeedback" element={<CenterCoachFeedback/>} />
+        <Route path="/showCompleteLogsCenterAdmin/:id" element={<CenterAdminEnquiryLogs/>} />
+
 
 
         <Route path="/superadminDashboard" element={<SuperadminDashboard />} />
@@ -499,6 +509,13 @@ function App() {
         <Route path="/users/" element={< UsersTable />} />
         <Route path="/participents/" element={< Participents />} />
         <Route path="/chessKids/" element={< ChessKid />} />
+        <Route path="/showCompleteLogsAdmin/:id" element={<SuperAdminEnquiryLogs/>} />
+
+
+
+
+
+
    
 
 

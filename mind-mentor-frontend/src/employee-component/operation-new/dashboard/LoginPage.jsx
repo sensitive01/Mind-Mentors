@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, ChevronDown } from "lucide-react";
+import { ArrowLeft, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -6,13 +6,14 @@ import {
   operationPasswordVerification,
 } from "../../../api/service/employee/EmployeeService";
 import toast from "react-hot-toast";
+import { ToastContainer } from "react-toastify";
 
 const KidsLoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [language, setLanguage] = useState("English");
   const [theme, setTheme] = useState("sky");
-  const [step, setStep] = useState(1); // Track the current step (1: email, 2: password)
+  const [step, setStep] = useState(1);
   const navigate = useNavigate();
 
   const themes = {
@@ -40,45 +41,40 @@ const KidsLoginPage = () => {
     try {
       const response = await operationPasswordVerification(email, password);
       console.log(response);
-      
+
       if (response.status === 200) {
         toast.success(response?.data?.message || "Login successful!");
-        localStorage.setItem("email", response?.data?.operationEmail?.email);
-        
-        // Extract department info from the response
+        localStorage.setItem("empId", response?.data?.operationEmail?._id);
+
         const department = response?.data?.operationEmail?.department;
-        
-        // Conditional navigation based on department
-        switch(department) {
-          case 'operation':
+
+        switch (department) {
+          case "operation":
             navigate("/employee-operation-dashboard");
             break;
-          case 'marketing':
+          case "marketing":
             navigate("/marketingDashboard");
             break;
-          case 'centeradmin':
+          case "centeradmin":
             navigate("/centeradmin-dashboard");
             break;
-          case 'renewal':
+          case "renewal":
             navigate("/renewalDashboard");
             break;
-          case 'service delivery':
+          case "service delivery":
             navigate("/serviceDashboard");
             break;
-          case 'super admin':
+          case "super admin":
             navigate("/superadminDashboard");
             break;
-          case 'coach':
+          case "coach":
             navigate("/coachDashboard");
             break;
           default:
             navigate("/");
         }
-  
-        setTimeout(() => {
-          
-        }, 1500);
-  
+
+        setTimeout(() => {}, 1500);
       } else {
         toast.error("Invalid password. Please try again.");
       }
@@ -87,7 +83,6 @@ const KidsLoginPage = () => {
       toast.error("Something went wrong. Please try again.");
     }
   };
-  
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen">
@@ -171,10 +166,10 @@ const KidsLoginPage = () => {
                   </label>
                   <button
                     type="button"
-                    onClick={() => setStep(1)} // Go back to the email step
+                    onClick={() => setStep(1)}
                     className={`text-gray-600 hover:text-gray-800 transition duration-300`}
                   >
-                    <ArrowLeft size={20} /> {/* Simple Back arrow */}
+                    <ArrowLeft size={20} />
                   </button>
                 </div>
 
@@ -201,16 +196,25 @@ const KidsLoginPage = () => {
             )}
           </form>
 
-          <div className="mt-4 flex justify-center">
+          {/* <div className="mt-4 flex justify-center">
             <button
               className="flex items-center text-gray-700 hover:underline transition duration-300"
               onClick={() => console.log("Navigate to Create Account")}
             >
               Create an Account <ArrowRight size={16} className="ml-1" />
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        closeOnClick
+        pauseOnHover
+        draggable
+        pauseOnFocusLoss
+      />
     </div>
   );
 };
