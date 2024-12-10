@@ -224,6 +224,8 @@ import ShowAllEnquiryLogs from "./pages/employee/operation-employee/ShowAllEnqui
 import MarketingCompleteLogs from "./pages/marketing/MarketingCompleteLogs";
 import CenterAdminEnquiryLogs from "./pages/centeradmin/CenterAdminEnquiryLogs";
 import SuperAdminEnquiryLogs from "./pages/superadmin/SuperAdminEnquiryLogs";
+import KidsDemoClassPage from "./pages/kids/KidsDemoClassPage";
+import KidsClassShedulePage from "./pages/kids/KidsClassShedulePage";
 
 
 
@@ -308,6 +310,10 @@ function App() {
           <Route path="/kids/login" element={<KidsLoginPage />} />
           <Route path="/kid/otp" element={<KidsPinPage />} />
           <Route path="/kids/dashboard" element={<KidsDashboard />} />
+          <Route path="/kids/demo-class" element={<KidsDemoClassPage />} />
+          <Route path="/kids/class-schedule" element={<KidsClassShedulePage />} />
+
+
           <Route path="/fee-details" element={<FeeDetailsPage />} />
           <Route path="/class-schedule" element={<ClassShedulePage />} />
 

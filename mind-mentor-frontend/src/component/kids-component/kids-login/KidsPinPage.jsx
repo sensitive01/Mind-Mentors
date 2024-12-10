@@ -6,7 +6,7 @@ import { validatePIN } from "../../../api/service/kid/KidService";
 
 const KidsPinPage = () => {
   const location = useLocation();
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const { state } = location;
 
   console.log("State in parent otp", state);
@@ -40,9 +40,15 @@ const KidsPinPage = () => {
     e.preventDefault();
     console.log(otp);
     try {
-      // const response = await validatePIN(otp, state);
-      // console.log(response);
-      navigate("/kids/dashboard")
+      const response = await validatePIN(otp, state);
+      console.log(response);
+      if (response.status === 200) {
+        toast.success(response?.data?.message);
+        localStorage.setItem("kidId",response.data.kidId)
+        setTimeout(() => {
+          navigate("/kids/dashboard");
+        }, 1500);
+      }
     } catch (err) {
       console.log("Error in verify the pin", err);
     }
@@ -66,7 +72,7 @@ const KidsPinPage = () => {
           <form onSubmit={handleSubmit} className="space-y-4 w-full">
             <div className="flex justify-center mb-2">
               <label className="text-sm font-medium text-gray-700">
-                Enter PIN
+                Enter PIN - 9947
               </label>
             </div>
 
@@ -81,7 +87,10 @@ const KidsPinPage = () => {
                   maxLength={1}
                   value={digit}
                   onChange={(e) =>
-                    handleOtpChange(index, e.target.value.replace(/[^0-9]/g, ""))
+                    handleOtpChange(
+                      index,
+                      e.target.value.replace(/[^0-9]/g, "")
+                    )
                   }
                   onKeyDown={(e) => handleKeyDown(index, e)}
                   required

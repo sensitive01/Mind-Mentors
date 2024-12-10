@@ -8,7 +8,7 @@ const KidSidebar = () => {
   const isActive = (path) => location.pathname === path;
 
   const navLinks = [
-    { path: "/kids/home", icon: Home, label: "Home" },
+    { path: "/kids/dashboard", icon: Home, label: "Home" },
     { path: "/kids/demo-class", icon: FileText, label: "Demo Class" },
     { path: "/kids/class-schedule", icon: Grid, label: "Class Schedule" },
     { path: "/kids/chess-kid", icon: Leaf, label: "Chess Kid" },

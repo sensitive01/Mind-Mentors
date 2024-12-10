@@ -11,13 +11,24 @@ export const validateKidChessId = async (chessId) => {
   }
 };
 
-export const validatePIN = async (pin,state) => {
-    try {
-      const response = await kidInstance.post(`/kid/verify-pin`, {
-        pin,state,
-      });
-      return response;
-    } catch (err) {
-      return err;
-    }
-  };
+export const validatePIN = async (pin, state) => {
+  try {
+    const response = await kidInstance.post(`/kid/verify-pin`, {
+      pin,
+      state,
+    });
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+export const getKidDemoClass = async (id) => {
+  try {
+    console.log("democlass",id)
+    const response = await kidInstance.get(`/kid/get-democlass/${id}`);
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
