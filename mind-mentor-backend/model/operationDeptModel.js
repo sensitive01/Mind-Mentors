@@ -5,14 +5,6 @@ const ProgramSchema = new mongoose.Schema({
   level: { type: String },
 });
 
-const logSchema = new mongoose.Schema({
-  employeeId: { type: mongoose.Schema.Types.ObjectId, },
-  employeeName: { type: String, },
-  comment: { type: String },
-  action: { type: String },
-  createdAt: { type: Date, default: Date.now },
-});
-
 const operationDeptSchema = new mongoose.Schema(
   {
     parentFirstName: { type: String },
@@ -62,8 +54,10 @@ const operationDeptSchema = new mongoose.Schema(
       referredTo: { type: String },
       referredEmail: { type: String },
     },
-
-    logs: [logSchema], 
+    logs: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Log",
+    },
   },
   { timestamps: true }
 );

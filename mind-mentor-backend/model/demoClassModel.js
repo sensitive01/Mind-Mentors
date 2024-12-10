@@ -45,6 +45,9 @@ const demoClassSchema = new mongoose.Schema(
     
      
     },
+    enqId:{
+      type:String
+    }
   },
   { timestamps: true }
 );

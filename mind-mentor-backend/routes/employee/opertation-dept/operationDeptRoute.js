@@ -64,6 +64,9 @@ operationRoute.post("/shedule-demo-class/:id", operationController.scheduleDemoC
 
 operationRoute.get("/get-shedule-demo-class", operationController.getAllSheduleClass);
 
+operationRoute.get("/fetch-all-logs/:id", operationController.fetchAllLogs);
+
+
 
 
 

@@ -9,6 +9,8 @@ const Parent = require("../../../model/parentModel");
 const generateChessId = require("../../../utils/generateChessId");
 const generateOTP = require("../../../utils/generateOtp");
 const Employee = require("../../../model/employeeModel");
+const enquiryLogs = require("../../../model/enquiryLogs");
+const moment = require("moment");
 
 // Email Verification
 
@@ -85,7 +87,7 @@ const operationEmailVerification = async (req, res) => {
       return res.status(200).json({
         success: true,
         message: "Email verification successful. Employee exists.",
-        operationEmail
+        operationEmail,
       });
     } else {
       console.log("No details found");
@@ -115,6 +117,8 @@ const operationPasswordVerification = async (req, res) => {
       password: password,
     });
 
+    console.log(operationEmail);
+
     if (operationEmail) {
       return res.status(200).json({
         success: true,
@@ -139,19 +143,41 @@ const operationPasswordVerification = async (req, res) => {
 // Create Enquiry Form
 const enquiryFormData = async (req, res) => {
   try {
+    console.log("Welcome to create new enquiry", req.body);
+
     const formData = req.body;
-    const { employeeId, employeeName } = req.body;
+    const { empId } = req.body;
 
-    const logEntry = {
-      employeeId,
-      employeeName,
-      action: `Enquiry form submitted by operation department on ${new Date().toLocaleString()}`,
-      createdAt: new Date(),
-    };
-
-    formData.logs = [logEntry];
+    const empData = await Employee.findOne(
+      { _id: empId },
+      { department: 1, name: 1 }
+    );
+    if (!empData) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found",
+      });
+    }
 
     const newEntry = await OperationDept.create(formData);
+
+    const logEntry = {
+      enqId: newEntry._id,
+      logs: [
+        {
+          employeeId: empId,
+          employeeName: empData.name,
+          comment: "Enquiry form submission",
+          action: `Enquiry form submitted by ${
+            empData.name
+          } on ${new Date().toLocaleString()}`,
+          createdAt: new Date(),
+        },
+      ],
+    };
+    const logData = await enquiryLogs.create(logEntry);
+    newEntry.logs = logData._id;
+    await newEntry.save();
 
     res.status(201).json({
       success: true,
@@ -166,24 +192,34 @@ const enquiryFormData = async (req, res) => {
     });
   }
 };
-
 const updateProspectData = async (req, res) => {
   try {
     console.log("..........................................");
     console.log("Prospects");
+    const formattedDateTime = new Intl.DateTimeFormat("en-US", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(new Date());
 
     const { id } = req.params;
+    const { empId } = req.body;
+
+    const empData = await Employee.findOne(
+      { _id: empId },
+      { name: 1, department: 1 }
+    );
+    if (!empData) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+    console.log("Employee Data", empData);
+
     const enquiryData = await OperationDept.findOne({ _id: id });
-    console.log(enquiryData);
+    if (!enquiryData) {
+      return res.status(404).json({ message: "Enquiry data not found" });
+    }
+    console.log("Enquiry Data", enquiryData);
+
     console.log("..........................................");
-    const {
-      updateFields,
-      employeeId,
-      employeeName,
-      comments,
-      state,
-      formData,
-    } = req.body;
 
     // 1. Handle Parent Registration
     let parentData = await parentSchema.findOne({
@@ -196,19 +232,17 @@ const updateProspectData = async (req, res) => {
         parentName: enquiryData.parentFirstName,
         parentEmail: enquiryData.email,
         parentMobile: enquiryData.whatsappNumber,
-
-        kids: [], // Will update later after creating the kid
-        type: "new", // Assuming it's a new parent
-        status: "Active", // Active status
+        kids: [],
+        type: "new",
+        status: "Active",
       });
 
-      // Save the new Parent
       await parentData.save();
     }
 
     // 2. Handle Kid Registration
-    const chessId = generateChessId(); // Assuming you have a function to generate a unique ID for the kid
-    const kidPin = generateOTP(); // Assuming you have a function to generate OTP for the kid
+    const chessId = generateChessId();
+    const kidPin = generateOTP();
 
     // Create new Kid
     const newKid = new kidSchema({
@@ -218,40 +252,85 @@ const updateProspectData = async (req, res) => {
       schoolName: enquiryData.schoolName,
       address: enquiryData.address,
       pincode: enquiryData.pincode,
-      parentId: parentData._id, // Link the Kid to the Parent
+      parentId: parentData._id,
+      chessId,
+      kidPin,
     });
 
-    // Save the new Kid
     await newKid.save();
 
-    // 3. Update the Parent with the Kid's ID
     parentData.kids.push({ kidId: newKid._id });
     await parentData.save();
 
-    // 4. Create Log Entry for the Operation Department Action
-    const logEntry = {
-      employeeId,
-      employeeName,
-      comments,
-      action: `Enquiry moved to prospects by operation department on ${new Date().toLocaleString()}`,
-      createdAt: new Date(),
-    };
+    // 4. Update the Log in the Log Database
+    if (enquiryData.logs) {
+      console.log("insode the logs");
+      const logUpdate = {
+        employeeId: empId,
+        employeeName: empData.name,
+        action: `Enuiry data is moved to prospects by ${empData.department} on ${formattedDateTime}`,
 
-    // 5. Update the OperationDept Entry
+        updatedAt: new Date(),
+      };
+
+      const newLogs = await enquiryLogs.findByIdAndUpdate(
+        { _id: enquiryData.logs },
+        {
+          $push: { logs: logUpdate },
+        },
+        { new: true }
+      );
+
+      console.log("new log updated", newLogs);
+    }
+
+    // 5. Create Log Entries for the Action
+    const logs = [
+      {
+        employeeId: empId,
+        employeeName: empData.name,
+
+        action: `Enquiry moved to prospects by ${
+          empData.name
+        } on ${new Date().toLocaleString()}`,
+        createdAt: new Date(),
+      },
+    ];
+
+    if (parentData._id) {
+      logs.push({
+        employeeId: empId,
+        employeeName: empData.name,
+        comments: `Registered new parent with ID: ${parentData._id}`,
+        action: "Parent Registration",
+        createdAt: new Date(),
+      });
+    }
+
+    if (newKid._id) {
+      logs.push({
+        employeeId: empId,
+        employeeName: empData.name,
+        comments: `Registered new kid with ID: ${newKid._id}`,
+        action: "Kid Registration",
+        createdAt: new Date(),
+      });
+    }
+
+    // 6. Update the OperationDept Entry
     const updatedEntry = await OperationDept.findByIdAndUpdate(
       { _id: id },
       {
-        $set: { ...updateFields, enquiryField: "prospects" },
-        $push: { logs: logEntry },
+        $set: { enquiryField: "prospects" },
       },
       { new: true }
     );
 
-    console.log("updatedEntry", updatedEntry);
-
     if (!updatedEntry) {
       return res.status(404).json({ message: "Prospect data not found" });
     }
+
+    console.log("updatedEntry", updatedEntry);
 
     // Return Success Response
     res.status(200).json({
@@ -326,9 +405,18 @@ const updateEnquiryStatus = async (req, res) => {
   try {
     console.log("Status update", req.body);
     const { id } = req.params;
-    const { enquiryStatus, employeeId, employeeName } = req.body;
+    const { enquiryStatus, empId } = req.body;
 
-    // Validate status
+    const empData = await Employee.findOne(
+      { _id: empId },
+      { department: 1, name: 1 }
+    );
+    if (!empData) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+
+    console.log("empData", empData);
+
     if (!["cold", "warm"].includes(enquiryStatus)) {
       return res.status(400).json({
         success: false,
@@ -336,47 +424,56 @@ const updateEnquiryStatus = async (req, res) => {
       });
     }
 
-    // Fetch the current entry to get the old status
     const existingEntry = await OperationDept.findById(id);
+    console.log("Existing Entry", existingEntry.logs);
     if (!existingEntry) {
       return res.status(404).json({ message: "Enquiry not found" });
     }
 
     const previousStatus = existingEntry.enquiryType || "unknown";
 
-    // Format the current date and time
     const formattedDateTime = new Intl.DateTimeFormat("en-US", {
       dateStyle: "medium",
       timeStyle: "short",
     }).format(new Date());
 
-    // Create log entry
-    const logEntry = {
-      employeeId,
-      employeeName,
-      action: `Enquiry status updated from '${previousStatus}' to '${enquiryStatus}' on ${formattedDateTime}`,
-      createdAt: new Date(),
-    };
-
-    // Update the status of the enquiry and append the log
     const updatedEntry = await OperationDept.findByIdAndUpdate(
       { _id: id },
       {
         enquiryType: enquiryStatus,
-        $push: { logs: logEntry },
       },
-      { new: true } // Return the updated document
+      { new: true }
     );
 
     if (!updatedEntry) {
       return res.status(404).json({ message: "Enquiry not found" });
     }
 
-    // Send success response with updated data
+    const logId = existingEntry.logs;
+    const logUpdate = await enquiryLogs.findByIdAndUpdate(
+      { _id: logId },
+      {
+        $push: {
+          logs: {
+            employeeId: empId,
+            employeeName: empData.name,
+            comment: `Status updated from '${previousStatus}' to '${enquiryStatus}'`,
+            action: `Status updated by ${empData.name} from '${previousStatus}' to '${enquiryStatus} on ${formattedDateTime}`,
+            createdAt: new Date(),
+          },
+        },
+      },
+      { new: true }
+    );
+
+    if (!logUpdate) {
+      return res.status(404).json({ message: "Log document not found" });
+    }
+
     res.status(200).json({
       success: true,
       message: `Enquiry status updated successfully from '${previousStatus}' to '${enquiryStatus}' on ${formattedDateTime}`,
-      data: updatedEntry, // Returning the updated document
+      data: updatedEntry,
     });
   } catch (error) {
     console.error("Error updating enquiry status", error);
@@ -392,9 +489,8 @@ const updateEnquiryStatus = async (req, res) => {
 const addNotesToEnquiry = async (req, res) => {
   try {
     const { id } = req.params;
-    const { enquiryStageTag, addNoteTo, notes } = req.body; // Notes data from the body
+    const { enquiryStageTag, addNoteTo, notes } = req.body;
 
-    // Validate if note data is provided
     if (!enquiryStageTag || !addNoteTo || !notes) {
       return res.status(400).json({
         success: false,
@@ -402,10 +498,8 @@ const addNotesToEnquiry = async (req, res) => {
       });
     }
 
-    // Create the new note
     const newNote = { enquiryStageTag, addNoteTo, notes };
 
-    // Find the enquiry by ID and push the new note into the notes array
     const updatedEntry = await OperationDept.findByIdAndUpdate(
       id,
       { $push: { notes: newNote } },
@@ -426,7 +520,6 @@ const addNotesToEnquiry = async (req, res) => {
   }
 };
 
-// Update Prospect Status (Cold/Warm)
 const updateProspectStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -477,12 +570,20 @@ const scheduleDemo = async (req, res) => {
 // Add Notes
 const addNotes = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { notes } = req.body;
-
+    const { id } = req.params; // Enquiry ID
+    const { notes, empId } = req.body; // Notes and employee ID
     const { enquiryStatus, disposition } = notes;
 
-    console.log("checking==>", notes);
+    // Fetch employee details
+    const empData = await Employee.findOne(
+      { _id: empId },
+      { name: 1, department: 1 }
+    );
+    if (!empData) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+
+    console.log("Employee Data", empData);
 
     // Ensure that notes is a string
     let notesToSave = notes;
@@ -518,30 +619,33 @@ const addNotes = async (req, res) => {
 
     if (notesToSave !== currentEntry.notes) {
       logs.push({
-        employeeId: req.user?.id, // Assuming user ID is available in the request
-        employeeName: req.user?.name, // Assuming user name is available in the request
+        employeeId: empId,
+        employeeName: empData.name,
         comment: `Updated notes from "${currentEntry.notes}" to "${notesToSave}"`,
-        action: `Updated notes from "${currentEntry.notes}" to "${notesToSave}"`,
+        action: `Updated notes`,
+        createdAt: new Date(),
       });
       actionDescription.push("Notes Updated");
     }
 
     if (enquiryStatus && enquiryStatus !== currentEntry.enquiryStatus) {
       logs.push({
-        employeeId: req.user?.id,
-        employeeName: req.user?.name,
+        employeeId: empId,
+        employeeName: empData.name,
         comment: `Changed enquiryStatus from "${currentEntry.enquiryStatus}" to "${enquiryStatus}"`,
-        action: `Changed enquiryStatus from "${currentEntry.enquiryStatus}" to "${enquiryStatus}"`,
+        action: `Updated enquiry status`,
+        createdAt: new Date(),
       });
       actionDescription.push("Enquiry Status Updated");
     }
 
     if (disposition && disposition !== currentEntry.disposition) {
       logs.push({
-        employeeId: req.user?.id,
-        employeeName: req.user?.name,
+        employeeId: empId,
+        employeeName: empData.name,
         comment: `Changed disposition from "${currentEntry.disposition}" to "${disposition}"`,
-        action: `Changed disposition from "${currentEntry.disposition}" to "${disposition}"`,
+        action: `Updated disposition`,
+        createdAt: new Date(),
       });
       actionDescription.push("Disposition Updated");
     }
@@ -551,15 +655,26 @@ const addNotes = async (req, res) => {
       id,
       {
         notes: notesToSave,
-        enquiryStatus: enquiryStatus || "Pending",
-        disposition: disposition || "None",
-        $push: { logs: { $each: logs } }, // Append logs to the logs array
+        enquiryStatus: enquiryStatus || currentEntry.enquiryStatus,
+        disposition: disposition || currentEntry.disposition,
       },
       { new: true }
     );
 
     if (!updatedEntry) {
       return res.status(404).json({ message: "Enquiry not found" });
+    }
+
+    // Update logs in the Log model
+    const logId = currentEntry.logs; // Assuming logs field contains the Log document ID
+    const logUpdate = await enquiryLogs.findByIdAndUpdate(
+      logId,
+      { $push: { logs: { $each: logs } } }, // Append the prepared logs
+      { new: true }
+    );
+
+    if (!logUpdate) {
+      return res.status(404).json({ message: "Log document not found" });
     }
 
     // Respond with success
@@ -572,7 +687,9 @@ const addNotes = async (req, res) => {
     });
   } catch (error) {
     console.error("Error adding notes:", error);
-    res.status(500).json({ message: "Error adding notes" });
+    res
+      .status(500)
+      .json({ message: "Error adding notes", error: error.message });
   }
 };
 
@@ -1012,13 +1129,14 @@ const getAllParentData = async (req, res) => {
 const getProspectsStudentsData = async (req, res) => {
   try {
     const prospectData = await OperationDept.find(
-      { enquiryField: "prospects" },
+      { enquiryField: "prospects", "scheduleDemo.status": "Pending" },
       {
         parentFirstName: 1,
         kidFirstName: 1,
         programs: 1,
         whatsappNumber: 1,
         email: 1,
+        logs:1
       }
     );
 
@@ -1040,23 +1158,34 @@ const getProspectsStudentsData = async (req, res) => {
     });
   }
 };
-
 const scheduleDemoClass = async (req, res) => {
   try {
+    console.log("Welcome to schedule demo class");
     console.log(req.params, req.body);
-    const { id } = req.params;
-    const { date, time, selectedProgram, email } = req.body.data;
 
-    // Validate required fields
+    const { id } = req.params;
+    const { date, time, selectedProgram, email,_id,kidFirstName} = req.body.data;
+    console.log("_id",_id)
+
+    
+
     if (!date || !time || !selectedProgram) {
       return res.status(400).json({ message: "Missing required fields." });
     }
 
-    // Find the parent and kid data
+    const empData = await Employee.findOne(
+      { _id: id },
+      { department: 1, name: 1 }
+    );
+    if (!empData) {
+      return res.status(404).json({ message: "Employee not found." });
+    }
+    console.log("Employee Data", empData);
+
     const parentData = await Parent.findOne({ parentEmail: email }, { _id: 1 });
-    // if (!parentData) {
-    //   return res.status(404).json({ message: "Parent not found." });
-    // }
+    if (!parentData) {
+      return res.status(404).json({ message: "Parent not found." });
+    }
 
     const kidsData = await kidSchema.findOne(
       { parentId: parentData._id },
@@ -1066,18 +1195,18 @@ const scheduleDemoClass = async (req, res) => {
       return res.status(404).json({ message: "Kid not found." });
     }
 
-    // Check for existing demo classes for the same date and time
-    const existingClasses = await DemoClass.find({ date, time });
-    const count = existingClasses.length;
-
-    if (count > 0) {
+    const existingClasses = await DemoClass.find({
+      date,
+      time,
+      kidId: kidsData._id,
+    });
+    if (existingClasses.length > 0) {
       return res.status(400).json({
-        message: `A demo class is already scheduled for this date and time. Current count: ${count}.`,
+        message: `A demo class is already scheduled for this date and time.`,
         existingClasses,
       });
     }
 
-    // Create and save the demo class document
     const demoClass = await DemoClass.create({
       date,
       time,
@@ -1089,14 +1218,63 @@ const scheduleDemoClass = async (req, res) => {
       ],
       kidId: kidsData._id,
       parentId: parentData._id,
-      scheduledByName: id,
+      scheduledByName: empData.name,
       scheduledById: id,
+      enqId:_id
     });
 
-    // Respond with the created document
+    const logId = await OperationDept.findOne({_id:_id},{logs:1})
+    console.log('logs data',logId)
+
+
+    const logs = [
+      {
+        employeeId: id,
+        employeeName: empData.name,
+
+        action: `Demo class is sheduled for ${kidFirstName} with ${selectedProgram.program} (Level: ${selectedProgram.level}) on ${date} at ${time} by  ${
+          empData.name
+        } on ${new Date().toLocaleString()}`,
+        createdAt: new Date(),
+      },
+    ];
+
+
+  
+    const updatedEnquiry = await enquiryLogs.findOneAndUpdate(
+      { _id: logId.logs },
+      {
+        $push: {
+          logs: logs, 
+        },
+      },
+      { new: true } 
+    );
+
+    
+    const updateStatus = await OperationDept.findByIdAndUpdate(
+       _id, 
+      {
+        $set: {
+          "scheduleDemo.status": "Sheduled", 
+        },
+      },
+      { new: true } 
+    );
+    
+    console.log("id",updateStatus,_id)
+    
+    if (!updatedEnquiry) {
+      return res
+        .status(404)
+        .json({ message: "Log not found in enquiry form." });
+    }
+
+    // Respond with the created demo class and updated enquiry log
     res.status(201).json({
-      message: "Demo class scheduled successfully",
-      data: demoClass,
+      message: "Demo class scheduled successfully and log updated.",
+      demoClass,
+      updatedEnquiry,
     });
   } catch (err) {
     console.error("Error scheduling demo class:", err);
@@ -1223,6 +1401,40 @@ const getAllSheduleClass = async (req, res) => {
   }
 };
 
+const fetchAllLogs = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const logsData = await enquiryLogs.findOne({ enqId: id });
+
+    if (!logsData) {
+      return res.status(404).json({ message: "Logs not found" });
+    }
+
+    // Extracting only the `createdAt` and `action` fields
+    const logs = logsData.logs.map(log => ({
+      createdAt: moment(log.createdAt).format('DD-MM-YY'), // Format the date to dd-mm-yy
+      action: log.action,
+    }));
+
+    return res.status(200).json(logs);
+  } catch (err) {
+    return res.status(500).json({ message: "Error in fetching the logs", error: err.message });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 module.exports = {
   operationEmailVerification,
   operationPasswordVerification,
@@ -1255,4 +1467,5 @@ module.exports = {
   getAllSheduleClass,
   updateProspectData,
   registerEmployee,
+  fetchAllLogs
 };
