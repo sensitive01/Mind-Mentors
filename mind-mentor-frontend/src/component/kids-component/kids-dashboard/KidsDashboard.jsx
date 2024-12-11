@@ -35,7 +35,7 @@ const KidsChessDashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-200 p-6 font-sans">
+    <div className="min-h-screen bg-[#ffefd2] p-6 font-sans">
       <div className="max-w-6xl mx-auto">
         {/* Playful Header */}
         <header className="text-center mb-10 animate-fade-in">

@@ -1,89 +1,69 @@
+import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Camera, FileText, Grid, Home, Leaf, Map, Video, UserCircle } from "lucide-react";
+import { 
+  Home, FileText, Grid, Leaf, Video, 
+  Map, Trophy, Gamepad, UserCircle, ChevronRight 
+} from "lucide-react";
 
 const KidSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const isActive = (path) => location.pathname === path;
-
   const navLinks = [
-    { path: "/kids/dashboard", icon: Home, label: "Home" },
-    { path: "/kids/demo-class", icon: FileText, label: "Demo Class" },
-    { path: "/kids/class-schedule", icon: Grid, label: "Class Schedule" },
-    { path: "/kids/chess-kid", icon: Leaf, label: "Chess Kid" },
-    { path: "/kids/reports", icon: FileText, label: "Reports" },
-    { path: "https://www.youtube.com/watch?v=zhkDRVRu6Rc", icon: Video, label: "Walkthrough" },
-    { path: "/kids/certificates", icon: FileText, label: "Certificates" },
-    { path: "/kids/playground", icon: Map, label: "Playground" },
+    { path: "/kids/dashboard", icon: Home, label: "Home", color: "text-[#FF6B6B]" },
+    { path: "/kids/demo-class", icon: FileText, label: "Class", color: "text-[#4ECDC4]" },
+    { path: "/kids/class-schedule", icon: Grid, label: "Schedule", color: "text-[#45B7D1]" },
+    { path: "/kids/chess-kid", icon: Gamepad, label: "Games", color: "text-[#FF9F1C]" },
+    { path: "/kids/reports", icon: Trophy, label: "Achievements", color: "text-[#A64D79]" },
+    { path: "/kids/certificates", icon: Map, label: "Journey", color: "text-[#6A5ACD]" },
   ];
 
+  const isActive = (path) => location.pathname === path;
+
   return (
-    <div className="w-[130px] bg-white flex flex-col shadow-lg h-screen">
+    <div 
+      className="fixed top-0 left-0 bottom-0 w-[250px] bg-gradient-to-b from-[#FFF5E1] to-[#FFE4B5] flex flex-col shadow-2xl overflow-y-auto z-50"
+      style={{
+        height: '100vh', // Ensure full viewport height
+        maxHeight: '100vh',
+        minHeight: '100vh'
+      }}
+    >
       {/* Profile Section */}
       <div className="pt-6 pb-4 flex justify-center relative">
         <button 
           onClick={() => navigate("/kids/profile/manage")}
           className="relative group"
         >
-          <div className="w-12 h-12 rounded-full overflow-hidden transform transition-all duration-500 ease-in-out 
-                          group-hover:scale-110 group-hover:shadow-lg group-hover:ring-4 group-hover:ring-purple-200">
-            <UserCircle size={48} color="#a555f7" className="w-full h-full" />
+          <div className={`w-16 h-16 rounded-full bg-gradient-to-br from-[#FF6B6B] to-[#4ECDC4] flex items-center justify-center shadow-lg transform transition-all duration-500 group-hover:scale-110`}>
+            <UserCircle 
+              size={48} 
+              className="text-white w-full h-full transform group-hover:rotate-6 transition-transform"
+            />
           </div>
-          <div className="w-3 h-3 bg-green-500 rounded-full absolute bottom-0 right-0 border-2 border-white 
-                          transform transition-transform duration-500 ease-in-out group-hover:scale-125"></div>
+          <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-white rounded-full animate-pulse"></div>
         </button>
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex-1 flex flex-col space-y-1 px-2 py-2">
+      <nav className="flex-1 flex flex-col space-y-2 px-3 py-4 overflow-y-auto">
         {navLinks.map((link) => (
           <Link
             key={link.path}
             to={link.path}
-            className={`
-              group relative flex flex-col items-center justify-center
-              py-3 px-2 rounded-lg
-              transition-all duration-300 ease-in-out
-              hover:shadow-md hover:bg-purple-50
-              ${isActive(link.path) ? 'bg-purple-100 shadow-md' : ''}
-            `}
+            className={`group relative flex items-center py-3 px-3 rounded-xl transition-all duration-300 ease-in-out ${isActive(link.path) ? 'bg-white shadow-md scale-105' : 'hover:bg-white/50 hover:shadow-sm'}`}
           >
-            {/* Active Indicator */}
-            <div className={`
-              absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8
-              bg-[rgb(177,21,177)] rounded-r-full
-              transform transition-all duration-300 ease-in-out
-              ${isActive(link.path) ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0 group-hover:opacity-100 group-hover:scale-y-75'}
-            `}></div>
-            
             {/* Icon Container */}
-            <div className={`
-              relative mb-2 
-              transition-all duration-300 ease-in-out
-              transform 
-              ${isActive(link.path) ? 'scale-110 rotate-3' : 'group-hover:scale-110 group-hover:rotate-3'}
-            `}>
-              <link.icon
-                size={24}
-                className={`
-                  transition-colors duration-300 ease-in-out
-                  ${
-                    isActive(link.path)
-                      ? 'text-[rgb(177,21,177)]'
-                      : 'text-gray-400 group-hover:text-[rgb(177,21,177)]'
-                  }
-                `}
+            <div className={`relative mr-3 transition-all duration-300 transform group-hover:scale-110 ${link.color} ${isActive(link.path) ? 'scale-125 rotate-6' : ''}`}>
+              <link.icon 
+                size={28} 
+                strokeWidth={2} 
+                className="group-hover:animate-bounce"
               />
             </div>
 
             {/* Label */}
-            <span className={`
-              text-xs font-medium text-center leading-tight
-              transition-all duration-300 ease-in-out
-              transform
-              ${isActive(link.path) ? 'text-[rgb(177,21,177)] scale-105 font-semibold' : 'text-gray-600 group-hover:text-[rgb(177,21,177)] group-hover:scale-105'}
-            `}>
+            <span className={`text-sm font-bold transition-all duration-300 ${isActive(link.path) ? 'text-[#FF6B6B] scale-105' : 'text-gray-700 group-hover:text-[#FF6B6B]'}`}>
               {link.label}
             </span>
           </Link>
@@ -91,19 +71,19 @@ const KidSidebar = () => {
       </nav>
 
       {/* Refer Section */}
-      <div className="mt-auto p-4 flex justify-center">
-        <div className="w-full relative group transform transition-all duration-500 ease-in-out 
-                        hover:scale-110 hover:rotate-2 cursor-pointer">
-          <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-[rgb(177,21,177)]/0 to-[rgb(177,21,177)]/0 
-                        transition-opacity duration-300 group-hover:from-[rgb(177,21,177)]/10 group-hover:to-[rgb(177,21,177)]/10"></div>
-          <img 
-            src="/api/placeholder/320/160" 
-            alt="refer" 
-            className="w-full h-auto object-contain relative z-10 
-                     transition-all duration-500 ease-in-out 
-                     group-hover:opacity-90 group-hover:shadow-lg 
-                     rounded-lg"
-          />
+      <div className="p-4 mt-auto">
+        <div className="bg-gradient-to-r from-[#FF6B6B] to-[#4ECDC4] rounded-2xl p-4 text-center relative overflow-hidden shadow-lg hover:scale-105 transition-all duration-300 group">
+          <div className="absolute top-0 left-0 w-full h-full bg-white/10 transform -skew-x-12 group-hover:skew-x-0 transition-transform duration-300"></div>
+          
+          <h3 className="text-white font-bold text-lg mb-2">
+            Refer a Friend
+          </h3>
+          <p className="text-white/80 text-xs mb-3">
+            Earn cool rewards!
+          </p>
+          <button className="bg-white text-[#FF6B6B] px-4 py-2 rounded-full font-bold text-sm hover:bg-[#FF6B6B] hover:text-white transition-all duration-300">
+            Invite Now
+          </button>
         </div>
       </div>
     </div>

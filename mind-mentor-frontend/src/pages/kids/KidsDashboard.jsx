@@ -9,36 +9,40 @@ const KidsDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       setLoading(false);
     }, 1500);
+
+    return () => clearTimeout(timer);
   }, []);
 
+  if (loading) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
+        <ChessLoader />
+      </div>
+    );
+  }
+
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
-      {loading ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
-          <ChessLoader />
-        </div>
-      ) : (
-        <>
+    <div className="flex h-screen">
+      {/* Sidebar */}
+      <div className="flex-none w-[250px]">
+        <KidSidebar />
+      </div>
+
+      {/* Main content area */}
+      <div className="flex-1 flex flex-col">
+        {/* Topbar */}
+        <div className="flex-none">
           <KidTopbar />
+        </div>
 
-          <div className="flex flex-1 overflow-hidden">
-            <div className="h-full">
-              <KidSidebar />
-            </div>
-
-            <div className="flex-1 p-6 overflow-y-auto">
-              <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
-                <div className="bg-white rounded-lg shadow-sm lg:col-span-2 p-4">
-                  <KidsDahbaordPage />
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+        {/* Dashboard */}
+        <div className="flex-1 overflow-auto">
+          <KidsDahbaordPage />
+        </div>
+      </div>
     </div>
   );
 };
