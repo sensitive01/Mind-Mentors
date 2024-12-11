@@ -202,3 +202,47 @@ const ExpensesForm = () => {
 };
 
 export default ExpensesForm;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const App = () => {
+  return (
+    <Router>
+      <Routes>
+        <Route
+          path="/login"
+          element={<Login />} // A page without the layout
+        />
+        <Route
+          path="*"
+          element={
+            <Layout>
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/allow-deduct" element={<AllowDeductTable />} />
+                <Route path="/another-page" element={<AnotherPage />} />
+              </Routes>
+            </Layout>
+          }
+        />
+      </Routes>
+    </Router>
+  );
+};

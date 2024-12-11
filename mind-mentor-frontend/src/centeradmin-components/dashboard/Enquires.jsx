@@ -157,28 +157,9 @@ const Enquiries = () => {
   });
   const [editRowsModel, setEditRowsModel] = useState({});
 
-// Update the handleStatusToggle function if necessary
-// const handleStatusToggle = async (id) => {
-//   const rowToUpdate = rows.find(row => row._id === id);
-//   const newStatus = rowToUpdate.enquiryStatus === 'warm' ? 'cold' : 'warm';
-
-//   try {
-//     await updateEnquiryStatus(id, newStatus); // Update status setRows(rows.map(row => {
-//       if (row._id === id) {
-//         return {
-//           ...row,
-//           enquiryStatus: newStatus,
-//           stageTag: newStatus
-//         };
-//       }
-//       return row;
-//   } catch (error) {
-//     console.error("Error updating enquiry status:", error);
-//   }
-// };
 const handleStatusToggle = async (id) => {
   const rowToUpdate = rows.find(row => row._id === id);
-  const newStatus = rowToUpdate.enquiryStatus === 'warm' ? 'cold' : 'warm';
+  const newStatus = rowToUpdate.enquiryType === 'warm' ? 'cold' : 'warm';
 
   try {
     // Call the API to update the status
@@ -191,7 +172,7 @@ const handleStatusToggle = async (id) => {
         if (row._id === id) {
           return {
             ...row,
-            enquiryStatus: newStatus,
+            enquiryType: newStatus,
             stageTag: newStatus
           };
         }

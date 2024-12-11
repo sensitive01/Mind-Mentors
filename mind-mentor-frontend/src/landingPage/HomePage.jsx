@@ -26,48 +26,48 @@ const HomePage = () => {
       path: '/employee-login',
       color: 'purple'
     },
-    {
-      title: 'Service Delivery',
-      icon: Briefcase,
-      description: 'Manage schedules and coordinate activities',
-      path: '/serviceLogin',
-      color: 'blue'
-    },
-    {
-      title: 'Renewal Associate',
-      icon: Briefcase,
-      description: 'Manage schedules and coordinate activities',
-      path: '/renewalLogin',
-      color: 'green'
-    },
-    {
-      title: 'Coach',
-      icon: Briefcase,
-      description: 'Manage schedules and coordinate activities',
-      path: '/coachLogin',
-      color: 'purple'
-    },
-    {
-      title: 'Marketing Associate',
-      icon: Briefcase,
-      description: 'Manage schedules and coordinate activities',
-      path: '/marketingLogin',
-      color: 'blue'
-    },
-    {
-      title: 'Centre Admin',
-      icon: Briefcase,
-      description: 'Manage schedules and coordinate activities',
-      path: '/centeradmin-login',
-      color: 'green'
-    },
-    {
-      title: ' Super Admin',
-      icon: Briefcase,
-      description: 'Manage schedules and coordinate activities',
-      path: '/superadminLogin',
-      color: 'purple'
-    }
+    // {
+    //   title: 'Service Delivery',
+    //   icon: Briefcase,
+    //   description: 'Manage schedules and coordinate activities',
+    //   path: '/serviceLogin',
+    //   color: 'blue'
+    // },
+    // {
+    //   title: 'Renewal Associate',
+    //   icon: Briefcase,
+    //   description: 'Manage schedules and coordinate activities',
+    //   path: '/renewalLogin',
+    //   color: 'green'
+    // },
+    // {
+    //   title: 'Coach',
+    //   icon: Briefcase,
+    //   description: 'Manage schedules and coordinate activities',
+    //   path: '/coachLogin',
+    //   color: 'purple'
+    // },
+    // {
+    //   title: 'Marketing Associate',
+    //   icon: Briefcase,
+    //   description: 'Manage schedules and coordinate activities',
+    //   path: '/marketingLogin',
+    //   color: 'blue'
+    // },
+    // {
+    //   title: 'Centre Admin',
+    //   icon: Briefcase,
+    //   description: 'Manage schedules and coordinate activities',
+    //   path: '/centeradmin-login',
+    //   color: 'green'
+    // },
+    // {
+    //   title: ' Super Admin',
+    //   icon: Briefcase,
+    //   description: 'Manage schedules and coordinate activities',
+    //   path: '/superadminLogin',
+    //   color: 'purple'
+    // }
   ];
 
   const getColorClasses = (color) => {

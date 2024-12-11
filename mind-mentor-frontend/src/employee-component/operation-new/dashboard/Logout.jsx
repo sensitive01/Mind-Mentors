@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { LogOut } from 'lucide-react';
-import { useNavigate } from 'react-router-dom'; // If using React Router for navigation
+import React, { useState } from "react";
+import { LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom"; // If using React Router for navigation
 
 const AnimatedLogout = () => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -10,9 +10,9 @@ const AnimatedLogout = () => {
     setIsLoggingOut(true);
     // Simulate logout process
     setTimeout(() => {
-      console.log('User logged out');
+      console.log("User logged out");
       setIsLoggingOut(false);
-      navigate('/'); // Redirect to home
+      navigate("/"); // Redirect to home
     }, 1500);
   };
 
@@ -21,27 +21,20 @@ const AnimatedLogout = () => {
       <div className="p-2">
         {/* Logout Button */}
         <button
-  onClick={handleLogout}
-  disabled={isLoggingOut}
-  className={`
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          className={`
     w-full mt-2 px-4 py-2 rounded-md
     flex items-center gap-2
     text-[#ffffff] hover:text-[#ffffff]
     bg-[#642b8f] hover:bg-[#642b8f]
     transition-all duration-200
-    ${isLoggingOut ? 'opacity-50 cursor-not-allowed' : ''}
+    ${isLoggingOut ? "opacity-50 cursor-not-allowed" : ""}
   `}
->
-  Logout
-
-          <LogOut
-            className={`h-4 w-4 ${
-              isLoggingOut ? 'animate-spin' : ''
-            }`}
-          />
-          <span>
-            {isLoggingOut ? 'Logging out...' : ''}
-          </span>
+        >
+          Logout
+          <LogOut className={`h-4 w-4 ${isLoggingOut ? "animate-spin" : ""}`} />
+          <span>{isLoggingOut ? "Logging out..." : ""}</span>
         </button>
       </div>
     </div>

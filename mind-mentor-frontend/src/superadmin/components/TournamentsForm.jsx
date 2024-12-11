@@ -1,22 +1,81 @@
 import { Button, Divider, MenuItem, TextField } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
+import axios from 'axios';
 import { Trash } from 'lucide-react';
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useParams } from 'react-router-dom';
 
 const ChessTournamentForm = () => {
+  const { id } = useParams(); // Get the ID from the URL
   const [tournaments, setTournaments] = useState([
-    { id: 1, name: '', organizer: '', type: '', entryFee: '', status: '', startDate: '', endDate: '', location: '' }
+    {
+      id: 1,
+      name: '',
+      organizer: '',
+      type: '',
+      entryFee: '',
+      status: '',
+      startDate: '',
+      endDate: '',
+      location: ''
+    }
   ]);
-
   const tournamentTypes = ['Blitz', 'Rapid', 'Classical'];
   const statusOptions = ['Ongoing', 'Completed', 'Cancelled'];
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (id) {
+      // Fetch tournament data for the given ID
+      fetchTournamentById(id);
+    }
+  }, [id]);
+
+  const fetchTournamentById = async (id) => {
+    try {
+      const response = await axios.get(`http://localhost:3000/superadmin/tournaments/${id}`);
+      setTournaments([response.data]); // Populate the form with the fetched tournament data
+    } catch (error) {
+      console.error('Error fetching tournament:', error);
+      alert('Failed to fetch tournament details.');
+    }
+  };
+
+  const createTournament = async (tournamentData) => {
+    console.log('Creating tournament:', tournamentData);
+    try {
+      await axios.post('http://localhost:3000/superadmin/tournaments', tournamentData);
+      alert('Tournament created successfully!');
+    } catch (error) {
+      console.error('Error creating tournament:', error);
+      alert('Failed to create tournament.');
+    }
+  };
+
+  const updateTournament = async (id, tournamentData) => {
+    try {
+      await axios.put(`http://localhost:3000/superadmin/tournaments/${id}`, tournamentData);
+      alert('Tournament updated successfully!');
+    } catch (error) {
+      console.error('Error updating tournament:', error);
+      alert('Failed to update tournament.');
+    }
+  };
+
   const addTournament = () => {
     setTournaments([
       ...tournaments,
-      { id: tournaments.length + 1, name: '', organizer: '', type: '', entryFee: '', status: '', startDate: '', endDate: '', location: '' }
+      {
+        id: tournaments.length + 1,
+        name: '',
+        organizer: '',
+        type: '',
+        entryFee: '',
+        status: '',
+        startDate: '',
+        endDate: '',
+        location: ''
+      }
     ]);
   };
 
@@ -34,21 +93,32 @@ const ChessTournamentForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
     try {
       for (let tournament of tournaments) {
         if (Object.values(tournament).every((value) => value !== '')) {
-          const tournamentData = { ...tournament };
-
-          // Mock submission
-          console.log("Submitted Tournament: ", tournamentData);
+          if (id) {
+            await updateTournament(tournament.id, tournament);
+          } else {
+            await createTournament(tournament);
+          }
         }
       }
-
-      setTournaments([{ id: 1, name: '', organizer: '', type: '', entryFee: '', status: '', startDate: '', endDate: '', location: '' }]);
-      alert("Tournaments submitted successfully!");
+      setTournaments([
+        {
+          id: 1,
+          name: '',
+          organizer: '',
+          type: '',
+          entryFee: '',
+          status: '',
+          startDate: '',
+          endDate: '',
+          location: ''
+        }
+      ]);
+      alert('Tournaments submitted successfully!');
     } catch (error) {
-      alert("Error while submitting tournaments. Please try again.");
+      alert('Error while submitting tournaments. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -97,7 +167,6 @@ const ChessTournamentForm = () => {
             View Tournaments
           </Button>
         </div>
-
         <form className="p-8" onSubmit={handleSubmit}>
           <div className="space-y-8">
             <h3 className="text-[#642b8f] font-semibold text-lg pb-2 border-b-2 border-[#642b8f]">
@@ -195,19 +264,19 @@ const ChessTournamentForm = () => {
               + Add Tournament
             </button>
           </div>
-
           <Divider className="my-6" />
-
           <div style={{ height: 400, width: '100%' }}>
             <DataGrid
-              rows={tournaments}
+              rows={tournaments.map(tournament => ({ ...tournament, id: tournament._id || tournament.id }))}
               columns={columns}
               pageSize={5}
               disableSelectionOnClick
               checkboxSelection
+              getRowId={(row) => row.id} // Ensure the 'id' is the unique identifier
             />
-          </div>
 
+
+          </div>
           <div className="flex justify-center gap-6 mt-12">
             <button
               type="submit"

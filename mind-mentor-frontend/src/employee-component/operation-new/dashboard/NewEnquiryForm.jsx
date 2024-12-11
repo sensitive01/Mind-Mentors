@@ -257,8 +257,8 @@ const NewEnquiryForm = () => {
                         onChange={(e) => handleProgramChange(index, 'program', e.target.value)}
                       >
                         <option value="">-Select Program-</option>
-                        <option value="program1">Program 1</option>
-                        <option value="program2">Program 2</option>
+                        <option value="Chess">Chess</option>
+                        <option value="Rubiks Cube">Rubiks Cube</option>
                       </select>
                       <select
                         className="flex-1 p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors bg-white"
