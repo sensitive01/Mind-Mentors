@@ -31,7 +31,7 @@ const CenterLeavesPage = React.lazy(() => import("./pages/centeradmin/CenterLeav
 const CenterListingEnquiries = React.lazy(() => import("./pages/centeradmin/CenterListingEnquiries"));
 const CenterMessageStusTrackPage = React.lazy(() => import("./pages/centeradmin/CenterMessageStusTrackPage"));
 const CenterMyTaskPage = React.lazy(() => import("./pages/centeradmin/CenterMyTaskPage"));
-const CenterOperationDashboardPage = React.lazy(() => import("./pages/centeradmin/CenterOperationDashboardPage"));
+const CenterOperationDashboardPage = React.lazy(() => import("./pages/centeradmin/CenterOperationDashboardPage;"));
 const CenterProfile = React.lazy(() => import("./pages/centeradmin/CenterProfile"));
 const CenterProspectPage = React.lazy(() => import("./pages/centeradmin/CenterProspectPage"));
 const CenterReferalPage = React.lazy(() => import("./pages/centeradmin/CenterReferalPage"));
