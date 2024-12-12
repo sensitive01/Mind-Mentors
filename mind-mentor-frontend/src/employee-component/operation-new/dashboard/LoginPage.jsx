@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { ArrowLeft, ChevronDown } from "lucide-react";
+=======
+import { ArrowLeft, ArrowRight, ChevronDown } from "lucide-react";
+>>>>>>> Aadis_code
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -6,7 +10,10 @@ import {
   operationPasswordVerification,
 } from "../../../api/service/employee/EmployeeService";
 import toast from "react-hot-toast";
+<<<<<<< HEAD
 import { ToastContainer } from "react-toastify";
+=======
+>>>>>>> Aadis_code
 
 const KidsLoginPage = () => {
   const [email, setEmail] = useState("");
@@ -33,6 +40,7 @@ const KidsLoginPage = () => {
     } catch (error) {
       console.error("Error verifying email:", error);
       toast.error("Something went wrong. Please try again.");
+<<<<<<< HEAD
     }
   };
 
@@ -81,8 +89,64 @@ const KidsLoginPage = () => {
     } catch (error) {
       console.error("Error in operation department login:", error);
       toast.error("Something went wrong. Please try again.");
+=======
+>>>>>>> Aadis_code
     }
   };
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await operationPasswordVerification(email, password);
+      console.log(response);
+      
+      if (response.status === 200) {
+        toast.success(response?.data?.message || "Login successful!");
+        localStorage.setItem("email", response?.data?.operationEmail?.email);
+        
+        // Extract department info from the response
+        const department = response?.data?.operationEmail?.department;
+        
+        // Conditional navigation based on department
+        switch(department) {
+          case 'operation':
+            navigate("/employee-operation-dashboard");
+            break;
+          case 'marketing':
+            navigate("/marketingDashboard");
+            break;
+          case 'centeradmin':
+            navigate("/centeradmin-dashboard");
+            break;
+          case 'renewal':
+            navigate("/renewalDashboard");
+            break;
+          case 'service delivery':
+            navigate("/serviceDashboard");
+            break;
+          case 'super admin':
+            navigate("/superadminDashboard");
+            break;
+          case 'coach':
+            navigate("/coachDashboard");
+            break;
+          default:
+            navigate("/");
+        }
+  
+        setTimeout(() => {
+          
+        }, 1500);
+  
+      } else {
+        toast.error("Invalid password. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error in operation department login:", error);
+      toast.error("Something went wrong. Please try again.");
+    }
+  };
+  
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen">

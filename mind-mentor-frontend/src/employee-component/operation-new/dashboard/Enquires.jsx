@@ -22,38 +22,66 @@ import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import { alpha } from "@mui/material/styles";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
+<<<<<<< HEAD
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import columns from "./Columns";
 
+=======
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom"; // Import Link for navigation
+import columns from "./Columns"; // Import columns from the separate file
+import data from "./Enquiry";
+>>>>>>> Aadis_code
 import {
   fetchAllEnquiries,
   moveToProspects,
   updateEnquiryStatus,
   addNotes,
+<<<<<<< HEAD
   fetchProspectsEnquiries
 } from "../../../api/service/employee/EmployeeService";
+=======
+} from "../../../api/service/employee/EmployeeService"; // Adjust the import path as necessary
+>>>>>>> Aadis_code
 
 const theme = createTheme({
   palette: {
     primary: {
+<<<<<<< HEAD
       main: "#642b8f",
 
+=======
+      main: "#642b8f", // Indigo
+      // main: '#f8a213', // Indigo
+>>>>>>> Aadis_code
       light: "#818CF8",
       dark: "#4F46E5",
     },
     secondary: {
+<<<<<<< HEAD
       main: "#EC4899",
+=======
+      main: "#EC4899", // Pink
+>>>>>>> Aadis_code
       light: "#F472B6",
       dark: "#DB2777",
     },
     warm: {
+<<<<<<< HEAD
       main: "#F59E0B",
+=======
+      main: "#F59E0B", // Amber
+>>>>>>> Aadis_code
       light: "#FCD34D",
       dark: "#D97706",
     },
     cold: {
+<<<<<<< HEAD
       main: "#3B82F6",
+=======
+      main: "#3B82F6", // Blue
+>>>>>>> Aadis_code
       light: "#60A5FA",
       dark: "#2563EB",
     },
@@ -99,9 +127,18 @@ const theme = createTheme({
 const DetailView = ({ data }) => (
   <Grid container spacing={3} sx={{ p: 2 }}>
     {Object.entries(data).map(([key, value]) => {
+<<<<<<< HEAD
       if (key !== "id") {
         const formattedKey = key.replace(/([A-Z])/g, " $1").toUpperCase();
 
+=======
+      // Avoid displaying 'id' key in the view
+      if (key !== "id") {
+        // Format the key to be more readable (e.g., 'firstName' -> 'First Name')
+        const formattedKey = key.replace(/([A-Z])/g, " $1").toUpperCase();
+
+        // Handling 'scheduleDemo' separately to show its 'status'
+>>>>>>> Aadis_code
         if (key === "scheduleDemo") {
           return (
             <Grid item xs={12} sm={6} md={4} key={key}>
@@ -122,12 +159,20 @@ const DetailView = ({ data }) => (
                 </Typography>
                 <Typography variant="body1" color="text.primary">
                   {value?.status || "N/A"}{" "}
+<<<<<<< HEAD
+=======
+                  {/* Display status or "N/A" if missing */}
+>>>>>>> Aadis_code
                 </Typography>
               </Box>
             </Grid>
           );
         }
 
+<<<<<<< HEAD
+=======
+        // Handling 'logs' separately to display individual log actions with index
+>>>>>>> Aadis_code
         if (key === "logs" && Array.isArray(value)) {
           return (
             <Grid item xs={12} sm={6} md={4} key={key}>
@@ -153,6 +198,10 @@ const DetailView = ({ data }) => (
                           <strong>
                             {index + 1}. {log.action}
                           </strong>{" "}
+<<<<<<< HEAD
+=======
+                          {/* Display index starting from 1 */}
+>>>>>>> Aadis_code
                           <Typography variant="caption" color="text.secondary">
                             {new Date(log.createdAt).toLocaleString()}
                           </Typography>
@@ -165,6 +214,10 @@ const DetailView = ({ data }) => (
           );
         }
 
+<<<<<<< HEAD
+=======
+        // Format and display other fields
+>>>>>>> Aadis_code
         return (
           <Grid item xs={12} sm={6} md={4} key={key}>
             <Box
@@ -188,8 +241,14 @@ const DetailView = ({ data }) => (
                       .map((prog) => `${prog.program} (${prog.level})`)
                       .join(", ")
                   : value && typeof value === "object" && value !== null
+<<<<<<< HEAD
                   ? "N/A"
                   : value || "N/A"}{" "}
+=======
+                  ? "N/A" // Handle objects or complex structures if required
+                  : value || "N/A"}{" "}
+                {/* Display N/A for null, undefined, or empty values */}
+>>>>>>> Aadis_code
               </Typography>
             </Box>
           </Grid>
@@ -213,7 +272,11 @@ const Enquiries = () => {
         console.log(data);
         setRows(data);
       } catch (err) {
+<<<<<<< HEAD
         console.log("Failed to fetch Enquiries. Please try again later.", err);
+=======
+        setError("Failed to fetch Enquiries. Please try again later.");
+>>>>>>> Aadis_code
       } finally {
         setLoading(false);
       }
@@ -242,9 +305,18 @@ const Enquiries = () => {
     const newStatus = rowToUpdate.enquiryType === "warm" ? "cold" : "warm";
 
     try {
+<<<<<<< HEAD
       const response = await updateEnquiryStatus(id, newStatus, empId);
 
       if (response.success) {
+=======
+      // Call the API to update the status
+      const response = await updateEnquiryStatus(id, newStatus);
+
+      // Check if the response indicates success
+      if (response.success) {
+        // Update the state only if the API call was successful
+>>>>>>> Aadis_code
         setRows(
           rows.map((row) => {
             if (row._id === id) {
@@ -266,6 +338,7 @@ const Enquiries = () => {
   };
   const handleNoteSave = async () => {
     if (noteDialog.rowData) {
+<<<<<<< HEAD
       const updatedNotes = noteDialog.noteText;
       const id = noteDialog.rowData._id;
       let updatedEnquiryStatus = noteDialog.enquiryStatus;
@@ -289,6 +362,31 @@ const Enquiries = () => {
         updatedDisposition = "None";
       }
 
+=======
+      const updatedNotes = noteDialog.noteText; // Get the notes from the dialog
+      const id = noteDialog.rowData._id; // Get the ID of the row to update
+      let updatedEnquiryStatus = noteDialog.enquiryStatus; // Get enquiry status
+      let updatedDisposition = noteDialog.disposition; // Get disposition
+  
+      // Log the values to ensure they are correct
+      console.log("Updated Notes:", updatedNotes);
+      console.log("Updated Enquiry Status:", updatedEnquiryStatus);
+      console.log("Updated Disposition:", updatedDisposition);
+  
+      // Ensure enquiryStatus and disposition have valid values
+      const validEnquiryStatus = ["Pending", "Qualified Lead", "Unqualified Lead"];
+      const validDisposition = ["RnR", "Call Back", "None"];
+  
+      // Apply default values if enquiryStatus or disposition are empty
+      if (!validEnquiryStatus.includes(updatedEnquiryStatus)) {
+        updatedEnquiryStatus = "Pending"; // Default value for enquiryStatus
+      }
+      if (!validDisposition.includes(updatedDisposition)) {
+        updatedDisposition = "None"; // Default value for disposition
+      }
+  
+      // Update the local state
+>>>>>>> Aadis_code
       setRows((prevRows) =>
         prevRows.map((row) =>
           row._id === id
@@ -301,6 +399,7 @@ const Enquiries = () => {
             : row
         )
       );
+<<<<<<< HEAD
 
       try {
         await addNotes(id, empId, {
@@ -308,14 +407,42 @@ const Enquiries = () => {
           enquiryStatus: updatedEnquiryStatus,
           disposition: updatedDisposition,
         });
+=======
+  
+      // Call the API to save the notes
+      try {
+        await addNotes(id, {
+          notes: updatedNotes,
+          enquiryStatus: updatedEnquiryStatus,
+          disposition: updatedDisposition,
+        }); // Pass all fields correctly
+>>>>>>> Aadis_code
         console.log("Notes saved successfully");
       } catch (error) {
         console.error("Error saving notes:", error);
       }
+<<<<<<< HEAD
 
       console.log("setting rows", rows);
     }
   };
+=======
+  
+      // Reset the note dialog state properly
+      setNoteDialog({
+        open: false,
+        rowData: null,
+        noteText: "",
+        enquiryStatus: "", // Reset enquiryStatus
+        disposition: "", // Reset disposition
+      });
+      console.log("setting rows", rows);
+    }
+  };
+  
+  
+
+>>>>>>> Aadis_code
 
   const handleRowEditStop = (params, event) => {
     event.defaultMuiPrevented = true;
@@ -329,6 +456,15 @@ const Enquiries = () => {
   };
   const handleProcessRowUpdateError = (error) => {
     console.error("Row update error:", error);
+<<<<<<< HEAD
+=======
+  };
+
+  const handleMoveProspects = async (id) => {
+    console.log(id);
+    const respose = await moveToProspects(id);
+    console.log(respose);
+>>>>>>> Aadis_code
   };
 
   const handleMoveProspects = async (id) => {
@@ -385,8 +521,12 @@ const Enquiries = () => {
                 handleStatusToggle,
                 setViewDialog,
                 enquiryStatus,
+<<<<<<< HEAD
                 handleMoveProspects,
                 handleShowLogs
+=======
+                handleMoveProspects
+>>>>>>> Aadis_code
               )}
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel}
@@ -493,8 +633,13 @@ const Enquiries = () => {
               TransitionProps={{ direction: "up" }}
               BackdropProps={{
                 sx: {
+<<<<<<< HEAD
                   backgroundColor: "rgba(0, 0, 0, 0.5)",
                   backdropFilter: "blur(4px)",
+=======
+                  backgroundColor: "rgba(0, 0, 0, 0.5)", // Adds a semi-transparent black color
+                  backdropFilter: "blur(4px)", // Applies a blur effect to the backdrop
+>>>>>>> Aadis_code
                 },
               }}
             >
@@ -502,7 +647,11 @@ const Enquiries = () => {
                 sx={{
                   color: "#ffffff",
                   fontWeight: 600,
+<<<<<<< HEAD
                   background: "linear-gradient(to right, #642b8f, #aa88be)",
+=======
+                  background: "linear-gradient(to right, #642b8f, #aa88be)", // Apply the gradient background
+>>>>>>> Aadis_code
                 }}
               >
                 Add Note

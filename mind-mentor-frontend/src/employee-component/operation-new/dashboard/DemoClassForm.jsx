@@ -27,7 +27,11 @@ const customColors = {
 };
 
 const DemoClassForm = () => {
+<<<<<<< HEAD
   const empId = localStorage.getItem("empId");
+=======
+  const empEmail = localStorage.getItem("email");
+>>>>>>> Aadis_code
   const navigate = useNavigate();
   const [prospectData, setProspectData] = useState([]);
   const [newClassForm, setNewClassForm] = useState({
@@ -44,7 +48,10 @@ const DemoClassForm = () => {
     },
     date: "",
     time: "",
+<<<<<<< HEAD
    
+=======
+>>>>>>> Aadis_code
   });
   const [isDialogOpen, setIsDialogOpen] = useState(true);
 
@@ -73,7 +80,10 @@ const DemoClassForm = () => {
           program: "",
           level: "",
           _id: "",
+<<<<<<< HEAD
           logs: "",
+=======
+>>>>>>> Aadis_code
         },
         date: prev.date,
         time: prev.time,
@@ -125,7 +135,10 @@ const DemoClassForm = () => {
       selectedProgram,
       date,
       time,
+<<<<<<< HEAD
       
+=======
+>>>>>>> Aadis_code
     } = newClassForm;
 
     // Validation
@@ -153,10 +166,18 @@ const DemoClassForm = () => {
     // Console log the complete class details
     console.log("Scheduled class details:", newClass);
 
+<<<<<<< HEAD
     const response = await seduleDemoClass(empId, newClass);
 
     console.log(response);
     if (response && response.data) {
+=======
+    const response = await seduleDemoClass(empEmail, newClass);
+
+    console.log(response);
+    if(response && response.data){
+
+>>>>>>> Aadis_code
       navigate("/employee-operation/schedule");
     }
   };

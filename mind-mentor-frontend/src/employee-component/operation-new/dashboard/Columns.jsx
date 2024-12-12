@@ -1,5 +1,6 @@
 // columns.js
 import { alpha } from "@mui/material/styles";
+<<<<<<< HEAD
 import {
   Zoom,
   Fade,
@@ -22,6 +23,14 @@ const columns = (
   handleMoveProspects,
   handleShowLogs
 ) => [
+=======
+import { Zoom, Fade, Grow, Box, Chip, Switch, IconButton, Tooltip } from "@mui/material";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import NoteAddIcon from "@mui/icons-material/NoteAdd";
+import { DownloadIcon } from "lucide-react";
+
+const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog,handleMoveProspects) => [
+>>>>>>> Aadis_code
   {
     field: "parentFirstName",
     headerName: "Parent First Name",
@@ -177,12 +186,17 @@ const columns = (
   {
     field: "actions",
     headerName: "Actions",
+<<<<<<< HEAD
     width: 250,
+=======
+    width: 200,
+>>>>>>> Aadis_code
     renderCell: (params) => (
       <Box
         sx={{ display: "flex", gap: 1 }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* View Button */}
         <Grow in={true}>
           <IconButton
             size="small"
@@ -197,7 +211,11 @@ const columns = (
             <VisibilityIcon fontSize="small" />
           </IconButton>
         </Grow>
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> Aadis_code
         {/* Add Note Button */}
         <Grow in={true} style={{ transformOrigin: "0 0 0" }}>
           <IconButton
@@ -220,13 +238,21 @@ const columns = (
             <NoteAddIcon fontSize="small" />
           </IconButton>
         </Grow>
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> Aadis_code
         {/* Move to Prospects Button */}
         <Grow in={true}>
           <Tooltip title="Move to Prospects" arrow>
             <IconButton
               size="small"
+<<<<<<< HEAD
               onClick={() => handleMoveProspects(params.row._id)}
+=======
+              onClick={()=>handleMoveProspects(params.row._id)}
+>>>>>>> Aadis_code
               sx={{
                 color: "#1D4ED8",
                 "&:hover": {
@@ -238,6 +264,7 @@ const columns = (
             </IconButton>
           </Tooltip>
         </Grow>
+<<<<<<< HEAD
 
         {/* Logs Button */}
         <Grow in={true}>
@@ -257,8 +284,11 @@ const columns = (
             </IconButton>
           </Tooltip>
         </Grow>
+=======
+>>>>>>> Aadis_code
       </Box>
     ),
-  },
+  }
+  
 ];
 export default columns;

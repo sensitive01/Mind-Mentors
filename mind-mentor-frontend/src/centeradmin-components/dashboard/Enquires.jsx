@@ -232,6 +232,7 @@ const Enquiries = () => {
     pageSize: 5,
   });
 
+<<<<<<< HEAD
   const handleStatusToggle = async (id) => {
     const rowToUpdate = rows.find((row) => row._id === id);
     const newStatus = rowToUpdate.enquiryType === "warm" ? "cold" : "warm";
@@ -257,6 +258,45 @@ const Enquiries = () => {
       }
     } catch (error) {
       console.error("Error updating enquiry status:", error);
+=======
+const handleStatusToggle = async (id) => {
+  const rowToUpdate = rows.find(row => row._id === id);
+  const newStatus = rowToUpdate.enquiryType === 'warm' ? 'cold' : 'warm';
+
+  try {
+    // Call the API to update the status
+    const response = await updateEnquiryStatus(id, newStatus);
+    
+    // Check if the response indicates success
+    if (response.success) {
+      // Update the state only if the API call was successful
+      setRows(rows.map(row => {
+        if (row._id === id) {
+          return {
+            ...row,
+            enquiryType: newStatus,
+            stageTag: newStatus
+          };
+        }
+        return row;
+      }));
+    } else {
+      console.error("Failed to update status:", response.message);
+    }
+  } catch (error) {
+    console.error("Error updating enquiry status:", error);
+  }
+};
+  
+  const handleNoteSave = () => {
+    if (noteDialog.rowData) {
+      setRows(rows.map(row =>
+        row._id === noteDialog.rowData._id
+          ? { ...row, notes: noteDialog.noteText }
+          : row
+      ));
+      setNoteDialog({ open: false, rowData: null, noteText: '' });
+>>>>>>> Aadis_code
     }
   };
   const handleNoteSave = async () => {

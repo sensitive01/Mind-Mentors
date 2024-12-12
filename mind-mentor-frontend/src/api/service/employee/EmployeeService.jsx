@@ -1,4 +1,5 @@
 import { operationDeptInstance } from "../../axios/operationDeptInstance";
+import { userInstance } from "../../axios/userInstance";
 
 // Email Verification
 export const employeeEmailVerification = async (email) => {
@@ -152,8 +153,13 @@ export const getProspectsStudents = async () => {
 };
 
 
+<<<<<<< HEAD
 export const seduleDemoClass = async (empId,data) => {
   const response = await operationDeptInstance.post(`/shedule-demo-class/${empId}`,{data});
+=======
+export const seduleDemoClass = async (email,data) => {
+  const response = await operationDeptInstance.post(`/shedule-demo-class/${email}`,{data});
+>>>>>>> Aadis_code
   return response.data;
 };
 
@@ -163,6 +169,7 @@ export const getAllSheduleClass = async () => {
   return response;
 };
 
+<<<<<<< HEAD
 export const moveToProspects = async (id,empId) => {
   const response = await operationDeptInstance.put(`/move-to-prospects/${id}`,{empId});
   return response;
@@ -173,3 +180,87 @@ export const fetchAllLogs = async (id) => {
   const response = await operationDeptInstance.get(`/fetch-all-logs/${id}`);
   return response;
 };
+=======
+export const moveToProspects = async (id) => {
+  const response = await operationDeptInstance.put(`/move-to-prospects/${id}`);
+  return response;
+};
+
+// Create User
+export const createUser = async (userData) => {
+  const response = await userInstance.post("/users", userData);
+  console.log('Incoming request body:', req.body);
+
+  return response.data;
+};
+
+// Get All Users
+export const fetchAllUsers = async () => {
+  const response = await userInstance.get("/get-users");
+  return response.data;
+};
+
+// Get All Users By Name
+export const fetchUsersByName = async () => {
+  const response = await userInstance.get("/usersbyname");
+  return response.data;
+};
+
+// Get User by ID
+export const fetchUserById = async (id) => {
+  const response = await userInstance.get(`/get-user/${id}`);
+  return response.data;
+};
+
+// Update User
+export const updateUser = async (id, updatedData) => {
+  const response = await userInstance.put(`/update-user/${id}`, updatedData);
+  return response.data;
+};
+
+// Delete User
+export const deleteUser = async (id) => {
+  const response = await userInstance.delete(`/delete-user/${id}`);
+  return response.data;
+};
+
+
+// Create User
+export const createEmployee = async (userData) => {
+  const response = await userInstance.post("/employee", userData);
+  console.log('Incoming request body:', req.body);
+  return response.data;
+};
+
+
+// tournments
+// Create Tournament
+export const createTournament = async (tournamentData) => {
+  const response = await userInstance.post("/tournaments", tournamentData);
+  return response.data;
+};
+
+// Get All Tournaments
+export const fetchAllTournaments = async () => {
+  const response = await userInstance.get("/tournaments");
+  return response.data;
+};
+
+// Get Tournament by ID
+export const fetchTournamentById = async (id) => {
+  const response = await userInstance.get(`/tournaments/${id}`);
+  return response.data;
+};
+
+// Update Tournament
+export const updateTournament = async (id, updatedData) => {
+  const response = await userInstance.put(`/tournaments/${id}`, updatedData);
+  return response.data;
+};
+
+// Delete Tournament
+export const deleteTournament = async (id) => {
+  const response = await userInstance.delete(`/tournaments/${id}`);
+  return response.data;
+};
+>>>>>>> Aadis_code
