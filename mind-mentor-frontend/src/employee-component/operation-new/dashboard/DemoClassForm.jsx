@@ -17,6 +17,7 @@ import {
   seduleDemoClass,
 } from "../../../api/service/employee/EmployeeService";
 import { useNavigate } from "react-router-dom";
+import { fetchCoachData } from "../../../api/service/employee/coachService";
 
 const customColors = {
   primary: "#642B8F",
@@ -60,6 +61,23 @@ const DemoClassForm = () => {
     };
     fetchStudentData();
   }, []);
+
+
+useEffect(()=>{
+  const fetchCoachAvailability = async()=>{
+    const response = await fetchCoachData()
+    console.log(response)
+
+  }
+  fetchCoachAvailability()
+
+},[])
+
+
+
+
+
+
 
   const handleStudentSelection = (studentId) => {
     const selectedStudent = prospectData?.find(

@@ -9,6 +9,8 @@ const dbConnect = require("./config/database/dbConnect")
 const parentRoute = require("./routes/parent/parentRoute")
 const operationRoute = require("./routes/employee/opertation-dept/operationDeptRoute")
 const kidRoute = require("./routes/kid/kidRoutes")
+const coachRoute = require("./routes/coach/CoachRoute");
+const serviceRoute = require("./routes/servicedelivery/serviceDeliveryRoute");
 const PORT = 3000
 
 app.set("trust proxy", true);
@@ -41,6 +43,9 @@ app.disable("x-powered-by");
 app.use("/parent",parentRoute)
 app.use("/employee/operation",operationRoute)
 app.use("/kid",kidRoute)
+app.use("/coach",coachRoute)
+app.use("/service",serviceRoute)
+
 
 
 

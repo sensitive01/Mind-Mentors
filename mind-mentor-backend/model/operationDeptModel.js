@@ -48,7 +48,7 @@ const operationDeptSchema = new mongoose.Schema(
         enum: ["Pending", "Scheduled", "Completed", "Cancelled"],
         default: "Pending",
       },
-      sheduledDate: { type: Date },
+      sheduledDay: { type: String },
     },
     referral: {
       referredTo: { type: String },

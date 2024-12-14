@@ -158,7 +158,7 @@ export const seduleDemoClass = async (empId,data) => {
 };
 
 
-export const getAllSheduleClass = async () => {
+export const getDemoSheduleClass = async () => {
   const response = await operationDeptInstance.get(`/get-shedule-demo-class`);
   return response;
 };
@@ -173,3 +173,18 @@ export const fetchAllLogs = async (id) => {
   const response = await operationDeptInstance.get(`/fetch-all-logs/${id}`);
   return response;
 };
+
+export const getDemoClassandStudentData = async (classId) => {
+  const response = await operationDeptInstance.get(`/get-demo-class-student-data/${classId}`);
+  return response;
+};
+
+
+
+export const saveDemoClassDetails = async (classId,students,empId) => {
+  const response = await operationDeptInstance.post(`/save-demo-class/${empId}`,{classId,students});
+  return response;
+};
+
+
+

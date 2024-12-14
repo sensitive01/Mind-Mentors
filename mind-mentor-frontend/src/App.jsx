@@ -226,6 +226,9 @@ import CenterAdminEnquiryLogs from "./pages/centeradmin/CenterAdminEnquiryLogs";
 import SuperAdminEnquiryLogs from "./pages/superadmin/SuperAdminEnquiryLogs";
 import KidsDemoClassPage from "./pages/kids/KidsDemoClassPage";
 import KidsClassShedulePage from "./pages/kids/KidsClassShedulePage";
+import CoachAvailabilityPage from "./pages/coach/CoachAvailabilityPage";
+import ServiceDelivaryClassShedulePage from "./pages/servicedelivery/ServiceDelivaryClassShedulePage";
+import AssignDemoClassPage from "./pages/employee/operation-employee/AssignDemoClassPage";
 
 
 
@@ -344,6 +347,7 @@ function App() {
         <Route path="/employee-operation/coachfeedback" element={<CoachFeedback/>} />
         <Route path="/employee-operation/demoSheduleForm" element={<DemoClassShedulePage/>} />
         <Route path="/showCompleteLogs/:id" element={< ShowAllEnquiryLogs/>} />
+        <Route path="/employeeAssignDemoClass/:id" element={<AssignDemoClassPage/>} />
 
 
 
@@ -371,6 +375,12 @@ function App() {
         <Route path="/servicePrograms" element={<ServicePrograms />} />
         <Route path="/serviceDashboard" element={<ServiceDashboard />} />
         <Route path="/serviceLogin" element={<ServiceLogin />} />
+        <Route path="/serviceClassShedule" element={<ServiceDelivaryClassShedulePage/>} />
+
+
+
+
+
 
 
 
@@ -424,6 +434,8 @@ function App() {
         <Route path="/coachSupport/" element={<CoachSupportRequest />} />
         <Route path="/coachFeedaback/add" element={<CoachFeedbackAdd />} />
         <Route path="/coachLogin" element={<CoachLogin />} />
+        <Route path="/coachAvailability" element={<CoachAvailabilityPage />} />
+
 
 
 

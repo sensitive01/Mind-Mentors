@@ -13,20 +13,9 @@ const KidsLoginPage = () => {
   const themes = {
     sky: "bg-[#642b8f]", // Sky blue
   };
-  const textThemes = {
-    sky: "color-[#642b8f]", // Sky blue
-    indigo: "text-indigo-600",
-    green: "text-green-600",
-    red: "text-red-600",
-    purple: "text-purple-600",
-  };
 
-  const changeTheme = () => {
-    const themeKeys = Object.keys(themes);
-    const currentIndex = themeKeys.indexOf(theme);
-    const nextIndex = (currentIndex + 1) % themeKeys.length;
-    setTheme(themeKeys[nextIndex]);
-  };
+
+
 
   const handleSubmit = (e) => {
     e.preventDefault();

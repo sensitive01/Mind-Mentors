@@ -11,6 +11,7 @@ const generateOTP = require("../../../utils/generateOtp");
 const Employee = require("../../../model/employeeModel");
 const enquiryLogs = require("../../../model/enquiryLogs");
 const moment = require("moment");
+const ClassSchedule = require("../../../model/classSheduleModel");
 
 // Email Verification
 
@@ -1293,110 +1294,25 @@ const getAllAttandanceData = async (req, res) => {
 
 const getAllSheduleClass = async (req, res) => {
   try {
-    // Get all demo classes from the database
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Normalize the time to start of the day
+    const scheduleData = await ClassSchedule.find({ classType: "Demo" });
+    console.log("Demo Class Schedule Data:", scheduleData);
 
-    const scheduleData = await DemoClass.find({
-      date: { $gte: today },
+    res.status(200).json({
+      success: true,
+      message: "Demo class schedules retrieved successfully",
+       scheduleData,
     });
-
-    console.log(scheduleData);
-
-    // Initialize the grouped schedule by day of the week (Monday to Saturday)
-    const groupedSchedule = {
-      Monday: [],
-      Tuesday: [],
-      Wednesday: [],
-      Thursday: [],
-      Friday: [],
-      Saturday: [],
-    };
-
-    // Helper to map day numbers to day names
-    const daysOfWeek = [
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-    ];
-
-    // Loop through the schedule data to group by day of the week
-    scheduleData.forEach((schedule) => {
-      const dayOfWeek = daysOfWeek[new Date(schedule.date).getDay()];
-
-      // If the day is Sunday, skip it
-      if (dayOfWeek === "Sunday") return;
-
-      const dateKey = new Date(schedule.date).toISOString().split("T")[0]; // Only the date part (e.g., "2024-12-18")
-      const timeKey = schedule.time; // Time (e.g., "12:00 PM - 2:00 PM")
-
-      // Create a unique key by combining date and time
-      const key = `${dateKey} ${timeKey}`;
-
-      // Initialize the group if it doesn't exist
-      const group = groupedSchedule[dayOfWeek].find((item) => item.key === key);
-      if (!group) {
-        groupedSchedule[dayOfWeek].push({
-          key,
-          date: dateKey,
-          time: timeKey,
-          subject: `${schedule.programs[0].program}: ${schedule.programs[0].programLevel}`,
-          teacher: schedule.coachName || "N/A",
-          students: [], // Initialize an empty list of students
-        });
-      }
-
-      // Add the student (or participant) to the group
-      const groupToUpdate = groupedSchedule[dayOfWeek].find(
-        (item) => item.key === key
-      );
-      groupToUpdate.students.push({
-        kidId: schedule.kidId, // You can also include more student info here if needed
-      });
-    });
-
-    // Format the result by counting the number of students in each group
-    const result = [];
-
-    // Collect the result for each day (Monday to Saturday)
-    Object.keys(groupedSchedule).forEach((day) => {
-      // If there are no classes for the day, make sure to add it with an empty array
-      if (groupedSchedule[day].length === 0) {
-        result.push({
-          day: day,
-          date: null,
-          time: null,
-          subject: "No classes scheduled",
-          teacher: "N/A",
-          studentCount: 0,
-        });
-      } else {
-        groupedSchedule[day].forEach((group) => {
-          result.push({
-            day: day,
-            date: group.date,
-            time: group.time,
-            subject: group.subject,
-            teacher: group.teacher,
-            studentCount: group.students.length, // Count the number of students
-          });
-        });
-      }
-    });
-
-    // Return the grouped schedule with student count
-    res.status(200).json(result);
   } catch (err) {
     console.error("Error in getting the demo class", err);
-    res
-      .status(500)
-      .json({ message: "Internal server error", error: err.message });
+
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
   }
 };
+
 
 const fetchAllLogs = async (req, res) => {
   try {
@@ -1420,6 +1336,138 @@ const fetchAllLogs = async (req, res) => {
       .json({ message: "Error in fetching the logs", error: err.message });
   }
 };
+
+const getDemoClassAndStudentsData = async (req, res) => {
+  try {
+    console.log("Welcome to getting the demo class and student data", req.params);
+    const { classId } = req.params;
+
+    // Find the class data by ID
+    const classData = await ClassSchedule.find({ _id: classId });
+
+
+    if (!classData) {
+      return res.status(404).json({ message: "Class not found" });
+    }
+
+    // Find kids data matching the program and level in arrays
+    const kidsData = await OperationDept.find(
+      {
+        enquiryField: "prospects",
+        "scheduleDemo.status": "Pending",
+        programs: {
+          $elemMatch: {
+            program: classData[0].program,
+            level: classData[0].level,
+          },
+        },
+      },
+      { kidFirstName: 1 } // Project only the required fields
+    );
+
+    console.log("Class Data", classData);
+    console.log("Kids Data", kidsData);
+
+    res.status(200).json({ classData, kidsData });
+  } catch (err) {
+    console.error("Error in getting the demo class and student data", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+
+
+const saveDemoClassData = async (req, res) => {
+  try {
+    console.log("Welcome to save the demo class", req.body, req.params);
+
+    const { empId } = req.params;
+    const { classId, students } = req.body;
+
+    // Fetch employee data
+    const empData = await Employee.findOne({ _id: empId }, { name: 1, department: 1 });
+
+    // Fetch kids data
+    const kidsData = await OperationDept.find({ _id: { $in: students } }, { kidFirstName: 1, _id: 1 });
+
+    console.log("Fetched kids data:", kidsData);
+    console.log("Fetched empData:", empData);
+
+    // Fetch the class schedule data
+    const classSchedule = await ClassSchedule.findById(classId);
+
+    if (!classSchedule) {
+      return res.status(404).json({ message: "Class schedule not found." });
+    }
+
+    // Prepare new selected students data
+    const updatedSelectedStudents = students.map(studentId => {
+      const kid = kidsData.find(kid => kid._id.toString() === studentId);
+      return {
+        kidId: studentId,
+        kidName: kid ? kid.kidFirstName : "Unknown",
+      };
+    });
+
+    // Update class schedule with the new selected students (using $push to add to existing array)
+    await ClassSchedule.findByIdAndUpdate(
+      classId,
+      {
+        $push: {
+          selectedStudents: { $each: updatedSelectedStudents },
+        },
+        $set: {
+          "scheduledBy.id": empData._id,
+          "scheduledBy.department": empData.department,
+          "scheduledBy.name": empData.name || "",
+        },
+      },
+      { new: true }
+    );
+
+    // Update the scheduleDemo field in the kidsData
+    const updatedKidsDataPromises = kidsData.map(async (kid) => {
+      // Check if kid is in selected students and then update scheduleDemo
+      if (students.includes(kid._id.toString())) {
+        kid.scheduleDemo = {
+          status: "Scheduled",
+          scheduledDay: classSchedule.day,  // Use class schedule day
+        };
+
+        await kid.save();
+      }
+    });
+
+    // Wait for all updates to finish
+    await Promise.all(updatedKidsDataPromises);
+
+    // Respond with success
+    res.status(200).json({
+      message: "Demo class data saved successfully.",
+      updatedClassSchedule: classSchedule,
+      updatedKidsData: kidsData,
+    });
+
+  } catch (err) {
+    console.log("Error in saving the demo class", err);
+    res.status(500).json({ error: "An error occurred while saving the demo class." });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 module.exports = {
   operationEmailVerification,
@@ -1454,4 +1502,6 @@ module.exports = {
   updateProspectData,
   registerEmployee,
   fetchAllLogs,
+  saveDemoClassData,
+  getDemoClassAndStudentsData
 };
