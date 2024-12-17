@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   TextField,
   Button,
@@ -12,22 +12,14 @@ import {
   FormControlLabel,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { sheduleTimeTable } from "../../api/service/employee/serviceDeliveryService";
+import {
+  getCoachAvailabilityData,
+  sheduleTimeTable,
+} from "../../api/service/employee/serviceDeliveryService";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
-const days = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
-
-const coaches = ["John Doe", "Jane Smith", "Mike Johnson", "Sarah Williams"];
-
+// Hardcoded levels for programs
 const programs = [
   { name: "Chess", levels: ["Beginner", "Intermediate", "Advanced"] },
   { name: "Rubiks Cube", levels: ["Beginner", "Intermediate", "Advanced"] },
@@ -35,8 +27,9 @@ const programs = [
 ];
 
 const ClassScheduleForm = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const empId = localStorage.getItem("empId");
+  const [availabilityData, setAvailabilityData] = useState([]);
   const [schedules, setSchedules] = useState([
     {
       day: "",
@@ -46,9 +39,25 @@ const ClassScheduleForm = () => {
       startTime: "",
       endTime: "",
       meetingLink: "",
-      isDemo: false
+      isDemo: false,
     },
   ]);
+
+  useEffect(() => {
+    const fetchAvailableData = async () => {
+      try {
+        const response = await getCoachAvailabilityData();
+        setAvailabilityData(response.data.availableDays);
+      } catch (error) {
+        console.error("Error fetching availability data:", error);
+        toast.error("Failed to fetch coach availability");
+      }
+    };
+    fetchAvailableData();
+  }, []);
+
+  // Get unique coaches from availability data
+  const coaches = [...new Set(availabilityData.map((item) => item.coachName))];
 
   const handleScheduleChange = (index, field, value) => {
     const newSchedules = [...schedules];
@@ -57,12 +66,55 @@ const ClassScheduleForm = () => {
       [field]: value,
     };
 
-    // Reset level if program changes
+    // Reset dependent fields when coach is changed
+    if (field === "coachName") {
+      newSchedules[index].program = "";
+      newSchedules[index].day = "";
+    
+    }
+
+    // Reset level when program is changed
     if (field === "program") {
       newSchedules[index].level = "";
     }
 
     setSchedules(newSchedules);
+  };
+
+  // Get unique programs for a specific coach
+  const getProgramsForCoach = (coachName) => {
+    return [
+      ...new Set(
+        availabilityData
+          .filter((item) => item.coachName === coachName)
+          .map((item) => item.program)
+      ),
+    ];
+  };
+
+  // Get available days for a specific coach and program
+  const getDaysForCoachProgram = (coachName, program) => {
+    return [
+      ...new Set(
+        availabilityData
+          .filter(
+            (item) => item.coachName === coachName && item.program === program
+          )
+          .map((item) => item.day)
+      ),
+    ];
+  };
+
+  // Get available time slots for a specific coach, program, and day
+  const getTimeSlots = (coachName, program, day) => {
+    return availabilityData
+      .filter(
+        (item) =>
+          item.coachName === coachName &&
+          item.program === program &&
+          item.day === day
+      )
+      
   };
 
   const addSchedule = () => {
@@ -76,7 +128,7 @@ const ClassScheduleForm = () => {
         startTime: "",
         endTime: "",
         meetingLink: "",
-        isDemo: false
+        isDemo: false,
       },
     ]);
   };
@@ -87,7 +139,7 @@ const ClassScheduleForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Validate schedules
+
     const isValid = schedules.every(
       (schedule) =>
         schedule.coachName &&
@@ -96,23 +148,24 @@ const ClassScheduleForm = () => {
         schedule.day &&
         schedule.startTime &&
         schedule.endTime
-       
     );
 
     if (!isValid) {
-      alert("Please fill in all fields");
+      toast.error("Please fill in all fields");
       return;
     }
 
-    console.log(schedules);
-    const response = await sheduleTimeTable(empId, schedules);
-    console.log(response);
-    if(response.status===201){
-      toast.success(response.data.message)
-      setTimeout(() => {
-        navigate("/serviceScheduleClass")
-        
-      }, 1500);
+    try {
+      const response = await sheduleTimeTable(empId, schedules);
+      if (response.status === 201) {
+        toast.success(response.data.message);
+        setTimeout(() => {
+          navigate("/serviceScheduleClass");
+        }, 1500);
+      }
+    } catch (error) {
+      toast.error("Failed to submit schedules");
+      console.error("Submission error:", error);
     }
   };
 
@@ -126,7 +179,7 @@ const ClassScheduleForm = () => {
         startTime: "",
         endTime: "",
         meetingLink: "",
-        isDemo: false
+        isDemo: false,
       },
     ]);
   };
@@ -142,7 +195,6 @@ const ClassScheduleForm = () => {
         <form onSubmit={handleSubmit} onReset={handleReset} className="p-8">
           {schedules.map((schedule, index) => (
             <React.Fragment key={index}>
-              {/* First Row: Coach, Program, Level, Demo/Class */}
               <Grid
                 container
                 spacing={2}
@@ -150,7 +202,7 @@ const ClassScheduleForm = () => {
                 alignItems="center"
               >
                 {/* Coach Dropdown */}
-                <Grid item xs={12} sm={3}>
+                <Grid item xs={12} sm={4}>
                   <FormControl fullWidth>
                     <InputLabel>Coach</InputLabel>
                     <Select
@@ -169,22 +221,26 @@ const ClassScheduleForm = () => {
                   </FormControl>
                 </Grid>
 
-                {/* Program Dropdown */}
+                {/* Program Dropdown (Dependent on Coach) */}
                 <Grid item xs={12} sm={3}>
                   <FormControl fullWidth>
                     <InputLabel>Program</InputLabel>
                     <Select
                       value={schedule.program}
                       label="Program"
+                      disabled={!schedule.coachName}
                       onChange={(e) =>
                         handleScheduleChange(index, "program", e.target.value)
                       }
                     >
-                      {programs.map((program) => (
-                        <MenuItem key={program.name} value={program.name}>
-                          {program.name}
-                        </MenuItem>
-                      ))}
+                      {schedule.coachName &&
+                        getProgramsForCoach(schedule.coachName).map(
+                          (program) => (
+                            <MenuItem key={program} value={program}>
+                              {program}
+                            </MenuItem>
+                          )
+                        )}
                     </Select>
                   </FormControl>
                 </Grid>
@@ -214,13 +270,24 @@ const ClassScheduleForm = () => {
                 </Grid>
 
                 {/* Demo/Class Switch */}
-                <Grid item xs={12} sm={3} container alignItems="center" justifyContent="center">
+                <Grid
+                  item
+                  xs={12}
+                  sm={1}
+                  container
+                  alignItems="center"
+                  justifyContent="center"
+                >
                   <FormControlLabel
                     control={
                       <Switch
                         checked={schedule.isDemo}
                         onChange={(e) =>
-                          handleScheduleChange(index, "isDemo", e.target.checked)
+                          handleScheduleChange(
+                            index,
+                            "isDemo",
+                            e.target.checked
+                          )
                         }
                         color="primary"
                       />
@@ -231,34 +298,38 @@ const ClassScheduleForm = () => {
                 </Grid>
               </Grid>
 
-              {/* Second Row: Day, Time, Meeting Link */}
               <Grid
                 container
                 spacing={2}
-                className="mb-8 p-4 border rounded-lg "
+                className="mb-8 p-4 border rounded-lg"
                 alignItems="center"
               >
-                {/* Day Dropdown */}
+                {/* Day Dropdown (Dependent on Coach and Program) */}
                 <Grid item xs={12} sm={3}>
                   <FormControl fullWidth>
                     <InputLabel>Day</InputLabel>
                     <Select
                       value={schedule.day}
                       label="Day"
+                      disabled={!schedule.coachName || !schedule.program}
                       onChange={(e) =>
                         handleScheduleChange(index, "day", e.target.value)
                       }
                     >
-                      {days.map((day) => (
-                        <MenuItem key={day} value={day}>
-                          {day}
-                        </MenuItem>
-                      ))}
+                      {schedule.coachName &&
+                        schedule.program &&
+                        getDaysForCoachProgram(
+                          schedule.coachName,
+                          schedule.program
+                        ).map((day) => (
+                          <MenuItem key={day} value={day}>
+                            {day}
+                          </MenuItem>
+                        ))}
                     </Select>
                   </FormControl>
                 </Grid>
 
-                {/* Start Time Input */}
                 <Grid item xs={12} sm={2}>
                   <TextField
                     fullWidth
@@ -272,12 +343,11 @@ const ClassScheduleForm = () => {
                       shrink: true,
                     }}
                     inputProps={{
-                      step: 300, // 5 min
+                      step: 300,
                     }}
                   />
                 </Grid>
 
-                {/* End Time Input */}
                 <Grid item xs={12} sm={2}>
                   <TextField
                     fullWidth
@@ -291,13 +361,13 @@ const ClassScheduleForm = () => {
                       shrink: true,
                     }}
                     inputProps={{
-                      step: 300, // 5 min
+                      step: 300,
                     }}
                   />
                 </Grid>
 
-                {/* Meeting Link Input */}
-                <Grid item xs={12} sm={4}>
+                {/* Meeting Link */}
+                <Grid item xs={12} sm={3}>
                   <TextField
                     fullWidth
                     label="Meeting Link"
@@ -309,7 +379,7 @@ const ClassScheduleForm = () => {
                   />
                 </Grid>
 
-                {/* Remove Schedule Button */}
+                {/* Remove Schedule Button (for multiple schedules) */}
                 {schedules.length > 1 && (
                   <Grid item xs={12} sm={1}>
                     <IconButton
@@ -325,7 +395,7 @@ const ClassScheduleForm = () => {
             </React.Fragment>
           ))}
 
-          {/* Action Buttons */}
+          {/* Form Action Buttons */}
           <div className="flex justify-center gap-4 mt-6">
             <Button onClick={addSchedule} variant="outlined" color="secondary">
               Add Another Schedule

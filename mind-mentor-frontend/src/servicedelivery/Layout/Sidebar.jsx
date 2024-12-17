@@ -185,6 +185,12 @@ const ModernSidebar = () => {
     },
     {
       icon: <ClassScheduleIcon />,
+      text: 'Coach Availability',
+      color: iconColors.classSchedules,
+      link: '/coachAvailabilityTable',
+    },
+    {
+      icon: <ClassScheduleIcon />,
       text: 'Class Schedules',
       color: iconColors.classSchedules,
       link: '/serviceScheduleClass',

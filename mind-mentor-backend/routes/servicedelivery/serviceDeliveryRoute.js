@@ -9,6 +9,11 @@ const serviceController = require('../../controller/servicedelivery/seviceContro
 
 serviceRoute.post("/save-class-shedule/:id",serviceController.timeTableShedules)
 serviceRoute.get("/get-class-shedule",serviceController.getClassShedules)
+serviceRoute.get("/get-coach-data",serviceController.getCoachData)
+serviceRoute.post("/save-coach-availabledays",serviceController.saveCoachAvailableDays)
+serviceRoute.get("/get-coach-availabledata-table",serviceController.getCoachAvailableDays)
+
+
 
 
 

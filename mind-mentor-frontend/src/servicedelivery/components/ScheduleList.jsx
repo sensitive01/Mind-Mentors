@@ -283,15 +283,38 @@ const ScheduleKanban = () => {
             </Button>
           </Box>
 
-          <Grid container spacing={3}>
+          <Grid
+            container
+            spacing={3}
+            sx={{
+              flexWrap: "nowrap",
+              overflowX: "auto",
+              pb: 2, // For scrollbar space
+            }}
+          >
             {Object.entries(scheduleData).map(([day, classes]) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={day}>
-                <AnimatedCard>
+              <Grid
+                item
+                xs={12 / 7}
+                key={day}
+                sx={{
+                  minWidth: "300px",
+                  maxHeight: "calc(100vh - 200px)", // Adjust this value based on your layout
+                }}
+              >
+                <AnimatedCard
+                  sx={{
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
+                >
                   <CardHeader
                     title={day}
                     sx={{
                       bgcolor: customColors.primary,
                       color: "#ffffff",
+                      flexShrink: 0,
                       "& .MuiCardHeader-title": {
                         fontWeight: "bold",
                         textAlign: "center",
@@ -299,7 +322,30 @@ const ScheduleKanban = () => {
                       },
                     }}
                   />
-                  <CardContent>
+                  <CardContent
+                    sx={{
+                      flexGrow: 1,
+                      overflow: "auto",
+                      "&::-webkit-scrollbar": {
+                        width: "8px",
+                      },
+                      "&::-webkit-scrollbar-track": {
+                        background: "#f1f1f1",
+                        borderRadius: "4px",
+                      },
+                      "&::-webkit-scrollbar-thumb": {
+                        background: customColors.primary,
+                        borderRadius: "4px",
+                        "&:hover": {
+                          background: customColors.secondary,
+                        },
+                      },
+                      padding: "16px",
+                      "&:last-child": {
+                        paddingBottom: "16px",
+                      },
+                    }}
+                  >
                     {classes.map((classItem, index) => (
                       <ClassCard
                         key={`${day}-${index}`}
@@ -308,6 +354,10 @@ const ScheduleKanban = () => {
                         sx={{
                           opacity: 1,
                           transform: "translateY(0)",
+                          mb: 2,
+                          "&:last-child": {
+                            mb: 0,
+                          },
                         }}
                       >
                         <IconText>
@@ -330,7 +380,7 @@ const ScheduleKanban = () => {
                               fontWeight: "bold",
                             }}
                           >
-                            {classItem.subject}
+                            {`${classItem.subject}`}
                           </Typography>
                         </IconText>
 

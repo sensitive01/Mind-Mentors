@@ -232,6 +232,8 @@ import AssignDemoClassPage from "./pages/employee/operation-employee/AssignDemoC
 import KidsGamesListPage from "./pages/kids/KidsGamesListPage";
 import KidsAchievementsPage from "./pages/kids/KidsAchievementsPage";
 import KidsJourneyPage from "./pages/kids/KidsJourneyPage";
+import CoachAvailabilityFormPage from "./pages/servicedelivery/CoachAvailabilityFormPage";
+import CoachAvailabilityTablePage from "./pages/servicedelivery/CoachAvailabilityTablePage";
 
 
 
@@ -385,6 +387,10 @@ function App() {
         <Route path="/serviceDashboard" element={<ServiceDashboard />} />
         <Route path="/serviceLogin" element={<ServiceLogin />} />
         <Route path="/serviceClassShedule" element={<ServiceDelivaryClassShedulePage/>} />
+        <Route path="/coachAvailabilityForm" element={<CoachAvailabilityFormPage/>} />
+        <Route path="/coachAvailabilityTable" element={<CoachAvailabilityTablePage/>} />
+
+
 
 
 

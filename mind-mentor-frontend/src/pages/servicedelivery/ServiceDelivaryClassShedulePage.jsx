@@ -9,7 +9,6 @@ const ServiceDelivaryClassShedulePage = () => {
         <Sidebar />
       </div>
 
-      {/* Add a flex-grow class to make the enquiry form take the full width */}
       <div className="flex-1  p-4 overflow-x-hidden">
         <Topbar/>
         <ClassTimeTables/>

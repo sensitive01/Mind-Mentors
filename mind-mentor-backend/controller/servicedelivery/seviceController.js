@@ -2,6 +2,7 @@
 // const leaves = require('../../model/serviceLeavesModdel');
 // const serviceattendance = require('../../model/serviceattendanceModel');
 
+const CoachAvailability = require("../../model/availabilityModel");
 const ClassSchedule = require("../../model/classSheduleModel");
 const Employee = require("../../model/employeeModel");
 const convertTo12HourFormat = require("../../utils/convertTo12HourFormat");
@@ -73,7 +74,7 @@ const getClassShedules = async (req, res) => {
   try {
     console.log("Welcome to class schedules");
     const classData = await ClassSchedule.find();
-    console.log(classData)
+    console.log(classData);
 
     res.status(200).json({
       success: true,
@@ -86,6 +87,99 @@ const getClassShedules = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to retrieve class schedules",
+      error: err.message,
+    });
+  }
+};
+const getCoachData = async (req, res) => {
+  try {
+    console.log("Welcome to fetch coach data");
+
+    const coachData = await Employee.find(
+      { department: "coach" },
+      { firstName: 1, _id: 1 }
+    );
+
+    console.log("Fetched Coach Data:", coachData);
+
+    if (coachData.length === 0) {
+      return res.status(404).json({ message: "No coaches found." });
+    }
+
+    res.status(200).json({
+      message: "Coach data fetched successfully.",
+      coachData,
+    });
+  } catch (err) {
+    console.error("Error in fetching the coach data:", err);
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching coach data." });
+  }
+};
+
+const saveCoachAvailableDays = async (req, res) => {
+  try {
+    console.log("Welcome to save availability", req.body);
+
+    const { data } = req.body;
+
+    for (let item of data) {
+      const { coachName: coachId, day, program, fromTime, toTime } = item;
+
+      const coach = await Employee.findById(coachId);
+
+      if (!coach) {
+        console.log(`Coach with ID ${coachId} not found`);
+        continue;
+      }
+
+      const coachName = coach.firstName;
+
+      const newAvailability = new CoachAvailability({
+        coachId,
+        coachName,
+
+        program,
+        day,
+        fromTime,
+        toTime,
+      });
+
+      await newAvailability.save();
+    }
+
+    res
+      .status(200)
+      .json({ message: "Coach availabilities saved successfully" });
+  } catch (err) {
+    console.error("Error in saving the availability", err);
+    res
+      .status(500)
+      .json({ error: "An error occurred while saving availability" });
+  }
+};
+
+const getCoachAvailableDays = async (req, res) => {
+  try {
+    // Fetch all availability records from the database
+    const availableDays = await CoachAvailability.find();
+
+    if (availableDays.length === 0) {
+      return res.status(404).json({ message: "No availability records found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Coach availability fetched successfully",
+      availableDays,
+    });
+  } catch (err) {
+    console.error("Error in getting the available days", err);
+
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching availability",
       error: err.message,
     });
   }
@@ -530,6 +624,9 @@ const getClassShedules = async (req, res) => {
 module.exports = {
   timeTableShedules,
   getClassShedules,
+  getCoachData,
+  saveCoachAvailableDays,
+  getCoachAvailableDays,
 
   // operationEmailVerification,
   // operationPasswordVerification,
