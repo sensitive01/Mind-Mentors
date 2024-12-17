@@ -6,6 +6,8 @@ const generateChessId = require("../../utils/generateChessId");
 const generateOTP = require("../../utils/generateOtp");
 const operationDeptModel = require("../../model/operationDeptModel");
 
+const ClassSchedule = require("../../model/classSheduleModel");
+
 const parentLogin = async (req, res) => {
   try {
     console.log("Welcome to parent login", req.body);
@@ -528,6 +530,69 @@ const getParentProfileData = async (req, res) => {
   }
 };
 
+const getKidDemoClassDetails = async (req, res) => {
+  try {
+    console.log("Welcome to get kids demo class details",req.params);
+
+    const {  kidId } = req.params;
+
+
+    // Find the class schedule with the matching kidId in selectedStudents
+    const demoClassDetails = await ClassSchedule.findOne({
+      "selectedStudents.kidId": kidId,status:"Scheduled"
+    });
+
+    console.log("demoClassDetails",demoClassDetails)
+
+    if (!demoClassDetails) {
+      return res.status(404).json({ message: "No demo class found for the given kid." });
+    }
+
+    // Extract only the student with the matching kidId
+    const filteredStudents = demoClassDetails.selectedStudents.filter(
+      (student) => student.kidId === kidId
+    );
+
+    if (filteredStudents.length === 0) {
+      return res.status(404).json({ message: "Student not found in the demo class." });
+    }
+
+    // Return the modified demoClassDetails with only the filtered student
+    const updatedDemoClassDetails = {
+      ...demoClassDetails._doc, // Extract all properties of the document
+      selectedStudents: filteredStudents, // Overwrite the selectedStudents array
+    };
+
+    res.status(200).json({
+      message: "Kid demo class details retrieved successfully.",
+      classDetails: updatedDemoClassDetails,
+    });
+  } catch (err) {
+    console.error("Error in getting the kid's demo class details:", err);
+    res.status(500).json({ error: "An error occurred while fetching the demo class details." });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 module.exports = {
   parentLogin,
@@ -545,4 +610,5 @@ module.exports = {
   parentBookNewDemoClass,
   parentAddNewKid,
   getParentProfileData,
+  getKidDemoClassDetails
 };

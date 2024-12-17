@@ -44,6 +44,9 @@ const kidSchema = new mongoose.Schema(
       ref: "Parent",
       
     },
+    enqId:{
+      type:String
+    }
   },
   { timestamps: true }
 );

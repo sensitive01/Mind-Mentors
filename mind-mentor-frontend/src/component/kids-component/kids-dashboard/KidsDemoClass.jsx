@@ -7,10 +7,11 @@ import {
   Target,
   Star,
   Rocket,
-  Trophy
+  ExternalLink,
+  User
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getKidDemoClass } from '../../../api/service/kid/KidService';
+import { getDemoClass } from '../../../api/service/parent/ParentService';
 
 const KidsDemoClass = () => {
   const kidId = localStorage.getItem("kidId")
@@ -22,9 +23,9 @@ const KidsDemoClass = () => {
     const fetchDemoClassDetails = async () => {
       try {
         setLoading(true);
-        const response = await getKidDemoClass(kidId);
+        const response = await getDemoClass(kidId);
         console.log(response)
-        setDemoClass(response.data.data);
+        setDemoClass(response.data.classDetails);
         setLoading(false);
       } catch (err) {
         console.error('Error fetching demo class details:', err);
@@ -39,21 +40,21 @@ const KidsDemoClass = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-gradient-to-r from-amber-100 to-pink-100 animate-background">
-        <Rocket size={64} className="text-orange-500 animate-bounce" />
-        <div className="absolute animate-ping w-40 h-40 bg-orange-200 rounded-full opacity-50"></div>
+      <div className="flex justify-center items-center h-screen bg-gradient-to-r from-primary to-primary/80 animate-background">
+        <Rocket size={64} className="text-white animate-bounce" />
+        <div className="absolute animate-ping w-40 h-40 bg-primary/30 rounded-full opacity-50"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="h-screen bg-red-50 flex items-center justify-center p-4">
-        <div className="bg-white p-8 rounded-3xl shadow-2xl text-center max-w-md w-full border-4 border-red-300">
+      <div className="h-screen bg-primary/10 flex items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-3xl shadow-2xl text-center max-w-md w-full border-4 border-primary/30">
           <div className="mb-4 flex justify-center">
-            <Trophy className="text-red-500 animate-bounce" size={64} />
+            <Target className="text-primary animate-bounce" size={64} />
           </div>
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Oops! Adventure Paused</h2>
+          <h2 className="text-2xl font-bold text-primary mb-4">Oops! Adventure Paused</h2>
           <p className="text-gray-700 text-base">{error}</p>
         </div>
       </div>
@@ -62,36 +63,33 @@ const KidsDemoClass = () => {
 
   if (!demoClass) {
     return (
-      <div className="h-screen bg-gradient-to-r from-purple-100 to-pink-100 flex items-center justify-center p-4">
-        <div className="bg-white p-8 rounded-3xl shadow-2xl text-center max-w-md w-full border-4 border-purple-300">
-          <Star size={64} className="mx-auto mb-4 text-purple-600 animate-spin" />
-          <h2 className="text-2xl font-bold text-purple-800">No Class Adventures Today</h2>
-          <p className="text-purple-600 mt-2">Check back later for exciting missions!</p>
+      <div className="h-screen bg-gradient-to-r from-primary/90 to-primary/70 flex items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-3xl shadow-2xl text-center max-w-md w-full border-4 border-primary/30">
+          <Star size={64} className="mx-auto mb-4 text-primary animate-spin" />
+          <h2 className="text-2xl font-bold text-primary">No Class Adventures Today</h2>
+          <p className="text-primary/80 mt-2">Check back later for exciting missions!</p>
         </div>
       </div>
     );
   }
 
-  // Format date
-  const formattedDate = new Date(demoClass.date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  const handleJoinClass = () => {
+    window.open(demoClass.meetingLink, '_blank');
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-amber-100 to-pink-100 flex items-center justify-center p-4">
-      <div className="w-full bg-white rounded-3xl shadow-2xl overflow-hidden border-8 border-white relative">
+    <div className="min-h-screen bg-gradient-to-r from-primary/90 to-primary/70 flex items-center justify-center p-4">
+      <div className="w-full bg-white rounded-3xl shadow-2xl overflow-hidden border-8 border-white relative max-w-4xl">
         {/* Playful Header */}
-        <div className="bg-gradient-to-r from-orange-500 to-pink-500 text-white p-6 relative overflow-hidden">
+        <div className="bg-gradient-to-r from-primary to-primary/80 text-white p-6 relative overflow-hidden">
           <div className="absolute -top-10 -right-10 transform rotate-45 bg-white/20 w-40 h-40 rounded-full"></div>
-          <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-orange-400 to-pink-400 animate-pulse"></div>
+          <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-primary/70 to-primary/90 animate-pulse"></div>
           
           <h1 className="text-2xl font-extrabold mb-2 drop-shadow-md relative z-10">
-            🚀 {demoClass.programs[0].program} Adventure Quest
+            🏆 {demoClass.program} Champion Quest
           </h1>
           <p className="text-base text-white/90 font-medium relative z-10">
-            Epic {demoClass.programs[0].programLevel} Level Challenge!
+            {demoClass.level} Level Training
           </p>
         </div>
 
@@ -101,21 +99,20 @@ const KidsDemoClass = () => {
           <div className="space-y-4">
             {/* Date Field */}
             <div 
-              className="bg-orange-50 p-4 rounded-2xl shadow-md 
-              transform transition-all hover:scale-105 hover:shadow-xl 
-              group cursor-pointer"
+              className="bg-primary/10 p-4 rounded-2xl shadow-md 
+              transform transition-all hover:scale-105 hover:shadow-xl"
             >
               <div className="flex items-center space-x-4">
                 <Calendar 
-                  className="text-orange-500 group-hover:animate-bounce" 
+                  className="text-primary" 
                   size={32} 
                 />
                 <div>
-                  <h3 className="text-base font-bold text-orange-800">
-                    Mission Date
+                  <h3 className="text-base font-bold text-primary">
+                    Mission Day
                   </h3>
-                  <p className="text-sm text-orange-600">
-                    {formattedDate}
+                  <p className="text-sm text-primary/70">
+                    {demoClass.day} {new Date(demoClass.createdAt).toLocaleDateString()}
                   </p>
                 </div>
               </div>
@@ -123,87 +120,96 @@ const KidsDemoClass = () => {
 
             {/* Time Field */}
             <div 
-              className="bg-purple-50 p-4 rounded-2xl shadow-md 
-              transform transition-all hover:scale-105 hover:shadow-xl 
-              group cursor-pointer"
+              className="bg-primary/10 p-4 rounded-2xl shadow-md 
+              transform transition-all hover:scale-105 hover:shadow-xl"
             >
               <div className="flex items-center space-x-4">
                 <Clock 
-                  className="text-purple-500 group-hover:animate-spin" 
+                  className="text-primary" 
                   size={32} 
                 />
                 <div>
-                  <h3 className="text-base font-bold text-purple-800">
+                  <h3 className="text-base font-bold text-primary">
                     Adventure Time
                   </h3>
-                  <p className="text-sm text-purple-600">
-                    {demoClass.time}
+                  <p className="text-sm text-primary/70">
+                    {demoClass.classTime}
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Online Classroom Field */}
+            {/* Coach Field */}
             <div 
-              className="bg-green-50 p-4 rounded-2xl shadow-md 
-              transform transition-all hover:scale-105 hover:shadow-xl 
-              group cursor-pointer"
+              className="bg-primary/10 p-4 rounded-2xl shadow-md 
+              transform transition-all hover:scale-105 hover:shadow-xl"
             >
               <div className="flex items-center space-x-4">
-                <Video 
-                  className="text-green-500 group-hover:animate-pulse" 
+                <User 
+                  className="text-primary" 
                   size={32} 
                 />
                 <div>
-                  <h3 className="text-base font-bold text-green-800">
-                    Magic Portal
+                  <h3 className="text-base font-bold text-primary">
+                    Mission Guide
                   </h3>
-                  <p className="text-sm text-green-600">
-                    Online Classroom
+                  <p className="text-sm text-primary/70">
+                    {demoClass.coachName || 'Expert Instructor'}
                   </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Right Column - Class Excitement */}
+          {/* Right Column - Additional Details */}
           <div className="space-y-4">
-            {/* Chess Journey Field */}
+            {/* Class Type & Level */}
             <div 
-              className="bg-yellow-50 p-4 rounded-2xl shadow-md 
+              className="bg-primary/10 p-4 rounded-2xl shadow-md 
               transform transition-all hover:scale-105 hover:shadow-xl"
             >
-              <h3 className="text-xl font-bold text-yellow-800 mb-2">
-                🏰 Your Epic Journey Begins!
+              <h3 className="text-xl font-bold text-primary mb-2">
+                🎯 Your Training Details
               </h3>
-              <p className="text-sm text-yellow-600 leading-relaxed">
-                Prepare for an incredible adventure where every move tells a story! Learn secret chess strategies that'll make you a true champion!
-              </p>
+              <div className="space-y-2">
+                <p className="text-sm text-primary/70 flex items-center">
+                  <Award size={20} className="mr-2 text-primary" />
+                  Type: {demoClass.classType}
+                </p>
+                <p className="text-sm text-primary/70 flex items-center">
+                  <Target size={20} className="mr-2 text-primary" />
+                  Level: {demoClass.level}
+                </p>
+                <p className="text-sm text-primary/70 flex items-center">
+                  <Star size={20} className="mr-2 text-primary" />
+                  Status: {demoClass.status}
+                </p>
+              </div>
             </div>
 
-            {/* Superpowers Field */}
+            {/* Learner Superpowers */}
             <div 
-              className="bg-indigo-50 p-4 rounded-2xl shadow-md 
+              className="bg-primary/10 p-4 rounded-2xl shadow-md 
               transform transition-all hover:scale-105 hover:shadow-xl"
             >
-              <h4 className="text-xl font-bold text-indigo-800 mb-3">
-                🌟 Unlock Your Superpowers
+              <h4 className="text-xl font-bold text-primary mb-3">
+                🌟 Your Learning Adventure
               </h4>
               <ul className="space-y-2">
                 {[
-                  "Chess Ninja Moves 🥷",
-                  "Brain-Boosting Strategies 🧠",
-                  "Victory Planning Skills 🏆"
+                  "Skill Building 🧠",
+                  "Fun Learning 🎉",
+                  "Expert Guidance 🏆"
                 ].map((power, index) => (
                   <li 
                     key={index} 
-                    className="flex items-center text-sm text-indigo-600 font-medium 
-                    hover:text-indigo-800 hover:translate-x-2 
-                    transition-all duration-300 ease-in-out cursor-pointer"
+                    className="flex items-center text-sm text-primary/70 font-medium 
+                    hover:text-primary 
+                    transition-all duration-300 ease-in-out"
                   >
                     <Award 
                       size={20} 
-                      className="mr-2 text-indigo-500" 
+                      className="mr-2 text-primary" 
                     />
                     {power}
                   </li>
@@ -213,19 +219,20 @@ const KidsDemoClass = () => {
           </div>
         </div>
 
-        {/* Action Button */}
-        <div className="bg-gradient-to-r from-orange-100 to-pink-100 p-6 flex justify-center">
+        {/* Action Buttons */}
+        <div className="bg-primary/10 p-6 flex justify-center space-x-4">
           <button 
-            className="bg-gradient-to-r from-orange-500 to-pink-500 text-white 
+            onClick={handleJoinClass}
+            className="bg-gradient-to-r from-primary to-primary/80 text-white 
             px-8 py-3 rounded-full text-base font-bold 
-            hover:from-orange-600 hover:to-pink-600 
+            hover:from-primary/90 hover:to-primary 
             transform hover:scale-110 transition-all 
             shadow-xl flex items-center space-x-3 
             hover:animate-pulse"
           >
-            <Rocket size={24} />
-            <span>Launch Your Adventure!</span>
-            <Star size={24} />
+            <Video size={24} />
+            <span>Join Class</span>
+            <ExternalLink size={24} />
           </button>
         </div>
       </div>

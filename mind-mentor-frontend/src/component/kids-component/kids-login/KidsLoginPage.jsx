@@ -55,7 +55,7 @@ const KidsLoginPage = () => {
                 htmlFor="mobile"
                 className="block text-sm font-medium text-gray-700"
               >
-                Enter you chess id - MM6725192
+                Enter your chess id - MM6064121
               </label>
 
               <div className="relative">

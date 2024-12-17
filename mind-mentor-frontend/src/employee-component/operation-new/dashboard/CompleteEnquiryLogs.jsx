@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import {
   Box,
-  Button,
   createTheme,
   Fade,
   Paper,
@@ -11,7 +10,6 @@ import {
 } from "@mui/material";
 import { useParams } from "react-router-dom";
 import { alpha } from "@mui/material/styles";
-import { Link } from "react-router-dom";
 
 import { fetchAllLogs } from "../../../api/service/employee/EmployeeService";
 
@@ -26,11 +24,17 @@ const CompleteEnquiryLogs = () => {
         const response = await fetchAllLogs(id);
         console.log(response.data); // Check the structure of the data
         if (response.status === 200 && Array.isArray(response.data)) {
-          const logData = response.data.map((log, index) => ({
+          // Sort logs by createdAt in descending order (newest first)
+          const sortedLogs = response.data.sort((a, b) => 
+            new Date(b.createdAt) - new Date(a.createdAt)
+          );
+
+          const logData = sortedLogs.map((log, index) => ({
             id: index + 1, // Assign a unique id for each log
             createdAt: log.createdAt,
             action: log.action,
           }));
+
           setLogs(logData); // Store the fetched logs
           setRows(logData); // Set rows for DataGrid
         } else {
@@ -54,7 +58,6 @@ const CompleteEnquiryLogs = () => {
       field: "createdAt",
       headerName: "Created At",
       flex: 5,
-      valueFormatter: (params) => {params.value},
     },
     {
       field: "action",
@@ -152,15 +155,21 @@ const CompleteEnquiryLogs = () => {
               >
                 Enquiry Logs
               </Typography>
-              
             </Box>
             <DataGrid
               rows={rows}
               columns={columns}
-              pageSizeOptions={[5, 10, 25]}
+              initialState={{
+                pagination: {
+                  paginationModel: { 
+                    pageSize: 10,
+                    page: 0
+                  },
+                },
+              }}
+              pageSizeOptions={[10, 25, 50]}
               checkboxSelection
               disableRowSelectionOnClick
-              editMode="row"
               getRowId={(row) => row.id}
               slots={{ toolbar: GridToolbar }}
               slotProps={{

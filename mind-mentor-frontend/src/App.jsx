@@ -229,6 +229,9 @@ import KidsClassShedulePage from "./pages/kids/KidsClassShedulePage";
 import CoachAvailabilityPage from "./pages/coach/CoachAvailabilityPage";
 import ServiceDelivaryClassShedulePage from "./pages/servicedelivery/ServiceDelivaryClassShedulePage";
 import AssignDemoClassPage from "./pages/employee/operation-employee/AssignDemoClassPage";
+import KidsGamesListPage from "./pages/kids/KidsGamesListPage";
+import KidsAchievementsPage from "./pages/kids/KidsAchievementsPage";
+import KidsJourneyPage from "./pages/kids/KidsJourneyPage";
 
 
 
@@ -315,6 +318,12 @@ function App() {
           <Route path="/kids/dashboard" element={<KidsDashboard />} />
           <Route path="/kids/demo-class" element={<KidsDemoClassPage />} />
           <Route path="/kids/class-schedule" element={<KidsClassShedulePage />} />
+          <Route path="/kids/game-list" element={<KidsGamesListPage />} />
+          <Route path="/kids/achievements-list" element={<KidsAchievementsPage />} />
+          <Route path="/kids/travel-journey" element={<KidsJourneyPage />} />
+
+
+
 
 
           <Route path="/fee-details" element={<FeeDetailsPage />} />

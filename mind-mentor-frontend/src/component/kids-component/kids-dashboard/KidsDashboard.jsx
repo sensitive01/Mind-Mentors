@@ -1,226 +1,214 @@
-import React, { useState } from 'react';
-import { 
-  UserCircle, 
-  Trophy, 
-  Calendar, 
-  Star, 
-  Book, 
-  Award,
-  Rocket,
-  Target
-} from 'lucide-react';
+import { useState } from "react";
+import { Book, Rocket, Star, Shield, Gamepad } from "lucide-react";
 
 const KidsChessDashboard = () => {
-  const [activeSection, setActiveSection] = useState(null);
+  const [activeCard, setActiveCard] = useState(null);
 
-  const chessLevels = [
-    { name: 'Pawn Recruit', icon: <Trophy className="text-blue-500" />, color: 'bg-blue-50' },
-    { name: 'Knight Apprentice', icon: <Rocket className="text-purple-500" />, color: 'bg-purple-50' },
-    { name: 'Bishop Pro', icon: <Target className="text-green-500" />, color: 'bg-green-50' }
-  ];
-
-  const challengeCards = [
-    { 
-      title: 'Checkmate Challenge', 
-      description: 'Defeat the AI in 3 moves!', 
-      icon: <Trophy className="text-yellow-500" size={32} />,
-      bgColor: 'bg-yellow-50'
+  const dashboardSections = [
+    {
+      title: "My Chess Adventure",
+      icon: <Rocket className="text-secondary" size={40} />,
+      color: "bg-secondary/10",
+      buttonColor: "bg-primary",
+      description: "Your chess journey starts here!",
+      sections: [
+        {
+          name: "Pawn Recruit",
+          icon: <Shield className="text-secondary" size={30} />,
+          progress: 65,
+        },
+        {
+          name: "Knight Level",
+          icon: <Star className="text-tertiary" size={30} />,
+          progress: 45,
+        },
+      ],
     },
-    { 
-      title: 'Puzzle Master', 
-      description: 'Solve tricky chess puzzles', 
-      icon: <Book className="text-red-500" size={32} />,
-      bgColor: 'bg-red-50'
-    }
+    {
+      title: "Fun Challenges",
+      icon: <Gamepad className="text-primary" size={40} />,
+      color: "bg-tertiary/10",
+      buttonColor: "bg-primary",
+      description: "Cool chess missions await!",
+      challenges: [
+        {
+          title: "Checkmate Challenge",
+          description: "Defeat the AI in 3 moves!",
+          reward: "🏆 Bronze Medal",
+        },
+        {
+          title: "Puzzle Master",
+          description: "Solve tricky chess puzzles",
+          reward: "🌟 Bonus Points",
+        },
+      ],
+    },
+    {
+      title: "Chess Classes",
+      icon: <Book className="text-secondary" size={40} />,
+      color: "bg-quaternary/10",
+      buttonColor: "bg-primary",
+      description: "Learn and grow together!",
+      classes: [
+        {
+          name: "Chess Basics",
+          time: "Sat 10 AM",
+          difficulty: "Beginner",
+        },
+        {
+          name: "Strategy Masters",
+          time: "Sun 11 AM",
+          difficulty: "Intermediate",
+        },
+      ],
+    },
   ];
 
   return (
-    <div className="min-h-screen bg-[#ffefd2] p-6 font-sans">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-b from-primary/90 to-primary/70 p-4 sm:p-6 md:p-8 font-sans">
+      <div className="max-w-7xl mx-auto">
         {/* Playful Header */}
-        <header className="text-center mb-10 animate-fade-in">
-          <h1 className="text-6xl font-extrabold text-transparent bg-clip-text 
-            bg-gradient-to-r from-blue-600 to-purple-600 
-            drop-shadow-lg mb-2">
-            Chess Adventurers
+        <header className="text-center mb-8 md:mb-12">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white drop-shadow-lg mb-2 animate-bounce">
+            Chess Champions 🏆
           </h1>
-          <p className="text-xl text-blue-800 font-medium">
-            Where every move tells a story!
+          <p className="text-lg sm:text-xl text-white/90 font-medium">
+            Discover, Learn, and Conquer!
           </p>
         </header>
 
         {/* Dashboard Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Profile Section with Gamified Elements */}
-          <section 
-            className={`bg-white rounded-3xl shadow-2xl p-6 text-center 
-            transform transition-all duration-300 
-            ${activeSection === 'profile' ? 'scale-105 ring-4 ring-blue-300' : 'hover:scale-105'}
-            cursor-pointer`}
-            onClick={() => setActiveSection('profile')}
-          >
-            <div className="relative">
-              <UserCircle 
-                className="mx-auto text-blue-600 
-                animate-bounce" 
-                size={100} 
-              />
-              <span className="absolute top-0 right-0 bg-green-500 text-white 
-                rounded-full px-2 py-1 text-xs">
-                Online
-              </span>
-            </div>
-            
-            <h2 className="text-3xl font-bold text-blue-800 mt-4">
-              Chess Ninja
-            </h2>
-
-            {/* Level Progress */}
-            <div className="mt-6 grid grid-cols-3 gap-4">
-              {chessLevels.map((level, index) => (
-                <div 
-                  key={index} 
-                  className={`p-3 rounded-xl ${level.color} 
-                  flex flex-col items-center 
-                  transform transition hover:scale-110`}
-                >
-                  {level.icon}
-                  <p className="text-xs font-semibold text-blue-800 mt-2">
-                    {level.name}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            <button 
-              className="mt-6 w-full bg-gradient-to-r from-blue-600 to-purple-600 
-              text-white py-3 rounded-full 
-              hover:from-blue-700 hover:to-purple-700 
-              transition-all transform hover:scale-105 
-              shadow-md font-bold"
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+          {dashboardSections.map((section, index) => (
+            <div
+              key={index}
+              className={`
+                bg-white rounded-3xl shadow-2xl p-6 transform transition-all duration-300 
+                ${
+                  activeCard === index
+                    ? "scale-105 ring-4 ring-secondary"
+                    : "hover:scale-105"
+                }
+                cursor-pointer relative overflow-hidden group
+              `}
+              onMouseEnter={() => setActiveCard(index)}
+              onMouseLeave={() => setActiveCard(null)}
             >
-              🏆 View Achievements
-            </button>
-          </section>
+              {/* Animated Background */}
+              <div
+                className={`
+                absolute top-0 left-0 w-full h-1 
+                ${section.color} 
+                group-hover:animate-pulse
+              `}
+              ></div>
 
-          {/* Learning Challenges */}
-          <section 
-            className={`bg-white rounded-3xl shadow-2xl p-6 
-            transform transition-all duration-300 
-            ${activeSection === 'challenges' ? 'scale-105 ring-4 ring-purple-300' : 'hover:scale-105'}
-            cursor-pointer`}
-            onClick={() => setActiveSection('challenges')}
-          >
-            <div className="flex items-center space-x-4 mb-6">
-              <Award className="text-purple-600" size={40} />
-              <h2 className="text-3xl font-bold text-purple-800">
-                Daily Challenges
-              </h2>
-            </div>
-
-            <div className="space-y-6">
-              {challengeCards.map((challenge, index) => (
-                <div 
-                  key={index} 
-                  className={`${challenge.bgColor} p-4 rounded-2xl 
-                  flex items-center justify-between 
-                  hover:shadow-lg transition-all transform hover:scale-105`}
-                >
-                  <div>
-                    <h3 className="text-xl font-bold text-purple-900">
-                      {challenge.title}
-                    </h3>
-                    <p className="text-sm text-purple-700">
-                      {challenge.description}
-                    </p>
-                  </div>
-                  {challenge.icon}
-                </div>
-              ))}
-            </div>
-
-            <button 
-              className="mt-6 w-full bg-gradient-to-r from-purple-600 to-pink-600 
-              text-white py-3 rounded-full 
-              hover:from-purple-700 hover:to-pink-700 
-              transition-all transform hover:scale-105 
-              shadow-md font-bold"
-            >
-              🚀 Start Challenge
-            </button>
-          </section>
-
-          {/* Upcoming Classes */}
-          <section 
-            className={`bg-white rounded-3xl shadow-2xl p-6 
-            transform transition-all duration-300 
-            ${activeSection === 'classes' ? 'scale-105 ring-4 ring-green-300' : 'hover:scale-105'}
-            cursor-pointer`}
-            onClick={() => setActiveSection('classes')}
-          >
-            <div className="flex items-center space-x-4 mb-6">
-              <Calendar className="text-green-600" size={40} />
-              <h2 className="text-3xl font-bold text-green-800">
-                Chess Adventures
-              </h2>
-            </div>
-
-            <div className="space-y-6">
-              <div 
-                className="bg-green-50 p-4 rounded-2xl 
-                flex items-center justify-between 
-                hover:shadow-lg transition-all transform hover:scale-105"
-              >
-                <div>
-                  <h3 className="text-xl font-bold text-green-900">
-                    Chess Basics Bootcamp
-                  </h3>
-                  <p className="text-sm text-green-700">
-                    Every Saturday • 10 AM
-                  </p>
-                </div>
-                <button 
-                  className="bg-green-500 text-white px-4 py-2 
-                  rounded-full hover:bg-green-600 
-                  transition-colors"
-                >
-                  Join
-                </button>
+              {/* Section Header */}
+              <div className="flex items-center mb-4 space-x-4">
+                {section.icon}
+                <h2 className="text-2xl font-bold text-primary">
+                  {section.title}
+                </h2>
               </div>
-              <div 
-                className="bg-teal-50 p-4 rounded-2xl 
-                flex items-center justify-between 
-                hover:shadow-lg transition-all transform hover:scale-105"
-              >
-                <div>
-                  <h3 className="text-xl font-bold text-teal-900">
-                    Strategy Masters
-                  </h3>
-                  <p className="text-sm text-teal-700">
-                    Every Sunday • 11 AM
-                  </p>
+
+              {/* Description */}
+              <p className="text-primary/70 mb-4">{section.description}</p>
+
+              {/* Conditional Content Rendering */}
+              {section.sections && (
+                <div className="space-y-4">
+                  {section.sections.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="bg-quinary/20 p-3 rounded-xl flex items-center justify-between"
+                    >
+                      <div className="flex items-center space-x-3">
+                        {item.icon}
+                        <span className="font-semibold text-primary">
+                          {item.name}
+                        </span>
+                      </div>
+                      <div className="w-20 bg-gray-200 rounded-full h-2.5">
+                        <div
+                          className="bg-secondary h-2.5 rounded-full"
+                          style={{ width: `${item.progress}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <button 
-                  className="bg-teal-500 text-white px-4 py-2 
-                  rounded-full hover:bg-teal-600 
-                  transition-colors"
+              )}
+
+              {section.challenges && (
+                <div className="space-y-4">
+                  {section.challenges.map((challenge, idx) => (
+                    <div
+                      key={idx}
+                      className="bg-tertiary/10 p-3 rounded-xl flex items-center justify-between hover:bg-tertiary/20 transition"
+                    >
+                      <div>
+                        <h3 className="font-bold text-primary">
+                          {challenge.title}
+                        </h3>
+                        <p className="text-sm text-primary/70">
+                          {challenge.description}
+                        </p>
+                      </div>
+                      <span className="text-lg">{challenge.reward}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {section.classes && (
+                <div className="space-y-4">
+                  {section.classes.map((classItem, idx) => (
+                    <div
+                      key={idx}
+                      className="bg-quaternary/10 p-3 rounded-xl flex items-center justify-between hover:bg-quaternary/20 transition"
+                    >
+                      <div>
+                        <h3 className="font-bold text-primary">
+                          {classItem.name}
+                        </h3>
+                        <p className="text-sm text-primary/70">
+                          {classItem.time}
+                        </p>
+                      </div>
+                      <span className="bg-quaternary text-white px-2 py-1 rounded-full text-xs">
+                        {classItem.difficulty}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Action Button */}
+              <div className="flex justify-center mt-6">
+                <button
+                  className={`
+                    px-8 py-3 rounded-full 
+                    ${section.buttonColor}
+                    text-white font-bold 
+                    hover:brightness-110 hover:shadow-xl 
+                    transform hover:-translate-y-1 
+                    transition-all duration-300
+                    shadow-md
+                  `}
                 >
-                  Join
+                  Explore More
                 </button>
               </div>
             </div>
-
-            <button 
-              className="mt-6 w-full bg-gradient-to-r from-green-600 to-teal-600 
-              text-white py-3 rounded-full 
-              hover:from-green-700 hover:to-teal-700 
-              transition-all transform hover:scale-105 
-              shadow-md font-bold"
-            >
-              📅 View Full Schedule
-            </button>
-          </section>
+          ))}
         </div>
+
+        {/* Fun Footer */}
+        <footer className="text-center mt-8 md:mt-12">
+          <p className="text-white/70 text-sm">
+            Let's make learning chess fun! 🚀♟️
+          </p>
+        </footer>
       </div>
     </div>
   );

@@ -13,6 +13,7 @@ import {
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import NoteAddIcon from "@mui/icons-material/NoteAdd";
 import { DownloadIcon, HistoryIcon } from "lucide-react";
+import { formatDateOnly } from "../../../utils/formatDateOnly";
 
 const columns = (
   theme,
@@ -166,14 +167,9 @@ const columns = (
     field: "createdAt",
     headerName: "Created At",
     width: 200,
-    valueFormatter: (params) => new Date(params.value).toLocaleString(),
+    valueFormatter: (params) => formatDateOnly(params.value),
   },
-  {
-    field: "updatedAt",
-    headerName: "Updated At",
-    width: 200,
-    valueFormatter: (params) => new Date(params.value).toLocaleString(),
-  },
+ 
   {
     field: "actions",
     headerName: "Actions",
@@ -208,6 +204,8 @@ const columns = (
                 open: true,
                 rowData: params.row,
                 noteText: params.row.notes || "",
+                disposition: params.row.disposition || "None", // Use current disposition
+                enquiryStatus: params.row.enquiryStatus || "Pending" 
               });
             }}
             sx={{

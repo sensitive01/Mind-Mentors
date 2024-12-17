@@ -25,6 +25,9 @@ parentRoute.post("/add-new-kid/:parentId",parentController.parentAddNewKid)
 
 parentRoute.get("/getprofiledata/:parentId",parentController.getParentProfileData)
 
+parentRoute.get("/get-kid-demo-class-details/:kidId",parentController.getKidDemoClassDetails)
+
+
 
 
 

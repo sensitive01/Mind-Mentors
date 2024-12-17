@@ -1,22 +1,27 @@
 import { useState, useEffect } from "react";
-import KidsLoadingAnimation from "./KidsLoadingAnimation"; // Import the new loading component
-import KidsDahbaordPage from "../../component/kids-component/kids-dashboard/KidsDashboard";
+
+import ChessLoader from "../../landingPage/loader/ChessLoader";
 import KidSidebar from "../../component/kids-component/kids-dashboard/kid-layout/KidSidebar";
 import KidTopbar from "../../component/kids-component/kids-dashboard/kid-layout/KidTopbar";
+import KidsGamesList from "../../component/kids-component/kids-dashboard/KidsGamesList";
 
-const KidsDashboard = () => {
+const KidsGamesListPage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 3000); // Extended to 3 seconds to enjoy the animation
+    }, 1500);
 
     return () => clearTimeout(timer);
   }, []);
 
   if (loading) {
-    return <KidsLoadingAnimation />;
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
+        <ChessLoader />
+      </div>
+    );
   }
 
   return (
@@ -35,11 +40,11 @@ const KidsDashboard = () => {
 
         {/* Dashboard */}
         <div className="flex-1 overflow-auto">
-          <KidsDahbaordPage />
+          <KidsGamesList />
         </div>
       </div>
     </div>
   );
 };
 
-export default KidsDashboard;
+export default KidsGamesListPage;

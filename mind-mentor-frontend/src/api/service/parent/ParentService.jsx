@@ -138,3 +138,17 @@ export const getParentData = async (parentId) => {
     return err;
   }
 };
+
+
+export const getDemoClass = async (kidId) => {
+  try {
+  
+    const response = await parentInstance.get(
+      `/parent/get-kid-demo-class-details/${kidId}`,
+   
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};

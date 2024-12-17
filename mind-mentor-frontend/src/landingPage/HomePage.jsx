@@ -1,3 +1,4 @@
+import React from 'react';
 import { Users, User, Baby, Briefcase } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -8,107 +9,112 @@ const HomePage = () => {
     {
       title: 'Parent',
       icon: User,
-      description: 'Manage your children\'s activities and track their progress',
+      description: 'Join your child on their magical learning adventure! Monitor activities and celebrate every achievement together 🎉',
       path: '/parent/login',
-      color: 'blue'
+      color: 'blue',
+      avatar: (
+        <div className="relative transform transition-transform hover:scale-110">
+          <div className="w-24 h-24 bg-gradient-to-br from-blue-200 to-blue-300 rounded-full flex items-center justify-center shadow-lg">
+            <svg className="w-16 h-16" viewBox="0 0 48 48" fill="none">
+              <circle cx="24" cy="16" r="10" fill="#4B5563"/>
+              <path d="M4 42C4 32 14 28 24 28C34 28 44 32 44 42" stroke="#4B5563" strokeWidth="4"/>
+              <circle cx="36" cy="12" r="6" fill="#EF4444" opacity="0.8"/>
+            </svg>
+          </div>
+          <div className="absolute -right-2 -top-1 animate-bounce">
+            <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
+              <span className="text-white text-xl">❤️</span>
+            </div>
+          </div>
+        </div>
+      )
     },
     {
       title: 'Kid',
       icon: Baby,
-      description: 'Access your activities, games, and learning materials',
-      path: '/kids/login', // Adjust path as needed for kid login
-      color: 'green'
+      description: 'Start your exciting journey full of fun games, cool rewards, and amazing discoveries! 🚀',
+      path: '/kids/login',
+      color: 'green',
+      avatar: (
+        <div className="relative transform transition-transform hover:scale-110">
+          <div className="w-24 h-24 bg-gradient-to-br from-green-200 to-green-300 rounded-full flex items-center justify-center shadow-lg">
+            <svg className="w-16 h-16" viewBox="0 0 48 48" fill="none">
+              <circle cx="24" cy="18" r="8" fill="#4B5563"/>
+              <path d="M8 42C8 32 16 30 24 30C32 30 40 32 40 42" stroke="#4B5563" strokeWidth="4"/>
+              <circle cx="38" cy="16" r="4" fill="#FBBF24" className="animate-pulse"/>
+              <circle cx="10" cy="16" r="4" fill="#FBBF24" className="animate-pulse"/>
+            </svg>
+          </div>
+          <div className="absolute -right-2 -top-1 animate-bounce">
+            <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
+              <span className="text-white text-xl">🌟</span>
+            </div>
+          </div>
+        </div>
+      )
     },
     {
       title: 'Employee',
       icon: Briefcase,
-      description: 'Manage schedules and coordinate activities',
+      description: 'Access administrative tools and manage system operations efficiently',
       path: '/employee-login',
-      color: 'purple'
-    },
-    // {
-    //   title: 'Service Delivery',
-    //   icon: Briefcase,
-    //   description: 'Manage schedules and coordinate activities',
-    //   path: '/serviceLogin',
-    //   color: 'blue'
-    // },
-    // {
-    //   title: 'Renewal Associate',
-    //   icon: Briefcase,
-    //   description: 'Manage schedules and coordinate activities',
-    //   path: '/renewalLogin',
-    //   color: 'green'
-    // },
-    // {
-    //   title: 'Coach',
-    //   icon: Briefcase,
-    //   description: 'Manage schedules and coordinate activities',
-    //   path: '/coachLogin',
-    //   color: 'purple'
-    // },
-    // {
-    //   title: 'Marketing Associate',
-    //   icon: Briefcase,
-    //   description: 'Manage schedules and coordinate activities',
-    //   path: '/marketingLogin',
-    //   color: 'blue'
-    // },
-    // {
-    //   title: 'Centre Admin',
-    //   icon: Briefcase,
-    //   description: 'Manage schedules and coordinate activities',
-    //   path: '/centeradmin-login',
-    //   color: 'green'
-    // },
-    // {
-    //   title: ' Super Admin',
-    //   icon: Briefcase,
-    //   description: 'Manage schedules and coordinate activities',
-    //   path: '/superadminLogin',
-    //   color: 'purple'
-    // }
+      color: 'purple',
+      avatar: (
+        <div className="w-24 h-24 bg-gradient-to-br from-purple-200 to-purple-300 rounded-full flex items-center justify-center shadow-lg">
+          <Briefcase className="w-12 h-12 text-purple-600" />
+        </div>
+      )
+    }
   ];
 
   const getColorClasses = (color) => {
     const colors = {
       blue: {
-        bg: 'bg-blue-500',
-        hover: 'hover:bg-blue-600',
-        light: 'bg-blue-50',
-        text: 'text-blue-500'
+        bg: 'bg-gradient-to-r from-blue-500 to-blue-600',
+        hover: 'hover:from-blue-600 hover:to-blue-700',
+        light: 'bg-gradient-to-br from-blue-50 to-blue-100',
+        text: 'text-blue-600',
+        border: 'border-blue-200',
+        shadow: 'shadow-blue-200'
       },
       green: {
-        bg: 'bg-green-500',
-        hover: 'hover:bg-green-600',
-        light: 'bg-green-50',
-        text: 'text-green-500'
+        bg: 'bg-gradient-to-r from-green-500 to-green-600',
+        hover: 'hover:from-green-600 hover:to-green-700',
+        light: 'bg-gradient-to-br from-green-50 to-green-100',
+        text: 'text-green-600',
+        border: 'border-green-200',
+        shadow: 'shadow-green-200'
       },
       purple: {
-        bg: 'bg-purple-500',
-        hover: 'hover:bg-purple-600',
-        light: 'bg-purple-50',
-        text: 'text-purple-500'
+        bg: 'bg-gradient-to-r from-purple-500 to-purple-600',
+        hover: 'hover:from-purple-600 hover:to-purple-700',
+        light: 'bg-gradient-to-br from-purple-50 to-purple-100',
+        text: 'text-purple-600',
+        border: 'border-purple-200',
+        shadow: 'shadow-purple-200'
       }
     };
     return colors[color];
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 via-purple-50 to-green-50">
       <div className="max-w-6xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="text-center mb-16">
-          <div className="flex justify-center mb-6">
-            <div className="bg-blue-100 p-4 rounded-full">
-              <Users className="w-12 h-12 text-blue-500" />
+          <div className="flex justify-center mb-8">
+            <div className="bg-gradient-to-br from-blue-100 to-purple-100 p-6 rounded-full shadow-xl shadow-purple-200/50 animate-bounce">
+              <Users className="w-16 h-16 text-blue-600" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Welcome to KidSystem
+          <h1 className="text-6xl font-bold mb-6 animate-fade-in">
+            Welcome to{' '}
+            <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-green-600 bg-clip-text text-transparent">
+              KidSystem
+            </span>
           </h1>
-          <p className="text-xl text-gray-600">
-            Please select your user type to continue
+          <p className="text-xl text-gray-600 font-medium">
+            Choose your adventure and let's begin! ✨
           </p>
         </div>
 
@@ -119,26 +125,24 @@ const HomePage = () => {
             return (
               <div
                 key={userType.title}
-                className="bg-white rounded-xl shadow-lg overflow-hidden transition-transform hover:scale-105"
+                className={`bg-white rounded-2xl shadow-xl ${colors.shadow} overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl border-2 ${colors.border}`}
               >
-                <div className={`${colors.light} p-8`}>
-                  <div className="flex justify-center">
-                    <userType.icon className={`w-16 h-16 ${colors.text}`} />
-                  </div>
+                <div className={`${colors.light} p-8 flex justify-center items-center`}>
+                  {userType.avatar}
                 </div>
                 
                 <div className="p-8">
-                  <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+                  <h2 className="text-3xl font-bold text-gray-900 mb-4">
                     {userType.title}
                   </h2>
-                  <p className="text-gray-600 mb-8">
+                  <p className="text-lg text-gray-600 mb-8 h-24">
                     {userType.description}
                   </p>
                   <button
                     onClick={() => navigate(userType.path)}
-                    className={`w-full ${colors.bg} ${colors.hover} text-white font-medium px-6 py-3 rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2`}
+                    className={`w-full ${colors.bg} ${colors.hover} text-white font-semibold px-6 py-4 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center gap-3`}
                   >
-                    <userType.icon className="w-5 h-5" />
+                    <userType.icon className="w-6 h-6" />
                     Continue as {userType.title}
                   </button>
                 </div>

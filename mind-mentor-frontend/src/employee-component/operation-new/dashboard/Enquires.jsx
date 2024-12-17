@@ -265,8 +265,10 @@ const Enquiries = () => {
     }
   };
   const handleNoteSave = async () => {
+    console.log("noteDialog.rowData",noteDialog.rowData)
     if (noteDialog.rowData) {
       const updatedNotes = noteDialog.noteText;
+      console.log("updated notes",updatedNotes)
       const id = noteDialog.rowData._id;
       let updatedEnquiryStatus = noteDialog.enquiryStatus;
       let updatedDisposition = noteDialog.disposition;
@@ -303,6 +305,7 @@ const Enquiries = () => {
       );
 
       try {
+        console.log("--->",updatedNotes)
         await addNotes(id, empId, {
           notes: updatedNotes,
           enquiryStatus: updatedEnquiryStatus,

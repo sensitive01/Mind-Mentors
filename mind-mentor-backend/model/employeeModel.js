@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 // Employee Schema
 const employeeSchema = new mongoose.Schema(
   {
-    name: {
+    firstName: {
       type: String,
 
       trim: true,

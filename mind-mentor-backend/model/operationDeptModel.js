@@ -15,6 +15,7 @@ const operationDeptSchema = new mongoose.Schema(
     email: { type: String },
     message: { type: String },
     source: { type: String },
+    kidId:{type:String},
     kidsAge: { type: Number },
     kidsGender: { type: String },
     programs: {

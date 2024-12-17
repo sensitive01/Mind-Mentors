@@ -45,7 +45,6 @@ const DemoClassForm = () => {
     },
     date: "",
     time: "",
-   
   });
   const [isDialogOpen, setIsDialogOpen] = useState(true);
 
@@ -62,22 +61,13 @@ const DemoClassForm = () => {
     fetchStudentData();
   }, []);
 
-
-useEffect(()=>{
-  const fetchCoachAvailability = async()=>{
-    const response = await fetchCoachData()
-    console.log(response)
-
-  }
-  fetchCoachAvailability()
-
-},[])
-
-
-
-
-
-
+  useEffect(() => {
+    const fetchCoachAvailability = async () => {
+      const response = await fetchCoachData();
+      console.log(response);
+    };
+    fetchCoachAvailability();
+  }, []);
 
   const handleStudentSelection = (studentId) => {
     const selectedStudent = prospectData?.find(
@@ -143,7 +133,6 @@ useEffect(()=>{
       selectedProgram,
       date,
       time,
-      
     } = newClassForm;
 
     // Validation
