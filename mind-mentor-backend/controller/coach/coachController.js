@@ -3,6 +3,7 @@
 // const serviceattendance = require('../../model/coachAttendanceModel');
 
 const CoachAvailability = require("../../model/availabilityModel");
+const ClassSchedule = require("../../model/classSheduleModel");
 const Employee = require("../../model/employeeModel");
 
 
@@ -57,7 +58,23 @@ const saveCoachAvailability = async (req, res) => {
 };
 
 
+const getMyScheduledClasses = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const classData = await ClassSchedule.find({ coachId: id });
 
+    if (!classData || classData.length === 0) {
+      return res.status(404).json({ message: "No classes scheduled for this coach." });
+    }
+
+    return res.status(200).json({
+      message: "Classes retrieved successfully",
+      classData,
+    });
+  } catch (err) {
+    return res.status(500).json({ message: "Error in getting the coach scheduled classes", error: err.message });
+  }
+};
 
 
 
@@ -506,7 +523,8 @@ const saveCoachAvailability = async (req, res) => {
 
 module.exports = {
 
-  saveCoachAvailability
+  saveCoachAvailability,
+  getMyScheduledClasses
 
 
 

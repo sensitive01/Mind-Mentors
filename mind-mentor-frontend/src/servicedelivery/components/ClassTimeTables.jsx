@@ -16,10 +16,9 @@ import {
   getCoachAvailabilityData,
   sheduleTimeTable,
 } from "../../api/service/employee/serviceDeliveryService";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
-// Hardcoded levels for programs
 const programs = [
   { name: "Chess", levels: ["Beginner", "Intermediate", "Advanced"] },
   { name: "Rubiks Cube", levels: ["Beginner", "Intermediate", "Advanced"] },
@@ -36,8 +35,8 @@ const ClassScheduleForm = () => {
       coachName: "",
       program: "",
       level: "",
-      startTime: "",
-      endTime: "",
+      fromTime: "",
+      toTime: "",
       meetingLink: "",
       isDemo: false,
     },
@@ -47,6 +46,7 @@ const ClassScheduleForm = () => {
     const fetchAvailableData = async () => {
       try {
         const response = await getCoachAvailabilityData();
+        console.log(response)
         setAvailabilityData(response.data.availableDays);
       } catch (error) {
         console.error("Error fetching availability data:", error);
@@ -56,32 +56,65 @@ const ClassScheduleForm = () => {
     fetchAvailableData();
   }, []);
 
-  // Get unique coaches from availability data
   const coaches = [...new Set(availabilityData.map((item) => item.coachName))];
+
+  // Helper function to convert time string to minutes
+  const timeToMinutes = (timeStr) => {
+    if (!timeStr) return null;
+    try {
+      const [hours, minutes] = timeStr.split(":").map(Number);
+      return hours * 60 + minutes;
+    } catch (error) {
+      return null;
+    }
+  };
+
+  // Helper function to check if a time is within available slots
+  const validateTimeSlot = (schedule, fromTime, toTime) => {
+    if (!schedule.coachName || !schedule.program || !schedule.day) {
+      return true; // Skip validation if required fields are not filled
+    }
+
+    const timeSlots = getTimeSlots(schedule.coachName, schedule.program, schedule.day);
+    if (!timeSlots.length) return false;
+
+    const selectedStart = timeToMinutes(fromTime);
+    const selectedEnd = timeToMinutes(toTime);
+
+    if (!selectedStart || !selectedEnd) return true; // Skip validation if times are incomplete
+
+    return timeSlots.some(slot => {
+      const slotStart = timeToMinutes(slot.fromTime);
+      const slotEnd = timeToMinutes(slot.toTime);
+      return selectedStart >= slotStart && selectedEnd <= slotEnd;
+    });
+  };
 
   const handleScheduleChange = (index, field, value) => {
     const newSchedules = [...schedules];
-    newSchedules[index] = {
-      ...newSchedules[index],
-      [field]: value,
-    };
+    const currentSchedule = { ...newSchedules[index] };
 
-    // Reset dependent fields when coach is changed
-    if (field === "coachName") {
-      newSchedules[index].program = "";
-      newSchedules[index].day = "";
-    
+    // Update the field
+    currentSchedule[field] = value;
+
+    // Validate time slots if either time is changed
+    if (field === "fromTime" || field === "toTime") {
+      const isValid = validateTimeSlot(
+        currentSchedule,
+        field === "fromTime" ? value : currentSchedule.fromTime,
+        field === "toTime" ? value : currentSchedule.toTime
+      );
+
+      if (!isValid && currentSchedule.fromTime && currentSchedule.toTime) {
+        toast.error("Selected time slot is not within coach's available hours");
+        return;
+      }
     }
 
-    // Reset level when program is changed
-    if (field === "program") {
-      newSchedules[index].level = "";
-    }
-
+    newSchedules[index] = currentSchedule;
     setSchedules(newSchedules);
   };
 
-  // Get unique programs for a specific coach
   const getProgramsForCoach = (coachName) => {
     return [
       ...new Set(
@@ -92,7 +125,6 @@ const ClassScheduleForm = () => {
     ];
   };
 
-  // Get available days for a specific coach and program
   const getDaysForCoachProgram = (coachName, program) => {
     return [
       ...new Set(
@@ -105,16 +137,13 @@ const ClassScheduleForm = () => {
     ];
   };
 
-  // Get available time slots for a specific coach, program, and day
   const getTimeSlots = (coachName, program, day) => {
-    return availabilityData
-      .filter(
-        (item) =>
-          item.coachName === coachName &&
-          item.program === program &&
-          item.day === day
-      )
-      
+    return availabilityData.filter(
+      (item) =>
+        item.coachName === coachName &&
+        item.program === program &&
+        item.day === day
+    );
   };
 
   const addSchedule = () => {
@@ -125,8 +154,8 @@ const ClassScheduleForm = () => {
         coachName: "",
         program: "",
         level: "",
-        startTime: "",
-        endTime: "",
+        fromTime: "",
+        toTime: "",
         meetingLink: "",
         isDemo: false,
       },
@@ -140,20 +169,31 @@ const ClassScheduleForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const isValid = schedules.every(
-      (schedule) =>
-        schedule.coachName &&
-        schedule.program &&
-        schedule.level &&
-        schedule.day &&
-        schedule.startTime &&
-        schedule.endTime
-    );
+    // Validate all schedules
+    const isValid = schedules.every(schedule => {
+      // Check required fields
+      if (!schedule.coachName || !schedule.program || !schedule.level || 
+          !schedule.day || !schedule.fromTime || !schedule.toTime) {
+        toast.error("Please fill in all required fields");
+        return false;
+      }
 
-    if (!isValid) {
-      toast.error("Please fill in all fields");
-      return;
-    }
+      // Validate time slots
+      const isTimeValid = validateTimeSlot(
+        schedule,
+        schedule.fromTime,
+        schedule.toTime
+      );
+
+      if (!isTimeValid) {
+        toast.error(`Invalid time slot selected for ${schedule.coachName}'s schedule`);
+        return false;
+      }
+
+      return true;
+    });
+
+    if (!isValid) return;
 
     try {
       const response = await sheduleTimeTable(empId, schedules);
@@ -176,12 +216,30 @@ const ClassScheduleForm = () => {
         coachName: "",
         program: "",
         level: "",
-        startTime: "",
-        endTime: "",
+        fromTime: "",
+        toTime: "",
         meetingLink: "",
         isDemo: false,
       },
     ]);
+  };
+
+  // Helper function to get available time range for a schedule
+  const getAvailableTimeRange = (schedule) => {
+    if (!schedule.coachName || !schedule.program || !schedule.day) {
+      return { min: "00:00", max: "23:59" };
+    }
+
+    const timeSlots = getTimeSlots(schedule.coachName, schedule.program, schedule.day);
+    if (!timeSlots.length) return { min: "00:00", max: "23:59" };
+
+    const fromTimes = timeSlots.map(slot => slot.fromTime);
+    const toTimes = timeSlots.map(slot => slot.toTime);
+
+    return {
+      min: fromTimes.sort()[0],
+      max: toTimes.sort()[toTimes.length - 1]
+    };
   };
 
   return (
@@ -193,207 +251,216 @@ const ClassScheduleForm = () => {
         </div>
 
         <form onSubmit={handleSubmit} onReset={handleReset} className="p-8">
-          {schedules.map((schedule, index) => (
-            <React.Fragment key={index}>
-              <Grid
-                container
-                spacing={2}
-                className="mb-4 p-4 border rounded-lg"
-                alignItems="center"
-              >
-                {/* Coach Dropdown */}
-                <Grid item xs={12} sm={4}>
-                  <FormControl fullWidth>
-                    <InputLabel>Coach</InputLabel>
-                    <Select
-                      value={schedule.coachName}
-                      label="Coach"
-                      onChange={(e) =>
-                        handleScheduleChange(index, "coachName", e.target.value)
-                      }
-                    >
-                      {coaches.map((coach) => (
-                        <MenuItem key={coach} value={coach}>
-                          {coach}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-
-                {/* Program Dropdown (Dependent on Coach) */}
-                <Grid item xs={12} sm={3}>
-                  <FormControl fullWidth>
-                    <InputLabel>Program</InputLabel>
-                    <Select
-                      value={schedule.program}
-                      label="Program"
-                      disabled={!schedule.coachName}
-                      onChange={(e) =>
-                        handleScheduleChange(index, "program", e.target.value)
-                      }
-                    >
-                      {schedule.coachName &&
-                        getProgramsForCoach(schedule.coachName).map(
-                          (program) => (
-                            <MenuItem key={program} value={program}>
-                              {program}
-                            </MenuItem>
-                          )
-                        )}
-                    </Select>
-                  </FormControl>
-                </Grid>
-
-                {/* Level Dropdown */}
-                <Grid item xs={12} sm={3}>
-                  <FormControl fullWidth>
-                    <InputLabel>Level</InputLabel>
-                    <Select
-                      value={schedule.level}
-                      label="Level"
-                      disabled={!schedule.program}
-                      onChange={(e) =>
-                        handleScheduleChange(index, "level", e.target.value)
-                      }
-                    >
-                      {schedule.program &&
-                        programs
-                          .find((p) => p.name === schedule.program)
-                          ?.levels.map((level) => (
-                            <MenuItem key={level} value={level}>
-                              {level}
-                            </MenuItem>
-                          ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-
-                {/* Demo/Class Switch */}
+          {schedules.map((schedule, index) => {
+            const timeRange = getAvailableTimeRange(schedule);
+            
+            return (
+              <React.Fragment key={index}>
                 <Grid
-                  item
-                  xs={12}
-                  sm={1}
                   container
+                  spacing={2}
+                  className="mb-4 p-4 border rounded-lg"
                   alignItems="center"
-                  justifyContent="center"
                 >
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={schedule.isDemo}
+                  {/* Coach Dropdown */}
+                  <Grid item xs={12} sm={4}>
+                    <FormControl fullWidth>
+                      <InputLabel>Coach</InputLabel>
+                      <Select
+                        value={schedule.coachName}
+                        label="Coach"
                         onChange={(e) =>
-                          handleScheduleChange(
-                            index,
-                            "isDemo",
-                            e.target.checked
-                          )
+                          handleScheduleChange(index, "coachName", e.target.value)
                         }
-                        color="primary"
-                      />
-                    }
-                    label={schedule.isDemo ? "Demo" : "Class"}
-                    labelPlacement="start"
-                  />
-                </Grid>
-              </Grid>
-
-              <Grid
-                container
-                spacing={2}
-                className="mb-8 p-4 border rounded-lg"
-                alignItems="center"
-              >
-                {/* Day Dropdown (Dependent on Coach and Program) */}
-                <Grid item xs={12} sm={3}>
-                  <FormControl fullWidth>
-                    <InputLabel>Day</InputLabel>
-                    <Select
-                      value={schedule.day}
-                      label="Day"
-                      disabled={!schedule.coachName || !schedule.program}
-                      onChange={(e) =>
-                        handleScheduleChange(index, "day", e.target.value)
-                      }
-                    >
-                      {schedule.coachName &&
-                        schedule.program &&
-                        getDaysForCoachProgram(
-                          schedule.coachName,
-                          schedule.program
-                        ).map((day) => (
-                          <MenuItem key={day} value={day}>
-                            {day}
+                      >
+                        {coaches.map((coach) => (
+                          <MenuItem key={coach} value={coach}>
+                            {coach}
                           </MenuItem>
                         ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-
-                <Grid item xs={12} sm={2}>
-                  <TextField
-                    fullWidth
-                    label="Start Time"
-                    type="time"
-                    value={schedule.startTime}
-                    onChange={(e) =>
-                      handleScheduleChange(index, "startTime", e.target.value)
-                    }
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    inputProps={{
-                      step: 300,
-                    }}
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={2}>
-                  <TextField
-                    fullWidth
-                    label="End Time"
-                    type="time"
-                    value={schedule.endTime}
-                    onChange={(e) =>
-                      handleScheduleChange(index, "endTime", e.target.value)
-                    }
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    inputProps={{
-                      step: 300,
-                    }}
-                  />
-                </Grid>
-
-                {/* Meeting Link */}
-                <Grid item xs={12} sm={3}>
-                  <TextField
-                    fullWidth
-                    label="Meeting Link"
-                    value={schedule.meetingLink}
-                    onChange={(e) =>
-                      handleScheduleChange(index, "meetingLink", e.target.value)
-                    }
-                    placeholder="Enter meeting link (Zoom, Google Meet, etc.)"
-                  />
-                </Grid>
-
-                {/* Remove Schedule Button (for multiple schedules) */}
-                {schedules.length > 1 && (
-                  <Grid item xs={12} sm={1}>
-                    <IconButton
-                      onClick={() => removeSchedule(index)}
-                      color="error"
-                      size="medium"
-                    >
-                      <DeleteIcon />
-                    </IconButton>
+                      </Select>
+                    </FormControl>
                   </Grid>
-                )}
-              </Grid>
-            </React.Fragment>
-          ))}
+
+                  {/* Program Dropdown */}
+                  <Grid item xs={12} sm={3}>
+                    <FormControl fullWidth>
+                      <InputLabel>Program</InputLabel>
+                      <Select
+                        value={schedule.program}
+                        label="Program"
+                        disabled={!schedule.coachName}
+                        onChange={(e) =>
+                          handleScheduleChange(index, "program", e.target.value)
+                        }
+                      >
+                        {schedule.coachName &&
+                          getProgramsForCoach(schedule.coachName).map(
+                            (program) => (
+                              <MenuItem key={program} value={program}>
+                                {program}
+                              </MenuItem>
+                            )
+                          )}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+
+                  {/* Level Dropdown */}
+                  <Grid item xs={12} sm={3}>
+                    <FormControl fullWidth>
+                      <InputLabel>Level</InputLabel>
+                      <Select
+                        value={schedule.level}
+                        label="Level"
+                        disabled={!schedule.program}
+                        onChange={(e) =>
+                          handleScheduleChange(index, "level", e.target.value)
+                        }
+                      >
+                        {schedule.program &&
+                          programs
+                            .find((p) => p.name === schedule.program)
+                            ?.levels.map((level) => (
+                              <MenuItem key={level} value={level}>
+                                {level}
+                              </MenuItem>
+                            ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+
+                  {/* Demo/Class Switch */}
+                  <Grid
+                    item
+                    xs={12}
+                    sm={1}
+                    container
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={schedule.isDemo}
+                          onChange={(e) =>
+                            handleScheduleChange(
+                              index,
+                              "isDemo",
+                              e.target.checked
+                            )
+                          }
+                          color="primary"
+                        />
+                      }
+                      label={schedule.isDemo ? "Demo" : "Class"}
+                      labelPlacement="start"
+                    />
+                  </Grid>
+                </Grid>
+
+                <Grid
+                  container
+                  spacing={2}
+                  className="mb-8 p-4 border rounded-lg"
+                  alignItems="center"
+                >
+                  {/* Day Dropdown */}
+                  <Grid item xs={12} sm={3}>
+                    <FormControl fullWidth>
+                      <InputLabel>Day</InputLabel>
+                      <Select
+                        value={schedule.day}
+                        label="Day"
+                        disabled={!schedule.coachName || !schedule.program}
+                        onChange={(e) =>
+                          handleScheduleChange(index, "day", e.target.value)
+                        }
+                      >
+                        {schedule.coachName &&
+                          schedule.program &&
+                          getDaysForCoachProgram(
+                            schedule.coachName,
+                            schedule.program
+                          ).map((day) => (
+                            <MenuItem key={day} value={day}>
+                              {day}
+                            </MenuItem>
+                          ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+
+                  {/* Time Selection */}
+                  <Grid item xs={12} sm={2}>
+                    <TextField
+                      fullWidth
+                      label="Start Time"
+                      type="time"
+                      value={schedule.fromTime}
+                      onChange={(e) =>
+                        handleScheduleChange(index, "fromTime", e.target.value)
+                      }
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                      inputProps={{
+                        min: timeRange.min,
+                        max: timeRange.max,
+                        step: 300,
+                      }}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} sm={2}>
+                    <TextField
+                      fullWidth
+                      label="End Time"
+                      type="time"
+                      value={schedule.toTime}
+                      onChange={(e) =>
+                        handleScheduleChange(index, "toTime", e.target.value)
+                      }
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                      inputProps={{
+                        min: timeRange.min,
+                        max: timeRange.max,
+                        step: 300,
+                      }}
+                    />
+                  </Grid>
+
+                  {/* Meeting Link */}
+                  <Grid item xs={12} sm={3}>
+                    <TextField
+                      fullWidth
+                      label="Meeting Link"
+                      value={schedule.meetingLink}
+                      onChange={(e) =>
+                        handleScheduleChange(index, "meetingLink", e.target.value)
+                      }
+                      placeholder="Enter meeting link (Zoom, Google Meet, etc.)"
+                    />
+                  </Grid>
+
+                  {/* Remove Schedule Button */}
+                  {schedules.length > 1 && (
+                    <Grid item xs={12} sm={1}>
+                      <IconButton
+                        onClick={() => removeSchedule(index)}
+                        color="error"
+                        size="medium"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Grid>
+                  )}
+                </Grid>
+              </React.Fragment>
+            );
+          })}
 
           {/* Form Action Buttons */}
           <div className="flex justify-center gap-4 mt-6">
@@ -409,6 +476,15 @@ const ClassScheduleForm = () => {
           </div>
         </form>
       </div>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        closeOnClick
+        pauseOnHover
+        draggable
+        pauseOnFocusLoss
+      />
     </div>
   );
 };

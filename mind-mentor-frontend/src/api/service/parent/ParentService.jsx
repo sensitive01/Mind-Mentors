@@ -115,7 +115,7 @@ export const parentBookNewDemoClass = async (kidId, formData) => {
 
 export const parentRegisterChampions = async (parentId, formData) => {
   try {
-    console.log("parentId, formData",parentId, formData);
+    console.log("parentId, formData", parentId, formData);
     const response = await parentInstance.post(
       `/parent/add-new-kid/${parentId}`,
       formData
@@ -128,10 +128,8 @@ export const parentRegisterChampions = async (parentId, formData) => {
 
 export const getParentData = async (parentId) => {
   try {
-  
     const response = await parentInstance.get(
-      `/parent/getprofiledata/${parentId}`,
-   
+      `/parent/getprofiledata/${parentId}`
     );
     return response;
   } catch (err) {
@@ -139,13 +137,68 @@ export const getParentData = async (parentId) => {
   }
 };
 
-
 export const getDemoClass = async (kidId) => {
   try {
-  
     const response = await parentInstance.get(
-      `/parent/get-kid-demo-class-details/${kidId}`,
-   
+      `/parent/get-kid-demo-class-details/${kidId}`
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+export const addKidAvailabilities = async (kidId, data) => {
+  try {
+    const response = await parentInstance.post(
+      `/parent/save-kid-availability/${kidId}`,
+      { data }
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+export const fetchAllAvailabileDays = async (kidId) => {
+  try {
+    const response = await parentInstance.get(
+      `/parent/get-kid-availability/${kidId}`
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+export const updateKidAvailability = async (data) => {
+  try {
+    const response = await parentInstance.put(
+      `/parent/update-kid-availability/${data._id}`,
+      { data }
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+export const pauseKidAvailability = async (availId, status) => {
+  try {
+    const response = await parentInstance.put(
+      `/parent/update-kid-availability-status/${availId}`,
+      { status }
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+export const deleteKidAvailability = async (availId) => {
+  try {
+    const response = await parentInstance.delete(
+      `/parent/delete-kid-availability/${availId}`
     );
     return response;
   } catch (err) {

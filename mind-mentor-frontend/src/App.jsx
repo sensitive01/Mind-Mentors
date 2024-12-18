@@ -234,6 +234,7 @@ import KidsAchievementsPage from "./pages/kids/KidsAchievementsPage";
 import KidsJourneyPage from "./pages/kids/KidsJourneyPage";
 import CoachAvailabilityFormPage from "./pages/servicedelivery/CoachAvailabilityFormPage";
 import CoachAvailabilityTablePage from "./pages/servicedelivery/CoachAvailabilityTablePage";
+import AddKidAvailabilityPage from "./pages/parent/AddKidAvailabilityPage";
 
 
 
@@ -312,6 +313,7 @@ function App() {
           <Route path="/parent/new-referal" element={<ParentReferalPage />} />
           <Route path="/parent/support" element={<SupportPage />} />
           <Route path="/parent/walkthrough-video" element={<WalkThroughPage />} />
+          <Route path="/parent/add-kid-availability/:kidId" element={<AddKidAvailabilityPage />} />
 
 
          

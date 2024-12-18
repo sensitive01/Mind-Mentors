@@ -172,18 +172,34 @@ const ScheduleKanban = () => {
   const [selectedDay, setSelectedDay] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
 
+
+  const parseTime = (timeString) => {
+    const [time, period] = timeString.split(' ');
+    let [hours, minutes] = time.split(':').map(Number);
+    
+    // Convert to 24-hour format
+    if (period === 'PM' && hours !== 12) {
+      hours += 12;
+    }
+    if (period === 'AM' && hours === 12) {
+      hours = 0;
+    }
+    
+    return hours * 60 + minutes;
+  };
+
   useEffect(() => {
     const fetchAllClassSchedules = async () => {
       try {
         const response = await getClassShedules();
         console.log(response);
-
+  
         // Transform the API data into the required format
         const transformedData = response.reduce((acc, classItem) => {
           if (!acc[classItem.day]) {
             acc[classItem.day] = [];
           }
-
+  
           acc[classItem.day] = [
             ...acc[classItem.day],
             {
@@ -197,10 +213,10 @@ const ScheduleKanban = () => {
               meetingLink: classItem.meetingLink,
             },
           ];
-
+  
           return acc;
         }, {});
-
+  
         // Days in sequence from Monday to Sunday
         const days = [
           "Monday",
@@ -211,29 +227,37 @@ const ScheduleKanban = () => {
           "Saturday",
           "Sunday",
         ];
-
+  
         // Ensure all days are represented and sorted
         const orderedData = days.reduce((acc, day) => {
-          acc[day] = transformedData[day] || [
-            {
-              subject: "No class scheduled",
-              teacher: "N/A",
-              students: 0,
-              level: "N/A",
-              time: "N/A",
-            },
-          ];
+          if (transformedData[day]) {
+            // Sort classes for each day by time
+            acc[day] = transformedData[day].sort((a, b) => {
+              return parseTime(a.time) - parseTime(b.time);
+            });
+          }
+          
+          else {
+            acc[day] = [
+              {
+                subject: "No class schedules",
+                teacher: "",
+                students: 0,
+                level: "",
+                time: "",
+              },
+            ];
+          }
           return acc;
         }, {});
-
+  
         setScheduleData(orderedData);
       } catch (error) {
         console.error("Error fetching class schedules:", error);
-        // Optionally set a default or error state
         setScheduleData({});
       }
     };
-
+  
     fetchAllClassSchedules();
   }, []);
 

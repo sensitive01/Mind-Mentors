@@ -28,11 +28,11 @@ const ParentRegistration = () => {
   console.log("Toolkit datas in ParentRegistration",regFormData)
 
   const [mobile, setMobile] = useState(phoneNumber || "");
-  const [isMobileWhatsapp, setIsMobileWhatsapp] = useState(true);
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [childName, setChildName] = useState("");
-  const [isCooldown, setIsCooldown] = useState(false);
+  const [isMobileWhatsapp, setIsMobileWhatsapp] = useState(regFormData.isMobileWhatsapp||true);
+  const [email, setEmail] = useState(regFormData.email||"");
+  const [name, setName] = useState(regFormData.name||"");
+  const [childName, setChildName] = useState(regFormData.childName||"");
+  const [isCooldown, setIsCooldown] = useState(regFormData.isCooldown||false);
 
   const [country, setCountry] = useState("in");
 
@@ -51,6 +51,7 @@ const ParentRegistration = () => {
     e.preventDefault();
 
     if (isCooldown) return;
+    console.log(email,name,childName,mobile)
 
     if (!email || !name || !childName || !mobile) {
       toast.error("Please fill out all fields before submitting.");

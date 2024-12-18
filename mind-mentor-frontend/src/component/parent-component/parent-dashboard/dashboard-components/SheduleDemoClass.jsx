@@ -19,6 +19,7 @@ const SheduleDemoClass = () => {
     const fetchDemoClass = async () => {
       try {
         const response = await fetchDemoClassDetails(id); 
+        console.log(response)
         if (response.status === 200 && response.data.data !== null) {
           setDemoClass(response.data.data); 
           setIsScheduled(true); 

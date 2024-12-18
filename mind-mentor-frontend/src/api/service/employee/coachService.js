@@ -15,3 +15,12 @@ export const fetchCoachData = async () => {
   );
   return response;
 };
+
+export const getMyClassData = async (empId) => {
+  const response = await coachInsatance.get(
+    `/coach/fetch-my-sheduled-class/${empId}`,
+    
+  );
+  return response;
+};
+

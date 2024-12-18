@@ -95,7 +95,7 @@ const MenuGrid = () => {
       subtitle: "Availability",
       bgColor: "bg-cyan-600",
       gradient: "from-cyan-600 to-cyan-700",
-      route: "#",
+      route: `/parent/add-kid-availability/${id}`,
     },
   ];
 

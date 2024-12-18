@@ -43,8 +43,8 @@ const timeTableShedules = async (req, res) => {
           },
           day: shedule.day,
           classTime: `${convertTo12HourFormat(
-            shedule.startTime
-          )} - ${convertTo12HourFormat(shedule.endTime)}`,
+            shedule.fromTime
+          )} - ${convertTo12HourFormat(shedule.toTime)}`,
 
           coachName: shedule.coachName,
           coachId: shedule.coachId,

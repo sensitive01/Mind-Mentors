@@ -6,6 +6,13 @@ const initialState = {
   name: '',
   childName: '',
   isMobileWhatsapp: false,
+  age: '',
+  gender: '',
+  intention: '',
+  schoolName: '',
+  address: '',
+  pincode: '',
+  programs: [],
 };
 
 const regDataParentKidsSlice = createSlice({
@@ -13,13 +20,9 @@ const regDataParentKidsSlice = createSlice({
   initialState,
   reducers: {
     setFormData: (state, action) => {
-      state.mobile = action.payload.mobile;
-      state.email = action.payload.email;
-      state.name = action.payload.name;
-      state.childName = action.payload.childName;
-      state.isMobileWhatsapp = action.payload.isMobileWhatsapp;
+      return { ...state, ...action.payload }; // Merge new data with existing state
     },
-    resetFormData: () => initialState, 
+    resetFormData: () => initialState, // Reset state to initial
   },
 });
 

@@ -6,6 +6,8 @@ const coachController = require('../../controller/coach/coachController');
 
 
 coachRoute.post("/shedule-class-availability/:id",coachController.saveCoachAvailability)
+coachRoute.get("/fetch-my-sheduled-class/:id",coachController.getMyScheduledClasses)
+
 // coachRoute.get("/fetch-coach-availability",coachController.getAvailableCoach)
 
 

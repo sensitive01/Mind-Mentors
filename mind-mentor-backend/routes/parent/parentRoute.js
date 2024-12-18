@@ -27,6 +27,19 @@ parentRoute.get("/getprofiledata/:parentId",parentController.getParentProfileDat
 
 parentRoute.get("/get-kid-demo-class-details/:kidId",parentController.getKidDemoClassDetails)
 
+parentRoute.post("/save-kid-availability/:kidId",parentController.saveKidAvailability)
+
+parentRoute.get("/get-kid-availability/:kidId",parentController.getKidAvailability)
+
+parentRoute.put("/update-kid-availability/:availId",parentController.updateKidAvailability)
+parentRoute.put("/update-kid-availability-status/:availId",parentController.updateKidAvailabilityStatus)
+
+parentRoute.delete("/delete-kid-availability/:availId",parentController.deleteKidAvailabilityStatus)
+
+
+
+
+
 
 
 

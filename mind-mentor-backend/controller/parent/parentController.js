@@ -7,6 +7,7 @@ const generateOTP = require("../../utils/generateOtp");
 const operationDeptModel = require("../../model/operationDeptModel");
 
 const ClassSchedule = require("../../model/classSheduleModel");
+const kidAvailability = require("../../model/kidAvailability");
 
 const parentLogin = async (req, res) => {
   try {
@@ -212,12 +213,12 @@ const parentBookDemoClass = async (req, res) => {
     await demoClass.save();
     console.log("Demo class saved");
 
-    // Updating the parent's type to "exist"
+    
     await parentModel.findByIdAndUpdate(parent._id, {
       type: "exist",
     });
 
-    // Updating kid data if necessary
+    
     const updatedKid = await kidModel.findByIdAndUpdate({ _id: kid._id }, kid, {
       new: true,
     });
@@ -308,7 +309,7 @@ const getDemoClassDetails = async (req, res) => {
   try {
     console.log("Welcome to get demo class data");
     const { kidId } = req.params;
-    const demoClassData = await demoClassModel.findOne({ kidId: kidId });
+    const demoClassData = await demoClassModel.findOne({ kidId: kidId ,status:"Scheduled"});
     console.log("demoClassData", demoClassData);
 
     if (!demoClassData) {
@@ -576,13 +577,154 @@ const getKidDemoClassDetails = async (req, res) => {
 
 
 
+const saveKidAvailability = async (req, res) => {
+  try {
+    const { kidId } = req.params;
+    const { day, availableFrom, availableTo, status } = req.body.data;
+
+    console.log("Welcome to save kid availability", req.body, kidId);
+
+
+    if (!kidId) {
+      return res.status(404).json({ message: "Kid not found" });
+    }
+
+    const newAvailability = new kidAvailability({
+      kidId,
+      day,
+      availableFrom,
+      availableTo,
+      status,
+    });
+
+    await newAvailability.save();
+
+    return res.status(201).json({ message: "Kid availability saved successfully", newAvailability });
+
+  } catch (err) {
+    console.error("Error in saving the kid availability", err);
+    return res.status(500).json({ message: "Error in saving the kid availability" });
+  }
+};
+
+
+const getKidAvailability = async (req, res) => {
+  try {
+    const { kidId } = req.params;
+    const KidAvailableData = await kidAvailability.find({ kidId: kidId });
+
+
+    if (!KidAvailableData || KidAvailableData.length === 0) {
+      return res.status(404).json({ message: "No availability data found for the kid" });
+    }
+
+    // Send the data as the response
+    return res.status(200).json({ message: "Kid availability data fetched successfully",  KidAvailableData });
+
+  } catch (err) {
+    console.log("Error in fetching the available data", err);
+    return res.status(500).json({ message: "Error in fetching the availability data" });
+  }
+};
 
 
 
+const updateKidAvailability = async (req, res) => {
+  try {
+    console.log("Update availability", req.body);
+    
+    const { availId } = req.params;
+    console.log(availId)
+    const updatedData = req.body.data;
+
+
+    const availability = await kidAvailability.findById(availId);
+    if (!availability) {
+      return res.status(404).json({ message: "Availability not found" });
+    }
+
+
+    const updatedAvailability = await kidAvailability.findByIdAndUpdate(
+      {_id:availId},
+      {
+        $set: {
+          day: updatedData.day,
+          availableFrom: updatedData.availableFrom,
+          availableTo: updatedData.availableTo,
+          status: updatedData.status
+        }
+      },
+      { new: true } 
+    );
+
+ 
+    return res.status(200).json({
+      message: "Availability updated successfully",
+      data: updatedAvailability
+    });
+    
+  } catch (err) {
+    console.log("Error in updating availability", err);
+    return res.status(500).json({ message: "Error in updating availability" });
+  }
+};
+
+
+const updateKidAvailabilityStatus = async (req, res) => {
+  try {
+    console.log("Welcome to update the status", req.body);
+    
+    const { availId } = req.params;
+    const { status } = req.body; 
+    console.log("AvailId", availId);
+
+   
+    const availability = await kidAvailability.findById(availId);
+    if (!availability) {
+      return res.status(404).json({ message: "Availability not found" });
+    }
+
+    
+    const updatedAvailability = await kidAvailability.findByIdAndUpdate(
+      availId,
+      {
+        $set: { status }
+      },
+      { new: true }
+    );
+
+
+    return res.status(200).json({
+      message: "Availability status updated successfully",
+      data: updatedAvailability
+    });
+    
+  } catch (err) {
+    console.log("Error in updating the status", err);
+    return res.status(500).json({ message: "Error in updating availability status" });
+  }
+};
 
 
 
+const deleteKidAvailabilityStatus = async (req, res) => {
+  try {
+    const { availId } = req.params;
+    console.log(availId)
+    const deletedAvailability = await kidAvailability.findByIdAndDelete(availId);
 
+    if (!deletedAvailability) {
+      return res.status(404).json({ message: "Availability not found" });
+    }
+
+    return res.status(200).json({
+      message: "Availability deleted successfully",
+      data: deletedAvailability,
+    });
+  } catch (err) {
+    return res.status(500).json({ message: "Error in deleting availability data" });
+  }
+};
 
 
 
@@ -610,5 +752,10 @@ module.exports = {
   parentBookNewDemoClass,
   parentAddNewKid,
   getParentProfileData,
-  getKidDemoClassDetails
+  getKidDemoClassDetails,
+  saveKidAvailability,
+  getKidAvailability,
+  updateKidAvailability,
+  updateKidAvailabilityStatus,
+  deleteKidAvailabilityStatus
 };

@@ -5,26 +5,26 @@ import { parentKidsRegistration } from "../../api/service/parent/ParentService";
 import LeftLogoBar from "./parent-dashboard/layout/LeftLogoBar";
 import { StepperContext } from "../completion-status-bar/StepperContext"; // Import the context
 import Stepper from "../completion-status-bar/Stepper";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { setFormData } from "../../store/regDataParentKidsSlice";
 
 const ParentKidsRegistration = () => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const { nextStep, previousStep } = useContext(StepperContext);
   const { state } = location;
   const regFormData = useSelector((state) => state.formData);
-  console.log("Toolkit datas in ParentKidsRegistration",regFormData)
+  console.log("Toolkit datas in ParentKidsRegistration", regFormData);
 
-  
-
-  const [formData, setFormData] = useState({
+  const [formData, setFormDatas] = useState({
     kidsName: state?.childName || "",
-    age: "",
-    gender: "",
-    intention: "",
-    schoolName: "",
-    address: "",
-    pincode: "",
+    age:regFormData.age|| "",
+    gender:regFormData.gender|| "",
+    intention:regFormData.intention|| "",
+    schoolName:regFormData.schoolName|| "",
+    address:regFormData.address|| "",
+    pincode:regFormData.pincode|| "",
   });
   const [isCooldown, setIsCooldown] = useState(false);
 
@@ -32,7 +32,7 @@ const ParentKidsRegistration = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+    setFormDatas((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -42,7 +42,6 @@ const ParentKidsRegistration = () => {
     e.preventDefault();
     if (isCooldown) return;
 
- 
     const { kidsName, age, gender, intention, schoolName, address, pincode } =
       formData;
     if (
@@ -64,6 +63,7 @@ const ParentKidsRegistration = () => {
     setTimeout(() => setIsCooldown(false), 5000);
 
     console.log("Form submitted", formData);
+    dispatch(setFormData(formData));
     try {
       const result = await parentKidsRegistration(formData, state);
       console.log(result);
@@ -82,10 +82,8 @@ const ParentKidsRegistration = () => {
   };
 
   useEffect(() => {
-   
     const handleRouteChange = () => {
       if (window.performance && performance.navigation.type === 2) {
-
         previousStep();
       }
     };
@@ -100,8 +98,8 @@ const ParentKidsRegistration = () => {
   const handleSkipDashboard = () => {
     localStorage.getItem("parentId", state?.data?.parentId);
     toast.info("Kids Registration is incomplete, moving to dashboard");
-    if (isCooldown) return; 
-    setIsCooldown(true); 
+    if (isCooldown) return;
+    setIsCooldown(true);
     setTimeout(() => setIsCooldown(false), 5000);
 
     setTimeout(() => {
@@ -262,7 +260,6 @@ const ParentKidsRegistration = () => {
                 }`}
                 onClick={handleSkipDashboard}
                 disabled={isCooldown}
-
               >
                 Skip to Dashboard
               </button>

@@ -29,7 +29,7 @@ const Sidebar = () => {
       label: "Class schedules",
       iconSize: 24,
     },
-    { path: "#", icon: Clock, label: "Availability", iconSize: 24 },
+    { path: "#", icon: Clock, label: "AvailabilityS", iconSize: 24 },
     {
       path: "/parent/walkthrough-video",
       icon: PlayCircle,

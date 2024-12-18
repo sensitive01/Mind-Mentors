@@ -49,7 +49,7 @@ const ParentKidsDetailsPage = () => {
           <div className="flex-1 flex flex-col h-full">
             <Topbar />
 
-            <div className="flex-1 p-8 overflow-auto">
+            <div className="flex-1 p-8">
               <KidsDetails kids={kids} />
             </div>
           </div>
