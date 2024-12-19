@@ -5,6 +5,8 @@
 const CoachAvailability = require("../../model/availabilityModel");
 const ClassSchedule = require("../../model/classSheduleModel");
 const Employee = require("../../model/employeeModel");
+const enquiryLogs = require("../../model/enquiryLogs");
+const operationDeptModel = require("../../model/operationDeptModel");
 const convertTo12HourFormat = require("../../utils/convertTo12HourFormat");
 
 const timeTableShedules = async (req, res) => {
@@ -184,6 +186,164 @@ const getCoachAvailableDays = async (req, res) => {
     });
   }
 };
+
+
+
+const getClassAndStudentsData = async (req, res) => {
+  try {
+    console.log(
+      "Welcome to getting the demo class and student data",
+      req.params
+    );
+    const { classId } = req.params;
+
+    // Find the class data by ID
+    const classData = await ClassSchedule.find({ _id: classId });
+
+    if (!classData) {
+      return res.status(404).json({ message: "Class not found" });
+    }
+
+    // Find kids data matching the program and level in arrays
+    const kidsData = await operationDeptModel.find(
+      {
+        enquiryField: "prospects",
+        payment: "Success",
+        programs: {
+          $elemMatch: {
+            program: classData[0].program,
+            level: classData[0].level,
+          },
+        },
+      },
+      { kidFirstName: 1 } // Project only the required fields
+    );
+
+    console.log("Class Data", classData);
+    console.log("Kids Data", kidsData);
+
+    res.status(200).json({ classData, kidsData });
+  } catch (err) {
+    console.error("Error in getting the demo class and student data", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const saveClassData = async (req, res) => {
+  try {
+    console.log("Welcome to save the demo class", req.body, req.params);
+
+    const formattedDateTime = new Intl.DateTimeFormat("en-US", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(new Date());
+
+    const { empId } = req.params;
+    const { classId, students } = req.body;
+
+    // Fetch employee data
+    const empData = await Employee.findOne(
+      { _id: empId },
+      { name: 1, department: 1 }
+    );
+
+    // Fetch kids data
+    const kidsData = await operationDeptModel.find(
+      { _id: { $in: students } },
+      { kidFirstName: 1, _id: 1, logs: 1, kidId: 1 }
+    );
+
+    console.log("Fetched kids data:", kidsData);
+    console.log("Fetched empData:", empData);
+
+    // Fetch the class schedule data
+    const classSchedule = await ClassSchedule.findById(classId);
+
+    if (!classSchedule) {
+      return res.status(404).json({ message: "Class schedule not found." });
+    }
+
+    // Prepare new selected students data
+    const updatedSelectedStudents = students.map((studentId) => {
+      console.log();
+      const kid = kidsData.find((kid) => kid._id.toString() === studentId);
+      return {
+        kidId: kid.kidId,
+        kidName: kid ? kid.kidFirstName : "Unknown",
+      };
+    });
+
+    console.log("updatedSelectedStudents", updatedSelectedStudents, kidsData);
+
+    // Update class schedule with the new selected students (using $push to add to existing array)
+    await ClassSchedule.findByIdAndUpdate(
+      classId,
+      {
+        $push: {
+          selectedStudents: { $each: updatedSelectedStudents },
+        },
+        $set: {
+          "scheduledBy.id": empData._id,
+          "scheduledBy.department": empData.department,
+          "scheduledBy.name": empData.name || "",
+        },
+      },
+      { new: true }
+    );
+
+    // Update the scheduleDemo field in the kidsData
+    const updatedKidsDataPromises = kidsData.map(async (kid) => {
+      if (students.includes(kid._id.toString())) {
+        kid.scheduleDemo = {
+          status: "Scheduled",
+          scheduledDay: classSchedule.day,
+        };
+
+        await kid.save();
+      }
+    });
+
+    // Wait for all updates to finish
+    await Promise.all(updatedKidsDataPromises);
+
+    // const logUpdate = await enquiryLogs.findByIdAndUpdate(
+    //   { _id: kidsData.logs },
+    //   {
+    //     $push: {
+    //       logs: {
+    //         employeeId: empId,
+    //         employeeName: empData.firstName, // empData.firstName should exist here
+    //         action: ` ${empData.firstName} in ${empData.department} department sheduled class for kid. created on ${formattedDateTime}`,
+    //         createdAt: new Date(),
+    //       },
+    //     },
+    //   },
+    //   { new: true }
+    // );
+
+    // Respond with success
+    res.status(200).json({
+      message: "Demo class data saved successfully.",
+      updatedClassSchedule: classSchedule,
+      updatedKidsData: kidsData,
+    });
+  } catch (err) {
+    console.log("Error in saving the demo class", err);
+    res
+      .status(500)
+      .json({ error: "An error occurred while saving the demo class." });
+  }
+};
+
+
+
+
+
+
+
+
+
+
 
 // Email Verification
 // const operationEmailVerification = async (req, res) => {
@@ -627,6 +787,8 @@ module.exports = {
   getCoachData,
   saveCoachAvailableDays,
   getCoachAvailableDays,
+  getClassAndStudentsData,
+  saveClassData
 
   // operationEmailVerification,
   // operationPasswordVerification,

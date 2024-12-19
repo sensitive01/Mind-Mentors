@@ -7,10 +7,7 @@ import {
   Typography,
   Grid,
   Chip,
-  Paper,
-  styled,
   Modal,
-  createTheme,
   ThemeProvider,
   Backdrop,
   Fade,
@@ -25,166 +22,38 @@ import {
   Close as CloseIcon,
   EventSeat as LevelIcon,
   CalendarToday as DayIcon,
+  PersonAdd as AddStudentIcon,
 } from "@mui/icons-material";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getClassShedules } from "../../api/service/employee/serviceDeliveryService";
-
-// Custom theme colors remain the same
-const customColors = {
-  primary: "#642b8f",
-  secondary: "#F8A213",
-  accent: "#AA88BE",
-  highlight: "#F0BA6F",
-  background: "#EFE8F0",
-};
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: "#642b8f", // Indigo
-      // main: '#f8a213', // Indigo
-      light: "#818CF8",
-      // dark: "#4F46E5",
-    },
-    secondary: {
-      main: "#EC4899", // Pink
-      light: "#F472B6",
-      dark: "#DB2777",
-    },
-    warm: {
-      main: "#F59E0B", // Amber
-      light: "#FCD34D",
-      dark: "#D97706",
-    },
-    cold: {
-      main: "#3B82F6", // Blue
-      light: "#60A5FA",
-      dark: "#2563EB",
-    },
-    background: {
-      default: "#F1F5F9",
-      paper: "#FFFFFF",
-    },
-    text: {
-      primary: "#1E293B",
-      secondary: "#64748B",
-    },
-  },
-  components: {
-    MuiPaper: {
-      styleOverrides: {
-        root: {
-          backgroundImage: "none",
-        },
-      },
-    },
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          textTransform: "none",
-          borderRadius: 8,
-        },
-      },
-    },
-    MuiDataGrid: {
-      styleOverrides: {
-        root: {
-          borderRadius: 12,
-          border: "none",
-          "& .MuiDataGrid-cell:focus": {
-            outline: "none",
-          },
-        },
-      },
-    },
-  },
-});
-
-const AnimatedCard = styled(Card)({
-  transition: "transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out",
-  "&:hover": {
-    transform: "translateY(-8px)",
-    boxShadow: `0 12px 20px rgba(100, 43, 143, 0.2)`,
-    cursor: "pointer",
-  },
-  height: "100%",
-  background: customColors.background,
-  position: "relative",
-});
-
-const ClassCard = styled(Paper)({
-  padding: "16px",
-  marginBottom: "16px",
-  transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-  background: "#ffffff",
-  borderLeft: `4px solid ${customColors.primary}`,
-  "&:hover": {
-    transform: "scale(1.02)",
-    boxShadow: `0 8px 16px rgba(100, 43, 143, 0.2)`,
-    borderLeft: `4px solid ${customColors.secondary}`,
-  },
-});
-
-const IconText = styled(Box)({
-  display: "flex",
-  alignItems: "center",
-  gap: "8px",
-  marginBottom: "8px",
-  "& svg": {
-    transition: "transform 0.3s ease-in-out",
-  },
-  "&:hover svg": {
-    transform: "scale(1.1)",
-  },
-});
-
-const ModalContent = styled(Box)({
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: "90%",
-  maxWidth: "500px",
-  backgroundColor: "#ffffff",
-  borderRadius: "16px",
-  boxShadow: "0 24px 48px rgba(100, 43, 143, 0.2)",
-  padding: "24px",
-  outline: "none",
-});
-
-const DetailRow = styled(Box)({
-  display: "flex",
-  alignItems: "center",
-  gap: "16px",
-  padding: "16px",
-  borderRadius: "8px",
-  marginBottom: "16px",
-  backgroundColor: customColors.background,
-  transition: "transform 0.3s ease-in-out",
-  "&:hover": {
-    transform: "translateX(8px)",
-  },
-});
+import {
+  AnimatedCard,
+  ClassCard,
+  customColors,
+  DetailRow,
+  IconText,
+  ModalContent,
+  theme,
+} from "../../coach/Layout/customStyle";
 
 const ScheduleKanban = () => {
   const [scheduleData, setScheduleData] = useState({});
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedDay, setSelectedDay] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-
+  const navigate = useNavigate();
 
   const parseTime = (timeString) => {
-    const [time, period] = timeString.split(' ');
-    let [hours, minutes] = time.split(':').map(Number);
-    
-    // Convert to 24-hour format
-    if (period === 'PM' && hours !== 12) {
+    const [time, period] = timeString.split(" ");
+    let [hours, minutes] = time.split(":").map(Number);
+
+    if (period === "PM" && hours !== 12) {
       hours += 12;
     }
-    if (period === 'AM' && hours === 12) {
+    if (period === "AM" && hours === 12) {
       hours = 0;
     }
-    
+
     return hours * 60 + minutes;
   };
 
@@ -193,31 +62,30 @@ const ScheduleKanban = () => {
       try {
         const response = await getClassShedules();
         console.log(response);
-  
-        // Transform the API data into the required format
+
         const transformedData = response.reduce((acc, classItem) => {
           if (!acc[classItem.day]) {
             acc[classItem.day] = [];
           }
-  
+
           acc[classItem.day] = [
             ...acc[classItem.day],
             {
+              id:classItem._id,
               time: classItem.classTime,
               subject: classItem.program,
               teacher: classItem.coachName,
-              students: 0,
+              students: classItem.selectedStudents.length||0,
               level: classItem.level,
               classType: classItem.classType,
               status: classItem.status,
               meetingLink: classItem.meetingLink,
             },
           ];
-  
+
           return acc;
         }, {});
-  
-        // Days in sequence from Monday to Sunday
+
         const days = [
           "Monday",
           "Tuesday",
@@ -227,17 +95,13 @@ const ScheduleKanban = () => {
           "Saturday",
           "Sunday",
         ];
-  
-        // Ensure all days are represented and sorted
+
         const orderedData = days.reduce((acc, day) => {
           if (transformedData[day]) {
-            // Sort classes for each day by time
             acc[day] = transformedData[day].sort((a, b) => {
               return parseTime(a.time) - parseTime(b.time);
             });
-          }
-          
-          else {
+          } else {
             acc[day] = [
               {
                 subject: "No class schedules",
@@ -250,14 +114,14 @@ const ScheduleKanban = () => {
           }
           return acc;
         }, {});
-  
+
         setScheduleData(orderedData);
       } catch (error) {
         console.error("Error fetching class schedules:", error);
         setScheduleData({});
       }
     };
-  
+
     fetchAllClassSchedules();
   }, []);
 
@@ -271,6 +135,13 @@ const ScheduleKanban = () => {
     setModalOpen(false);
     setSelectedClass(null);
     setSelectedDay(null);
+  };
+
+  const handleAddKids = (e, classInfo) => {
+    e.stopPropagation();
+
+    console.log("Add kids for class:", classInfo);
+    navigate(`/serviceAssignClassToKid/${classInfo.id}`);
   };
 
   return (
@@ -313,7 +184,7 @@ const ScheduleKanban = () => {
             sx={{
               flexWrap: "nowrap",
               overflowX: "auto",
-              pb: 2, // For scrollbar space
+              pb: 2,
             }}
           >
             {Object.entries(scheduleData).map(([day, classes]) => (
@@ -321,10 +192,7 @@ const ScheduleKanban = () => {
                 item
                 xs={12 / 7}
                 key={day}
-                sx={{
-                  minWidth: "300px",
-                  maxHeight: "calc(100vh - 200px)", // Adjust this value based on your layout
-                }}
+                sx={{ minWidth: "300px", maxHeight: "calc(100vh - 200px)" }}
               >
                 <AnimatedCard
                   sx={{
@@ -418,23 +286,46 @@ const ScheduleKanban = () => {
                           </Typography>
                         </IconText>
 
-                        <IconText>
-                          <StudentsIcon
-                            sx={{ color: customColors.highlight }}
-                          />
-                          <Chip
-                            label={`${classItem.students} students`}
-                            size="small"
-                            sx={{
-                              borderColor: customColors.primary,
-                              color: customColors.primary,
-                              "&:hover": {
-                                backgroundColor: "rgba(100, 43, 143, 0.1)",
-                              },
-                            }}
-                            variant="outlined"
-                          />
-                        </IconText>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            width: "100%",
+                          }}
+                        >
+                          <IconText>
+                            <StudentsIcon
+                              sx={{ color: customColors.highlight }}
+                            />
+                            <Chip
+                              label={`${classItem.students} students`}
+                              size="small"
+                              sx={{
+                                borderColor: customColors.primary,
+                                color: customColors.primary,
+                                "&:hover": {
+                                  backgroundColor: "rgba(100, 43, 143, 0.1)",
+                                },
+                              }}
+                              variant="outlined"
+                            />
+                          </IconText>
+
+                          {classItem.classType === "Class" && (
+                            <IconButton
+                              onClick={(e) => handleAddKids(e, classItem)}
+                              sx={{
+                                color: customColors.primary,
+                                "&:hover": {
+                                  backgroundColor: `${customColors.primary}20`,
+                                },
+                              }}
+                            >
+                              <AddStudentIcon />
+                            </IconButton>
+                          )}
+                        </Box>
                       </ClassCard>
                     ))}
                   </CardContent>
@@ -443,7 +334,6 @@ const ScheduleKanban = () => {
             ))}
           </Grid>
 
-          {/* Modal remains the same as in the previous version */}
           <Modal
             open={modalOpen}
             onClose={handleCloseModal}
@@ -471,10 +361,7 @@ const ScheduleKanban = () => {
                       <Typography
                         variant="h4"
                         component="h2"
-                        sx={{
-                          color: customColors.primary,
-                          fontWeight: "bold",
-                        }}
+                        sx={{ color: customColors.primary, fontWeight: "bold" }}
                       >
                         Class Details
                       </Typography>
@@ -549,24 +436,51 @@ const ScheduleKanban = () => {
                       </Box>
                     </DetailRow>
 
-                    <DetailRow>
-                      <StudentsIcon
-                        sx={{ color: customColors.secondary, fontSize: 28 }}
-                      />
-                      <Box>
-                        <Typography
-                          variant="body1"
-                          sx={{ color: customColors.primary }}
-                        >
-                          Class Size
-                        </Typography>
-                        <Typography
-                          variant="h6"
-                          sx={{ color: customColors.secondary }}
-                        >
-                          {selectedClass.students} Students
-                        </Typography>
+                    <DetailRow
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <StudentsIcon
+                          sx={{
+                            color: customColors.secondary,
+                            fontSize: 28,
+                            mr: 2,
+                          }}
+                        />
+                        <Box>
+                          <Typography
+                            variant="body1"
+                            sx={{ color: customColors.primary }}
+                          >
+                            Class Size
+                          </Typography>
+                          <Typography
+                            variant="h6"
+                            sx={{ color: customColors.secondary }}
+                          >
+                            {selectedClass.students} Students
+                          </Typography>
+                        </Box>
                       </Box>
+                      {selectedClass.classType === "Class" && (
+                        <Button
+                          variant="contained"
+                          startIcon={<AddStudentIcon />}
+                          onClick={(e) => handleAddKids(e, selectedClass)}
+                          sx={{
+                            backgroundColor: customColors.primary,
+                            "&:hover": {
+                              backgroundColor: customColors.secondary,
+                            },
+                          }}
+                        >
+                          Add Kids
+                        </Button>
+                      )}
                     </DetailRow>
 
                     {selectedClass.level && selectedClass.level !== "N/A" && (

@@ -109,10 +109,10 @@ const ScheduleKanban = () => {
     const currentDay = today.toLocaleDateString("en-US", { weekday: "long" });
     const currentTime = today.getHours() * 60 + today.getMinutes();
     const classTime = parseTime(classItem.classTime);
-    console.log(classItem.day,currentDay)
+    console.log( Math.abs(currentTime - classTime))
 
     return classItem.day == currentDay && 
-           Math.abs(currentTime - classTime) <= 160;
+           Math.abs(currentTime - classTime) <= 320;
   };
 
   // Check if a class has been conducted

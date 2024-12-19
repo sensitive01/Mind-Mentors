@@ -28,6 +28,8 @@ export const fetchCoachData = async () => {
 };
 
 
+
+
 export const saveAvailabletime = async (data) => {
   const response = await serviceInstance.post(
     `/service/save-coach-availabledays`,{data}
@@ -42,5 +44,20 @@ export const getCoachAvailabilityData = async () => {
     `/service/get-coach-availabledata-table`
     
   );
+  return response;
+};
+
+
+export const getClassandStudentData = async (id) => {
+  const response = await serviceInstance.get(
+    `/service/get-class-student-data/${id}`
+    
+  );
+  return response;
+};
+
+
+export const saveClassDetails = async (classId,students,empId) => {
+  const response = await serviceInstance.post(`/service/save-class-data/${empId}`,{classId,students});
   return response;
 };

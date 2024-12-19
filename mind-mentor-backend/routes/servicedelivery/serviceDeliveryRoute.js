@@ -13,6 +13,11 @@ serviceRoute.get("/get-coach-data",serviceController.getCoachData)
 serviceRoute.post("/save-coach-availabledays",serviceController.saveCoachAvailableDays)
 serviceRoute.get("/get-coach-availabledata-table",serviceController.getCoachAvailableDays)
 
+serviceRoute.get("/get-class-student-data/:classId", serviceController.getClassAndStudentsData);
+serviceRoute.post("/save-class-data/:empId", serviceController.saveClassData);
+
+
+
 
 
 

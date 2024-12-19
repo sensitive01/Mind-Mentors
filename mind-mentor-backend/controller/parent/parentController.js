@@ -8,6 +8,7 @@ const operationDeptModel = require("../../model/operationDeptModel");
 
 const ClassSchedule = require("../../model/classSheduleModel");
 const kidAvailability = require("../../model/kidAvailability");
+const ConductedClass = require("../../model/conductedClassSchema");
 
 const parentLogin = async (req, res) => {
   try {
@@ -531,25 +532,107 @@ const getParentProfileData = async (req, res) => {
   }
 };
 
+// const getKidDemoClassDetails = async (req, res) => {
+//   try {
+//     console.log("Welcome to get kids demo class details",req.params);
+
+//     const {  kidId } = req.params;
+
+
+//     const demoClassDetails = await ClassSchedule.findOne({
+//       "selectedStudents.kidId": kidId,status:"Scheduled"
+//     });
+
+
+
+//     if (!demoClassDetails) {
+//       const conductedDemoClass = await ConductedClass.findOne({"students.studentID": kidId,status:"Conducted"})
+//       console.log("conducted class",conductedDemoClass)
+//       // return res.status(404).json({ message: "No demo class found for the given kid." });
+//     }
+
+//     const filteredStudents = demoClassDetails.selectedStudents.filter(
+//       (student) => student.kidId === kidId
+//     );
+
+//     if (filteredStudents.length === 0) {
+//       return res.status(404).json({ message: "Student not found in the demo class." });
+//     }
+
+   
+//     const updatedDemoClassDetails = {
+//       ...demoClassDetails._doc, 
+//       selectedStudents: filteredStudents,
+//     };
+
+//     res.status(200).json({
+//       message: "Kid demo class details retrieved successfully.",
+//       classDetails: updatedDemoClassDetails,
+//     });
+//   } catch (err) {
+//     console.error("Error in getting the kid's demo class details:", err);
+//     res.status(500).json({ error: "An error occurred while fetching the demo class details." });
+//   }
+// };
+
 const getKidDemoClassDetails = async (req, res) => {
   try {
-    console.log("Welcome to get kids demo class details",req.params);
+    const { kidId } = req.params;
 
-    const {  kidId } = req.params;
-
-
-    // Find the class schedule with the matching kidId in selectedStudents
     const demoClassDetails = await ClassSchedule.findOne({
-      "selectedStudents.kidId": kidId,status:"Scheduled"
+      "selectedStudents.kidId": kidId,
+      status: "Scheduled",
     });
 
-    console.log("demoClassDetails",demoClassDetails)
-
     if (!demoClassDetails) {
-      return res.status(404).json({ message: "No demo class found for the given kid." });
+      const conductedDemoClass = await ConductedClass.findOne({
+        "students.studentID": kidId,
+        status: "Conducted",
+      });
+
+      if (!conductedDemoClass) {
+        return res.status(404).json({ message: "No demo class found for the given kid." });
+      }
+
+      const classScheduleDetails = await ClassSchedule.findById(conductedDemoClass.classID);
+
+      if (classScheduleDetails && classScheduleDetails.classType === "Demo") {
+        const studentData = conductedDemoClass.students.find(
+          (student) => student.studentID.toString() === kidId
+        );
+
+        const combinedData = {
+          classDetails: {
+            classID: classScheduleDetails._id,
+            classType: classScheduleDetails.classType,
+            day: classScheduleDetails.day,
+            classTime: classScheduleDetails.classTime,
+            coachName: classScheduleDetails.coachName,
+            coachId: classScheduleDetails.coachId,
+            program: classScheduleDetails.program,
+            level: classScheduleDetails.level,
+            meetingLink: classScheduleDetails.meetingLink,
+            status: classScheduleDetails.status,
+            conductedDate: conductedDemoClass.conductedDate,
+          },
+          student: {
+            studentID: studentData.studentID,
+            name: studentData.name,
+            attendance: studentData.attendance,
+            feedback: studentData.feedback,
+          },
+          status: conductedDemoClass.status,
+        };
+
+        return res.status(200).json({
+          message: "Kid's conducted demo class details retrieved successfully.",
+          combinedData,
+        });
+      } else {
+        return res.status(404).json({ message: "The class type is not a Demo class." });
+      }
     }
 
-    // Extract only the student with the matching kidId
     const filteredStudents = demoClassDetails.selectedStudents.filter(
       (student) => student.kidId === kidId
     );
@@ -558,22 +641,19 @@ const getKidDemoClassDetails = async (req, res) => {
       return res.status(404).json({ message: "Student not found in the demo class." });
     }
 
-    // Return the modified demoClassDetails with only the filtered student
     const updatedDemoClassDetails = {
-      ...demoClassDetails._doc, // Extract all properties of the document
-      selectedStudents: filteredStudents, // Overwrite the selectedStudents array
+      ...demoClassDetails._doc,
+      selectedStudents: filteredStudents,
     };
 
     res.status(200).json({
-      message: "Kid demo class details retrieved successfully.",
+      message: "Kid's demo class details retrieved successfully.",
       classDetails: updatedDemoClassDetails,
     });
   } catch (err) {
-    console.error("Error in getting the kid's demo class details:", err);
     res.status(500).json({ error: "An error occurred while fetching the demo class details." });
   }
 };
-
 
 
 

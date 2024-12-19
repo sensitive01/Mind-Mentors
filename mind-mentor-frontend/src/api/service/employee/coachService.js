@@ -24,3 +24,21 @@ export const getMyClassData = async (empId) => {
   return response;
 };
 
+
+export const addFeedbackAndAttandance = async (classId,submissionData) => {
+  const response = await coachInsatance.post(
+    `/coach/add-class-feedback-attandance/${classId}`,{submissionData},
+    
+  );
+  return response;
+};
+
+
+
+export const getClassData = async (classId) => {
+  const response = await coachInsatance.get(
+    `/coach/get-class-data/${classId}`,
+    
+  );
+  return response;
+};

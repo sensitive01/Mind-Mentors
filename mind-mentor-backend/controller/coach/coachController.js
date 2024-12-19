@@ -4,6 +4,7 @@
 
 const CoachAvailability = require("../../model/availabilityModel");
 const ClassSchedule = require("../../model/classSheduleModel");
+const ConductedClass = require("../../model/conductedClassSchema");
 const Employee = require("../../model/employeeModel");
 
 
@@ -77,9 +78,70 @@ const getMyScheduledClasses = async (req, res) => {
 };
 
 
+const addFeedBackAndAttandance = async (req, res) => {
+  try {
+    const { submissionData } = req.body;
+    const { classId } = req.params;
+
+    const classType = await ClassSchedule.findOne({ _id: classId, classType: "Demo" });
+
+    if (classType) {
+      await ClassSchedule.updateOne(
+        { _id: classId },
+        { $pull: { selectedStudents: { kidId: { $in: submissionData.map(student => student.studentId) } } } }
+      );
+    }
+
+    const newClass = new ConductedClass({
+      classID: classId,
+      students: submissionData.map((student) => ({
+        studentID: student.studentId,
+        name: student.studentName,
+        attendance: student.present ? "Present" : "Absent",
+        feedback: student.feedback || "",
+      })),
+      conductedDate: Date.now(),
+      status: "Conducted",
+    });
+
+    await newClass.save();
+
+    res.status(201).json({
+      message: "New class with attendance and feedback added successfully",
+      class: newClass,
+    });
+  } catch (err) {
+    console.log("Error in adding attendance and feedback", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 
 
+
+const getClassData = async (req, res) => {
+  try {
+    console.log("Welcome to get class data");
+    const { classId } = req.params;
+    
+
+    const ClassScheduleData = await ClassSchedule.findOne({ _id: classId });
+    console.log(ClassScheduleData);
+
+    if (!ClassScheduleData) {
+      return res.status(404).json({ message: "Class not found" });
+    }
+
+   
+    res.status(200).json({
+      message: "Class data retrieved successfully",
+      ClassScheduleData,
+    });
+  } catch (err) {
+    console.log("Error in getting the class data", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 
 
@@ -524,7 +586,10 @@ const getMyScheduledClasses = async (req, res) => {
 module.exports = {
 
   saveCoachAvailability,
-  getMyScheduledClasses
+  getMyScheduledClasses,
+  addFeedBackAndAttandance,
+  getClassData
+  
 
 
 

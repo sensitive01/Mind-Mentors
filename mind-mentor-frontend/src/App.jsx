@@ -236,6 +236,7 @@ import CoachAvailabilityFormPage from "./pages/servicedelivery/CoachAvailability
 import CoachAvailabilityTablePage from "./pages/servicedelivery/CoachAvailabilityTablePage";
 import AddKidAvailabilityPage from "./pages/parent/AddKidAvailabilityPage";
 import CoachAddAttandaceFeedBack from "./pages/coach/CoachAddAttandaceFeedBack";
+import AssignClassToKid from "./pages/servicedelivery/AssignClassToKid";
 
 
 
@@ -392,6 +393,8 @@ function App() {
         <Route path="/serviceClassShedule" element={<ServiceDelivaryClassShedulePage/>} />
         <Route path="/coachAvailabilityForm" element={<CoachAvailabilityFormPage/>} />
         <Route path="/coachAvailabilityTable" element={<CoachAvailabilityTablePage/>} />
+        <Route path="/serviceAssignClassToKid/:id" element={<AssignClassToKid/>} />
+
 
 
 
@@ -454,7 +457,7 @@ function App() {
         <Route path="/coachLogin" element={<CoachLogin />} />
         <Route path="/coachAvailability" element={<CoachAvailabilityPage />} />
         <Route path="/coachAvailability" element={<CoachAvailabilityPage />} />
-        <Route path="/coachAttandanceFeedback/:id" element={<CoachAddAttandaceFeedBack />} />
+        <Route path="/coachAttandanceFeedback/:classId" element={<CoachAddAttandaceFeedBack />} />
 
 
 

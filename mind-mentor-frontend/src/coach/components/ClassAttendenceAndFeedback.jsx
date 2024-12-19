@@ -1,23 +1,25 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Calendar, Clock, User, BookOpen, GraduationCap, MessageCircle } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { addFeedbackAndAttandance, getClassData } from '../../api/service/employee/coachService';
+import { toast, ToastContainer } from 'react-toastify';
 
 const ClassAttendanceAndFeedback = () => {
-  const classDetails = {
-    day: "Thursday",
-    classTime: "4:00 PM - 5:00 PM",
-    coachName: "Aswin",
-    program: "Chess",
-    level: "Beginner",
-    classType: "Demo",
-    selectedStudents: [
-      {
-        kidId: "6763bb5ea8aeed9b6d951a51",
-        kidName: "Kid 2",
-        _id: "6763bb70a8aeed9b6d951a70",
+  const navigate = useNavigate()
+  const {classId} = useParams()
+  const [classDetails,setClassDetails]  =useState({})
+
+  useEffect(()=>{
+    const fetchclassData = async()=>{
+      const response= await getClassData(classId)
+      console.log(response)
+      if(response.status===200){
+        setClassDetails(response.data.ClassScheduleData)
       }
-      
-    ],
-  };
+    }
+    fetchclassData()
+  },[])
+  
 
   const [attendance, setAttendance] = useState({});
   const [feedback, setFeedback] = useState({});
@@ -30,14 +32,22 @@ const ClassAttendanceAndFeedback = () => {
     }));
   };
 
-  const handleSubmit = () => {
-    const submissionData = classDetails.selectedStudents.map((student) => ({
+  const handleSubmit = async() => {
+    const submissionData = classDetails?.selectedStudents?.map((student) => ({
       studentId: student.kidId,
       studentName: student.kidName,
       present: attendance[student.kidId] || false,
       feedback: feedback[student.kidId] || "",
     }));
     console.log("Submission data:", submissionData);
+    const response = await addFeedbackAndAttandance(classId,submissionData)
+    console.log(response)
+    if(response.status===201){
+      toast.success(response.data.message)
+      setTimeout(() => {
+        navigate("/coachScheduleClass")
+      }, 1500);
+    }
   };
 
   return (
@@ -85,10 +95,10 @@ const ClassAttendanceAndFeedback = () => {
           {/* Students List */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-700">
-              Students ({classDetails.selectedStudents.length})
+              Students ({classDetails?.selectedStudents?.length})
             </h3>
             
-            {classDetails.selectedStudents.map((student) => (
+            {classDetails?.selectedStudents?.map((student) => (
               <div
                 key={student.kidId}
                 className="bg-white p-4 rounded-lg shadow border transition-shadow hover:shadow-md"
@@ -149,6 +159,15 @@ const ClassAttendanceAndFeedback = () => {
           </button>
         </div>
       </div>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        closeOnClick
+        pauseOnHover
+        draggable
+        pauseOnFocusLoss
+      />
     </div>
   );
 };
