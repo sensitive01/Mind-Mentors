@@ -1,182 +1,77 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
-  Card,
-  CardContent,
-  CardHeader,
   Typography,
-  Grid,
-  Chip,
-  Paper,
-  styled,
-  Modal,
-  createTheme,
   ThemeProvider,
-  Backdrop,
   Fade,
-  IconButton,
   Button,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import {
-  AccessTime as TimeIcon,
-  Person as TeacherIcon,
-  People as StudentsIcon,
-  School as SubjectIcon,
-  Close as CloseIcon,
-  EventSeat as LevelIcon,
-  CalendarToday as DayIcon,
   PlayCircleOutline as LiveIcon,
-  ScheduleOutlined as UpcomingIcon
+  ScheduleOutlined as UpcomingIcon,
+  CheckCircleOutline as ConductedIcon,
 } from "@mui/icons-material";
-
 import { Link } from "react-router-dom";
-
 import { getMyClassData } from "../../api/service/employee/coachService";
+import { customColors, theme } from "../Layout/customStyle";
+import RenderClassList from "./shedule-components/RenderClassList";
+import UpcomingClasses from "./shedule-components/UpcommingClasses";
+import ClassDetailsModal from "./shedule-components/ClassDetailModel";
 
-// Custom theme colors remain the same
-const customColors = {
-  primary: "#642b8f",
-  secondary: "#F8A213",
-  accent: "#AA88BE",
-  highlight: "#F0BA6F",
-  background: "#EFE8F0",
-};
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: "#642b8f", // Indigo
-      // main: '#f8a213', // Indigo
-      light: "#818CF8",
-      // dark: "#4F46E5",
-    },
-    secondary: {
-      main: "#EC4899", // Pink
-      light: "#F472B6",
-      dark: "#DB2777",
-    },
-    warm: {
-      main: "#F59E0B", // Amber
-      light: "#FCD34D",
-      dark: "#D97706",
-    },
-    cold: {
-      main: "#3B82F6", // Blue
-      light: "#60A5FA",
-      dark: "#2563EB",
-    },
-    background: {
-      default: "#F1F5F9",
-      paper: "#FFFFFF",
-    },
-    text: {
-      primary: "#1E293B",
-      secondary: "#64748B",
-    },
-  },
-  components: {
-    MuiPaper: {
-      styleOverrides: {
-        root: {
-          backgroundImage: "none",
-        },
-      },
-    },
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          textTransform: "none",
-          borderRadius: 8,
-        },
-      },
-    },
-    MuiDataGrid: {
-      styleOverrides: {
-        root: {
-          borderRadius: 12,
-          border: "none",
-          "& .MuiDataGrid-cell:focus": {
-            outline: "none",
+const TabPanel = ({ children, value, index, ...other }) => (
+  <div
+    role="tabpanel"
+    hidden={value !== index}
+    id={`tabpanel-${index}`}
+    {...other}
+  >
+    {value === index && (
+      <Box
+        sx={{
+          p: 3,
+          transition: 'all 0.3s ease',
+          backgroundColor: 'background.paper',
+          borderRadius: 2,
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+          margin: '16px 0',
+          border: '1px solid',
+          borderColor: 'divider',
+          minHeight: '200px',
+          '& > *': {
+            animation: 'fadeIn 0.5s ease-in-out',
           },
-        },
-      },
-    },
-  },
-});
-
-const AnimatedCard = styled(Card)({
-  transition: "transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out",
-  "&:hover": {
-    transform: "translateY(-8px)",
-    boxShadow: `0 12px 20px rgba(100, 43, 143, 0.2)`,
-    cursor: "pointer",
-  },
-  height: "100%",
-  background: customColors.background,
-  position: "relative",
-});
-
-const ClassCard = styled(Paper)({
-  padding: "16px",
-  marginBottom: "16px",
-  transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-  background: "#ffffff",
-  borderLeft: `4px solid ${customColors.primary}`,
-  "&:hover": {
-    transform: "scale(1.02)",
-    boxShadow: `0 8px 16px rgba(100, 43, 143, 0.2)`,
-    borderLeft: `4px solid ${customColors.secondary}`,
-  },
-});
-
-const IconText = styled(Box)({
-  display: "flex",
-  alignItems: "center",
-  gap: "8px",
-  marginBottom: "8px",
-  "& svg": {
-    transition: "transform 0.3s ease-in-out",
-  },
-  "&:hover svg": {
-    transform: "scale(1.1)",
-  },
-});
-
-const ModalContent = styled(Box)({
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: "90%",
-  maxWidth: "500px",
-  backgroundColor: "#ffffff",
-  borderRadius: "16px",
-  boxShadow: "0 24px 48px rgba(100, 43, 143, 0.2)",
-  padding: "24px",
-  outline: "none",
-});
-
-const DetailRow = styled(Box)({
-  display: "flex",
-  alignItems: "center",
-  gap: "16px",
-  padding: "16px",
-  borderRadius: "8px",
-  marginBottom: "16px",
-  backgroundColor: customColors.background,
-  transition: "transform 0.3s ease-in-out",
-  "&:hover": {
-    transform: "translateX(8px)",
-  },
-});
+          '@keyframes fadeIn': {
+            '0%': {
+              opacity: 0,
+              transform: 'translateY(10px)'
+            },
+            '100%': {
+              opacity: 1,
+              transform: 'translateY(0)'
+            }
+          },
+          '&:hover': {
+            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+          }
+        }}
+      >
+        {children}
+      </Box>
+    )}
+  </div>
+);
 
 const ScheduleKanban = () => {
   const empId = localStorage.getItem("empId");
+  const [conductedClasses, setConductedClasses] = useState([]);
   const [liveClasses, setLiveClasses] = useState([]);
-  const [upcomingClasses, setUpcomingClasses] = useState([]);
+  const [upcomingClasses, setUpcomingClasses] = useState({});
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedDay, setSelectedDay] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [currentTab, setCurrentTab] = useState(0);
 
   // Helper function to parse time and convert to 24-hour format
   const parseTime = (timeString) => {
@@ -193,10 +88,49 @@ const ScheduleKanban = () => {
     return hours * 60 + minutes;
   };
 
-  // Function to determine if a class is live today
+
+  const getDayPosition = (day) => {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const today = new Date().getDay();
+    const targetDay = days.indexOf(day);
+    
+ 
+    let position = targetDay - today;
+    if (position <= 0) { 
+      position += 7;    
+    }
+    
+    return position;
+  };
+
+  // Check if a class is currently live
   const isLiveToday = (classItem) => {
-    const today = new Date().toLocaleDateString("en-US", { weekday: "long" });
-    return classItem.day === today;
+    const today = new Date();
+    const currentDay = today.toLocaleDateString("en-US", { weekday: "long" });
+    const currentTime = today.getHours() * 60 + today.getMinutes();
+    const classTime = parseTime(classItem.classTime);
+    console.log(classItem.day,currentDay)
+
+    return classItem.day == currentDay && 
+           Math.abs(currentTime - classTime) <= 160;
+  };
+
+  // Check if a class has been conducted
+  const isConducted = (classItem) => {
+    const today = new Date();
+    const currentDay = today.getDay();
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const classDay = days.indexOf(classItem.day);
+    const currentTime = today.getHours() * 60 + today.getMinutes();
+    const classTime = parseTime(classItem.classTime);
+
+    if (classDay === currentDay) {
+      return classTime < currentTime;
+    }
+
+    // Check if the class day has already passed this week
+    let dayDiff = currentDay - classDay;
+    return dayDiff > 0;
   };
 
   useEffect(() => {
@@ -205,26 +139,56 @@ const ScheduleKanban = () => {
         const response = await getMyClassData(empId);
         const classData = response.data.classData;
 
-        // Sort classes by time
-        const sortedClasses = classData.sort(
-          (a, b) => parseTime(a.classTime) - parseTime(b.classTime)
-        );
+        // Sort classes by time within each day
+        const sortedClasses = classData.sort((a, b) => {
+          return parseTime(a.classTime) - parseTime(b.classTime);
+        });
 
-        // Separate live and upcoming classes
+        const currentConductedClasses = sortedClasses.filter(isConducted);
         const currentLiveClasses = sortedClasses.filter(isLiveToday);
-        const currentUpcomingClasses = sortedClasses.filter(
-          (classItem) => !isLiveToday(classItem)
-        );
+        
+        // Group upcoming classes by day
+        const upcomingClassesByDay = sortedClasses
+          .filter(classItem => !isConducted(classItem) && !isLiveToday(classItem))
+          .reduce((acc, classItem) => {
+            if (!acc[classItem.day]) {
+              acc[classItem.day] = [];
+            }
+            acc[classItem.day].push(classItem);
+            return acc;
+          }, {});
 
+        // Sort days based on their position relative to today
+        const sortedUpcomingClasses = Object.entries(upcomingClassesByDay)
+          .sort(([dayA], [dayB]) => {
+            const posA = getDayPosition(dayA);
+            const posB = getDayPosition(dayB);
+            return posA - posB;
+          })
+          .reduce((acc, [day, classes]) => {
+            acc[day] = classes;
+            return acc;
+          }, {});
+
+        setConductedClasses(currentConductedClasses);
         setLiveClasses(currentLiveClasses);
-        setUpcomingClasses(currentUpcomingClasses);
+        setUpcomingClasses(sortedUpcomingClasses);
       } catch (error) {
         console.error("Error fetching class schedules:", error);
       }
     };
 
     fetchClassSchedules();
+    
+    // Refresh the data every minute to update live classes
+    const intervalId = setInterval(fetchClassSchedules, 60000);
+
+    return () => clearInterval(intervalId);
   }, [empId]);
+
+  const handleTabChange = (event, newValue) => {
+    setCurrentTab(newValue);
+  };
 
   const handleCardClick = (classInfo, day) => {
     setSelectedClass(classInfo);
@@ -236,83 +200,6 @@ const ScheduleKanban = () => {
     setModalOpen(false);
     setSelectedClass(null);
     setSelectedDay(null);
-  };
-
-  // Render function for class list
-  const renderClassList = (classes, isLive = false) => {
-    if (classes.length === 0) {
-      return (
-        <Typography
-          variant="body2"
-          sx={{
-            color: "text.secondary",
-            textAlign: "center",
-            p: 2,
-          }}
-        >
-          {isLive ? "No live classes today" : "No upcoming classes"}
-        </Typography>
-      );
-    }
-
-    return classes.map((classItem, index) => (
-      <ClassCard
-        key={`${classItem.day}-${index}`}
-        elevation={2}
-        onClick={() => handleCardClick(classItem, classItem.day)}
-        sx={{
-          opacity: 1,
-          transform: "translateY(0)",
-          mb: 2,
-          "&:last-child": { mb: 0 },
-        }}
-      >
-        {/* Class card content remains the same as in previous implementation */}
-        <IconText>
-          <TimeIcon sx={{ color: customColors.primary }} />
-          <Typography variant="body1" sx={{ color: customColors.primary }}>
-            {classItem.classTime}
-          </Typography>
-        </IconText>
-
-        <IconText>
-          <SubjectIcon sx={{ color: customColors.secondary }} />
-          <Typography
-            variant="h6"
-            component="h2"
-            sx={{
-              color: customColors.primary,
-              fontWeight: "bold",
-            }}
-          >
-            {classItem.program}
-          </Typography>
-        </IconText>
-
-        <IconText>
-          <TeacherIcon sx={{ color: customColors.accent }} />
-          <Typography variant="body2" sx={{ color: customColors.accent }}>
-            {classItem.coachName}
-          </Typography>
-        </IconText>
-
-        <IconText>
-          <StudentsIcon sx={{ color: customColors.highlight }} />
-          <Chip
-            label={`${classItem.selectedStudents?.length || 0} students`}
-            size="small"
-            sx={{
-              borderColor: customColors.primary,
-              color: customColors.primary,
-              "&:hover": {
-                backgroundColor: "rgba(100, 43, 143, 0.1)",
-              },
-            }}
-            variant="outlined"
-          />
-        </IconText>
-      </ClassCard>
-    ));
   };
 
   return (
@@ -349,233 +236,51 @@ const ScheduleKanban = () => {
             </Button>
           </Box>
 
-          <Grid container spacing={3}>
-            {/* Live Classes Section */}
-            <Grid item xs={12} md={6}>
-              <AnimatedCard>
-                <CardHeader
-                  title={
-                    <Box display="flex" alignItems="center">
-                      <LiveIcon sx={{ mr: 1, color: "red" }} />
-                      <Typography variant="h6">Live Classes Today</Typography>
-                    </Box>
-                  }
-                  sx={{
-                    bgcolor: customColors.primary,
-                    color: "#ffffff",
-                    "& .MuiCardHeader-title": {
-                      fontWeight: "bold",
-                      fontSize: "1.2rem",
-                    },
-                  }}
-                />
-                <CardContent sx={{ maxHeight: "500px", overflow: "auto" }}>
-                  {renderClassList(liveClasses, true)}
-                </CardContent>
-              </AnimatedCard>
-            </Grid>
+          <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
+            <Tabs value={currentTab} onChange={handleTabChange} centered>
+              <Tab
+                icon={<ConductedIcon />}
+                label="Conducted"
+                iconPosition="start"
+              />
+              <Tab icon={<LiveIcon />} label="Live" iconPosition="start" />
+              <Tab
+                icon={<UpcomingIcon />}
+                label="Upcoming"
+                iconPosition="start"
+              />
+            </Tabs>
+          </Box>
 
-            {/* Upcoming Classes Section */}
-            <Grid item xs={12} md={6}>
-              <AnimatedCard>
-                <CardHeader
-                  title={
-                    <Box display="flex" alignItems="center">
-                      <UpcomingIcon
-                        sx={{ mr: 1, color: customColors.secondary }}
-                      />
-                      <Typography variant="h6">Upcoming Classes</Typography>
-                    </Box>
-                  }
-                  sx={{
-                    bgcolor: customColors.primary,
-                    color: "#ffffff",
-                    "& .MuiCardHeader-title": {
-                      fontWeight: "bold",
-                      fontSize: "1.2rem",
-                    },
-                  }}
-                />
-                <CardContent sx={{ maxHeight: "500px", overflow: "auto" }}>
-                  {renderClassList(upcomingClasses)}
-                </CardContent>
-              </AnimatedCard>
-            </Grid>
-          </Grid>
-          {/* Modal remains the same as in the previous version */}
-          <Modal
-            open={modalOpen}
-            onClose={handleCloseModal}
-            closeAfterTransition
-            BackdropComponent={Backdrop}
-            BackdropProps={{
-              timeout: 500,
-              sx: {
-                backgroundColor: "rgba(100, 43, 143, 0.4)",
-              },
-            }}
-          >
-            <Fade in={modalOpen}>
-              <ModalContent>
-                {selectedClass && (
-                  <>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        mb: 3,
-                      }}
-                    >
-                      <Typography
-                        variant="h4"
-                        component="h2"
-                        sx={{
-                          color: customColors.primary,
-                          fontWeight: "bold",
-                        }}
-                      >
-                        Class Details
-                      </Typography>
-                      <IconButton
-                        onClick={handleCloseModal}
-                        sx={{
-                          color: customColors.primary,
-                          "&:hover": {
-                            backgroundColor: `${customColors.primary}20`,
-                          },
-                        }}
-                      >
-                        <CloseIcon />
-                      </IconButton>
-                    </Box>
+          <TabPanel value={currentTab} index={0}>
+            <RenderClassList
+              classes={conductedClasses}
+              handleCardClick={handleCardClick}
+             
+            />
+          </TabPanel>
 
-                    <DetailRow>
-                      <DayIcon
-                        sx={{ color: customColors.primary, fontSize: 28 }}
-                      />
-                      <Typography
-                        variant="h6"
-                        sx={{ color: customColors.primary }}
-                      >
-                        {selectedDay}
-                      </Typography>
-                    </DetailRow>
+          <TabPanel value={currentTab} index={1}>
+            <RenderClassList
+              classes={liveClasses}
+              handleCardClick={handleCardClick}
+              isLiveTab 
+            />
+          </TabPanel>
 
-                    <DetailRow>
-                      <SubjectIcon
-                        sx={{ color: customColors.secondary, fontSize: 28 }}
-                      />
-                      <Box>
-                        <Typography
-                          variant="h6"
-                          sx={{ color: customColors.primary }}
-                        >
-                          {selectedClass.subject}
-                        </Typography>
-                      </Box>
-                    </DetailRow>
-
-                    <DetailRow>
-                      <TimeIcon
-                        sx={{ color: customColors.accent, fontSize: 28 }}
-                      />
-                      <Typography
-                        variant="h6"
-                        sx={{ color: customColors.accent }}
-                      >
-                        {selectedClass.time}
-                      </Typography>
-                    </DetailRow>
-
-                    <DetailRow>
-                      <TeacherIcon
-                        sx={{ color: customColors.highlight, fontSize: 28 }}
-                      />
-                      <Box>
-                        <Typography
-                          variant="body1"
-                          sx={{ color: customColors.primary }}
-                        >
-                          Instructor
-                        </Typography>
-                        <Typography
-                          variant="h6"
-                          sx={{ color: customColors.highlight }}
-                        >
-                          {selectedClass.teacher}
-                        </Typography>
-                      </Box>
-                    </DetailRow>
-
-                    <DetailRow>
-                      <StudentsIcon
-                        sx={{ color: customColors.secondary, fontSize: 28 }}
-                      />
-                      <Box>
-                        <Typography
-                          variant="body1"
-                          sx={{ color: customColors.primary }}
-                        >
-                          Class Size
-                        </Typography>
-                        <Typography
-                          variant="h6"
-                          sx={{ color: customColors.secondary }}
-                        >
-                          {selectedClass.students} Students
-                        </Typography>
-                      </Box>
-                    </DetailRow>
-
-                    {selectedClass.level && selectedClass.level !== "N/A" && (
-                      <DetailRow>
-                        <LevelIcon
-                          sx={{ color: customColors.accent, fontSize: 28 }}
-                        />
-                        <Box>
-                          <Typography
-                            variant="body1"
-                            sx={{ color: customColors.primary }}
-                          >
-                            Level
-                          </Typography>
-                          <Typography
-                            variant="h6"
-                            sx={{ color: customColors.accent }}
-                          >
-                            {selectedClass.level}
-                          </Typography>
-                        </Box>
-                      </DetailRow>
-                    )}
-
-                    {selectedClass.classType && (
-                      <DetailRow>
-                        <Typography
-                          variant="body1"
-                          sx={{ color: customColors.primary }}
-                        >
-                          Class Type: {selectedClass.classType}
-                        </Typography>
-                      </DetailRow>
-                    )}
-
-                    {selectedClass.status && (
-                      <DetailRow>
-                        <Typography
-                          variant="body1"
-                          sx={{ color: customColors.primary }}
-                        >
-                          Status: {selectedClass.status}
-                        </Typography>
-                      </DetailRow>
-                    )}
-                  </>
-                )}
-              </ModalContent>
-            </Fade>
-          </Modal>
+          <TabPanel value={currentTab} index={2}>
+            <UpcomingClasses
+              upcomingClasses={upcomingClasses}
+              handleCardClick={handleCardClick}
+            />
+          </TabPanel>
+          
+          <ClassDetailsModal
+            modalOpen={modalOpen}
+            handleCloseModal={handleCloseModal}
+            selectedClass={selectedClass}
+            selectedDay={selectedDay}
+          />
         </Box>
       </Fade>
     </ThemeProvider>

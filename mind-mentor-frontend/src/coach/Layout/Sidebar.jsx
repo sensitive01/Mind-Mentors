@@ -168,7 +168,7 @@ const ModernSidebar = () => {
       text: 'Reports',
       color: iconColors.reports,
       subItems: [
-        { icon: <ReportsIcon />, text: 'Students Feedback', link: '/coachFeedback' },
+        { icon: <ReportsIcon />, text: 'Students Feedback', link: '/coachAttandanceFeedback' },
         { icon: <ReportsIcon />, text: 'Student Attendance Report', link: '/coachAttendanceReport' },
       ],
       open: openReports,

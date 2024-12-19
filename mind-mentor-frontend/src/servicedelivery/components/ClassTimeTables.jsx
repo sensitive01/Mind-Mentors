@@ -32,6 +32,7 @@ const ClassScheduleForm = () => {
   const [schedules, setSchedules] = useState([
     {
       day: "",
+      coachId: "",
       coachName: "",
       program: "",
       level: "",
@@ -46,7 +47,7 @@ const ClassScheduleForm = () => {
     const fetchAvailableData = async () => {
       try {
         const response = await getCoachAvailabilityData();
-        console.log(response)
+        console.log("CoachAvialbility", response);
         setAvailabilityData(response.data.availableDays);
       } catch (error) {
         console.error("Error fetching availability data:", error);
@@ -56,9 +57,17 @@ const ClassScheduleForm = () => {
     fetchAvailableData();
   }, []);
 
-  const coaches = [...new Set(availabilityData.map((item) => item.coachName))];
+  const coaches = [
+    ...new Set(
+      availabilityData.map((item) => ({
+        id: item.coachId,
+        name: item.coachName,
+      }))
+    ),
+  ].filter(
+    (coach, index, self) => index === self.findIndex((c) => c.id === coach.id)
+  );
 
-  // Helper function to convert time string to minutes
   const timeToMinutes = (timeStr) => {
     if (!timeStr) return null;
     try {
@@ -75,7 +84,11 @@ const ClassScheduleForm = () => {
       return true; // Skip validation if required fields are not filled
     }
 
-    const timeSlots = getTimeSlots(schedule.coachName, schedule.program, schedule.day);
+    const timeSlots = getTimeSlots(
+      schedule.coachName,
+      schedule.program,
+      schedule.day
+    );
     if (!timeSlots.length) return false;
 
     const selectedStart = timeToMinutes(fromTime);
@@ -83,7 +96,7 @@ const ClassScheduleForm = () => {
 
     if (!selectedStart || !selectedEnd) return true; // Skip validation if times are incomplete
 
-    return timeSlots.some(slot => {
+    return timeSlots.some((slot) => {
       const slotStart = timeToMinutes(slot.fromTime);
       const slotEnd = timeToMinutes(slot.toTime);
       return selectedStart >= slotStart && selectedEnd <= slotEnd;
@@ -94,8 +107,17 @@ const ClassScheduleForm = () => {
     const newSchedules = [...schedules];
     const currentSchedule = { ...newSchedules[index] };
 
-    // Update the field
-    currentSchedule[field] = value;
+    if (field === "coachName") {
+      // When coach is selected, find and set both name and ID
+      const selectedCoach = coaches.find(coach => coach.name === value);
+      if (selectedCoach) {
+        currentSchedule.coachName = selectedCoach.name;
+        currentSchedule.coachId = selectedCoach.id;
+      }
+    } else {
+      currentSchedule[field] = value;
+    }
+
 
     // Validate time slots if either time is changed
     if (field === "fromTime" || field === "toTime") {
@@ -151,6 +173,7 @@ const ClassScheduleForm = () => {
       ...schedules,
       {
         day: "",
+        coachId: "",
         coachName: "",
         program: "",
         level: "",
@@ -170,10 +193,16 @@ const ClassScheduleForm = () => {
     e.preventDefault();
 
     // Validate all schedules
-    const isValid = schedules.every(schedule => {
+    const isValid = schedules.every((schedule) => {
       // Check required fields
-      if (!schedule.coachName || !schedule.program || !schedule.level || 
-          !schedule.day || !schedule.fromTime || !schedule.toTime) {
+      if (
+        !schedule.coachName ||
+        !schedule.program ||
+        !schedule.level ||
+        !schedule.day ||
+        !schedule.fromTime ||
+        !schedule.toTime
+      ) {
         toast.error("Please fill in all required fields");
         return false;
       }
@@ -186,7 +215,9 @@ const ClassScheduleForm = () => {
       );
 
       if (!isTimeValid) {
-        toast.error(`Invalid time slot selected for ${schedule.coachName}'s schedule`);
+        toast.error(
+          `Invalid time slot selected for ${schedule.coachName}'s schedule`
+        );
         return false;
       }
 
@@ -213,6 +244,7 @@ const ClassScheduleForm = () => {
     setSchedules([
       {
         day: "",
+        coachId: "",
         coachName: "",
         program: "",
         level: "",
@@ -230,15 +262,19 @@ const ClassScheduleForm = () => {
       return { min: "00:00", max: "23:59" };
     }
 
-    const timeSlots = getTimeSlots(schedule.coachName, schedule.program, schedule.day);
+    const timeSlots = getTimeSlots(
+      schedule.coachName,
+      schedule.program,
+      schedule.day
+    );
     if (!timeSlots.length) return { min: "00:00", max: "23:59" };
 
-    const fromTimes = timeSlots.map(slot => slot.fromTime);
-    const toTimes = timeSlots.map(slot => slot.toTime);
+    const fromTimes = timeSlots.map((slot) => slot.fromTime);
+    const toTimes = timeSlots.map((slot) => slot.toTime);
 
     return {
       min: fromTimes.sort()[0],
-      max: toTimes.sort()[toTimes.length - 1]
+      max: toTimes.sort()[toTimes.length - 1],
     };
   };
 
@@ -253,7 +289,7 @@ const ClassScheduleForm = () => {
         <form onSubmit={handleSubmit} onReset={handleReset} className="p-8">
           {schedules.map((schedule, index) => {
             const timeRange = getAvailableTimeRange(schedule);
-            
+
             return (
               <React.Fragment key={index}>
                 <Grid
@@ -274,8 +310,8 @@ const ClassScheduleForm = () => {
                         }
                       >
                         {coaches.map((coach) => (
-                          <MenuItem key={coach} value={coach}>
-                            {coach}
+                          <MenuItem key={coach.id} value={coach.name}>
+                            {coach.name}
                           </MenuItem>
                         ))}
                       </Select>
@@ -439,7 +475,11 @@ const ClassScheduleForm = () => {
                       label="Meeting Link"
                       value={schedule.meetingLink}
                       onChange={(e) =>
-                        handleScheduleChange(index, "meetingLink", e.target.value)
+                        handleScheduleChange(
+                          index,
+                          "meetingLink",
+                          e.target.value
+                        )
                       }
                       placeholder="Enter meeting link (Zoom, Google Meet, etc.)"
                     />

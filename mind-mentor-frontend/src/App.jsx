@@ -235,6 +235,7 @@ import KidsJourneyPage from "./pages/kids/KidsJourneyPage";
 import CoachAvailabilityFormPage from "./pages/servicedelivery/CoachAvailabilityFormPage";
 import CoachAvailabilityTablePage from "./pages/servicedelivery/CoachAvailabilityTablePage";
 import AddKidAvailabilityPage from "./pages/parent/AddKidAvailabilityPage";
+import CoachAddAttandaceFeedBack from "./pages/coach/CoachAddAttandaceFeedBack";
 
 
 
@@ -452,6 +453,10 @@ function App() {
         <Route path="/coachFeedaback/add" element={<CoachFeedbackAdd />} />
         <Route path="/coachLogin" element={<CoachLogin />} />
         <Route path="/coachAvailability" element={<CoachAvailabilityPage />} />
+        <Route path="/coachAvailability" element={<CoachAvailabilityPage />} />
+        <Route path="/coachAttandanceFeedback/:id" element={<CoachAddAttandaceFeedBack />} />
+
+
 
 
 
