@@ -1,18 +1,22 @@
+import React, { useEffect, useState } from 'react';
 import {
-    Box,
-    createTheme,
-    Paper,
-    ThemeProvider,
-    Typography
+  Box,
+  Button,
+  createTheme,
+  Paper,
+  ThemeProvider,
+  Typography,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-import React, { useState } from 'react';
+import { getConductedDemo, updateDemoStatus } from '../../../api/service/employee/EmployeeService';
+import { toast, ToastContainer } from 'react-toastify';
 
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#642b8f', // Indigo
-    // main: '#f8a213', // Indigo
+      main: '#642b8f',
       light: '#818CF8',
       dark: '#4F46E5',
     },
@@ -40,46 +44,112 @@ const theme = createTheme({
   },
 });
 
-const columns = [
-  { field: 'sno', headerName: 'S.No', width: 80 },
-  { field: 'cheddKidID', headerName: 'CheddKid ID', width: 120 },
-  { field: 'parentName', headerName: 'Parent Name', width: 180 },
-  { field: 'contactNumber', headerName: 'Contact Number', width: 180 },
-  { field: 'subscriptionDate', headerName: 'Subscription Date', width: 180 },
-  { field: 'amount', headerName: 'Amount', width: 180 },
-  { field: 'invoice', headerName: 'Invoice', width: 180 },
-];
-
-const tasks = [
-  {
-    id: 1,
-    sno: 1,
-    cheddKidID: 'CK001',
-    parentName: 'John Doe',
-    contactNumber: '1234567890',
-    subscriptionDate: '2024-01-15',
-    amount: '1000',
-    invoice: 'INV123',
-  },
-  {
-    id: 2,
-    sno: 2,
-    cheddKidID: 'CK002',
-    parentName: 'Jane Smith',
-    contactNumber: '0987654321',
-    subscriptionDate: '2024-02-10',
-    amount: '1200',
-    invoice: 'INV124',
-  },
-  // Add more rows as needed
-];
-
 const Prospects = () => {
   const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
 
-//   useEffect(() => {
-//     setRows(tasks); // Load tasks into state
-//   }, []);
+  const columns = [
+    { field: 'sno', headerName: 'S.No', width: 70 },
+    { field: 'day', headerName: 'Day', width: 100 },
+    { field: 'classTime', headerName: 'Class Time', width: 150 },
+    { field: 'coachName', headerName: 'Coach', width: 120 },
+    { field: 'program', headerName: 'Program', width: 120 },
+    { field: 'level', headerName: 'Level', width: 120 },
+    { field: 'studentName', headerName: 'Student Name', width: 150 },
+    { field: 'attendance', headerName: 'Attendance', width: 120 },
+    { field: 'feedback', headerName: 'Feedback', width: 200 },
+    {
+      field: 'action',
+      headerName: 'Action',
+      width: 120,
+      renderCell: (params) => (
+        <Button
+          variant="contained"
+          color="primary"
+          size="small"
+          onClick={() => handleButtonClick(params.row)}
+          disabled={loading || params.row.attendance?.toLowerCase() === 'absent'}
+        >
+          Change Status
+        </Button>
+      ),
+    },
+  ];
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const response = await getConductedDemo();
+      console.log(response)
+      const formattedRows = response.data.flatMap((demoClass, classIndex) =>
+        demoClass.students.map((student, studentIndex) => ({
+          id: student.studentID,
+          sno: studentIndex + 1,
+          day: demoClass.day,
+          classTime: demoClass.classTime,
+          coachName: demoClass.coachName,
+          program: demoClass.program,
+          level: demoClass.level,
+          studentName: student.name,
+          studentID: student.studentID,
+          attendance: student.attendance,
+          feedback: student.feedback,
+          classData: demoClass,
+          studentData: student,
+        }))
+      );
+      setRows(formattedRows);
+    } catch (error) {
+      console.error('Error fetching demo data:', error);
+      showSnackbar('Error fetching data. Please try again.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleButtonClick = async (row) => {
+    try {
+      setLoading(true);
+      console.log(row.id)
+      const response = await updateDemoStatus(row.id);
+      console.log("response",response)
+
+      if (response.status === 200) {
+        showSnackbar('Status updated successfully', 'success');
+        toast.success(response.data.message)
+      
+      }
+    } catch (error) {
+      console.error('Error updating demo status:', error);
+      toast.error('Error updating status. Please try again.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbar({
+      open: true,
+      message,
+      severity,
+    });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar((prev) => ({
+      ...prev,
+      open: false,
+    }));
+  };
 
   return (
     <ThemeProvider theme={theme}>
@@ -103,13 +173,14 @@ const Prospects = () => {
               mb: 3,
             }}
           >
-            Invoices Data
+            Conducted Demo Classes
           </Typography>
           <DataGrid
             rows={rows}
             columns={columns}
             checkboxSelection
             disableRowSelectionOnClick
+            loading={loading}
             slots={{ toolbar: GridToolbar }}
             slotProps={{
               toolbar: {
@@ -118,8 +189,7 @@ const Prospects = () => {
               },
             }}
             sx={{
-              height: 500, // Fixed height for the table
-
+              height: 500,
               '& .MuiDataGrid-cell:focus': {
                 outline: 'none',
               },
@@ -140,7 +210,31 @@ const Prospects = () => {
             }}
           />
         </Paper>
+
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={handleCloseSnackbar}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        >
+          <Alert
+            onClose={handleCloseSnackbar}
+            severity={snackbar.severity}
+            sx={{ width: '100%' }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </Box>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        closeOnClick
+        pauseOnHover
+        draggable
+        pauseOnFocusLoss
+      />
     </ThemeProvider>
   );
 };

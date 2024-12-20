@@ -33,6 +33,8 @@ import {
   addNotes,
   fetchProspectsEnquiries
 } from "../../../api/service/employee/EmployeeService";
+import toast from "react-hot-toast";
+import { ToastContainer } from "react-toastify";
 
 const theme = createTheme({
   palette: {
@@ -338,6 +340,8 @@ const Enquiries = () => {
     console.log(id);
     const respose = await moveToProspects(id, empId);
     console.log(respose);
+    toast.success("Enquiry move to prospects")
+   
   };
 
   const handleShowLogs = (id) => {
@@ -606,6 +610,15 @@ const Enquiries = () => {
           </Paper>
         </Box>
       </Fade>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        closeOnClick
+        pauseOnHover
+        draggable
+        pauseOnFocusLoss
+      />
     </ThemeProvider>
   );
 };

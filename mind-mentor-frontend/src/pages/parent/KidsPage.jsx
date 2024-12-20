@@ -4,7 +4,6 @@ import Sidebar from '../../component/parent-component/parent-dashboard/layout/Si
 import Topbar from '../../component/parent-component/parent-dashboard/layout/Topbar';
 
 import Calendar from "../../components/kidsNav/Calender";
-import Stats from "../../components/kidsNav/Stats"
 
 
 const KidsPage = () => {
@@ -32,11 +31,11 @@ const KidsPage = () => {
 
             <div className="flex-1 p-8 overflow-y-auto">
               <div className="flex flex-col lg:flex-row gap-8">
-                <div className="lg:w-1/3">
+                {/* <div className="lg:w-1/3">
                   <Stats />
-                </div>
+                </div> */}
 
-                <div className="lg:w-2/3">
+                <div className="lg:w-full">
                   <Calendar />
                 </div>
               </div>

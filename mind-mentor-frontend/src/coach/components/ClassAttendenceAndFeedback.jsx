@@ -6,6 +6,7 @@ import { toast, ToastContainer } from 'react-toastify';
 
 const ClassAttendanceAndFeedback = () => {
   const navigate = useNavigate()
+  const empId = localStorage.getItem("empId")
   const {classId} = useParams()
   const [classDetails,setClassDetails]  =useState({})
 
@@ -40,7 +41,7 @@ const ClassAttendanceAndFeedback = () => {
       feedback: feedback[student.kidId] || "",
     }));
     console.log("Submission data:", submissionData);
-    const response = await addFeedbackAndAttandance(classId,submissionData)
+    const response = await addFeedbackAndAttandance(empId,classId,submissionData)
     console.log(response)
     if(response.status===201){
       toast.success(response.data.message)

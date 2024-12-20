@@ -25,9 +25,9 @@ export const getMyClassData = async (empId) => {
 };
 
 
-export const addFeedbackAndAttandance = async (classId,submissionData) => {
+export const addFeedbackAndAttandance = async (empId,classId,submissionData) => {
   const response = await coachInsatance.post(
-    `/coach/add-class-feedback-attandance/${classId}`,{submissionData},
+    `/coach/add-class-feedback-attandance/${empId}/${classId}`,{submissionData},
     
   );
   return response;

@@ -22,7 +22,10 @@ const kidSchema = new mongoose.Schema(
     gender: {
       type: String,
     },
-
+    selectedProgram: {
+      program: { type: String },
+      level: { type: String },
+    },
 
     intention: {
       type: String,
@@ -42,10 +45,17 @@ const kidSchema = new mongoose.Schema(
     parentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Parent",
-      
     },
-    enqId:{
-      type:String
+    enqId: {
+      type: String,
+    },
+    status:{
+      type:"String",
+      default:"Enrolled" 
+    },
+    role:{
+      type:String,
+      default:"Kid"
     }
   },
   { timestamps: true }

@@ -84,7 +84,7 @@ const KidsAvailability = () => {
       } else {
         const newEntry = {
           ...newAvailability,
-          status: "active",
+          status: "Active",
         };
 
         const response = await addKidAvailabilities(kidId, newEntry);
@@ -105,7 +105,7 @@ const KidsAvailability = () => {
 
   const toggleAvailabilityStatus = async (availability) => {
     try {
-      const newStatus = availability.status === "active" ? "paused" : "active";
+      const newStatus = availability.status === "Active" ? "Paused" : "Active";
 
       
       // Update local state
@@ -211,7 +211,7 @@ const KidsAvailability = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <span
                       className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        avail.status === "active"
+                        avail.status === "Active"
                           ? "bg-green-100 text-green-800"
                           : "bg-red-100 text-red-800"
                       }`}
@@ -224,13 +224,13 @@ const KidsAvailability = () => {
                       <button
                         onClick={() => toggleAvailabilityStatus(avail)}
                         className={`p-2 rounded-full transition-colors ${
-                          avail.status === "active"
+                          avail.status === "Active"
                             ? "hover:bg-yellow-100 text-yellow-600"
                             : "hover:bg-green-100 text-green-600"
                         }`}
-                        title={avail.status === "active" ? "Pause" : "Resume"}
+                        title={avail.status === "Active" ? "Pause" : "Resume"}
                       >
-                        {avail.status === "active" ? (
+                        {avail.status === "Active" ? (
                           <Pause size={18} />
                         ) : (
                           <Play size={18} />

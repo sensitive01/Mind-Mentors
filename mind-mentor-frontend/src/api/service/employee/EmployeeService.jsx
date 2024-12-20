@@ -186,5 +186,15 @@ export const saveDemoClassDetails = async (classId,students,empId) => {
   return response;
 };
 
+export const getConductedDemo = async () => {
+  const response = await operationDeptInstance.get(`/get-conducted-demo-class`);
+  return response;
+};
+
+export const updateDemoStatus = async (id) => {
+  const response = await operationDeptInstance.put(`/update-conducted-enrollment-status/${id}`);
+  return response;
+};
+
 
 

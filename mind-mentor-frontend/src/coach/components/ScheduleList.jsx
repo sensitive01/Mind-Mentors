@@ -112,7 +112,7 @@ const ScheduleKanban = () => {
     console.log( Math.abs(currentTime - classTime))
 
     return classItem.day == currentDay && 
-           Math.abs(currentTime - classTime) <= 320;
+           Math.abs(currentTime - classTime) <= 120;
   };
 
   // Check if a class has been conducted

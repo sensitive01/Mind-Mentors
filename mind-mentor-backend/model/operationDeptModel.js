@@ -9,7 +9,7 @@ const operationDeptSchema = new mongoose.Schema(
   {
     parentFirstName: { type: String },
     parentLastName: { type: String },
-    kidFirstName: { type: String },
+    kidFirstName: { type: String }, 
     kidLastName: { type: String },
     whatsappNumber: { type: String },
     email: { type: String },
@@ -46,7 +46,7 @@ const operationDeptSchema = new mongoose.Schema(
     scheduleDemo: {
       status: {
         type: String,
-        enum: ["Pending", "Scheduled", "Completed", "Cancelled"],
+        enum: ["Pending", "Scheduled", "Conducted", "Cancelled"], 
         default: "Pending",
       },
       sheduledDay: { type: String },

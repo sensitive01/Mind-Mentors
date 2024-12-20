@@ -205,3 +205,26 @@ export const deleteKidAvailability = async (availId) => {
     return err;
   }
 };
+
+
+export const fetchkidClassData = async (kidId) => {
+  try {
+    const response = await parentInstance.get(
+      `/parent/get-kid-class-data/${kidId}`
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+export const getKidAttendace = async (kidId) => {
+  try {
+    const response = await parentInstance.get(
+      `/parent/get-kid-attandance-data/${kidId}`
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};

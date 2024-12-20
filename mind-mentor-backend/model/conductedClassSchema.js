@@ -4,6 +4,9 @@ const conductedClassSchema = new mongoose.Schema({
   classID: {
     type: String,
   },
+  coachId: {
+    type: String,
+  },
   students: [
     {
       studentID: {

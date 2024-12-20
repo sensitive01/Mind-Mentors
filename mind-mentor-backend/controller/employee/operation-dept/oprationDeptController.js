@@ -12,6 +12,7 @@ const Employee = require("../../../model/employeeModel");
 const enquiryLogs = require("../../../model/enquiryLogs");
 const moment = require("moment");
 const ClassSchedule = require("../../../model/classSheduleModel");
+const ConductedClass = require("../../../model/conductedClassSchema");
 
 // Email Verification
 
@@ -256,6 +257,7 @@ const updateProspectData = async (req, res) => {
       address: enquiryData.address,
       pincode: enquiryData.pincode,
       parentId: parentData._id,
+      selectedProgram: enquiryData.programs||"", 
       chessId,
       kidPin,
     });
@@ -1499,6 +1501,84 @@ const saveDemoClassData = async (req, res) => {
   }
 };
 
+const getConductedDemoClass = async (req, res) => {
+  try {
+    const classSchedule = await ClassSchedule.find({ classType: "Demo" });
+    const conductedClasses = await ConductedClass.find();
+
+    const conductedDemoClasses = classSchedule 
+      .filter(schedule => 
+        conductedClasses.some(conducted => conducted.classID.toString() === schedule._id.toString())
+      )
+      .map(schedule => {
+        const conductedDetails = conductedClasses.find(
+          conducted => conducted.classID.toString() === schedule._id.toString()
+        );
+        return {
+          ...schedule.toObject(),
+          conductedDate: conductedDetails.conductedDate,
+          status: conductedDetails.status,
+          students: conductedDetails.students,
+        };
+      });
+
+      console.log("Conducted demo class",conductedDemoClasses) 
+
+    res.status(200).json(conductedDemoClasses);
+  } catch (err) {
+    console.log("Error in getting the conducted demo class", err);
+    res.status(500).json({ error: "Internal Server Error" }); 
+  }
+};
+
+
+
+const updateEnrollmentStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log("Id status", id);
+
+    const enrollmentData = await kidSchema.findOne({ _id: id }, { enqId: 1 });
+    
+    if (!enrollmentData) {
+      return res.status(404).json({ message: "Enrollment not found" });
+    }
+
+    console.log("Enrollment Data", enrollmentData);
+
+    const updateEqStatus = await OperationDept.findOneAndUpdate(
+      { _id: enrollmentData.enqId, payment: "Pending" },
+      { $set: { payment: "Success" } },
+      { new: true }
+    ); 
+
+    if (!updateEqStatus) {
+      return res.status(404).json({ message: "Enrollment with pending payment not found" });
+    }
+
+    console.log("Updated Enrollment Status", updateEqStatus);
+
+    return res.status(200).json({
+      message: "Payment status updated successfully",
+      updatedStatus: updateEqStatus
+    });
+
+  } catch (err) {
+    console.error("Error in updating the status", err);
+    return res.status(500).json({ message: "Server error while updating the status" });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
 module.exports = {
   operationEmailVerification,
   operationPasswordVerification,
@@ -1534,4 +1614,6 @@ module.exports = {
   fetchAllLogs,
   saveDemoClassData,
   getDemoClassAndStudentsData,
+  getConductedDemoClass,
+  updateEnrollmentStatus
 };

@@ -6,6 +6,7 @@ const CoachAvailability = require("../../model/availabilityModel");
 const ClassSchedule = require("../../model/classSheduleModel");
 const ConductedClass = require("../../model/conductedClassSchema");
 const Employee = require("../../model/employeeModel");
+const operationDeptModel = require("../../model/operationDeptModel");
 
 
 
@@ -81,7 +82,7 @@ const getMyScheduledClasses = async (req, res) => {
 const addFeedBackAndAttandance = async (req, res) => {
   try {
     const { submissionData } = req.body;
-    const { classId } = req.params;
+    const { classId,coachId } = req.params;
 
     const classType = await ClassSchedule.findOne({ _id: classId, classType: "Demo" });
 
@@ -90,10 +91,12 @@ const addFeedBackAndAttandance = async (req, res) => {
         { _id: classId },
         { $pull: { selectedStudents: { kidId: { $in: submissionData.map(student => student.studentId) } } } }
       );
+      
     }
 
     const newClass = new ConductedClass({
       classID: classId,
+      coachId,
       students: submissionData.map((student) => ({
         studentID: student.studentId,
         name: student.studentName,
@@ -105,6 +108,8 @@ const addFeedBackAndAttandance = async (req, res) => {
     });
 
     await newClass.save();
+
+
 
     res.status(201).json({
       message: "New class with attendance and feedback added successfully",

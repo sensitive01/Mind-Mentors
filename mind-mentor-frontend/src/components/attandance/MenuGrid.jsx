@@ -32,7 +32,7 @@ const MenuGrid = () => {
       subtitle: "Schedules",
       bgColor: "bg-emerald-600",
       gradient: "from-emerald-600 to-emerald-700",
-      route: "/parent/kid/attendance",
+      route: `/parent/kid/classShedule/${id}`,
     },
     {
       id: id,

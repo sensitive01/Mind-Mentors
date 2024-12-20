@@ -1,89 +1,124 @@
-import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import React, { useEffect, useState } from 'react';
+import { ChevronLeft, ChevronRight, Calendar, Clock, User } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { fetchkidClassData } from '../../api/service/parent/ParentService';
 
-const Calendar = () => {
+const ParentClassSchedule = () => {
+  const { id } = useParams();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedClass, setSelectedClass] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [view, setView] = useState('month');
+  const [classSchedule, setClassSchedule] = useState({});
 
-  useEffect(()=>{
+  const formatDateKey = (day) => {
+    const year = currentDate.getFullYear();
+    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+    const formattedDay = String(day).padStart(2, '0');
+    return `${year}-${month}-${formattedDay}`;
+  };
 
-  },[])
+  const formatDisplayDate = (date) => {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
 
+  useEffect(() => {
+    const fetchKidClass = async () => {
+      try {
+        const response = await fetchkidClassData(id);
+        console.log(response)
+        const formattedSchedule = {};
+        
+        // Process conducted classes
+        response?.data?.responseData?.conducted.forEach(cls => {
+          const conductedDate = new Date(cls.conductedDate);
+          const dateKey = conductedDate.toISOString().split('T')[0];
+          
+          if (!formattedSchedule[dateKey]) {
+            formattedSchedule[dateKey] = [];
+          }
+          
+          formattedSchedule[dateKey].push({
+            id: cls._id,
+            title: cls.classData.program,
+            time: cls.classData.classTime,
+            instructor: cls.classData.coachName,
+            status: 'completed',
+            child: cls.student.name,
+            location: `Level: ${cls.classData.level}`,
+            attendance: cls.student.attendance,
+            feedback: cls.student.feedback,
+            meetingLink: cls.classData.meetingLink,
+            actualDate: dateKey
+          });
+        });
 
-  const demoClassSchedule = {
-   
-    "2024-12-15": [
-      {
-        id: 1,
-        title: "Chess",
-        time: "09:00 - 10:30",
-        instructor: "Aswin",
-        status: "completed",
-        attendance: "Present",
-        topics: ["Chess"],
-        recording: "math_101_rec_15.mp4"
-      },
-      {
-        id: 2,
-        title: "Chess",
-        time: "11:00 - 12:30",
-        instructor: "Prof. Johnson",
-        status: "completed",
-        topics: ["Chess"],
-        recording: "math_101_rec_15.mp4",
+        // Process live classes
+        response?.data?.responseData?.live.forEach(cls => {
+          const today = new Date();
+          const dateKey = today.toISOString().split('T')[0];
+          
+          if (!formattedSchedule[dateKey]) {
+            formattedSchedule[dateKey] = [];
+          }
+          
+          formattedSchedule[dateKey].push({
+            id: cls._id,
+            title: cls.program,
+            time: cls.classTime,
+            instructor: cls.coachName,
+            status: 'live',
+            child: cls.selectedStudents.map(student => student.kidName).join(', '),
+            location: `Level: ${cls.level}`,
+            meetingLink: cls.meetingLink,
+            actualDate: dateKey
+          });
+        });
+
+        // Process upcoming classes
+        response?.data?.responseData?.upcoming.forEach(cls => {
+          const dayMapping = { 'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6 };
+          const targetDay = dayMapping[cls.day];
+          const today = new Date();
+          const daysUntilTarget = (targetDay + 7 - today.getDay()) % 7;
+          const targetDate = new Date(today);
+          targetDate.setDate(today.getDate() + daysUntilTarget);
+          const dateKey = targetDate.toISOString().split('T')[0];
+
+          if (!formattedSchedule[dateKey]) {
+            formattedSchedule[dateKey] = [];
+          }
+
+          formattedSchedule[dateKey].push({
+            id: cls._id,
+            title: cls.program,
+            time: cls.classTime,
+            instructor: cls.coachName,
+            status: 'upcoming',
+            child: cls.selectedStudents.map(student => student.kidName).join(', '),
+            location: `Level: ${cls.level}`,
+            meetingLink: cls.meetingLink,
+            actualDate: dateKey
+          });
+        });
+
+        console.log('Formatted Schedule:', formattedSchedule);
+        setClassSchedule(formattedSchedule);
+      } catch (error) {
+        console.error('Error fetching class data:', error);
       }
-    ],
-    "2024-12-19": [
-      {
-        id: 3,
-        title: "Chess",
-        time: "14:00 - 15:30",
-        instructor: "Dr. White",
-        status: "live",
-        topics: ["Chess"],
-        meetingLink: "https://meet.zoom.us/j/123456",
-      }
-    ],
-    "2024-12-20": [
-      {
-        id: 4,
-        title: "Chess",
-        time: "10:00 - 11:30",
-        instructor: "Dr. Green",
-        status: "upcoming",
-        attendance: "28/30",
-        topics: ["Chess"],
-        preReadingMaterial: "Chapter 5-6"
-      }
-    ]
-  };
+    };
 
-  const statusStyles = {
-    completed: {
-      container: "bg-gray-100 border-l-4 border-gray-500",
-      dot: "bg-gray-500"
-    },
-    live: {
-      container: "bg-green-50 border-l-4 border-green-500",
-      dot: "bg-green-500 animate-pulse"
-    },
-    upcoming: {
-      container: "bg-blue-50 border-l-4 border-blue-500",
-      dot: "bg-blue-500"
-    }
-  };
+    fetchKidClass();
+  }, [id]);
 
-  const getMonthStart = () => {
-    return new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-  };
-
-  const getMonthEnd = () => {
-    return new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-  };
+  const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   const generateCalendarDays = () => {
-    const start = getMonthStart();
-    const end = getMonthEnd();
+    const start = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const end = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
     const days = [];
     const padding = start.getDay();
 
@@ -98,118 +133,139 @@ const Calendar = () => {
     return days;
   };
 
-  const formatDateKey = (day) => {
-    return `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  const getClassesForDate = (dateKey) => {
+    return classSchedule[dateKey] || [];
   };
 
-  const getClassesForDay = (day) => {
-    const dateKey = formatDateKey(day);
-    return demoClassSchedule[dateKey] || [];
+  const handleDateClick = (day) => {
+    if (day) {
+      const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day+1);
+      console.log(newDate)
+      
+      setSelectedDate(newDate);
+      const dateKey = formatDateKey(day);
+      console.log('Selected date key:', dateKey);
+      console.log('Classes for this date:', getClassesForDate(dateKey));
+    }
   };
 
-  const handlePrevMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+  const handlePreviousMonth = () => {
+    setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() - 1)));
   };
 
   const handleNextMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+    setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() + 1)));
   };
 
-  const handleClassClick = (classInfo) => {
-    setSelectedClass(classInfo);
+  const getStatusStyles = (status) => {
+    switch (status) {
+      case 'live':
+        return 'bg-green-100 text-green-800 border-l-4 border-green-500';
+      case 'upcoming':
+        return 'bg-blue-100 text-blue-800 border-l-4 border-blue-500';
+      case 'completed':
+        return 'bg-gray-100 text-gray-800 border-l-4 border-gray-500';
+      default:
+        return 'bg-gray-100 text-gray-800 border-l-4 border-gray-500';
+    }
   };
-
-  const handleCloseDetails = () => {
-    setSelectedClass(null);
-  };
-
-  const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const calendarDays = generateCalendarDays();
 
   return (
-    <div className="max-w-6xl mx-auto">
-      {/* Calendar Header */}
-      <div className="bg-white rounded-t-lg shadow p-4">
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center space-x-2">
-            <button onClick={handlePrevMonth} className="p-2 hover:bg-gray-100 rounded">
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <h2 className="text-xl font-semibold">
-              {currentDate.toLocaleString("default", { month: "long" })} {currentDate.getFullYear()}
-            </h2>
-            <button onClick={handleNextMonth} className="p-2 hover:bg-gray-100 rounded">
-              <ChevronRight className="w-5 h-5" />
-            </button>
+    <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-xl">
+      <div className="bg-gradient-to-r from-indigo-600 to-violet-600 p-6 rounded-t-lg">
+        <div className="flex justify-between items-center text-white mb-6">
+          <div className="flex items-center space-x-4">
+            <Calendar className="w-6 h-6" />
+            <h1 className="text-2xl font-semibold">Class Schedule</h1>
           </div>
+          <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-2 text-white/80">
+              <Clock className="w-5 h-5" />
+              <span>{formatDisplayDate(selectedDate)}</span>
+            </div>
+            <div className="flex space-x-2">
+              <button 
+                onClick={() => setView('month')} 
+                className={`px-3 py-1 rounded-md transition-colors ${view === 'month' ? 'bg-white text-indigo-600' : 'text-white hover:bg-white/10'}`}
+              >
+                Month
+              </button>
+              <button 
+                onClick={() => setView('week')} 
+                className={`px-3 py-1 rounded-md transition-colors ${view === 'week' ? 'bg-white text-indigo-600' : 'text-white hover:bg-white/10'}`}
+              >
+                Week
+              </button>
+            </div>
+          </div>
+        </div>
 
-          <div className="flex items-center space-x-4 text-sm">
-            <div className="flex items-center">
-              <div className="w-3 h-3 rounded-full bg-gray-500 mr-2"></div>
-              <span>Completed</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse mr-2"></div>
-              <span>Live</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
-              <span>Upcoming</span>
-            </div>
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-4">
+            <button 
+              onClick={handlePreviousMonth}
+              className="p-2 hover:bg-white/10 rounded-full transition-colors"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+            <h2 className="text-xl font-medium">
+              {currentDate.toLocaleString('default', { month: 'long' })} {currentDate.getFullYear()}
+            </h2>
+            <button 
+              onClick={handleNextMonth}
+              className="p-2 hover:bg-white/10 rounded-full transition-colors"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Calendar Grid */}
-      <div className="bg-white shadow rounded-b-lg">
-        <div className="grid grid-cols-7 border-b">
-          {daysOfWeek.map((day) => (
-            <div key={day} className="p-4 text-center font-medium text-gray-600">
+      <div className="border-b">
+        <div className="grid grid-cols-7 bg-gray-50">
+          {daysOfWeek.map(day => (
+            <div key={day} className="p-4 text-center text-gray-700 font-medium border-r last:border-r-0">
               {day}
             </div>
           ))}
         </div>
-
+        
         <div className="grid grid-cols-7">
-          {calendarDays.map((day, index) => {
-            const isCurrentMonth = day !== null;
-            const classes = isCurrentMonth ? getClassesForDay(day) : [];
-            const isToday = isCurrentMonth && 
-              day === new Date().getDate() && 
-              currentDate.getMonth() === new Date().getMonth() && 
-              currentDate.getFullYear() === new Date().getFullYear();
+          {generateCalendarDays().map((day, index) => {
+            const dateKey = day ? formatDateKey(day) : null;
+            const classes = dateKey ? getClassesForDate(dateKey) : [];
+            const isSelected = day === selectedDate.getDate() && 
+                             currentDate.getMonth() === selectedDate.getMonth() &&
+                             currentDate.getFullYear() === selectedDate.getFullYear();
+            const isToday = day === new Date().getDate() && 
+                          currentDate.getMonth() === new Date().getMonth() &&
+                          currentDate.getFullYear() === new Date().getFullYear();
 
             return (
               <div
                 key={index}
-                className={`min-h-[120px] p-2 border-b border-r ${
-                  isCurrentMonth ? "bg-white" : "bg-gray-50"
-                } ${isToday ? "bg-blue-50" : ""}`}
+                onClick={() => handleDateClick(day)}
+                className={`min-h-[120px] p-2 border-t border-r relative cursor-pointer transition-colors
+                  ${!day ? 'bg-gray-50' : 'hover:bg-indigo-50'}
+                  ${isSelected ? 'bg-indigo-50' : ''}
+                  ${isToday ? 'bg-yellow-50' : ''}`}
               >
-                {isCurrentMonth && (
+                {day && (
                   <>
-                    <div className={`text-sm mb-1 ${
-                      isToday ? "font-bold text-blue-600" : "text-gray-600"
-                    }`}>
+                    <span className={`inline-flex items-center justify-center w-8 h-8 mb-1
+                      ${isSelected ? 'bg-indigo-600 text-white rounded-full' : ''}
+                      ${isToday && !isSelected ? 'bg-yellow-400 text-white rounded-full' : ''}`}
+                    >
                       {day}
-                    </div>
+                    </span>
                     <div className="space-y-1">
-                      {classes.map((classInfo) => (
+                      {classes.map(cls => (
                         <div
-                          key={classInfo.id}
-                          onClick={() => handleClassClick(classInfo)}
-                          className={`${
-                            statusStyles[classInfo.status].container
-                          } p-2 rounded cursor-pointer text-sm transition-colors duration-200 hover:opacity-80`}
+                          key={cls.id}
+                          className={`text-xs p-2 rounded-lg ${getStatusStyles(cls.status)}`}
                         >
-                          <div className="font-medium">{classInfo.title}</div>
-                          <div className="text-xs text-gray-600 mt-1">{classInfo.time}</div>
-                          <div className="flex items-center mt-1">
-                            <div className={`w-2 h-2 rounded-full ${
-                              statusStyles[classInfo.status].dot
-                            } mr-1`}></div>
-                            <span className="text-xs capitalize">{classInfo.status}</span>
-                          </div>
+                          <div className="font-medium">{cls.title}</div>
+                          <div className="text-xs opacity-75">{cls.time}</div>
                         </div>
                       ))}
                     </div>
@@ -221,91 +277,76 @@ const Calendar = () => {
         </div>
       </div>
 
-      {/* Class Details Modal */}
-      {selectedClass && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="text-xl font-semibold">{selectedClass.title}</h3>
-              <button
-                onClick={handleCloseDetails}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ×
-              </button>
-            </div>
-            
-            <div className="space-y-3">
-              <div>
-                <div className="text-sm text-gray-600">Time</div>
-                <div>{selectedClass.time}</div>
-              </div>
-              
-              <div>
-                <div className="text-sm text-gray-600">Instructor</div>
-                <div>{selectedClass.instructor}</div>
-              </div>
-              
-              <div>
-                <div className="text-sm text-gray-600">Status</div>
-                <div className="flex items-center">
-                  <div className={`w-2 h-2 rounded-full ${
-                    statusStyles[selectedClass.status].dot
-                  } mr-2`}></div>
-                  <span className="capitalize">{selectedClass.status}</span>
-                </div>
+      <div className="p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">
+          Classes on {formatDisplayDate(selectedDate)}
+        </h3>
+        
+        <div className="space-y-4">
+          {getClassesForDate(selectedDate.toISOString().split('T')[0]).map(cls => (
+            <div
+              key={cls.id}
+              className={`p-4 rounded-lg ${getStatusStyles(cls.status)}`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="font-medium text-lg">{cls.title}</h4>
+                <span className={`px-3 py-1 text-sm rounded-full ${
+                  cls.status === 'live' ? 'bg-green-100 text-green-800' :
+                  cls.status === 'upcoming' ? 'bg-blue-100 text-blue-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {cls.status}
+                </span>
               </div>
 
-              {selectedClass.status === "completed" && (
-                <>
-                  <div>
-                    <div className="text-sm text-gray-600">Attendance</div>
-                    <div>{selectedClass.attendance}</div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Clock className="w-4 h-4" />
+                    <span>{cls.time}</span>
                   </div>
-                  <div>
-                    <div className="text-sm text-gray-600">Recording</div>
-                    <div className="text-blue-600 cursor-pointer hover:underline">
-                      View Recording
+                  <div className="flex items-center space-x-2 mb-2">
+                    <User className="w-4 h-4" />
+                    <span>{cls.instructor}</span>
+                  </div>
+                  <div>{cls.location}</div>
+                </div>
+
+                <div>
+                  <div className="mb-2">
+                    <strong>Student:</strong> {cls.child}
+                  </div>
+                  {cls.status === 'completed' && (
+                    <>
+                      <div className="mb-2">
+                        <strong>Attendance:</strong> {cls.attendance}
+                      </div>
+                      <div>
+                        <strong>Feedback:</strong> {cls.feedback}
+                      </div>
+                    </>
+                  )}
+                  {(cls.status === 'live' || cls.status === 'upcoming') && (
+                    <div>
+                      <strong>Meeting Link:</strong>{' '}
+                      <a 
+                        href={cls.meetingLink} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        Join Class
+                      </a>
                     </div>
-                  </div>
-                </>
-              )}
-
-              {selectedClass.status === "live" && (
-                <div>
-                  <div className="text-sm text-gray-600">Meeting Link</div>
-                  <div className="text-blue-600 cursor-pointer hover:underline">
-                    Join Class
-                  </div>
-                </div>
-              )}
-
-              {selectedClass.status === "upcoming" && (
-                <div>
-                  <div className="text-sm text-gray-600">Pre-reading Material</div>
-                  <div>{selectedClass.preReadingMaterial}</div>
-                </div>
-              )}
-
-              <div>
-                <div className="text-sm text-gray-600">Topics</div>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {selectedClass.topics.map((topic, index) => (
-                    <span
-                      key={index}
-                      className="bg-gray-100 px-2 py-1 rounded text-sm"
-                    >
-                      {topic}
-                    </span>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>
-          </div>
+          ))}
         </div>
-      )}
+      </div>
     </div>
   );
 };
 
-export default Calendar;
+export default ParentClassSchedule;

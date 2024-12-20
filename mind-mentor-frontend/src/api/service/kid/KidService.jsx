@@ -32,3 +32,16 @@ export const getKidDemoClass = async (id) => {
     return err;
   }
 };
+
+
+
+export const getMyClassData = async (kidId) => {
+  try {
+    const response = await kidInstance.get(
+      `/kid/get-my-class-data/${kidId}`
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};

@@ -311,7 +311,7 @@ function App() {
           <Route path="/parent/kid/manage-login/:id" element={<ParentManageChildLoginPage />}/>
           <Route path="/parent/profile/manage" element={<ParentProfilePage />}/>
           <Route path="/parent/certificate" element={<CertificatePage />} />
-          <Route path="/parent/kid/attendance" element={<KidsPage />} />
+          <Route path="/parent/kid/classShedule/:id" element={<KidsPage />} />
           <Route path="/parent/new-referal" element={<ParentReferalPage />} />
           <Route path="/parent/support" element={<SupportPage />} />
           <Route path="/parent/walkthrough-video" element={<WalkThroughPage />} />

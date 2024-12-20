@@ -7,7 +7,7 @@ const coachController = require('../../controller/coach/coachController');
 
 coachRoute.post("/shedule-class-availability/:id",coachController.saveCoachAvailability)
 coachRoute.get("/fetch-my-sheduled-class/:id",coachController.getMyScheduledClasses)
-coachRoute.post("/add-class-feedback-attandance/:classId",coachController.addFeedBackAndAttandance)
+coachRoute.post("/add-class-feedback-attandance/:coachId/:classId",coachController.addFeedBackAndAttandance)
 coachRoute.get("/get-class-data/:classId",coachController.getClassData)
 
 

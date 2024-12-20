@@ -3,12 +3,16 @@ const kidRoute = express();
 
 const kidController = require("../../controller/kids/kidController")
 
-kidRoute.post("/login",kidController.validateKidChessId)
-kidRoute.post("/verify-pin",kidController.validateKidPin)
+
 kidRoute.get("/get-democlass/:id",kidController.getDemoClass)
+kidRoute.get("/get-my-class-data/:kidId",kidController.getKidClassData)
 
 
+kidRoute.post("/login",kidController.validateKidChessId)
+kidRoute.post("/verify-pin",kidController.validateKidPin)  
 
+
+ 
 
 
 module.exports =  kidRoute

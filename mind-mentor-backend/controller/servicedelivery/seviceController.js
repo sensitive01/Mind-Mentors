@@ -207,7 +207,7 @@ const getClassAndStudentsData = async (req, res) => {
     // Find kids data matching the program and level in arrays
     const kidsData = await operationDeptModel.find(
       {
-        enquiryField: "prospects",
+        enquiryField: "prospects", 
         payment: "Success",
         programs: {
           $elemMatch: {
