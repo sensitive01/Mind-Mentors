@@ -40,7 +40,7 @@ const operationDeptSchema = new mongoose.Schema(
       default: "None",
     },
     enquiryField: { type: String, default: "enquiryList" },
-    payment: { type: String, enum: ["Pending", "Success"], default: "Pending" },
+    payment: { type: String, enum: ["Pending", "Success"], default: "Pending" }, 
 
     notes: { type: String },
     scheduleDemo: {

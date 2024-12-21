@@ -1383,7 +1383,7 @@ const getDemoClassAndStudentsData = async (req, res) => {
           $elemMatch: {
             program: classData[0].program,
             level: classData[0].level,
-          },
+          }, 
         },
       },
       { kidFirstName: 1 } // Project only the required fields
