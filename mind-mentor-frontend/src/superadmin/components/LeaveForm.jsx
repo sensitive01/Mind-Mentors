@@ -160,26 +160,11 @@ const EmployeeLeaveForm = () => {
                 </div>
               </div>
             ))}
-            <button
-              type="button"
-              onClick={addLeaveDetail}
-              className="text-[#642b8f] hover:text-[#aa88be] font-medium text-sm transition-colors"
-            >
-              + Add Leave
-            </button>
+             
           </div>
 
-          <Divider className="my-6" />
 
-          <div style={{ height: 400, width: '100%' }}>
-            <DataGrid
-              rows={leaveDetails}
-              columns={columns}
-              pageSize={5}
-              disableSelectionOnClick
-              checkboxSelection
-            />
-          </div>
+
 
           <div className="flex justify-center gap-6 mt-12">
             <button

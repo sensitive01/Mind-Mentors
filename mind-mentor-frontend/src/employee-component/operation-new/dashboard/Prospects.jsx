@@ -27,11 +27,9 @@ import { Link, useNavigate } from "react-router-dom";
 import columns from "./Columns";
 
 import {
-  
-  
   updateEnquiryStatus,
   addNotes,
-  fetchProspectsEnquiries
+  fetchProspectsEnquiries,
 } from "../../../api/service/employee/EmployeeService";
 
 const theme = createTheme({
@@ -209,7 +207,7 @@ const Enquiries = () => {
   useEffect(() => {
     const loadLeaves = async () => {
       try {
-        const data = await  fetchProspectsEnquiries();
+        const data = await fetchProspectsEnquiries();
         console.log(data);
         setRows(data);
       } catch (err) {
@@ -367,7 +365,7 @@ const Enquiries = () => {
                 gutterBottom
                 sx={{ color: "text.primary", fontWeight: 600, mb: 3 }}
               >
-                Enquiries
+                Prospect Data
               </Typography>
               <Button
                 variant="contained"

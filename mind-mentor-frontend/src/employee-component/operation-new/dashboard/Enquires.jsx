@@ -377,6 +377,7 @@ const Enquiries = () => {
                 Enquiries
               </Typography>
               <Button
+              data-tour="status-button"
                 variant="contained"
                 color="primary"
                 component={Link}
@@ -579,7 +580,7 @@ const Enquiries = () => {
                   sx={{
                     bgcolor: "primary.main",
                     "&:hover": {
-                      bgcolor: "primary.dark",
+                      bgcolor: "primary",
                     },
                   }}
                 >

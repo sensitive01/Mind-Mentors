@@ -72,7 +72,7 @@ const KidsPinPage = () => {
           <form onSubmit={handleSubmit} className="space-y-4 w-full">
             <div className="flex justify-center mb-2">
               <label className="text-sm font-medium text-gray-700">
-                Enter PIN - 6654
+                Enter PIN - 7224
               </label>
             </div>
 

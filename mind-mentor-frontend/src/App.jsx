@@ -262,6 +262,7 @@ function App() {
   
     <>
       <Router>
+        
         <Routes>
           <Route path="/" element={<HomePage />} />
 
@@ -337,7 +338,7 @@ function App() {
 
 
 
-       
+  
     
         <Route path="/employee-login" element={<LoginPage />} />
         <Route path="/employee-operation-dashboard" element={<OperationDashboardPage />} />
@@ -363,7 +364,6 @@ function App() {
         <Route path="/employee-operation/demoSheduleForm" element={<DemoClassShedulePage/>} />
         <Route path="/showCompleteLogs/:id" element={< ShowAllEnquiryLogs/>} />
         <Route path="/employeeAssignDemoClass/:id" element={<AssignDemoClassPage/>} />
-
 
 
 

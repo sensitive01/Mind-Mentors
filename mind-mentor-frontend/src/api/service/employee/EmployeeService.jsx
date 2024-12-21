@@ -1,4 +1,5 @@
 import { operationDeptInstance } from "../../axios/operationDeptInstance";
+import { userInstance } from "../../axios/userInstance";
 
 // Email Verification
 export const employeeEmailVerification = async (email) => {
@@ -196,5 +197,140 @@ export const updateDemoStatus = async (id) => {
   return response;
 };
 
+// ............................................................
+
+
+// Create User
+export const createUser = async (userData) => {
+  const response = await userInstance.post("/users", userData);
+  console.log('Incoming request body:', req.body);
+
+  return response.data;
+};
+
+// Get All Users
+export const fetchAllUsers = async () => {
+  const response = await userInstance.get("/users");
+  return response.data;
+};
+
+// Get All Users By Name
+export const fetchUsersByName = async () => {
+  const response = await userInstance.get("/usersbyname");
+  return response.data;
+};
+
+// Get User by ID
+export const fetchUserById = async (id) => {
+  const response = await userInstance.get(`/user/${id}`);
+  return response.data;
+};
+
+// Update User
+export const updateUser = async (id, updatedData) => {
+  const response = await userInstance.put(`/user/${id}`, updatedData);
+  return response.data;
+};
+
+// Delete User
+export const deleteUser = async (id) => {
+  const response = await userInstance.delete(`/user/${id}`);
+  return response.data;
+};
+
+
+// Create User
+export const createEmployee = async (userData) => {
+  const response = await userInstance.post("employee", userData);
+  console.log('Incoming request body:', req.body);
+  return response.data;
+};
+
+// Get All employee
+export const fetchAllEmployees = async () => {
+  const response = await userInstance.get("/employees");
+  return response.data;
+};
+
+// Get employee by ID
+export const fetchEmployeeById = async (id) => {
+  const response = await userInstance.get(`/employees/${id}`);
+  return response.data;
+};
+
+// Update employee
+export const updateEmployee = async (id, updatedData) => {
+  const response = await userInstance.put(`/employees/${id}`, updatedData);
+  return response.data;
+};
+
+// Delete employee
+export const deleteEmployee = async (id) => {
+  const response = await userInstance.delete(`/employees/${id}`);
+  return response.data;
+};
+
+
+// tournments
+// Create Tournament
+export const createTournament = async (tournamentData) => {
+  const response = await userInstance.post("/tournaments", tournamentData);
+  return response.data;
+};
+
+// Get All Tournaments
+export const fetchAllTournaments = async () => {
+  const response = await userInstance.get("/tournaments");
+  return response.data;
+};
+
+// Get Tournament by ID
+export const fetchTournamentById = async (id) => {
+  const response = await userInstance.get(`/tournaments/${id}`);
+  return response.data;
+};
+
+// Update Tournament
+export const updateTournament = async (id, updatedData) => {
+  const response = await userInstance.put(`/tournaments/${id}`, updatedData);
+  return response.data;
+};
+
+// Delete Tournament
+export const deleteTournament = async (id) => {
+  const response = await userInstance.delete(`/tournaments/${id}`);
+  return response.data;
+};
+
+// tournments
+// Create Tournament
+export const createHoliday = async (tournamentData) => {
+  const response = await userInstance.post("/tournaments", tournamentData);
+  return response.data;
+};
+
+// Get All Tournaments
+export const fetchAllHoliday = async () => {
+  const response = await userInstance.get("/holidays");
+  return response.data;
+};
+
+// Get Tournament by ID
+export const fetchHolidayById = async (id) => {
+  const response = await userInstance.get(`/holidays/${id}`);
+  return response.data;
+};
+
+// Update Tournament
+export const updateHoliday = async (id, updatedData) => {
+  const response = await userInstance.put(`/holidays/${id}`, updatedData);
+  return response.data;
+};
+
+// Delete Tournament
+export const deleteHoliday = async (id) => {
+  const response = await userInstance.delete(`/holidays/${id}`);
+  return response.data;
+};
 
 

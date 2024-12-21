@@ -1,87 +1,116 @@
 import { Button } from '@mui/material';
-import { Mail, Building2, UserCircle2 } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import PhoneInput from 'react-phone-input-2';
-import 'react-phone-input-2/lib/style.css';
-import { Link, useParams } from 'react-router-dom';
-// import { createEmployee, updateEmployee } from '../../../api/Employee/EmployeeMaster';
+import { Link } from 'react-router-dom';
+import { createEmployee, updateUser,fetchUsersByName } from '../../api/service/employee/EmployeeService';
 
-const EmployeeMasterForm = () => {
-  const { id } = useParams(); 
+const UserMasterForm = () => {
   const [formData, setFormData] = useState({
-    employeeId: '',
     firstName: '',
     lastName: '',
     email: '',
     phoneNumber: '',
-    dateOfBirth: '',
-    dateOfJoining: '',
+    password: '',
+    confirmPassword: '',
     department: '',
-    designation: '',
-    employmentType: '',
-    salary: '',
-    bankAccountNumber: '',
-    bankName: '',
-    ifscCode: '',
-    panNumber: '',
-    permanentAddress: '',
-    communicationAddress: '',
-    emergencyContactName: '',
-    emergencyContactNumber: '',
-    educationQualification: '',
-    skills: [],
-    profilePicture: null
+    employmentType: ''
   });
 
-  const departments = ['HR', 'Finance', 'IT', 'Marketing', 'Sales', 'Operations', 'Customer Support'];
-  const designations = ['Junior', 'Senior', 'Manager', 'Director', 'Executive', 'Associate'];
-  const employmentTypes = ['Full-Time', 'Part-Time', 'Contract', 'Freelance'];
+  const [passwordVisibility, setPasswordVisibility] = useState({
+    password: false,
+    confirmPassword: false
+  });
 
-  useEffect(() => {
-    if (id) {
-      // Fetch employee data if ID is present (edit mode)
-      employeeMasterInstance
-        .get(`/employee/${id}`)
-        .then((response) => setFormData(response.data))
-        .catch((error) => console.error('Error fetching employee:', error));
-    }
-  }, [id]);
+  const departments = [
+    'Service',
+    'Renewal',
+    'Operations',
+    'Center',
+    'Executive',
+    'Marketing'
+  ];
 
+  const employmentTypes = [
+    'Full-Time',
+    'Part-Time',
+    'Contract',
+    'Internship',
+    'Temporary'
+  ];
+
+  const [users, setUsers] = useState([]);
+
+  // Handle input change
   const handleInputChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (field === 'selectedUser') {
+      const selectedUser = users.find(user => user._id === value);
+      if (selectedUser) {
+        setFormData(prev => ({
+          ...prev,
+          firstName: selectedUser.firstName,
+          lastName: selectedUser.lastName,
+          email: selectedUser.email,
+        }));
+      }
+    }
   };
 
-  const handleSkillChange = (skill) => {
-    setFormData((prev) => ({
+
+  const togglePasswordVisibility = (field) => {
+    setPasswordVisibility((prev) => ({
       ...prev,
-      skills: prev.skills.includes(skill)
-        ? prev.skills.filter(s => s !== skill)
-        : [...prev.skills, skill]
+      [field]: !prev[field]
     }));
   };
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    setFormData((prev) => ({ ...prev, profilePicture: file }));
-  };
+  useEffect(() => {
+    const getUsers = async () => {
+      try {
+        const userData = await fetchUsersByName();
+        setUsers(userData);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+
+    getUsers();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const formDataToSubmit = new FormData();
-      Object.keys(formData).forEach(key => {
-        if (formData[key] !== null) {
-          formDataToSubmit.append(key, formData[key]);
-        }
-      });
+    // Log both passwords to ensure they are being received correctly
+    console.log('Password:', formData.password);
+    console.log('Confirm Password:', formData.confirmPassword);
 
-      if (id) {
-        // Update employee
-        await updateEmployee(id, formDataToSubmit);
+    // Password validation (ensure both fields match)
+    if (formData.password !== formData.confirmPassword) {
+      alert('Passwords do not match');
+      return;
+    }
+
+    try {
+      // Prepare the form data to send to the backend (include confirmPassword)
+      const formDataToSubmit = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phoneNumber: formData.phoneNumber,
+        password: formData.password, // Send password to the backend
+        confirmPassword: formData.confirmPassword, // Send confirmPassword to the backend
+        department: formData.department,
+        employmentType: formData.employmentType,
+      };
+
+      // Check if we have a selected user (for updating an existing user)
+      if (formData.id) {
+        // If there's an ID, it means we are updating an existing employee
+        await updateUser(formData.id, formDataToSubmit);
       } else {
-        // Create new employee
+        // Otherwise, we are creating a new employee
         await createEmployee(formDataToSubmit);
       }
+
       alert('Employee data submitted successfully!');
     } catch (error) {
       console.error('Error submitting employee data:', error);
@@ -95,15 +124,15 @@ const EmployeeMasterForm = () => {
         <div className="bg-gradient-to-r from-[#642b8f] to-[#aa88be] p-8 text-white flex justify-between items-center">
           <div>
             <h2 className="text-3xl font-bold mb-2">
-              {id ? 'Edit Employee Master Data' : 'New Employee Master Data'}
+              {formData.id ? 'Edit User Data' : 'New Employee Data'}
             </h2>
-            <p className="text-sm opacity-90">Please fill in all the required employee information</p>
+            <p className="text-sm opacity-90">Please fill in all the required user information</p>
           </div>
           <Button
             variant="contained"
-            color="#642b8f"
+            style={{ backgroundColor: '#642b8f', color: 'white' }}
             component={Link}
-            to="/employee-list"
+            to="/employees"
           >
             View Employees
           </Button>
@@ -117,89 +146,75 @@ const EmployeeMasterForm = () => {
                   Personal Information
                 </h3>
                 <div className="flex gap-4 mb-4">
-                  <input
-                    type="text"
-                    placeholder="Employee ID"
-                    className="flex-1 p-3 rounded-lg border-2 border-gray-300 focus:border-[#642b8f] focus:outline-none"
-                    value={formData.employeeId}
-                    onChange={(e) => handleInputChange('employeeId', e.target.value)}
-                    required
-                  />
+                  <select
+                    className="w-1/2 p-3 rounded-lg border-2 border-gray-300 focus:border-[#642b8f] focus:outline-none bg-white"
+                    value={formData.selectedUser || ''}  // Bind the selected user ID
+                    onChange={(e) => handleInputChange('selectedUser', e.target.value)}  // Update the selected user ID
+                  >
+                    <option value="">Select User</option>
+                    {users.map(user => (
+                      <option key={user._id} value={user._id}>
+                        {user.firstName} {user.lastName}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    className="w-1/2 p-3 rounded-lg border-2 border-gray-300 focus:border-[#642b8f] focus:outline-none bg-white"
+                    value={formData.selectedEmail || ''}
+                    onChange={(e) => handleInputChange('selectedEmail', e.target.value)}
+                  >
+                    <option value="">Select Mail</option>
+                    {users.map(user => (
+                      <option key={user._id} value={user._id}>
+                        {user.email}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-                <div className="flex gap-4">
-                  <input
-                    type="text"
-                    placeholder="First Name"
-                    className="flex-1 p-3 rounded-lg border-2 border-gray-300 focus:border-[#642b8f] focus:outline-none"
-                    value={formData.firstName}
-                    onChange={(e) => handleInputChange('firstName', e.target.value)}
-                    required
-                  />
-                  <input
-                    type="text"
-                    placeholder="Last Name"
-                    className="flex-1 p-3 rounded-lg border-2 border-gray-300 focus:border-[#642b8f] focus:outline-none"
-                    value={formData.lastName}
-                    onChange={(e) => handleInputChange('lastName', e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
 
-              <div className="space-y-4">
-                <label className="block text-sm font-medium text-[#642b8f]">
-                  Contact Information
-                </label>
-                <div className="relative mb-4">
-                  <input
-                    type="email"
-                    className="w-full p-3 rounded-lg border-2 border-gray-300 focus:border-[#642b8f] focus:outline-none pl-4 pr-10"
-                    placeholder="Work Email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    required
-                  />
-                  <Mail className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[#642b8f]" />
-                </div>
-                <PhoneInput
-                  country={'in'}
-                  value={formData.phoneNumber}
-                  onChange={(value) => handleInputChange('phoneNumber', value)}
-                  inputProps={{
-                    placeholder: 'Work Phone Number',
-                    className: 'w-full p-3 rounded-lg !border-gray-300 focus:!border-[#642b8f]',
-                  }}
-                  containerClass="w-full border 2px"
-                  buttonClass="!border-gray-300 !rounded-lg"
-                  preferredCountries={['in']}
-                />
-              </div>
 
-              <div className="space-y-4">
-                <div className="flex gap-4">
-                  <div className="flex-1">
-                    <label className="block text-sm font-medium text-[#642b8f] mb-2">
-                      Date of Birth
-                    </label>
+                <div className="flex gap-4 mb-4">
+                  <div className="relative w-1/2">
                     <input
-                      type="date"
-                      className="w-full p-3 rounded-lg border-2 border-gray-300 focus:border-[#642b8f] focus:outline-none"
-                      value={formData.dateOfBirth}
-                      onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
+                      type={passwordVisibility.password ? "text" : "password"}
+                      placeholder="Password"
+                      value={formData.password}
+                      onChange={(e) => handleInputChange('password', e.target.value)}
+                      className="w-full p-3 rounded-lg border-2 border-gray-300 focus:border-[#642b8f] focus:outline-none pr-10"
                       required
                     />
+                    <button
+                      type="button"
+                      onClick={() => togglePasswordVisibility('password')}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 focus:outline-none"
+                    >
+                      {passwordVisibility.password ? (
+                        <Eye className="text-gray-500" size={20} />
+                      ) : (
+                        <EyeOff className="text-gray-500" size={20} />
+                      )}
+                    </button>
                   </div>
-                  <div className="flex-1">
-                    <label className="block text-sm font-medium text-[#642b8f] mb-2">
-                      Date of Joining
-                    </label>
+                  <div className="relative w-1/2">
                     <input
-                      type="date"
-                      className="w-full p-3 rounded-lg border-2 border-gray-300 focus:border-[#642b8f] focus:outline-none"
-                      value={formData.dateOfJoining}
-                      onChange={(e) => handleInputChange('dateOfJoining', e.target.value)}
+                      type={passwordVisibility.confirmPassword ? "text" : "password"}
+                      placeholder="Confirm Password"
+                      value={formData.confirmPassword}
+                      onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                      className="w-full p-3 rounded-lg border-2 border-gray-300 focus:border-[#642b8f] focus:outline-none pr-10"
                       required
                     />
+                    <button
+                      type="button"
+                      onClick={() => togglePasswordVisibility('confirmPassword')}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 focus:outline-none"
+                    >
+                      {passwordVisibility.confirmPassword ? (
+                        <Eye className="text-gray-500" size={20} />
+                      ) : (
+                        <EyeOff className="text-gray-500" size={20} />
+                      )}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -225,19 +240,6 @@ const EmployeeMasterForm = () => {
                   </select>
                   <select
                     className="flex-1 p-3 rounded-lg border-2 border-gray-300 focus:border-[#642b8f] focus:outline-none bg-white"
-                    value={formData.designation}
-                    onChange={(e) => handleInputChange('designation', e.target.value)}
-                    required
-                  >
-                    <option value="">Select Designation</option>
-                    {designations.map(desig => (
-                      <option key={desig} value={desig}>{desig}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex gap-4">
-                  <select
-                    className="flex-1 p-3 rounded-lg border-2 border-gray-300 focus:border-[#642b8f] focus:outline-none bg-white"
                     value={formData.employmentType}
                     onChange={(e) => handleInputChange('employmentType', e.target.value)}
                     required
@@ -247,112 +249,29 @@ const EmployeeMasterForm = () => {
                       <option key={type} value={type}>{type}</option>
                     ))}
                   </select>
-                  <input
-                    type="number"
-                    placeholder="Annual Salary"
-                    className="flex-1 p-3 rounded-lg border-2 border-gray-300 focus:border-[#642b8f] focus:outline-none"
-                    value={formData.salary}
-                    onChange={(e) => handleInputChange('salary', e.target.value)}
-                    required
-                  />
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <h3 className="text-[#642b8f] font-semibold text-lg pb-2 border-b-2 border-[#f8a213]">
-                  Bank & Tax Information
-                </h3>
-                <div className="flex gap-4 mb-4">
-                  <input
-                    type="text"
-                    placeholder="Bank Account Number"
-                    className="flex-1 p-3 rounded-lg border-2 border-gray-300 focus:border-[#642b8f] focus:outline-none"
-                    value={formData.bankAccountNumber}
-                    onChange={(e) => handleInputChange('bankAccountNumber', e.target.value)}
-                    required
-                  />
-                  <input
-                    type="text"
-                    placeholder="Bank Name"
-                    className="flex-1 p-3 rounded-lg border-2 border-gray-300 focus:border-[#642b8f] focus:outline-none"
-                    value={formData.bankName}
-                    onChange={(e) => handleInputChange('bankName', e.target.value)}
-                    required
-                  />
-                </div>
-                <input
-                  type="text"
-                  placeholder="IFSC Code"
-                  className="w-full p-3 rounded-lg border-2 border-gray-300 focus:border-[#642b8f] focus:outline-none"
-                  value={formData.ifscCode}
-                  onChange={(e) => handleInputChange('ifscCode', e.target.value)}
-                  required
-                />
-                <input
-                  type="text"
-                  placeholder="PAN Number"
-                  className="w-full p-3 rounded-lg border-2 border-gray-300 focus:border-[#642b8f] focus:outline-none"
-                  value={formData.panNumber}
-                  onChange={(e) => handleInputChange('panNumber', e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-[#642b8f] font-semibold text-lg pb-2 border-b-2 border-[#f8a213]">
-                  Skills & Profile Picture
-                </h3>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-[#642b8f] mb-2">
-                    Select Skills
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {['React', 'Node.js', 'Python', 'JavaScript', 'SQL', 'Cloud', 'DevOps'].map(skill => (
-                      <div key={skill} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          id={skill}
-                          checked={formData.skills.includes(skill)}
-                          onChange={() => handleSkillChange(skill)}
-                          className="mr-2"
-                        />
-                        <label htmlFor={skill}>{skill}</label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#642b8f] mb-2">
-                    Profile Picture
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileUpload}
-                    className="w-full p-3 rounded-lg border-2 border-gray-300 focus:border-[#642b8f] focus:outline-none"
-                  />
-                </div>
+              <div className="flex justify-center gap-6 mt-12">
+                <button
+                  type="submit"
+                  className="px-8 py-3 bg-[#642b8f] text-white rounded-lg font-medium hover:bg-[#aa88be] transition-colors shadow-lg hover:shadow-xl"
+                >
+                  Submit User Data
+                </button>
+                <button
+                  type="reset"
+                  className="px-8 py-3 bg-white border-2 border-[#642b8f] text-[#642b8f] rounded-lg font-medium hover:bg-[#efe8f0] transition-colors"
+                >
+                  Reset Form
+                </button>
               </div>
             </div>
-          </div>
-          
-          <div className="flex justify-center gap-6 mt-12">
-            <button
-              type="submit"
-              className="px-8 py-3 bg-[#642b8f] text-white rounded-lg font-medium hover:bg-[#aa88be] transition-colors shadow-lg hover:shadow-xl"
-            >
-              Submit Employee Data
-            </button>
-            <button
-              type="reset"
-              className="px-8 py-3 bg-white border-2 border-[#642b8f] text-[#642b8f] rounded-lg font-medium hover:bg-[#efe8f0] transition-colors"
-            >
-              Reset Form
-            </button>
           </div>
         </form>
       </div>
     </div>
   );
 };
-export default EmployeeMasterForm;
+
+export default UserMasterForm;

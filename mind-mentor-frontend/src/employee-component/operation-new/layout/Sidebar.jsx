@@ -37,11 +37,11 @@ const Sidebar = () => {
       title: 'Lead Management',
       icon: '💼',
       submenu: [
-        { title: 'New Enquiry', icon: '📝', path: '/employee-operation-enquiry-form' },
+        // { title: 'New Enquiry', icon: '📝', path: '/employee-operation-enquiry-form' },
         { title: 'Enquiries', icon: '📋', path: '/employee-operation-enquiry-list' },
         { title: 'Prospects', icon: '👥', path: '/employee-operation/prospects' },
-        { title: 'Conversion', icon: '📄', path: '/employee-operation/invoice' },
-        { title: 'Refer Friend', icon: '📢', path: '/employee-operation/referal' },
+        // { title: 'Conversion', icon: '📄', path: '/employee-operation/invoice' },
+        // { title: 'Refer Friend', icon: '📢', path: '/employee-operation/referal' },
       ],
     },
     {
@@ -134,8 +134,8 @@ const Sidebar = () => {
 
         {/* Navigation Links */}
         <nav className="flex flex-col mt-4 overflow-y-auto "> {/* Adjust the height  accordingly  max-h-[calc(100vh-200px)]*/}
-          {navLinks.map((link) => (
-            <div key={link.path} className="relative">
+          {navLinks.map((link,index) => (
+            <div key={index} className="relative">
               {/* Main Navigation Button */}
               <Link
                 to={link.path}
