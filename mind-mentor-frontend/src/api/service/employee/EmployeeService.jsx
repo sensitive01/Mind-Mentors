@@ -137,11 +137,9 @@ export const fetchTaskAmAssignedToOthers = async (empId) => {
 
 
 // Create Enquiry
-export const fetchMyTasks = async (empId) => {
+export const fetchAllTasks = async () => {
   try {
-    const response = await operationDeptInstance.get(`/mytasks/${empId}`, {
-    
-    });
+    const response = await operationDeptInstance.get(`/all-task`);
     return response.data;
   } catch (error) {
     console.error("Error fetching tasks:", error);

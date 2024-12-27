@@ -194,7 +194,12 @@ const TaskModule = () => {
               Please fill in the required information below
             </p>
           </div>
-          <Button variant="contained" color="#642b8f" component={Link} to="#">
+          <Button
+            variant="contained"
+            color="#642b8f"
+            component={Link}
+            to="#"
+          >
             View Support
           </Button>
         </div>
@@ -211,7 +216,6 @@ const TaskModule = () => {
                 <option value="category1">category 1</option>
                 <option value="category2">category 2</option>
                 <option value="category3">category 3</option>
-                <option value="category3">category 4</option>
               </select>
             </div>
 

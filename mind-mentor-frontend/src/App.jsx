@@ -117,6 +117,7 @@ import ServiceScheduleClass from "./pages/servicedelivery/ServiceScheduleClass";
 import ServiceSupport from "./pages/servicedelivery/ServiceSupport";
 import ServiceSupportRequest from "./pages/servicedelivery/ServiceSupportRequest";
 import ServiceLogin from "./servicedelivery/components/LoginPage";
+import ServiceTaskLogs from "./pages/servicedelivery/Logs"
 
 // ...........................................................................................................
 
@@ -244,6 +245,10 @@ import CoachAvailabilityTablePage from "./pages/servicedelivery/CoachAvailabilit
 import AddKidAvailabilityPage from "./pages/parent/AddKidAvailabilityPage";
 import CoachAddAttandaceFeedBack from "./pages/coach/CoachAddAttandaceFeedBack";
 import AssignClassToKid from "./pages/servicedelivery/AssignClassToKid";
+import CoachTaskLogs from "./pages/coach/CoachTaskLogs";
+import RenewalTaskLogs from "./pages/renewalassociate/RenewalTaskLogs";
+import CenterAdminTaskLogs from "./pages/centeradmin/CenterAdminTaskLogs";
+import SuperAdminTaskAllLogs from "./pages/superadmin/SuperAdminTaskAllLogs";
 
 
 
@@ -408,6 +413,8 @@ function App() {
         <Route path="/coachAvailabilityForm" element={<CoachAvailabilityFormPage/>} />
         <Route path="/coachAvailabilityTable" element={<CoachAvailabilityTablePage/>} />
         <Route path="/serviceAssignClassToKid/:id" element={<AssignClassToKid/>} />
+        <Route path="/service-delivary/taskslogs/:id" element={<ServiceTaskLogs />} />
+
 
 
 
@@ -447,6 +454,9 @@ function App() {
         <Route path="/renewalParents" element={<RenewalParents />} />
         <Route path="/renewalRenewals" element={<RenewalRenewal />} />
         <Route path="/renewalLogin" element={<RenewalLogin />} />
+        <Route path="/renewal-associate/taskslogs/:id" element={<RenewalTaskLogs />} />
+
+
 
 
 
@@ -472,6 +482,9 @@ function App() {
         <Route path="/coachAvailability" element={<CoachAvailabilityPage />} />
         <Route path="/coachAvailability" element={<CoachAvailabilityPage />} />
         <Route path="/coachAttandanceFeedback/:classId" element={<CoachAddAttandaceFeedBack />} />
+        <Route path="/coach/taskslogs/:id" element={<CoachTaskLogs />} />
+
+        
 
 
 
@@ -519,6 +532,12 @@ function App() {
         <Route path="/centeradmin/studentreport" element={<CenterStudentReport/>} />
         <Route path="/centeradmin/coachfeedback" element={<CenterCoachFeedback/>} />
         <Route path="/showCompleteLogsCenterAdmin/:id" element={<CenterAdminEnquiryLogs/>} />
+        <Route path="/centeradmin/taskslogs/:id" element={<CenterAdminTaskLogs />} />
+
+
+
+
+
 
 
 
@@ -567,6 +586,8 @@ function App() {
         <Route path="/participents/" element={< Participents />} />
         <Route path="/chessKids/" element={< ChessKid />} />
         <Route path="/showCompleteLogsAdmin/:id" element={<SuperAdminEnquiryLogs/>} />
+        <Route path="/superadmin/taskslogs/:id" element={<SuperAdminTaskAllLogs />} />
+
 
 
 

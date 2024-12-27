@@ -44,7 +44,7 @@ operationRoute.delete("/enquiry-form/:id", operationController.deleteEnquiry);
 operationRoute.get("/leaves-form", operationController.getAllLeaves);
 operationRoute.get("/attendance/", operationController.fetchAttendance);
 operationRoute.get("/tasks", operationController.getAllTasks);
-operationRoute.get("/mytasks/:id", operationController.getMyTasks);
+operationRoute.get("/all-task", operationController.getAllTasks);
 
 operationRoute.get("/my-pending-tasks/:id", operationController.getMyPendingTasks);
 operationRoute.get("/assign-task-to-others/:id", operationController.assignTaskToOthers);

@@ -19,17 +19,14 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
-import { useEffect, useState } from "react";
-import columns from "./TaskColumn";
-import tasks from "./Tasks";
-import { Link } from "react-router-dom";
-
 import { alpha } from "@mui/material/styles";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
-import { fetchMyTasks } from "../../api/service/employee/EmployeeService";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import columns from "./TaskColumn";
+import { addNotesToTasks, fetchTaskAmAssignedToOthers, updateTaskStatus } from "../../api/service/employee/EmployeeService";
 
 
-// Updated modern color scheme
 const theme = createTheme({
   palette: {
     primary: {
@@ -91,18 +88,17 @@ const theme = createTheme({
     },
   },
 });
-
 const DetailView = ({ data }) => (
   <Grid container spacing={3} sx={{ p: 2 }}>
     {Object.entries(data).map(
       ([key, value]) =>
         key !== "id" && (
-          <Grid item xs={12} sm={6} md={4} key={key}>
+          <Grid item xs={12} sm={6} md={6} key={key}>
             <Box
               sx={{
                 p: 2,
                 borderRadius: 2,
-                bgcolor: alpha(theme.palette.primary.main, 0.04),
+                bgcolor: alpha("#1976d2", 0.04), // Replace with `theme.palette.primary.main` if available
                 height: "100%",
               }}
             >
@@ -113,82 +109,169 @@ const DetailView = ({ data }) => (
               >
                 {key.replace(/([A-Z])/g, " $1").toUpperCase()}
               </Typography>
-              <Typography variant="body1" color="text.primary">
-                {value || "N/A"}
-              </Typography>
+              {typeof value === "object" && value !== null ? (
+                <>
+                  {value.name && (
+                    <Typography variant="body1" color="text.primary">
+                      Name: {value.name}
+                    </Typography>
+                  )}
+                  {value.email && (
+                    <Typography variant="body1" color="text.primary">
+                      Email: {value.email}
+                    </Typography>
+                  )}
+                </>
+              ) : (
+                <Typography variant="body1" color="text.primary">
+                  {value || "N/A"}
+                </Typography>
+              )}
             </Box>
           </Grid>
         )
     )}
   </Grid>
 );
-
 const Prospects = () => {
-  const email = localStorage.getItem("email")
   const [rows, setRows] = useState([]);
+  const navigate = useNavigate(); // React Router navigation
+  const [logDialog, setLogDialog] = useState({ open: false, rowData: null });
+  const empId = localStorage.getItem("empId");
+
 
   useEffect(() => {
-    const fetchMyTask = async () => {
+    const fetchTask = async () => {
       try {
-        const response = await fetchMyTasks(email);
+        const response = await fetchTaskAmAssignedToOthers(empId); 
+        console.log("My task",response)
         const formattedData = response.map((task) => ({
-          ...task,
-          id: task._id,
+          ...task, // Spread all properties of the task
+          id: task._id, // Map MongoDB's _id to the id expected by the table
+          taskTime: task.taskTime, // Already formatted by the controller
+          createdAt: task.createdAt, // Already formatted by the controller
+          updatedAt: task.updatedAt, // Already formatted by the controller
+          assignedBy: task.assignedBy
         }));
         setRows(formattedData);
+
+        console.log("New row",rows)
+
+
+
+
       } catch (error) {
         console.error("Failed to fetch tasks:", error);
       }
     };
-    fetchMyTask();
+    fetchTask();
   }, []);
-  
-
-  useEffect(() => {}, []);
   const [noteDialog, setNoteDialog] = useState({
     open: false,
     rowData: null,
     noteText: "",
   });
-
   const [viewDialog, setViewDialog] = useState({
     open: false,
     rowData: null,
   });
-
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
     pageSize: 5,
   });
-
-  const [editRowsModel, setEditRowsModel] = useState({});
-
-  const handleStatusToggle = (id) => {
-    setRows(
-      rows.map((row) => {
-        if (row.id === id) {
-          const newStatus = row.status === "Warm" ? "Cold" : "Warm";
-          return {
-            ...row,
-            status: newStatus,
-            stageTag: newStatus,
-          };
-        }
-        return row;
-      })
-    );
-  };
-
-  const handleNoteSave = () => {
-    if (noteDialog.rowData) {
+  const handleStatusToggle = async (id, newStatus) => {
+    try {
+      // Get empId from localStorage
+      const empId = localStorage.getItem('empId');
+      if (!empId) {
+        console.error("Employee ID (empId) is missing.");
+        return;
+      }
+      // Update the task status locally in the state
       setRows(
-        rows.map((row) =>
-          row.id === noteDialog.rowData.id
-            ? { ...row, notes: noteDialog.noteText }
-            : row
-        )
+        rows.map((row) => {
+          if (row._id === id) {
+            return {
+              ...row,
+              status: newStatus, // Update status with the selected value
+              stageTag: newStatus, // Update stageTag accordingly
+            };
+          }
+          return row;
+        })
       );
-      setNoteDialog({ open: false, rowData: null, noteText: "" });
+      // Prepare data for the API call
+      const payload = {
+        status: newStatus,
+        updatedBy: empId, // Pass empId to the backend
+      };
+      // Call the updateTaskStatus function
+      const data = await updateTaskStatus(id, payload, empId);
+      if (data.success) {
+        console.log("Task status updated successfully:", data);
+        // If activity log data is part of the response, log it or update UI accordingly
+        if (data.activityLog) {
+          console.log("Activity Log:", data.activityLog);
+        }
+      } else {
+        console.error("Failed to update task status:", data.message);
+      }
+    } catch (error) {
+      console.error("Error updating task status:", error);
+    }
+  };
+  const handleNoteSave = async () => {
+    if (noteDialog.rowData) {
+      try {
+        const { id } = noteDialog.rowData; // Extract Task ID
+        const { noteText, enquiryStage } = noteDialog;
+        // Validate that both Enquiry Stage and Note Text are provided
+        if (!enquiryStage || !noteText) {
+          console.error("Enquiry Stage and Note Text are required.");
+          return;
+        }
+        // Get empId from localStorage
+        const empId = localStorage.getItem('empId');
+        if (!empId) {
+          console.error("Employee ID (empId) is missing.");
+          return;
+        }
+        // Construct the payload matching the controller's expected format
+        const payload = {
+          enquiryStageTag: enquiryStage,
+          addNoteTo: "parent", // Default to 'parent'
+          notes: noteText,
+          addedBy: empId, // Pass empId in the payload
+        };
+        // Log the payload for debugging purposes
+        console.log("Payload to be sent:", payload);
+        // Call the service function to add the note
+        const data = await addNotesToTasks(id, payload);
+        // Handle the response
+        if (data.success) {
+          console.log("Note added successfully:", data);
+          // Update the UI with the new note
+          setRows(
+            rows.map((row) =>
+              row.id === id
+                ? { ...row, notes: [...(row.notes || []), payload] }
+                : row
+            )
+          );
+          // Close the note dialog and reset the form
+          setNoteDialog({
+            open: false,
+            rowData: null,
+            noteText: "",
+            enquiryStage: "",
+            notesTo: "",
+          });
+        } else {
+          console.error("Failed to add note:", data.message);
+        }
+      } catch (error) {
+        console.error("Error adding note:", error.message);
+      }
     }
   };
   console.log("row", rows);
@@ -217,27 +300,27 @@ const Prospects = () => {
                 gutterBottom
                 sx={{ color: "text.primary", fontWeight: 600, mb: 3 }}
               >
-                My Tasks
+                Assigned Tasks
               </Typography>
               <Button
                 variant="contained"
                 color="primary"
                 component={Link}
-                to="/superadminMyTasks/assigntask"
+                to="/centeradmin-tasks/assigntask"
               >
                 + My Task
               </Button>
             </Box>
-
             <DataGrid
               rows={rows}
               columns={columns(
                 theme,
                 handleStatusToggle,
                 setViewDialog,
-                setNoteDialog
+                setNoteDialog,
+                setLogDialog,
+                navigate // Pass navigate here
               )}
-              // Pass necessary functions as parameters
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel}
               pageSizeOptions={[5, 10, 25]}
@@ -252,7 +335,6 @@ const Prospects = () => {
               }}
               sx={{
                 height: 500, // Fixed height for the table
-
                 "& .MuiDataGrid-cell:focus": {
                   outline: "none",
                 },
@@ -272,7 +354,6 @@ const Prospects = () => {
                 },
               }}
             />
-
             {/* View Dialog */}
             <Dialog
               open={viewDialog.open}
@@ -296,7 +377,6 @@ const Prospects = () => {
                 <DetailView data={viewDialog.rowData || {}} />
               </DialogContent>
               <Divider sx={{ borderColor: "#aa88be" }} />
-
               <DialogActions sx={{ p: 2.5 }}>
                 <Button
                   class="px-8 py-3 bg-[#642b8f] text-white rounded-lg font-medium hover:bg-[#aa88be] transition-colors shadow-lg hover:shadow-xl"
@@ -311,7 +391,6 @@ const Prospects = () => {
                 </Button>
               </DialogActions>
             </Dialog>
-
             {/* Notes Dialog */}
             <Dialog
               open={noteDialog.open}
@@ -366,7 +445,6 @@ const Prospects = () => {
                     <MenuItem value="Converted">Converted</MenuItem>
                   </Select>
                 </FormControl>
-
                 {/* Notes To Field */}
                 <TextField
                   label="Notes To"
@@ -380,7 +458,6 @@ const Prospects = () => {
                   fullWidth
                   sx={{ mt: 2 }}
                 />
-
                 <TextField
                   label="Note"
                   value={noteDialog.noteText}
@@ -411,7 +488,6 @@ const Prospects = () => {
                 >
                   Save Note
                 </Button>
-
                 <Button
                   class="px-8 py-3 bg-white border-2 border-[#642b8f] text-[#642b8f] rounded-lg font-medium hover:bg-[#efe8f0] transition-colors"
                   onClick={() =>
@@ -421,7 +497,6 @@ const Prospects = () => {
                       noteText: "",
                       enquiryStage: "",
                       notesTo: "",
-                      parents: "",
                     })
                   }
                   variant="outlined"
@@ -441,5 +516,4 @@ const Prospects = () => {
     </ThemeProvider>
   );
 };
-
 export default Prospects;

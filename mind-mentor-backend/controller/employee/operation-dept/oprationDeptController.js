@@ -774,9 +774,9 @@ const addNotesToTasks = async (req, res) => {
     await ActivityLog.create({
       taskId: updatedEntry._id,
       action: 'ADD_NOTE',
-      details: `Note added to task ID: ${id} by ${addingEmployee.firstName} ${addingEmployee.lastName}.${addingEmployee.email}`,
+      details: `Note added to task ID: ${id} by ${addingEmployee.firstName}.${addingEmployee.email}`,
       performedBy: empId,
-      performedByName: `${addingEmployee.firstName} ${addingEmployee.lastName},${addingEmployee.email}`,
+      performedByName: `${addingEmployee.firstName} ,${addingEmployee.email}`,
     });
 
     // Send success response
@@ -1025,9 +1025,9 @@ const createTask = async (req, res) => {
     await ActivityLog.create({
       taskId: newTask._id,
       action: 'CREATE',
-      details: `Task "${task}" created by ${assigningEmployee.firstName} ${assigningEmployee.lastName}.${assigningEmployee.email}`,
+      details: `Task "${task}" created by ${assigningEmployee.firstName}.${assigningEmployee.email}`,
       performedBy: empId,
-      performedByName: `${assigningEmployee.firstName} ${assigningEmployee.lastName} ${assigningEmployee.email}`,
+      performedByName: `${assigningEmployee.firstName}  ${assigningEmployee.email}`,
     });
 
     res.status(201).json({
@@ -1045,6 +1045,7 @@ const getAllTasks = async (req, res) => {
   try {
     // Fetch all tasks and populate 'assignedBy'
     const tasks = await Task.find().populate('assignedBy', 'name email');
+    console.log("Task==>",tasks)
 
     // Format date and time to dd/mm/yy HH:mm
     const formatDateTime = (date) => {
@@ -1169,9 +1170,9 @@ const updateTaskStatus = async (req, res) => {
     await ActivityLog.create({
       taskId: updatedTask._id,
       action: 'UPDATE',
-      details: `Task status updated to "${status}" by ${updatingEmployee.firstName} ${updatingEmployee.lastName}.${updatingEmployee.email}`,
+      details: `Task status updated to "${status}" by ${updatingEmployee.firstName}.${updatingEmployee.email}`,
       performedBy: empId,
-      performedByName: `${updatingEmployee.firstName} ${updatingEmployee.lastName}, ${updatingEmployee.email}`,
+      performedByName: `${updatingEmployee.firstName} ${updatingEmployee.email}`,
     });
 
     res.status(200).json({
@@ -1304,20 +1305,8 @@ const getMyTasks = async (req, res) => {
   try {
     console.log("Welcome to get all task",req.params)
     
-    const { id } = req.params;
-    console.log(id)
-
-    if (!id) {
-      return res.status(400).json({ message: "empId are required" });
-    }
-
-    const empData = await Employee.findOne({_id:id},{email:1})
-    console.log(empData)
-
     // Fetch tasks assigned to the employee
-    const tasks = await Task.find({
-      assignedTo: empData.email,
-    });
+    const tasks = await Task.find();
 
     // Log the tasks if needed for debugging
     console.log(tasks);
@@ -1388,9 +1377,9 @@ const updateTask = async (req, res) => {
     await ActivityLog.create({
       taskId: updatedTask._id,
       action: 'UPDATE',
-      details: `Task updated by ${updatingEmployee.firstName} ${updatingEmployee.lastName}. Changes: ${JSON.stringify(req.body)}`,
+      details: `Task updated by ${updatingEmployee.firstName}  Changes: ${JSON.stringify(req.body)}`,
       performedBy: empId,
-      performedByName: `${updatingEmployee.firstName} ${updatingEmployee.lastName}`,
+      performedByName: `${updatingEmployee.firstName}`,
     });
 
     // Return success response

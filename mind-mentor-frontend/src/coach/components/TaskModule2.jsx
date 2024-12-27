@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
 import { createTasks } from "../../api/service/employee/EmployeeService";
 
 
 const TaskModule = () => {
-  const empEmail = localStorage.getItem("email")
+  const empId = localStorage.getItem("empId");
   const navigate = useNavigate()
   // State to manage form inputs
   const [formData, setFormData] = useState({
@@ -14,7 +14,7 @@ const TaskModule = () => {
     taskDate: "",
     taskTime: "",
     assignedTo: "",
-    assignedBy:empEmail||""
+    assignedBy: empId || ""
   });
 
   // State to manage form submission and display
@@ -31,6 +31,15 @@ const TaskModule = () => {
       [name]: value,
     }));
   };
+  useEffect(() => {
+    const storedempId = localStorage.getItem("empId");
+    if (storedempId) {
+      setFormData((prevState) => ({
+        ...prevState,
+        assignedBy: storedempId,
+      }));
+    }
+  }, []);
 
   // Handle form submission
   const handleSubmit = async (e) => {
@@ -48,26 +57,48 @@ const TaskModule = () => {
       return;
     }
 
-    await createTasks(formData);
-    // If all fields are filled, show success message
-    setSubmissionStatus({
-      submitted: true,
-      message: `Task Successfully Assigned to ${assignedTo} for ${kidsRelatedTo} on ${taskDate} at ${taskTime}`,
-    });
-    setTimeout(() => {
-      navigate("/coachMyTasks")
-      
-    }, 1500);
+    // Get the current employee details (assumed to be saved in localStorage or state)
+    const empId = localStorage.getItem('empId'); // Assuming empId is stored after login
+    const employeeName = localStorage.getItem('employeeName'); // Employee name from login or profile
 
+    // Call the createTasks function to save the task
+    try {
+      await createTasks(formData);
 
-    // Optional: Reset form after submission
-    setFormData({
-      kidsRelatedTo: "",
-      task: "",
-      taskDate: "",
-      taskTime: "",
-      assignedTo: "",
-    });
+      // Log the activity (creating the task)
+      const activityLog = {
+        taskId: formData.taskId, // Assuming taskId is available after task creation
+        action: 'Created Task',
+        performedBy: empId,
+        performedByName: employeeName,
+        details: `Assigned task: ${task} to ${assignedTo} for ${kidsRelatedTo} on ${taskDate} at ${taskTime}`,
+      };
+
+      // Call your API or function to log the activity
+      // await logActivity(activityLog);  // Assuming logActivity is a function to send data to the backend
+
+      // If all fields are filled, show success message
+      setSubmissionStatus({
+        submitted: true,
+        message: `Task Successfully Assigned to ${assignedTo} for ${kidsRelatedTo} on ${taskDate} at ${taskTime}`,
+      });
+
+      // Optional: Reset form after submission
+      setFormData({
+        kidsRelatedTo: "",
+        task: "",
+        taskDate: "",
+        taskTime: "",
+        assignedTo: "",
+      });
+
+    } catch (error) {
+      console.error("Error creating task:", error);
+      setSubmissionStatus({
+        submitted: true,
+        message: "Error creating task, please try again.",
+      });
+    }
   };
 
   // Reset form and submission status
@@ -111,11 +142,10 @@ const TaskModule = () => {
           <div
             className={`
             p-4 m-4 rounded-lg text-center font-medium 
-            ${
-              submissionStatus.message.includes("Successfully")
+            ${submissionStatus.message.includes("Successfully")
                 ? "bg-green-100 text-green-800"
                 : "bg-red-100 text-red-800"
-            }
+              }
           `}
           >
             {submissionStatus.message}
@@ -199,7 +229,9 @@ const TaskModule = () => {
                 <option value="">-Select-</option>
                 <option value="marketingassociate@mindmentorz.com">Marketing</option>
                 <option value="coach@mindmentorz.com">Coach</option>
-                <option value="operations@mindmentoz.com">Operations</option>
+                <option value="operations@mindmentorz.com">Operations</option>
+                <option value="serviceDelivery@mindmentorz.com">Service delivery</option>
+
               </select>
             </div>
           </div>
