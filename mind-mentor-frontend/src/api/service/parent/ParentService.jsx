@@ -38,14 +38,15 @@ export const parentKidsRegistration = async (formData, state) => {
   }
 };
 
-export const parentBookDemoClass = async (formData, state) => {
+export const parentBookDemoClass = async (formData, state,filteredSlots) => {
   try {
-    console.log("parentBookDemoClass", formData, state);
+    console.log("parentBookDemoClass", formData, state,filteredSlots);
     const response = await parentInstance.post(
       `/parent/parent-book-demo-class`,
       {
         formData,
         state,
+        filteredSlots
       }
     );
     return response;

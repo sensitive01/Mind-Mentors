@@ -94,25 +94,108 @@ export const markAttendance = async (formData) => {
 };
 
 
-// Create Enquiry
 export const createTasks = async (formData) => {
   const response = await operationDeptInstance.post("/tasks", formData);
   return response.data;
 };
 
-// Get All Enquiries
-export const fetchAllTasks = async () => {
-  const response = await operationDeptInstance.get("/tasks");
-  return response.data;
+
+export const fetchMyPendingTask = async (empId) => {
+  try {
+    const response = await operationDeptInstance.get(`/my-pending-tasks/${empId}`, {
+    
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching tasks:", error);
+    throw error;
+  }
 };
 
 
 
-export const fetchMyTasks = async (email) => {
-  const response = await operationDeptInstance.get(`/my-tasks/${email}`);
-  return response.data;
+export const fetchTaskAmAssignedToOthers = async (empId) => {
+  try {
+    const response = await operationDeptInstance.get(`/assign-task-to-others/${empId}`, {
+    
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching tasks:", error);
+    throw error;
+  }
 };
 
+
+
+
+
+
+
+
+
+
+
+// Create Enquiry
+export const fetchMyTasks = async (empId) => {
+  try {
+    const response = await operationDeptInstance.get(`/mytasks/${empId}`, {
+    
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching tasks:", error);
+    throw error;
+  }
+};
+export const getActivityLogsByTaskId = async (id) => {
+  console.log("Calling API with Task ID:", id);
+
+  try {
+    const response = await operationDeptInstance.get(`/taskslogs/${id}`);
+    console.log("API Response:", response);
+    return response.data;
+  } catch (error) {
+    console.error("Error in API call:", error);
+    throw error;
+  }
+};
+// Add Notes Service Function
+export const addNotesToTasks = async (id, payload) => {
+  try {
+    const response = await operationDeptInstance.put(`/tasks/notes/${id}`, payload);
+    return response.data; // Return the response data directly
+  } catch (error) {
+    console.error("Error in addNotesToTasks service:", error.message);
+    throw error; // Rethrow the error for the caller to handle
+  }
+};
+// api.js or in the same file
+export const updateTaskStatus = async (id, payload) => {
+  try {
+    // Get empId from localStorage (or from your app's state/context)
+    const empId = localStorage.getItem('empId');
+    if (!empId) {
+      throw new Error("Employee ID (empId) is missing.");
+    }
+
+    // Add empId to the headers
+    const response = await operationDeptInstance.put(
+      `/tasks/${id}/status`,
+      payload,
+      {
+        headers: {
+          'empId': empId, // Pass empId in the headers
+        },
+      }
+    );
+
+    return response.data; // Return the response data directly
+  } catch (error) {
+    console.error("Error in updateTaskStatus service:", error.message);
+    throw error; // Rethrow the error for the caller to handle
+  }
+};
 // Update Enquiry
 export const updateTasks = async (id, updatedData) => {
   const response = await operationDeptInstance.put(`/enquiry-form/${id}`, updatedData);
@@ -124,6 +207,12 @@ export const deleteTasks = async (id) => {
   const response = await operationDeptInstance.delete(`/enquiry-form/${id}`);
   return response.data;
 };
+
+
+
+
+
+
 
 export const getKidData = async () => {
   const response = await operationDeptInstance.get(`/get-kids-data`);
@@ -203,7 +292,6 @@ export const updateDemoStatus = async (id) => {
 // Create User
 export const createUser = async (userData) => {
   const response = await userInstance.post("/users", userData);
-  console.log('Incoming request body:', req.body);
 
   return response.data;
 };
@@ -242,7 +330,6 @@ export const deleteUser = async (id) => {
 // Create User
 export const createEmployee = async (userData) => {
   const response = await userInstance.post("employee", userData);
-  console.log('Incoming request body:', req.body);
   return response.data;
 };
 

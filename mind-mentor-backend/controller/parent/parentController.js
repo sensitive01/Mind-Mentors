@@ -187,46 +187,135 @@ const parentStudentRegistration = async (req, res) => {
   }
 };
 
+// const parentBookDemoClass = async (req, res) => {
+//   try {
+//     console.log("Welcome to demo class booking", req.body);
+
+//     const { formData, state,filteredSlots } = req.body;
+//     const { parent, kid } = state;
+
+//     formData.programs.map((data) => {
+//       console.log(data);
+//     });
+//     console.log("formData",formData)
+//     console.log("parent",parent)
+//     console.log("kid",kid)
+//     console.log("filteredSlots",filteredSlots)
+
+
+
+//     console.log("Parent ID:", parent._id, "Kid ID:", kid._id);
+//     if(formData.usePredefineSlot){
+//       console.log("Yes")
+//       const updateDemoClassDetails = await ClassSchedule.findOne({_id:filteredSlots[0]._id})
+//       console.log(updateDemoClassDetails)
+//     }
+
+//     // const demoClass = new demoClassModel({
+//     //   programs: formData.programs.map((programObj) => ({
+//     //     program: programObj.program,
+//     //     programLevel: programObj.programLevel,
+//     //   })),
+//     //   date: formData.date,
+//     //   time: formData.time,
+//     //   parentId: parent._id,
+//     //   kidId: kid._id,
+//     // });
+
+//     // await demoClass.save();
+//     // console.log("Demo class saved");
+
+    
+//     // await parentModel.findByIdAndUpdate(parent._id, {
+//     //   type: "exist",
+//     // });
+
+    
+//     // const updatedKid = await kidModel.findByIdAndUpdate({ _id: kid._id }, kid, {
+//     //   new: true,
+//     // });
+
+//     // res.status(201).json({
+//     //   success: true,
+//     //   message: "Demo class booked successfully, and chess ID updated.",
+//     //   parentId: parent._id,
+//     // });
+
+
+//   } catch (err) {
+//     console.error("Error in parent Book Demo Class", err);
+//     res.status(500).json({
+//       success: false,
+//       message: "Internal server error. Please try again later.",
+//     });
+//   }
+// };
+
+
 const parentBookDemoClass = async (req, res) => {
   try {
     console.log("Welcome to demo class booking", req.body);
 
-    const { formData, state } = req.body;
+    const { formData, state,} = req.body;
     const { parent, kid } = state;
 
     formData.programs.map((data) => {
       console.log(data);
     });
 
+    console.log("formData", formData);
+    console.log("parent", parent);
+    console.log("kid", kid);
+
+
     console.log("Parent ID:", parent._id, "Kid ID:", kid._id);
 
-    const demoClass = new demoClassModel({
-      programs: formData.programs.map((programObj) => ({
-        program: programObj.program,
-        programLevel: programObj.programLevel,
-      })),
-      date: formData.date,
-      time: formData.time,
-      parentId: parent._id,
-      kidId: kid._id,
-    });
+    if (formData.hasSchedule) {
+      console.log("Using predefined slot");
+      const updateDemoClassDetails = await ClassSchedule.findOne({ _id: formData.scheduleId });
+      
+      if (updateDemoClassDetails) {
+        console.log("Demo class details found", updateDemoClassDetails);
 
-    await demoClass.save();
-    console.log("Demo class saved");
+        // Push the kid details into selectedStudents array
+        updateDemoClassDetails.selectedStudents.push({
+          kidId: kid._id,
+          kidName: kid.kidsName, // Assuming the kid's name is available in the `kid` object
+        });
 
-    
-    await parentModel.findByIdAndUpdate(parent._id, {
-      type: "exist",
-    });
+        // Save the updated demo class details
+        await updateDemoClassDetails.save();
 
-    
-    const updatedKid = await kidModel.findByIdAndUpdate({ _id: kid._id }, kid, {
-      new: true,
-    });
+        console.log("Updated demo class details with selected student:", updateDemoClassDetails);
+      }
+      
+
+    }
+
+    // Additional operations for saving demo class or updating parent/kid models
+    // Uncomment if needed:
+    // const demoClass = new demoClassModel({
+    //   programs: formData.programs.map((programObj) => ({
+    //     program: programObj.program,
+    //     programLevel: programObj.programLevel,
+    //   })),
+    //   date: formData.date,
+    //   time: formData.time,
+    //   parentId: parent._id,
+    //   kidId: kid._id,
+    // });
+    // await demoClass.save();
+    // console.log("Demo class saved");
+
+    const parentData = await parentModel.findByIdAndUpdate(parent._id, { type: "exist" });
+    parentData.kids.push({kidId:kid._id})
+    await parentData.save()
+
+    const updatedKid = await kidModel.findByIdAndUpdate({ _id: kid._id }, kid, { new: true });
 
     res.status(201).json({
       success: true,
-      message: "Demo class booked successfully, and chess ID updated.",
+      message: "Demo class updated with selected student successfully.",
       parentId: parent._id,
     });
   } catch (err) {
@@ -237,6 +326,11 @@ const parentBookDemoClass = async (req, res) => {
     });
   }
 };
+
+
+
+
+
 
 const getKidsDataList = async (req, res) => {
   try {
@@ -578,6 +672,7 @@ const getParentProfileData = async (req, res) => {
 const getKidDemoClassDetails = async (req, res) => {
   try {
     const { kidId } = req.params;
+    console.log(kidId)
 
     const demoClassDetails = await ClassSchedule.findOne({
       "selectedStudents.kidId": kidId,

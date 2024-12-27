@@ -13,6 +13,7 @@ const enquiryLogs = require("../../../model/enquiryLogs");
 const moment = require("moment");
 const ClassSchedule = require("../../../model/classSheduleModel");
 const ConductedClass = require("../../../model/conductedClassSchema");
+const ActivityLog = require("../../../model/taskLogModel");
 
 // Email Verification
 
@@ -717,6 +718,101 @@ const addNotes = async (req, res) => {
   }
 };
 
+const addNotesToTasks = async (req, res) => {
+  try {
+    console.log("Incoming Request to Add Notes to Task"); // Start of function debug
+    const { id } = req.params; // Task ID
+    const { enquiryStageTag, addNoteTo, notes } = req.body;
+    
+    // Retrieve empId from localStorage (client-side)
+    const empId = req.headers.empid || req.body.addedBy || req.headers['empid-from-localstorage']; // Attempting to get from headers
+
+    console.log("Params (Task ID):", id);
+    console.log("Request Body Received:", req.body);
+
+    // Check for required fields
+    if (!enquiryStageTag || !notes) {
+      console.error("Validation Error: Missing required fields");
+      return res.status(400).json({
+        success: false,
+        message: "Enquiry Stage Tag and Notes are required.",
+      });
+    }
+
+    // Fetch the employee details who added the note
+    const addingEmployee = await Employee.findById(empId);
+    if (!addingEmployee) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+
+    // Prepare new note object
+    const newNote = {
+      enquiryStageTag,
+      addNoteTo: addNoteTo || "parent", // Default to 'parent'
+      notes,
+    };
+    console.log("Prepared New Note Object:", newNote);
+
+    // Update the task with the new note
+    console.log("Attempting to update task with ID:", id);
+    const updatedEntry = await Task.findByIdAndUpdate(
+      id,
+      { $push: { notes: newNote } },
+      { new: true, runValidators: true } // Ensure validation is applied
+    );
+
+    // Check if the task was found
+    if (!updatedEntry) {
+      console.error("Task Not Found for ID:", id);
+      return res.status(404).json({
+        success: false,
+        message: "Task not found with the provided ID.",
+      });
+    }
+
+    // Log the activity (Adding Note)
+    await ActivityLog.create({
+      taskId: updatedEntry._id,
+      action: 'ADD_NOTE',
+      details: `Note added to task ID: ${id} by ${addingEmployee.firstName} ${addingEmployee.lastName}.${addingEmployee.email}`,
+      performedBy: empId,
+      performedByName: `${addingEmployee.firstName} ${addingEmployee.lastName},${addingEmployee.email}`,
+    });
+
+    // Send success response
+    console.log("Note added successfully to task ID:", id);
+    return res.status(200).json({
+      success: true,
+      message: "Note added successfully.",
+      data: updatedEntry,
+    });
+  } catch (error) {
+    console.error("Error occurred while adding note:", error.message);
+    console.error("Stack Trace:", error.stack);
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while adding the note.",
+      error: error.message,
+    });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Referral to a Friend
 const referToFriend = async (req, res) => {
   try {
@@ -893,57 +989,82 @@ const getAllLeaves = async (req, res) => {
     res.status(500).json({ message: "Error fetching leaves" });
   }
 };
-
 const createTask = async (req, res) => {
   try {
     console.log(req.body);
-    const { task, taskDate, taskTime, assignedTo, assignedBy } = req.body;
+    const { task, taskDate, taskTime, assignedTo } = req.body;
+    const empId = req.headers.empId || req.body.assignedBy;
+
+    if (!empId) {
+      return res.status(400).json({ message: "AssignedBy (empId) is required" });
+    }
+
+    if (!empId) {
+      return res.status(400).json({ message: "Invalid Employee ID format" });
+    }
+
+    const assigningEmployee = await Employee.findById(empId);
+    if (!assigningEmployee) {
+      return res.status(404).json({ message: "Assigning employee not found" });
+    }
 
     const taskDateTime = new Date(`${taskDate}T${taskTime}:00`);
 
     const newTask = await Task.create({
       taskTime: taskDateTime,
       task,
-      assignedBy,
+      assignedBy: {
+        id: empId,
+        name: `${assigningEmployee.firstName}`,
+        email: assigningEmployee.email,
+      },
       assignedTo,
     });
 
-    res
-      .status(201)
-      .json({ message: "Task created successfully", task: newTask });
+    // Log the activity
+    await ActivityLog.create({
+      taskId: newTask._id,
+      action: 'CREATE',
+      details: `Task "${task}" created by ${assigningEmployee.firstName} ${assigningEmployee.lastName}.${assigningEmployee.email}`,
+      performedBy: empId,
+      performedByName: `${assigningEmployee.firstName} ${assigningEmployee.lastName} ${assigningEmployee.email}`,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Task created successfully",
+      data: newTask,
+    });
   } catch (error) {
     console.error("Error creating task", error);
     res.status(400).json({ message: "Failed to create task", error });
   }
 };
-
 // Get All Tasks
 const getAllTasks = async (req, res) => {
   try {
-    // Fetch all tasks
-    const tasks = await Task.find();
+    // Fetch all tasks and populate 'assignedBy'
+    const tasks = await Task.find().populate('assignedBy', 'name email');
 
     // Format date and time to dd/mm/yy HH:mm
-    const formattedTasks = tasks.map((task) => {
-      const formatDateTime = (date) => {
-        const d = new Date(date);
-        const day = String(d.getDate()).padStart(2, "0");
-        const month = String(d.getMonth() + 1).padStart(2, "0"); // Months are 0-based
-        const year = String(d.getFullYear()).slice(-2); // Get last 2 digits of the year
-        const hours = String(d.getHours()).padStart(2, "0");
-        const minutes = String(d.getMinutes()).padStart(2, "0");
-        return `${day}/${month}/${year} ${hours}:${minutes}`;
-      };
+    const formatDateTime = (date) => {
+      const d = new Date(date);
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const year = String(d.getFullYear()).slice(-2);
+      const hours = String(d.getHours()).padStart(2, "0");
+      const minutes = String(d.getMinutes()).padStart(2, "0");
+      return `${day}/${month}/${year} ${hours}:${minutes}`;
+    };
 
-      return {
-        ...task._doc, // Spread the original task document
-        taskTime: formatDateTime(task.taskTime),
-        createdAt: formatDateTime(task.createdAt),
-        updatedAt: formatDateTime(task.updatedAt),
-      };
-    });
+    const formattedTasks = tasks.map((task) => ({
+      ...task._doc, // Spread the original task document
+      taskTime: formatDateTime(task.taskTime),
+      createdAt: formatDateTime(task.createdAt),
+      updatedAt: formatDateTime(task.updatedAt),
+      assignedBy: task.assignedBy || { name: 'No assigned person', email: '' }, // Keep it as an object
+    }));
 
-    // Send response
     res.status(200).json(formattedTasks);
   } catch (error) {
     console.error("Error fetching tasks", error);
@@ -954,33 +1075,273 @@ const getAllTasks = async (req, res) => {
   }
 };
 
-const getMyTasks = async (req, res) => {
+const getTaskById = async (req, res) => {
   try {
-    // Fetch all tasks
-    const tasks = await Task.find({ assignedTo: req.params.id });
+    console.log("Welcome to my task")
+    const { id } = req.params; // Get the task ID from the route parameters
+
+    // Validate the task ID format
+    if (!id) {
+      return res.status(400).json({ message: "Invalid Task ID format" });
+    }
+
+    // Fetch the task by ID and populate 'assignedBy'
+    const task = await Task.findById(id).populate('assignedBy', 'name email');
+
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    // Format date and time to dd/mm/yy HH:mm
+    const formatDateTime = (date) => {
+      const d = new Date(date);
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const year = String(d.getFullYear()).slice(-2);
+      const hours = String(d.getHours()).padStart(2, "0");
+      const minutes = String(d.getMinutes()).padStart(2, "0");
+      return `${day}/${month}/${year} ${hours}:${minutes}`;
+    };
+
+    const formattedTask = {
+      ...task._doc, // Spread the original task document
+      taskTime: formatDateTime(task.taskTime),
+      createdAt: formatDateTime(task.createdAt),
+      updatedAt: formatDateTime(task.updatedAt),
+      assignedBy: task.assignedBy || { name: 'No assigned person', email: '' }, // Ensure assignedBy is always an object
+    };
+
+    res.status(200).json(formattedTask);
+  } catch (error) {
+    console.error("Error fetching task by ID", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch task. Please try again later.",
+    });
+  }
+};
+
+const updateTaskStatus = async (req, res) => {
+  try {
+    const { id } = req.params; // Task ID from the request params
+    const { status } = req.body; // New status from the request body
+    const empId = req.headers.empid; // Employee ID from headers
+
+    // Validate inputs
+    if (!id) {
+      return res.status(400).json({ message: "Task ID is required" });
+    }
+    if (!status) {
+      return res.status(400).json({ message: "Task status is required" });
+    }
+    if (!empId) {
+      return res.status(400).json({ message: "UpdatedBy (empId) is required" });
+    }
+    if (!empId) {
+      return res.status(400).json({ message: "Invalid Employee ID format" });
+    }
+
+    // Fetch employee details
+    const updatingEmployee = await Employee.findById(empId);
+    if (!updatingEmployee) {
+      return res.status(404).json({ message: "Updating employee not found" });
+    }
+
+    // Update the task
+    const updatedTask = await Task.findByIdAndUpdate(
+      id,
+      {
+        status,
+        statusUpdatedBy: {
+          id: empId,
+          name: `${updatingEmployee.firstName} ${updatingEmployee.lastName}`,
+          email: updatingEmployee.email,
+        },
+      },
+      { new: true, runValidators: true } // Return the updated document and apply validation
+    );
+
+    if (!updatedTask) {
+      return res.status(404).json({ message: "Task not found with the provided ID" });
+    }
+
+    // Log the activity
+    await ActivityLog.create({
+      taskId: updatedTask._id,
+      action: 'UPDATE',
+      details: `Task status updated to "${status}" by ${updatingEmployee.firstName} ${updatingEmployee.lastName}.${updatingEmployee.email}`,
+      performedBy: empId,
+      performedByName: `${updatingEmployee.firstName} ${updatingEmployee.lastName}, ${updatingEmployee.email}`,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Task status updated successfully",
+      data: updatedTask,
+    });
+  } catch (error) {
+    console.error("Error updating task status", error);
+    res.status(500).json({ message: "Failed to update task status", error });
+  }
+};
+
+
+const getMyPendingTasks = async (req, res) => {
+  try {
+    console.log("Welcome to get all task",req.params)
+    
+    const { id } = req.params;
+    console.log(id)
+
+    if (!id) {
+      return res.status(400).json({ message: "empId are required" });
+    }
+
+    const empData = await Employee.findOne({_id:id},{email:1})
+    console.log(empData)
+
+    // Fetch tasks assigned to the employee
+    const tasks = await Task.find({
+      assignedTo: empData.email,
+    });
+
+    // Log the tasks if needed for debugging
     console.log(tasks);
 
     // Format date and time to dd/mm/yy HH:mm
-    const formattedTasks = tasks.map((task) => {
-      const formatDateTime = (date) => {
-        const d = new Date(date);
-        const day = String(d.getDate()).padStart(2, "0");
-        const month = String(d.getMonth() + 1).padStart(2, "0"); // Months are 0-based
-        const year = String(d.getFullYear()).slice(-2); // Get last 2 digits of the year
-        const hours = String(d.getHours()).padStart(2, "0");
-        const minutes = String(d.getMinutes()).padStart(2, "0");
-        return `${day}/${month}/${year} ${hours}:${minutes}`;
-      };
+    const formatDateTime = (date) => {
+      const d = new Date(date);
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0"); // Months are 0-based
+      const year = String(d.getFullYear()).slice(-2); // Get last 2 digits of the year
+      const hours = String(d.getHours()).padStart(2, "0");
+      const minutes = String(d.getMinutes()).padStart(2, "0");
+      return `${day}/${month}/${year} ${hours}:${minutes}`;
+    };
 
-      return {
-        ...task._doc, // Spread the original task document
-        taskTime: formatDateTime(task.taskTime),
-        createdAt: formatDateTime(task.createdAt),
-        updatedAt: formatDateTime(task.updatedAt),
-      };
+    // Format the tasks with proper date and time
+    const formattedTasks = tasks.map((task) => ({
+      ...task._doc, // Spread the original task document
+      taskTime: formatDateTime(task.taskTime),
+      createdAt: formatDateTime(task.createdAt),
+      updatedAt: formatDateTime(task.updatedAt),
+    }));
+
+    // Send response with the filtered tasks
+    res.status(200).json(formattedTasks);
+  } catch (error) {
+    console.error("Error fetching tasks", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch tasks. Please try again later.",
+    });
+  }
+};
+
+
+
+const assignTaskToOthers = async (req, res) => {
+  try {
+    console.log("Welcome to get all task",req.params)
+    
+    const { id } = req.params;
+    console.log(id)
+
+    if (!id) {
+      return res.status(400).json({ message: "empId are required" });
+    }
+
+    const empData = await Employee.findOne({_id:id},{email:1})
+    console.log(empData)
+
+    // Fetch tasks assigned to the employee
+    const tasks = await Task.find({
+      "assignedBy.email": empData.email,
     });
 
-    // Send response
+    // Log the tasks if needed for debugging
+    console.log(tasks);
+
+    // Format date and time to dd/mm/yy HH:mm
+    const formatDateTime = (date) => {
+      const d = new Date(date);
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0"); // Months are 0-based
+      const year = String(d.getFullYear()).slice(-2); // Get last 2 digits of the year
+      const hours = String(d.getHours()).padStart(2, "0");
+      const minutes = String(d.getMinutes()).padStart(2, "0");
+      return `${day}/${month}/${year} ${hours}:${minutes}`;
+    };
+
+    // Format the tasks with proper date and time
+    const formattedTasks = tasks.map((task) => ({
+      ...task._doc, // Spread the original task document
+      taskTime: formatDateTime(task.taskTime),
+      createdAt: formatDateTime(task.createdAt),
+      updatedAt: formatDateTime(task.updatedAt),
+    }));
+
+    // Send response with the filtered tasks
+    res.status(200).json(formattedTasks);
+  } catch (error) {
+    console.error("Error fetching tasks", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch tasks. Please try again later.",
+    });
+  }
+};
+
+
+
+
+
+
+
+
+
+const getMyTasks = async (req, res) => {
+  try {
+    console.log("Welcome to get all task",req.params)
+    
+    const { id } = req.params;
+    console.log(id)
+
+    if (!id) {
+      return res.status(400).json({ message: "empId are required" });
+    }
+
+    const empData = await Employee.findOne({_id:id},{email:1})
+    console.log(empData)
+
+    // Fetch tasks assigned to the employee
+    const tasks = await Task.find({
+      assignedTo: empData.email,
+    });
+
+    // Log the tasks if needed for debugging
+    console.log(tasks);
+
+    // Format date and time to dd/mm/yy HH:mm
+    const formatDateTime = (date) => {
+      const d = new Date(date);
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0"); // Months are 0-based
+      const year = String(d.getFullYear()).slice(-2); // Get last 2 digits of the year
+      const hours = String(d.getHours()).padStart(2, "0");
+      const minutes = String(d.getMinutes()).padStart(2, "0");
+      return `${day}/${month}/${year} ${hours}:${minutes}`;
+    };
+
+    // Format the tasks with proper date and time
+    const formattedTasks = tasks.map((task) => ({
+      ...task._doc, // Spread the original task document
+      taskTime: formatDateTime(task.taskTime),
+      createdAt: formatDateTime(task.createdAt),
+      updatedAt: formatDateTime(task.updatedAt),
+    }));
+
+    // Send response with the filtered tasks
     res.status(200).json(formattedTasks);
   } catch (error) {
     console.error("Error fetching tasks", error);
@@ -994,15 +1355,45 @@ const getMyTasks = async (req, res) => {
 // Update Task
 const updateTask = async (req, res) => {
   try {
-    const { id } = req.params;
-    const updatedTask = await Task.findByIdAndUpdate(id, req.body, {
-      new: true,
-    });
+    const { id } = req.params; // Task ID from the request params
+    const empId = req.headers.empId || req.body.empId; // Employee ID from headers or body
 
-    if (!updatedTask) {
+    if (!empId) {
+      return res.status(400).json({ message: "Employee ID (empId) is required" });
+    }
+
+    // Fetch task before updating to get the task details
+    const taskToUpdate = await Task.findById(id);
+    if (!taskToUpdate) {
       return res.status(404).json({ message: "Task not found" });
     }
 
+    // Proceed with updating the task
+    const updatedTask = await Task.findByIdAndUpdate(id, req.body, {
+      new: true, // Return the updated document
+      runValidators: true, // Ensure that validations are applied
+    });
+
+    // Check if the task was updated successfully
+    if (!updatedTask) {
+      return res.status(404).json({ message: "Failed to update task" });
+    }
+
+    // Log the activity for task update
+    const updatingEmployee = await Employee.findById(empId);
+    if (!updatingEmployee) {
+      return res.status(404).json({ message: "Updating employee not found" });
+    }
+
+    await ActivityLog.create({
+      taskId: updatedTask._id,
+      action: 'UPDATE',
+      details: `Task updated by ${updatingEmployee.firstName} ${updatingEmployee.lastName}. Changes: ${JSON.stringify(req.body)}`,
+      performedBy: empId,
+      performedByName: `${updatingEmployee.firstName} ${updatingEmployee.lastName}`,
+    });
+
+    // Return success response
     res.status(200).json({
       success: true,
       message: "Task updated successfully",
@@ -1013,9 +1404,45 @@ const updateTask = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to update task. Please try again later.",
+      error: error.message,
     });
   }
 };
+
+
+const getActivityLogsByTaskId = async (req, res) => {
+  try {
+    const { id } = req.params; // 'id' from the route parameter
+
+    // Debugging the received taskId
+    console.log("Received Task ID:", id);
+
+    // Validate the task ID format
+    if (!id) {
+      return res.status(400).json({ message: "Invalid Task ID format", taskId: id });
+    }
+
+    // Fetch all activity logs associated with the provided task ID
+    const activityLogs = await ActivityLog.find({ taskId: id }).sort({ createdAt: -1 }); // Sort by most recent first
+
+    if (!activityLogs || activityLogs.length === 0) {
+      return res.status(404).json({ message: "No activity logs found for the provided task" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Activity logs for task retrieved successfully",
+      data: activityLogs,
+    });
+  } catch (error) {
+    console.error("Error fetching activity logs by task ID", error);
+    res.status(500).json({ message: "Failed to fetch activity logs", error });
+  }
+}
+
+
+
+
 
 // Delete Task
 const deleteTask = async (req, res) => {
@@ -1383,7 +1810,7 @@ const getDemoClassAndStudentsData = async (req, res) => {
           $elemMatch: {
             program: classData[0].program,
             level: classData[0].level,
-          }, 
+          },  
         },
       },
       { kidFirstName: 1 } // Project only the required fields
@@ -1615,5 +2042,11 @@ module.exports = {
   saveDemoClassData,
   getDemoClassAndStudentsData,
   getConductedDemoClass,
-  updateEnrollmentStatus
+  updateEnrollmentStatus,
+  getActivityLogsByTaskId,
+  getTaskById,
+  updateTaskStatus,
+  getMyPendingTasks,
+  assignTaskToOthers,
+  addNotesToTasks
 };

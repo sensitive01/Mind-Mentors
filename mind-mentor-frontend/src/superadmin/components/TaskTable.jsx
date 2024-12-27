@@ -26,8 +26,7 @@ import { Link } from "react-router-dom";
 
 import { alpha } from "@mui/material/styles";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
-import { fetchAllTasks } from "../../api/service/employee/EmployeeService";
-
+import { fetchMyTasks } from "../../api/service/employee/EmployeeService";
 
 // Updated modern color scheme
 const theme = createTheme({
@@ -124,13 +123,12 @@ const DetailView = ({ data }) => (
 );
 
 const Prospects = () => {
-
   const [rows, setRows] = useState([]);
 
   useEffect(() => {
     const fetchTask = async () => {
       try {
-        const response = await fetchAllTasks();
+        const response = await fetchMyTasks();
         const formattedData = response.map((task) => ({
           ...task,
           id: task._id,
@@ -142,7 +140,6 @@ const Prospects = () => {
     };
     fetchTask();
   }, []);
-  
 
   useEffect(() => {}, []);
   const [noteDialog, setNoteDialog] = useState({

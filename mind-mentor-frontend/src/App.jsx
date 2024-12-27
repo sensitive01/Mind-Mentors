@@ -1,3 +1,4 @@
+import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import "./index.css";
 import "react-toastify/dist/ReactToastify.css";
@@ -44,11 +45,8 @@ import OperationDashboardPage from "./pages/employee/operation-employee/Operatio
 import SEnquiryFormPage from "./pages/employee/operation-employee/SEnquiryFormPage";
 
 import ListingEnquiries from "./pages/employee/operation-employee/ListingEnquiries";
-import MyTaskPage from "./pages/employee/operation-employee/MyTaskPage";
 import ProspectPage from "./pages/employee/operation-employee/ProspectPage";
 import ReferalPage from "./pages/employee/operation-employee/ReferalPage";
-import TaskAssignByMePage from "./pages/employee/operation-employee/TaskAssignByMePage";
-import TasksPage from "./pages/employee/operation-employee/TasksPage";
 
 import SupportPages from "./pages/employee/operation-employee/SupportPage";
 import MessageStusTrackPage from "./pages/employee/operation-employee/MessageStusTrackPage";
@@ -61,8 +59,17 @@ import Profile from "./pages/employee/operation-employee/Profile"
 import InvoicePage from "./pages/employee/operation-employee/InvoicePage"
 import StudentReport from "./pages/employee/operation-employee/StudentReport"
 import CoachFeedback from "./pages/employee/operation-employee/CoachFeedback"
-import AssigneTaskPage from "./pages/employee/operation-employee/AssigneTasksPage"
 import LeaveFormPage from "./pages/employee/operation-employee/LeaveFormPage";
+
+import TasksLogs from "./pages/employee/operation-employee/Logs";
+import MyTaskPage from "./pages/employee/operation-employee/MyTaskPage";
+import TaskAssignByMePage from  "./pages/employee/operation-employee/TaskAssignByMePage";
+ import TasksPage from "./pages/employee/operation-employee/TasksPage";
+// const AssigneTaskPage = React.lazy(() => import("./pages/employee/operation-employee/AssigneTasksPage"));
+import AssigneTaskPage from "./pages/employee/operation-employee/AssigneTasksPage";
+
+
+
 
 
 
@@ -344,12 +351,19 @@ function App() {
         <Route path="/employee-operation-dashboard" element={<OperationDashboardPage />} />
         <Route path="/employee-operation-enquiry-form" element={<SEnquiryFormPage />} /> 
         <Route path="/employee-operation-enquiry-list" element={<ListingEnquiries/>} />
-        <Route path="/employee-operation-tasks/add" element={<MyTaskPage/>} />
         <Route path="/employee-operation/prospects" element={<ProspectPage/>} />
         <Route path="/employee-operation/referal" element={<ReferalPage/>} />
-        <Route path="/employee-operation-tasks/assigntask" element={<TaskAssignByMePage/>} />
-        <Route path="/employee-operation-tasks/assignedtasks" element={<AssigneTaskPage/>} />
-        <Route path="/employee-operation-tasks/tasks" element={<TasksPage/>} />
+
+        <Route path="/employee-operation/taskslogs/:id" element={<TasksLogs />} />
+
+        <Route path="/employee-operation-tasks/assigntask" element={<TaskAssignByMePage />} />
+        <Route path="/employee-operation/taskslogs/:id" element={<TasksLogs />} />
+        <Route path="/employee-operation-tasks/assignedtasks" element={<AssigneTaskPage />} />
+        <Route path="/employee-operation-tasks/tasks" element={<TasksPage />} />
+        <Route path="/employee-operation-tasks/add" element={<MyTaskPage />} />
+
+
+        
         <Route path="/employee-operation-tasks/support/add" element={<SupportPages/>} />
         <Route path="/employee-operation-tasks/supportTrack" element={<MessageStusTrackPage/>} />
         <Route path="/employee-operation-tasks/supports" element={<SupportRequest/>} />

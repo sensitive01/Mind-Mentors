@@ -12,7 +12,6 @@ import { setFormData } from "../../store/regDataParentKidsSlice";
 
 const KidsRegistration = () => {
   const dispatch = useDispatch();
-
   const navigate = useNavigate();
   const location = useLocation();
   const { state } = location;
@@ -25,35 +24,14 @@ const KidsRegistration = () => {
       programLevel: "",
     },
   ]);
-  const [date, setDate] = useState("");
-  const [fromTime, setFromTime] = useState("");
-  const [toTime, setToTime] = useState("");
   const [availableSlots, setAvailableSlots] = useState([]);
-  const [selectedDay, setSelectedDay] = useState("");
-  const [usePredefineSlot, setUsePredefineSlot] = useState(true);
+  const [selectedSlot, setSelectedSlot] = useState(null);
   const regFormData = useSelector((state) => state.formData);
-  console.log("Toolkit datas in KidsRegistration", regFormData);
-
-  // Function to get day of the week from a date
-  const getDayOfWeek = (dateString) => {
-    const days = [
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-    ];
-    const date = new Date(dateString);
-    return days[date.getDay()];
-  };
 
   useEffect(() => {
     const fetchDemoClass = async () => {
       try {
         const response = await getDemoSheduleClass();
-        console.log(response.data.scheduleData);
         setAvailableSlots(response.data.scheduleData);
       } catch (error) {
         console.error("Error fetching demo classes:", error);
@@ -61,21 +39,6 @@ const KidsRegistration = () => {
     };
     fetchDemoClass();
   }, []);
-
-  useEffect(() => {
-    if (date) {
-      const day = getDayOfWeek(date);
-      setSelectedDay(day);
-
-      setFromTime("");
-      setToTime("");
-    }
-  }, [date]);
-
-  const handleDateChange = (e) => {
-    const selectedDate = e.target.value;
-    setDate(selectedDate);
-  };
 
   const handleAddProgram = () => {
     setEnrollments([
@@ -96,6 +59,14 @@ const KidsRegistration = () => {
         item.id === id ? { ...item, [field]: value } : item
       )
     );
+    setSelectedSlot(null); // Reset selected slot when program changes
+  };
+
+  // Filter available slots based on selected program and level
+  const getMatchingSlots = (program, level) => {
+    return availableSlots.filter(
+      slot => slot.program === program && slot.level === level
+    );
   };
 
   const handleSubmit = async (e) => {
@@ -110,26 +81,6 @@ const KidsRegistration = () => {
       return;
     }
 
-    // Validate date and time
-    if (!date) {
-      toast.error("Please select a date");
-      return;
-    }
-
-    // Prepare time based on selection method
-    let timeToSubmit = "";
-    if (usePredefineSlot) {
-      // Use predefined slot time
-      timeToSubmit = fromTime;
-    } else {
-      // Use custom time input
-      if (!fromTime || !toTime) {
-        toast.error("Please enter both from and to times");
-        return;
-      }
-      timeToSubmit = `${fromTime} - ${toTime}`;
-    }
-
     const programsData = enrollments.map(({ program, programLevel }) => ({
       program,
       programLevel,
@@ -137,9 +88,8 @@ const KidsRegistration = () => {
 
     const formData = {
       programs: programsData,
-      date,
-      time: timeToSubmit,
-      day: selectedDay,
+      scheduleId: selectedSlot?._id,
+      hasSchedule: !!selectedSlot
     };
 
     dispatch(
@@ -150,12 +100,12 @@ const KidsRegistration = () => {
     );
 
     try {
-      console.log("Registration data:", formData, state);
       const response = await parentBookDemoClass(formData, state);
-      console.log(response);
-
+      
       if (response.status === 201) {
-        toast.success(response.data.message);
+        toast.success(selectedSlot 
+          ? "Registration successful! Your demo class has been scheduled."
+          : "Registration successful! Our team will contact you soon to schedule your demo class.");
         localStorage.setItem("parentId", response?.data?.parentId);
         setTimeout(() => {
           navigate("/parent/dashboard");
@@ -166,11 +116,6 @@ const KidsRegistration = () => {
       toast.error("Registration failed. Please try again.");
     }
   };
-
-  // Filter available slots based on selected day
-  const filteredSlots = availableSlots.filter(
-    (slot) => slot.day === selectedDay
-  );
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen">
@@ -251,6 +196,43 @@ const KidsRegistration = () => {
                       </div>
                     </div>
 
+                    {/* Available Slots Section */}
+                    {enrollment.program && enrollment.programLevel && (
+                      <div className="mt-4">
+                        <h4 className="font-medium text-gray-700 mb-2">Available Demo Classes</h4>
+                        {getMatchingSlots(enrollment.program, enrollment.programLevel).length > 0 ? (
+                          <div className="space-y-2">
+                            {getMatchingSlots(enrollment.program, enrollment.programLevel).map((slot) => (
+                              <div 
+                                key={slot._id}
+                                className={`p-4 rounded-lg border cursor-pointer transition-all duration-200 ${
+                                  selectedSlot?._id === slot._id 
+                                    ? 'border-primary bg-purple-50' 
+                                    : 'border-gray-200 hover:border-primary'
+                                }`}
+                                onClick={() => setSelectedSlot(slot)}
+                              >
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <p className="font-medium">{slot.day}</p>
+                                    <p className="text-gray-600">{slot.classTime}</p>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="font-medium">Coach: {slot.coachName}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-gray-600 italic">
+                            No scheduled demo classes available for this program and level. 
+                            You can still register and our team will contact you to schedule your demo class.
+                          </p>
+                        )}
+                      </div>
+                    )}
+
                     {enrollments.length > 1 && (
                       <button
                         type="button"
@@ -265,118 +247,14 @@ const KidsRegistration = () => {
                 ))}
               </div>
 
-              <button
+              {/* <button
                 type="button"
                 onClick={handleAddProgram}
                 className="flex items-center gap-2 text-primary hover:text-opacity-80 mt-6 py-2 px-4 rounded-lg hover:bg-purple-50 transition-all duration-200"
               >
                 <Plus size={20} />
                 <span>Add Another Program</span>
-              </button>
-            </div>
-
-            {/* Date and Time Selection Section */}
-            <div className="border p-6 rounded-md border-primary">
-              <h3 className="text-xl font-semibold text-primary mb-4">
-                Suitable Date & Time
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="flex flex-col">
-                  <label htmlFor="date" className="text-sm mb-2">
-                    Date
-                  </label>
-                  <input
-                    type="date"
-                    id="date"
-                    className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                    value={date}
-                    onChange={handleDateChange}
-                    required
-                  />
-                </div>
-
-                {selectedDay && (
-                  <div className="flex flex-col">
-                    <label className="text-sm mb-2">Select Time Option</label>
-                    <div className="flex items-center space-x-4">
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="timeOption"
-                          checked={usePredefineSlot}
-                          onChange={() => setUsePredefineSlot(true)}
-                          className="mr-2"
-                        />
-                        Predefined Slots
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="timeOption"
-                          checked={!usePredefineSlot}
-                          onChange={() => setUsePredefineSlot(false)}
-                          className="mr-2"
-                        />
-                        Custom Time
-                      </label>
-                    </div>
-                  </div>
-                )}
-
-                {selectedDay && usePredefineSlot && (
-                  <div className="flex flex-col">
-                    <label htmlFor="time" className="text-sm mb-2">
-                      Available Time Slots for {selectedDay}
-                    </label>
-                    <select
-                      id="time"
-                      className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                      value={fromTime}
-                      onChange={(e) => setFromTime(e.target.value)}
-                      required
-                    >
-                      <option value="">Select Time</option>
-                      {filteredSlots.map((slot, index) => (
-                        <option key={index} value={slot.classTime}>
-                          {slot.classTime} - {slot.program} ({slot.coachName})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                {selectedDay && !usePredefineSlot && (
-                  <>
-                    <div className="flex flex-col">
-                      <label htmlFor="fromTime" className="text-sm mb-2">
-                        From Time
-                      </label>
-                      <input
-                        type="time"
-                        id="fromTime"
-                        className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                        value={fromTime}
-                        onChange={(e) => setFromTime(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="flex flex-col">
-                      <label htmlFor="toTime" className="text-sm mb-2">
-                        To Time
-                      </label>
-                      <input
-                        type="time"
-                        id="toTime"
-                        className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                        value={toTime}
-                        onChange={(e) => setToTime(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </>
-                )}
-              </div>
+              </button> */}
             </div>
 
             {/* Navigation Buttons */}
