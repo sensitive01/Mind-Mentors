@@ -1,4 +1,4 @@
-import LeaveForm from "../../coach/components/LeaveForm";
+import LeaveForm from "../../coach/components/EmployeeleaveForm";
 import Sidebar from "../../coach/Layout/Sidebar";
 import Topbar from './../../component/parent-component/parent-dashboard/layout/Topbar';
 

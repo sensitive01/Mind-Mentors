@@ -23,6 +23,7 @@
     "@zegocloud/zego-uikit-prebuilt": "^2.13.1",
     "axios": "^1.7.7",
     "buffer": "^6.0.3",
+    "cloudinary": "^2.5.1",
     "env": "^0.0.2",
     "framer-motion": "^11.11.17",
     "libphonenumber-js": "^1.11.14",
@@ -47,7 +48,7 @@
     "sonner": "^1.7.0",
     "stream-browserify": "^3.0.0",
     "util": "^0.12.5",
-    "webex": "^3.7.0",
+    "webex": "^1.0.0",
     "zego-express-engine-webrtc": "^3.5.1"
   },
   "devDependencies": {

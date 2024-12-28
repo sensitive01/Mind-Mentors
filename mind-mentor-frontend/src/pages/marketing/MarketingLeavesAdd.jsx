@@ -1,4 +1,4 @@
-import LeaveForm from "../../marketing/components/LeaveForm";
+import LeaveForm from "../../marketing/components/EmployeeleaveForm";
 import Sidebar from "../../marketing/Layout/Sidebar";
 import Topbar from './../../component/parent-component/parent-dashboard/layout/Topbar';
 

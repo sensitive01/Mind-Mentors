@@ -838,8 +838,13 @@ const referToFriend = async (req, res) => {
 };
 const createLeave = async (req, res) => {
   try {
+    console.log("Create leave",req.body)
     const leaveData = req.body;
+    const {empId} = req.body
+    const empData = await Employee.findOne({_id:empId},{firstName:1})
     const newLeave = await leaves.create(leaveData);
+    newLeave.employeeName = empData.firstName
+    await newLeave.save()
 
     // Format dates to dd/mm/yy
     const formatDate = (date) => {
@@ -933,6 +938,56 @@ const createAttendance = async (req, res) => {
     });
   }
 };
+
+
+const getMyLeaveData = async (req, res) => {
+  try {
+    console.log("Welcome to fetch the leaves");
+    const { empId } = req.params;
+    const empLeaves = await leaves.find({ empId: empId });
+
+    if (empLeaves && empLeaves.length > 0) {
+      // Format the dates before sending the response
+      const formattedLeaves = empLeaves.map(leave => ({
+        ...leave._doc,
+        leaveStartDate: new Date(leave.leaveStartDate).toLocaleDateString("en-US"),
+        leaveEndDate: new Date(leave.leaveEndDate).toLocaleDateString("en-US"),
+      }));
+
+      res.status(200).json({
+        success: true,
+        message: "Employee leave data fetched successfully",
+      formattedLeaves,
+      });
+    } else {
+      res.status(401).json({
+        success: false,
+        message: "No leave data found for this employee",
+      });
+    }
+  } catch (err) {
+    console.error("Error in fetching my leaves", err);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching leave data",
+      error: err.message,
+    });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const updateLeave = async (req, res) => {
   try {
     const { id } = req.params;
@@ -2037,5 +2092,6 @@ module.exports = {
   updateTaskStatus,
   getMyPendingTasks,
   assignTaskToOthers,
-  addNotesToTasks
+  addNotesToTasks,
+  getMyLeaveData
 };

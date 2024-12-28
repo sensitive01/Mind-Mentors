@@ -1,4 +1,4 @@
-import LeaveForm from "../../superadmin/components/LeaveForm";
+import LeaveForm from "../../superadmin/components/EmployeeleaveForm";
 import Sidebar from "../../superadmin/Layout/Sidebar";
 import Topbar from './../../component/parent-component/parent-dashboard/layout/Topbar';
 

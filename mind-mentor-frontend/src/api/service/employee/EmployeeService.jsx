@@ -42,6 +42,15 @@ export const createLeave = async (formData) => {
   return response.data;
 };
 
+
+export const fetchMyLeaves = async (empId) => {
+  const response = await operationDeptInstance.get(`/get-my-leaves/${empId}`);
+  return response.data;
+};
+
+
+
+
 // Get All Leaves
 export const fetchAllLeaves = async (empEmail) => {
   const response = await operationDeptInstance.get(`/leaves-form?email=${empEmail}`);

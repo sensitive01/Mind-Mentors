@@ -66,7 +66,7 @@ const EmployeeLeaveForm = () => {
             variant="contained"
             color="#642b8f"
             component={Link}
-            to="/centeradmin/leaves"
+            to="/coachLeaves"
           >
             View Leaves
           </Button>

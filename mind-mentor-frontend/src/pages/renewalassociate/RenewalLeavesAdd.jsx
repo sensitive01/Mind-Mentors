@@ -1,4 +1,4 @@
-import LeaveForm from "../../renewalassociate/components/LeaveForm";
+import LeaveForm from "../../renewalassociate/components/EmployeeleaveForm";
 import Sidebar from "../../renewalassociate/Layout/Sidebar";
 import Topbar from './../../component/parent-component/parent-dashboard/layout/Topbar';
 

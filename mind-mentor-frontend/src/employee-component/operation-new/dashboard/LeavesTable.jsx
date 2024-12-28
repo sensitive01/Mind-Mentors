@@ -1,9 +1,11 @@
-
 import EditIcon from '@mui/icons-material/Edit';
-import SaveIcon from '@mui/icons-material/Save';
+import HistoryIcon from '@mui/icons-material/History';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+
 import {
   Box,
   Button,
+  CircularProgress,
   createTheme,
   Dialog,
   DialogActions,
@@ -14,13 +16,12 @@ import {
   TextField,
   ThemeProvider,
   Typography,
-  CircularProgress,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { DataGrid, GridActionsCellItem, GridToolbar } from '@mui/x-data-grid';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchAllLeaves } from '../../../api/service/employee/EmployeeService'; // Adjust the import path as necessary
+import { fetchMyLeaves } from '../../../api/service/employee/EmployeeService';
 
 const theme = createTheme({
   palette: {
@@ -39,26 +40,29 @@ const theme = createTheme({
     },
   },
 });
-
-// Columns definition remains the same...
 const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog) => [
-  { field: 'id', headerName: 'ID', width: 70 },
-  { field: 'employeeName', headerName: 'Employee Name', width: 200 },
+  { field: 'employeeName', headerName: 'Employee', width: 150 },
   { field: 'leaveType', headerName: 'Leave Type', width: 150 },
-  { field: 'leaveStartDate', headerName: 'Leave Start Date', width: 150 },
-  { field: 'leaveEndDate', headerName: 'Leave End Date', width: 150 },
-  { field: 'status', headerName: 'Status', width: 130 },
+  { field: 'leaveStartDate', headerName: 'Leave Start Date', width: 180 },
+  { field: 'leaveEndDate', headerName: 'Leave End Date', width: 180 },
+  { field: 'status', headerName: 'Status', width: 120 },
   {
     field: 'notes',
     headerName: 'Notes',
-    width: 200,
+    width: 120,
     renderCell: (params) => (
       <Button
-        onClick={() => setNoteDialog({ open: true, rowData: params.row, noteText: params.row.notes })}
+        onClick={() =>
+          setNoteDialog({
+            open: true,
+            rowData: params.row,
+            noteText: params.row.notes,
+          })
+        }
         variant="text"
         color="secondary"
       >
-        View Note
+        View
       </Button>
     ),
   },
@@ -68,17 +72,60 @@ const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog) => [
     width: 150,
     renderCell: (params) => (
       <>
-        <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={() => setViewDialog({ open: true, rowData: params.row })} />
-        <GridActionsCellItem icon={<SaveIcon />} label="Approve" onClick={() => handleStatusToggle(params.row.id)} />
+        <GridActionsCellItem
+          icon={<VisibilityIcon />}
+          label="View"
+          onClick={() =>
+            setViewDialog({
+              open: true,
+              rowData: params.row,
+            })
+          }
+          sx={{
+            color: '#F59E0B',
+            '&:hover': { backgroundColor: alpha(theme.palette.primary.main, 0.1) },
+          }}
+        />
+        <GridActionsCellItem
+          icon={<EditIcon />}
+          label="Approve"
+          // Uncomment the following line if `handleStatusToggle` is defined
+          onClick={() => handleStatusToggle(params.row._id)}
+          sx={{
+            color: '#642b8f',
+            '&:hover': { backgroundColor: alpha(theme.palette.secondary.main, 0.1) },
+          }}
+        />
       </>
     ),
   },
+  {
+    field: 'proof',
+    headerName: 'Proof',
+    width: 200,
+    renderCell: (params) =>
+      params.row.proof ? (
+        <a href={params.row.proof} target="_blank" rel="noopener noreferrer">
+          <HistoryIcon
+            sx={{
+              color: '#000',
+              '&:hover': { backgroundColor: alpha(theme.palette.info.main, 0.1) },
+            }}
+          />
+        </a>
+      ) : (
+        'No Proof'
+      ),
+  },
 ];
+
+
+
 const DetailView = ({ data }) => (
   <Grid container spacing={3} sx={{ p: 2 }}>
     {Object.entries(data).map(([key, value]) => (
       key !== 'id' && (
-        <Grid item xs={12} sm={6} md={4} key={key}>
+        <Grid item xs={12} sm={6} md={6} key={key}>
           <Box sx={{ p: 2, borderRadius: 2, bgcolor: alpha(theme.palette.primary.main, 0.04), height: '100%' }}>
             <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
               {key.replace(/([A-Z])/g, ' $1').toUpperCase()}
@@ -92,40 +139,46 @@ const DetailView = ({ data }) => (
     ))}
   </Grid>
 );
+
 const EmployeeLeaveManagement = () => {
-  const empEmail = localStorage.getItem("email")
-  console.log(empEmail)
+  const empId = localStorage.getItem("empId");
+  console.log("empId is : ", empId);
+
   const [rows, setRows] = useState([]);
   const [noteDialog, setNoteDialog] = useState({ open: false, rowData: null, noteText: '' });
   const [viewDialog, setViewDialog] = useState({ open: false, rowData: null });
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 5 });
-  const [loading, setLoading] = useState(true); // State to manage loading
-  const [error, setError] = useState(null); // State to manage errors
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const loadLeaves = async () => {
+    const fetchLeavesData = async () => {
       try {
-        const data = await fetchAllLeaves(empEmail);
-        setRows(data);
+        console.log("Fetching leaves data for empId:", empId);
+        const response = await fetchMyLeaves(empId);
+        console.log("Response received: ", response);
+
+        setRows(response.formattedLeaves);  // Assuming response contains data directly
+
+        setLoading(false);
       } catch (err) {
-        setError('Failed to fetch leaves. Please try again later.');
-      } finally {
+        console.error("Error fetching leaves data:", err.message);  // Log detailed error
+        setError("Failed to fetch leaves data.");
         setLoading(false);
       }
     };
 
-    loadLeaves();
-  }, []);
-
-  // handleStatusToggle and handleNoteSave remain the same...
+    if (empId) {
+      fetchLeavesData();
+    } else {
+      console.log("empId is missing or invalid");
+    }
+  }, [empId]);
   const handleStatusToggle = (id) => {
     setRows(rows.map(row => {
-      if (row.id === id) {
+      if (row._id === id) {
         const newStatus = row.status === 'Approved' ? 'Pending' : 'Approved';
-        return {
-          ...row,
-          status: newStatus,
-        };
+        return { ...row, status: newStatus };
       }
       return row;
     }));
@@ -141,6 +194,7 @@ const EmployeeLeaveManagement = () => {
       setNoteDialog({ open: false, rowData: null, noteText: '' });
     }
   };
+
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ width: '100%', height: '100%', p: 3 }}>
@@ -167,38 +221,38 @@ const EmployeeLeaveManagement = () => {
             <Typography color="error" align="center">{error}</Typography>
           ) : (
             <DataGrid
-            rows={rows}
-            columns={columns(theme, handleStatusToggle, setViewDialog, setNoteDialog)}
-            getRowId={(row) => row._id} // Specify _id as the unique identifier
-            paginationModel={paginationModel}
-            onPaginationModelChange={setPaginationModel}
-            pageSizeOptions={[5, 10, 25]}
-            checkboxSelection
-            disableRowSelectionOnClick
-            slots={{ toolbar: GridToolbar }}
-            slotProps={{
-              toolbar: {
-                showQuickFilter: true,
-                quickFilterProps: { debounceMs: 500 },
-              },
-            }}
-            sx={{
-              height: 500,
-              '& .MuiDataGrid-cell:focus': { outline: 'none' },
-              '& .MuiDataGrid-row:hover': { backgroundColor: alpha(theme.palette.primary.main, 0.04) },
-              '& .MuiDataGrid-columnHeader': {
-                backgroundColor: '#642b8f',
-                color: 'white',
-                fontWeight: 600,
-              },
-              '& .MuiCheckbox-root.Mui-checked': {
-                color: '#FFFFFF',
-              },
-              '& .MuiDataGrid-columnHeader .MuiCheckbox-root': {
-                color: '#FFFFFF',
-              },
-            }}
-          />
+              rows={rows}
+              columns={columns(theme, handleStatusToggle, setViewDialog, setNoteDialog)}
+              getRowId={(row) => row._id} // Ensure you use `_id` as the unique identifier
+              paginationModel={paginationModel}
+              onPaginationModelChange={setPaginationModel}
+              pageSizeOptions={[5, 10, 25]}
+              checkboxSelection
+              disableRowSelectionOnClick
+              slots={{ toolbar: GridToolbar }}
+              slotProps={{
+                toolbar: {
+                  showQuickFilter: true,
+                  quickFilterProps: { debounceMs: 500 },
+                },
+              }}
+              sx={{
+                height: 500,
+                '& .MuiDataGrid-cell:focus': { outline: 'none' },
+                '& .MuiDataGrid-row:hover': { backgroundColor: alpha(theme.palette.primary.main, 0.04) },
+                '& .MuiDataGrid-columnHeader': {
+                  backgroundColor: '#642b8f',
+                  color: 'white',
+                  fontWeight: 600,
+                },
+                '& .MuiCheckbox-root.Mui-checked': {
+                  color: '#FFFFFF',
+                },
+                '& .MuiDataGrid-columnHeader .MuiCheckbox-root': {
+                  color: '#FFFFFF',
+                },
+              }}
+            />
           )}
 
           {/* View Dialog */}
@@ -236,3 +290,4 @@ const EmployeeLeaveManagement = () => {
 };
 
 export default EmployeeLeaveManagement;
+
