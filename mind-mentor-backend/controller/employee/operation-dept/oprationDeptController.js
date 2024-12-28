@@ -1972,36 +1972,72 @@ const saveDemoClassData = async (req, res) => {
   }
 };
 
+// const getConductedDemoClass = async (req, res) => {
+//   try {
+//     const classSchedule = await ClassSchedule.find({ classType: "Demo" });
+//     console.log("classSchedule",classSchedule)
+//     const conductedClasses = await ConductedClass.find();
+//     console.log("conductedClasses",conductedClasses)
+
+//     const conductedDemoClasses = classSchedule 
+//       .filter(schedule => 
+//         conductedClasses.some(conducted => conducted.classID.toString() === schedule._id.toString())
+//       )
+//       .map(schedule => {
+//         const conductedDetails = conductedClasses.find(
+//           conducted => conducted.classID.toString() === schedule._id.toString()
+//         );
+//         return {
+//           ...schedule.toObject(),
+//           conductedDate: conductedDetails.conductedDate,
+//           status: conductedDetails.status,
+//           students: conductedDetails.students,
+//         };
+//       });
+
+//       console.log("Conducted demo class",conductedDemoClasses) 
+
+//     res.status(200).json(conductedDemoClasses);
+//   } catch (err) {
+//     console.log("Error in getting the conducted demo class", err);
+//     res.status(500).json({ error: "Internal Server Error" }); 
+//   }
+// };
+
 const getConductedDemoClass = async (req, res) => {
   try {
     const classSchedule = await ClassSchedule.find({ classType: "Demo" });
+    console.log("classSchedule", classSchedule);
     const conductedClasses = await ConductedClass.find();
+    console.log("conductedClasses", conductedClasses);
 
-    const conductedDemoClasses = classSchedule 
-      .filter(schedule => 
-        conductedClasses.some(conducted => conducted.classID.toString() === schedule._id.toString())
-      )
-      .map(schedule => {
-        const conductedDetails = conductedClasses.find(
-          conducted => conducted.classID.toString() === schedule._id.toString()
-        );
-        return {
-          ...schedule.toObject(),
-          conductedDate: conductedDetails.conductedDate,
-          status: conductedDetails.status,
-          students: conductedDetails.students,
-        };
-      });
+    // Build the conductedDemoClasses array
+    const conductedDemoClasses = classSchedule.map(schedule => {
+      // Fetch all conducted classes for the current schedule
+      const conductedDetails = conductedClasses.filter(
+        conducted => conducted.classID.toString() === schedule._id.toString()
+      );
 
-      console.log("Conducted demo class",conductedDemoClasses) 
+      // Map over the conducted classes and create individual entries
+      return conductedDetails.map(conducted => ({
+        ...schedule.toObject(),
+        conductedDate: conducted.conductedDate,
+        status: conducted.status,
+        students: conducted.students,
+      }));
+    });
 
-    res.status(200).json(conductedDemoClasses);
+    // Flatten the array since `map` with `filter` creates nested arrays
+    const flattenedDemoClasses = conductedDemoClasses.flat();
+
+    console.log("Conducted demo class", flattenedDemoClasses);
+
+    res.status(200).json(flattenedDemoClasses);
   } catch (err) {
     console.log("Error in getting the conducted demo class", err);
-    res.status(500).json({ error: "Internal Server Error" }); 
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
-
 
 
 const updateEnrollmentStatus = async (req, res) => {
