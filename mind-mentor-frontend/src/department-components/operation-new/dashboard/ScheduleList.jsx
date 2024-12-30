@@ -33,7 +33,7 @@ import {
   IconText,
   ModalContent,
   theme,
-} from "../../../coach/Layout/customStyle";
+} from "../../coach/Layout/customStyle";
 
 const ScheduleKanban = () => {
   const navigate = useNavigate();

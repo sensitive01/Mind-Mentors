@@ -50,7 +50,7 @@ const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog) => [
   {
     field: "notes",
     headerName: "Notes",
-    width: 120,
+    width: 150,
     renderCell: (params) => (
       <Button
         onClick={() =>

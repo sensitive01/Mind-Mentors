@@ -15,6 +15,11 @@ import {
 } from "@mui/icons-material";
 import { Link } from "react-router-dom";
 import { getMyClassData } from "../../../api/service/employee/coachService";
+// import { customColors, theme } from "../Layout/customStyle";
+// import RenderClassList from "./shedule-components/RenderClassList";
+// import UpcomingClasses from "./shedule-components/UpcommingClasses";
+// import ClassDetailsModal from "./shedule-components/ClassDetailModel";
+
 import { customColors, theme } from "../Layout/customStyle";
 import RenderClassList from "./shedule-components/RenderClassList";
 import UpcomingClasses from "./shedule-components/UpcommingClasses";

@@ -3,7 +3,7 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getActivityLogsByTaskId } from "../../api/service/employee/EmployeeService"; // Ensure this is correctly imported
+import { getActivityLogsByTaskId } from "../../../api/service/employee/EmployeeService"; // Ensure this is correctly imported
 
 const theme = createTheme({
   palette: {
@@ -89,7 +89,7 @@ const Prospects = () => {
     <ThemeProvider theme={theme}>
       <Box
         sx={{
-          width: { xs: "100%", sm: "50%", md: "80%" }, // Responsive widths
+          width: { xs: "100%", sm: "100%", md: "100%" }, // Responsive widths
           height: "100%",
           p: 3,
           ml: "auto", // Pushes the Box to the right

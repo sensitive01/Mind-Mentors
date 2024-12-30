@@ -1,7 +1,7 @@
-import React from "react";
-import LeavesTable from "../../../department-components/servicedelivery/components/LeavesTable";
-import Sidebar from "../../../department-components/servicedelivery/Layout/Sidebar";
-import Topbar from "./../../../component/parent-component/parent-dashboard/layout/Topbar";
+import LeavesTable from "../../../department-components/coach/components/LeavesTable";
+import Sidebar from "../../../department-components/coach/Layout/Sidebar";
+import Topbar from '../../../component/parent-component/parent-dashboard/layout/Topbar';
+
 const ListingEnquiries = () => {
   return (
     <div className="flex h-screen w-screen overflow-hidden">
@@ -23,4 +23,6 @@ const ListingEnquiries = () => {
     </div>
   );
 };
+
+
 export default ListingEnquiries;

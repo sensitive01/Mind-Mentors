@@ -7,7 +7,7 @@ import {
   createLeave,
   updateLeave,
 } from "../../../api/service/employee/EmployeeService";
-import FileUpload from "../../components/uploader/FileUpload";
+import FileUpload from "../../../components/uploader/FileUpload";
 
 const EmployeeLeaveForm = () => {
   const empId = localStorage.getItem("empId"); // Retrieve empId from local storage

@@ -138,21 +138,28 @@ import AssignClassToKid from "./pages/employee/servicedelivery/AssignClassToKid"
 // import RenewalLogin from "./renewalassociate/components/LoginPage";
 
 // import CoachLogin from "./coach/components/LoginPage";
-// import CoachAttendance from './pages/coach/CoachAttendance';
-// import CoachAttendanceReport from "./pages/coach/CoachAttendanceReport";
-// import CoachDashboard from "./pages/coach/CoachDashboard";
-// // import CoachFeedback from "./pages/coach/CoachFeedback";
-// import CoachFeedbackAdd from "./pages/coach/CoachFeedbackAdd";
-// import CoachInvoice from "./pages/coach/CoachInvoice";
-// import CoachLeaves from "./pages/coach/CoachLeaves";
-// import CoachLeavesAdd from "./pages/coach/CoachLeavesAdd";
-// import CoachMyAssignTasks from "./pages/coach/CoachMyAssignTasks";
-// import CoachMyAssignTasksTable from "./pages/coach/CoachMyAssignTasksTable";
-// import CoachMyTasks from "./pages/coach/CoachMyTasks";
-// import CoachProfile from "./pages/coach/CoachProfile";
-// import CoachScheduleClass from "./pages/coach/CoachScheduleClass";
-// import CoachSupport from "./pages/coach/CoachSupport";
-// import CoachSupportRequest from "./pages/coach/CoachSupportRequest";
+import CoachAttendance from './pages/employee/coach/CoachAttendance';
+import CoachAttendanceReport from "./pages/employee/coach/CoachAttendanceReport";
+import CoachDashboard from "./pages/employee/coach/CoachDashboard";
+// import CoachFeedback from "./pages/coach/CoachFeedback";
+import CoachFeedbackAdd from "./pages/employee/coach/CoachFeedbackAdd";
+import CoachInvoice from "./pages/employee/coach/CoachInvoice";
+import CoachLeaves from "./pages/employee/coach/CoachLeaves";
+import CoachLeavesAdd from "./pages/employee/coach/CoachLeavesAdd";
+import CoachMyAssignTasks from "./pages/employee/coach/CoachMyAssignTasks";
+import CoachMyAssignTasksTable from "./pages/employee/coach/CoachMyAssignTasksTable";
+import CoachMyTasks from "./pages/employee/coach/CoachMyTasks";
+import CoachProfile from "./pages/employee/coach/CoachProfile";
+import CoachScheduleClass from "./pages/employee/coach/CoachScheduleClass";
+import CoachSupport from "./pages/employee/coach/CoachSupport";
+import CoachSupportRequest from "./pages/employee/coach/CoachSupportRequest";
+import CoachAvailabilityPage from "./pages/employee/coach/CoachAvailabilityPage";
+import CoachAddAttandaceFeedBack from "./pages/employee/coach/CoachAddAttandaceFeedBack";
+import CoachTaskLogs from "./pages/employee/coach/CoachTaskLogs";
+
+
+
+
 
 // import MarketingAttendance from './pages/marketing/MarketingAttendance';
 // import MarketingAttendanceReport from "./pages/marketing/MarketingAttendanceReport";
@@ -216,13 +223,10 @@ import AssignClassToKid from "./pages/employee/servicedelivery/AssignClassToKid"
 // import SuperAdminEnquiryLogs from "./pages/superadmin/SuperAdminEnquiryLogs";
 // import KidsDemoClassPage from "./pages/kids/KidsDemoClassPage";
 // import KidsClassShedulePage from "./pages/kids/KidsClassShedulePage";
-// import CoachAvailabilityPage from "./pages/coach/CoachAvailabilityPage";
 // import KidsGamesListPage from "./pages/kids/KidsGamesListPage";
 // import KidsAchievementsPage from "./pages/kids/KidsAchievementsPage";
 // import KidsJourneyPage from "./pages/kids/KidsJourneyPage";
 // import AddKidAvailabilityPage from "./pages/parent/AddKidAvailabilityPage";
-// import CoachAddAttandaceFeedBack from "./pages/coach/CoachAddAttandaceFeedBack";
-// import CoachTaskLogs from "./pages/coach/CoachTaskLogs";
 // import RenewalTaskLogs from "./pages/renewalassociate/RenewalTaskLogs";
 // import CenterAdminTaskLogs from "./pages/centeradmin/CenterAdminTaskLogs";
 // import SuperAdminTaskAllLogs from "./pages/superadmin/SuperAdminTaskAllLogs";
@@ -238,8 +242,7 @@ function App() {
           <Route path="/parent/login" element={<ParentLogin />} />
           <Route path="/parent/enter-otp" element={<ParentOtpPage />} />
 
-          <Route
-            path="/parent/registration"
+          <Route path="/parent/registration"
             element={
               <Provider store={store}>
                 <StepperProvider>
@@ -274,34 +277,16 @@ function App() {
           <Route path="/parent/dashboard" element={<DashboardPage />} />
           <Route path="/parent/kid" element={<ParentKidsDetailsPage />} />
           <Route path="/parent/add-kid" element={<AddKid />} />
-          <Route
-            path="/parent/kid/attendance/:id"
-            element={<AttendancePage />}
-          />
-          <Route
-            path="/parent/kid/demo-class/:id"
-            element={<ParentDemoClassPage />}
-          />
-          <Route
-            path="/parent/kid/demo-class-shedule/:id"
-            element={<ParentReqNewDemoClass />}
-          />
-          <Route
-            path="/parent/kid/manage-login/:id"
-            element={<ParentManageChildLoginPage />}
-          />
-          <Route
-            path="/parent/profile/manage"
-            element={<ParentProfilePage />}
-          />
+          <Route path="/parent/kid/attendance/:id" element={<AttendancePage />} />
+          <Route path="/parent/kid/demo-class/:id" element={<ParentDemoClassPage />}/>
+          <Route path="/parent/kid/demo-class-shedule/:id" element={<ParentReqNewDemoClass />} />
+          <Route path="/parent/kid/manage-login/:id" element={<ParentManageChildLoginPage />}/>
+          <Route path="/parent/profile/manage" element={<ParentProfilePage />} />
           <Route path="/parent/certificate" element={<CertificatePage />} />
           <Route path="/parent/kid/classShedule/:id" element={<KidsPage />} />
           <Route path="/parent/new-referal" element={<ParentReferalPage />} />
           <Route path="/parent/support" element={<SupportPage />} />
-          <Route
-            path="/parent/walkthrough-video"
-            element={<WalkThroughPage />}
-          />
+          <Route path="/parent/walkthrough-video"  element={<WalkThroughPage />} />
           {/* <Route path="/parent/add-kid-availability/:kidId" element={<AddKidAvailabilityPage />} /> */}
 
           <Route path="/kids/login" element={<KidsLoginPage />} />
@@ -316,96 +301,34 @@ function App() {
           <Route path="/fee-details" element={<FeeDetailsPage />} />
           <Route path="/class-schedule" element={<ClassShedulePage />} />
 
-          <Route path="/employee-login" element={<LoginPage />} />
-          <Route
-            path="/employee-operation-dashboard"
-            element={<OperationDashboardPage />}
-          />
-          <Route
-            path="/employee-operation-enquiry-form"
-            element={<SEnquiryFormPage />}
-          />
-          <Route
-            path="/employee-operation-enquiry-list"
-            element={<ListingEnquiries />}
-          />
-          <Route
-            path="/employee-operation/prospects"
-            element={<ProspectPage />}
-          />
-          <Route
-            path="/employee-operation/attendance"
-            element={<EmpAttendance />}
-          />
-          <Route path="/employee-operation/leaves" element={<LeavesPage />} />
-          <Route
-            path="/employee-operation/leaves/add"
-            element={<LeaveFormPage />}
-          />
-          <Route
-            path="/employee-operation-tasks/tasks"
-            element={<TasksPage />}
-          />
-          <Route
-            path="/employee-operation-tasks/assignedtasks"
-            element={<AssigneTaskPage />}
-          />
-          <Route
-            path="/employee-operation/taskslogs/:id"
-            element={<TasksLogs />}
-          />
-          <Route
-            path="/employee-operation-tasks/assigntask"
-            element={<TaskAssignByMePage />}
-          />
-          <Route
-            path="/showCompleteLogs/:id"
-            element={<ShowAllEnquiryLogs />}
-          />
-          <Route
-            path="/employee-operation/schedule"
-            element={<ScheduleClass />}
-          />
-          <Route
-            path="/employee-operation/studentreport"
-            element={<StudentReport />}
-          />
-          <Route path="/employee-operation/invoice" element={<InvoicePage />} />
-          <Route
-            path="/employee-operation/coachfeedback"
-            element={<CoachFeedback />}
-          />
-          <Route
-            path="/employeeAssignDemoClass/:id"
-            element={<AssignDemoClassPage />}
-          />
-          <Route
-            path="/employee-operation-tasks/supports"
-            element={<SupportRequest />}
-          />
-          <Route
-            path="/employee-operation-tasks/support/add"
-            element={<SupportPages />}
-          />
-          <Route
-            path="/employee-operation-tasks/supportTrack"
-            element={<MessageStusTrackPage />}
-          />
 
-          <Route
-            path="/employee-operation-tasks/add"
-            element={<MyTaskPage />}
-          />
+          <Route path="/employee-login" element={<LoginPage />} />
+          <Route path="/employee-operation-dashboard"  element={<OperationDashboardPage />} />
+          <Route path="/employee-operation-enquiry-form" element={<SEnquiryFormPage />}/>
+          <Route path="/employee-operation-enquiry-list" element={<ListingEnquiries />} />
+          <Route path="/employee-operation/prospects"  element={<ProspectPage />} />
+          <Route path="/employee-operation/attendance" element={<EmpAttendance />}/>
+          <Route path="/employee-operation/leaves" element={<LeavesPage />} />
+          <Route path="/employee-operation/leaves/add" element={<LeaveFormPage />} />
+          <Route path="/employee-operation-tasks/tasks"  element={<TasksPage />} />
+          <Route path="/employee-operation-tasks/assignedtasks" element={<AssigneTaskPage />} />
+          <Route path="/employee-operation/taskslogs/:id" element={<TasksLogs />}/>
+          <Route path="/employee-operation-tasks/assigntask" element={<TaskAssignByMePage />} />
+          <Route path="/showCompleteLogs/:id"  element={<ShowAllEnquiryLogs />}/>
+          <Route path="/employee-operation/schedule"  element={<ScheduleClass />}/>
+          <Route path="/employee-operation/studentreport"  element={<StudentReport />}  />
+          <Route path="/employee-operation/invoice" element={<InvoicePage />} />
+          <Route path="/employee-operation/coachfeedback"  element={<CoachFeedback />} />
+          <Route path="/employeeAssignDemoClass/:id"  element={<AssignDemoClassPage />} />
+          <Route path="/employee-operation-tasks/supports" element={<SupportRequest />} />
+          <Route path="/employee-operation-tasks/support/add" element={<SupportPages />}  />
+          <Route path="/employee-operation-tasks/supportTrack"  element={<MessageStusTrackPage />}  />
+          <Route path="/employee-operation-tasks/add" element={<MyTaskPage />}  />
           <Route path="/employee-operation/referal" element={<ReferalPage />} />
-          <Route
-            path="/employee-operation/taskslogs/:id"
-            element={<TasksLogs />}
-          />
+          <Route path="/employee-operation/taskslogs/:id"  element={<TasksLogs />}/>
           <Route path="/employee-operation/profile" element={<Profile />} />
-          <Route
-            path="/employee-operation/demoSheduleForm"
-            element={<DemoClassShedulePage />}
-          />
+          <Route path="/employee-operation/demoSheduleForm"   element={<DemoClassShedulePage />}  />
+
 
           <Route path="/serviceProfile" element={<ServiceProfile />} />
           <Route path="/serviceAttendance" element={<ServiceAttendance />} />
@@ -413,53 +336,22 @@ function App() {
           <Route path="/serviceLeaves/add" element={<ServiceLeavesAdd />} />
           <Route path="/serviceInvoice" element={<ServiceInvoice />} />
           <Route path="/serviceFeedback" element={<ServiceFeedback />} />
-          <Route
-            path="/serviceAttendanceReport"
-            element={<ServiceAttendanceReport />}
-          />
-          <Route
-            path="/serviceMyTasks/assigntask"
-            element={<ServiceMyAssignTasks />}
-          />
+          <Route path="/serviceAttendanceReport" element={<ServiceAttendanceReport />} />
+          <Route path="/serviceMyTasks/assigntask" element={<ServiceMyAssignTasks />}  />
           <Route path="/serviceMyTasks" element={<ServiceMyTasks />} />
-          <Route
-            path="/serviceAssignedTasks/"
-            element={<ServiceMyAssignTasksTable />}
-          />
-
-          <Route
-            path="/serviceScheduleClass/"
-            element={<ServiceScheduleClass />}
-          />
+          <Route path="/serviceAssignedTasks/"  element={<ServiceMyAssignTasksTable />} />
+          <Route path="/serviceScheduleClass/"  element={<ServiceScheduleClass />}/>
           <Route path="/serviceSupport/add" element={<ServiceSupport />} />
           <Route path="/serviceSupport/" element={<ServiceSupportRequest />} />
-          <Route
-            path="/serviceMessageStatus/"
-            element={<ServiceMessageStusTrackPage />}
-          />
+          <Route path="/serviceMessageStatus/"  element={<ServiceMessageStusTrackPage />}/>
           <Route path="/servicekids" element={<ServiceKids />} />
           <Route path="/servicePrograms" element={<ServicePrograms />} />
           <Route path="/serviceDashboard" element={<ServiceDashboard />} />
-          <Route
-            path="/serviceClassShedule"
-            element={<ServiceDelivaryClassShedulePage />}
-          />
-          <Route
-            path="/coachAvailabilityForm"
-            element={<CoachAvailabilityFormPage />}
-          />
-          <Route
-            path="/coachAvailabilityTable"
-            element={<CoachAvailabilityTablePage />}
-          />
-          <Route
-            path="/serviceAssignClassToKid/:id"
-            element={<AssignClassToKid />}
-          />
-          <Route
-            path="/service-delivary/taskslogs/:id"
-            element={<ServiceTaskLogs />}
-          />
+          <Route path="/serviceClassShedule"  element={<ServiceDelivaryClassShedulePage />} />
+          <Route path="/coachAvailabilityForm"  element={<CoachAvailabilityFormPage />} />
+          <Route path="/coachAvailabilityTable"  element={<CoachAvailabilityTablePage />}  />
+          <Route path="/serviceAssignClassToKid/:id" element={<AssignClassToKid />}/>
+          <Route path="/service-delivary/taskslogs/:id"  element={<ServiceTaskLogs />}/>
 
           {/* <Route path="/serviceLogin" element={<ServiceLogin />} /> */}
 
@@ -486,7 +378,7 @@ function App() {
         <Route path="/renewal-associate/taskslogs/:id" element={<RenewalTaskLogs />} /> */}
           {/* <Route path="/renewalReferrals" element={<RenewalReferal />} /> */}
 
-          {/* 
+        
 
         <Route path="/coachDashboard" element={<CoachDashboard />} />
         <Route path="/coachProfile" element={<CoachProfile />} />
@@ -503,11 +395,11 @@ function App() {
         <Route path="/coachSupport/add" element={<CoachSupport />} />
         <Route path="/coachSupport/" element={<CoachSupportRequest />} />
         <Route path="/coachFeedaback/add" element={<CoachFeedbackAdd />} />
-        <Route path="/coachLogin" element={<CoachLogin />} />
+        {/* <Route path="/coachLogin" element={<CoachLogin />} /> */}
         <Route path="/coachAvailability" element={<CoachAvailabilityPage />} />
-        <Route path="/coachAvailability" element={<CoachAvailabilityPage />} />
+        {/* <Route path="/coachAvailability" element={<CoachAvailabilityPage />} /> */}
         <Route path="/coachAttandanceFeedback/:classId" element={<CoachAddAttandaceFeedBack />} />
-        <Route path="/coach/taskslogs/:id" element={<CoachTaskLogs />} /> */}
+        <Route path="/coach/taskslogs/:id" element={<CoachTaskLogs />} /> 
 
           {/* 
         <Route path="/marketingDashboard" element={<MarketingDashboard />} />
