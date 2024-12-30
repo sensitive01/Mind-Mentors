@@ -367,14 +367,14 @@ const Enquiries = () => {
               >
                 Prospect Data
               </Typography>
-              <Button
+              {/* <Button
                 variant="contained"
                 color="primary"
                 component={Link}
                 to="/employee-operation-enquiry-form"
               >
                 + New Enquiry Form
-              </Button>
+              </Button> */}
             </Box>
             <DataGrid
               rows={rows}

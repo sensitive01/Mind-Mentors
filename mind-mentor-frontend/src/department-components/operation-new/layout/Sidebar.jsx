@@ -1,208 +1,268 @@
-import { ChevronDown, ChevronUp, Menu } from 'lucide-react';
-import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import Logout from '../../../department-components/operation-new/dashboard/Logout';
-import account from '../../../images/accountInage.webp';
-import { Divider } from '@mui/material';
+import {
+  DashboardOutlined,
+  BusinessCenter,
+  AssignmentOutlined,
+  CalendarToday,
+  EventNote,
+  Assessment,
+  Receipt,
+  HelpOutline,
+  ExpandLess,
+  ExpandMore,
+  ChevronLeft,
+  ChevronRight,
+  Person as ProfileIcon
+} from '@mui/icons-material';
+import { Box, Collapse, Divider, Drawer, IconButton, List, ListItem, ListItemIcon, ListItemText, Tooltip, Typography } from '@mui/material';
+import { styled } from '@mui/material/styles';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 
-const Sidebar = ({ isExpanded = true, onToggle }) => {
-  const location = useLocation();
-  const [expandedMenus, setExpandedMenus] = useState({});
+const ModernSidebar = () => {
+  const [openReports, setOpenReports] = useState(false);
+  const [openTasks, setOpenTasks] = useState(false);
+  const [openSupport, setOpenSupport] = useState(false);
+  const [openLeadManagement, setOpenLeadManagement] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
-  const isActive = (path) => location.pathname === path;
-
-  const toggleSubmenu = (path) => {
-    setExpandedMenus((prev) => ({
-      ...prev,
-      [path]: !prev[path],
-    }));
+  const iconColors = {
+    profile: '#FF6B6B',
+    dashboard: '#4ECDC4',
+    leads: '#45B7D1',
+    attendance: '#FDCB6E',
+    tasks: '#6C5CE7',
+    schedule: '#FF8A5B',
+    leaves: '#2ECC71',
+    reports: '#9B59B6',
+    invoices: '#3498DB',
+    support: '#E74C3C'
   };
 
-  const navLinks = [
+  const StyledListItem = styled(ListItem)(({ theme }) => ({
+    borderRadius: 8,
+    margin: '2px 0',
+    padding: '8px 16px',
+    display: 'flex',
+    alignItems: 'center',
+    transition: 'all 0.3s ease',
+    position: 'relative',
+    overflow: 'hidden',
+    gap: 8,
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: 0,
+      height: '100%',
+      backgroundColor: '#642b8f',
+      transition: 'width 0.3s ease',
+      zIndex: 0
+    },
+    '&:hover': {
+      '&::before': { width: '100%' },
+      '& .MuiListItemIcon-root, & .MuiListItemText-primary': {
+        color: 'white',
+        zIndex: 1
+      },
+      '& .MuiListItemIcon-root svg': {
+        filter: 'brightness(200%)'
+      },
+      boxShadow: theme.shadows[2]
+    }
+  }));
+
+  const StyledDrawer = styled(Drawer)(() => ({
+    width: isCollapsed ? 80 : 280,
+    '& .MuiDrawer-paper': {
+      width: isCollapsed ? 80 : 280,
+      backgroundColor: 'white',
+      borderRight: 'none',
+      transition: 'width 0.3s ease'
+    }
+  }));
+
+  const menuItems = [
     {
-      title: 'Dashboard',
-      icon: '📊',
-      path: '/employee-operation-dashboard',
+      icon: <DashboardOutlined />,
+      text: 'Dashboard',
+      color: iconColors.dashboard,
+      link: '/employee-operation-dashboard'
     },
     {
-      title: 'Lead Management',
-      icon: '💼',
-      submenu: [
-        { title: 'Enquiries', icon: '📋', path: '/employee-operation-enquiry-list' },
-        { title: 'Prospects', icon: '👥', path: '/employee-operation/prospects' },
+      icon: <BusinessCenter />,
+      text: 'Lead Management',
+      color: iconColors.leads,
+      subItems: [
+        { text: 'Enquiries', link: '/employee-operation-enquiry-list' },
+        { text: 'Prospects', link: '/employee-operation/prospects' }
       ],
+      open: openLeadManagement,
+      onClick: () => setOpenLeadManagement(!openLeadManagement)
     },
     {
-      title: 'Attendance',
-      icon: '📅',
-      path: '/employee-operation/attendance',
+      icon: <AssignmentOutlined />,
+      text: 'Attendance',
+      color: iconColors.attendance,
+      link: '/employee-operation/attendance'
     },
     {
-      title: 'Tasks',
-      icon: '✓',
-      path: '/employee-operation-tasks/tasks',
-      submenu: [
-        { title: 'My Tasks', icon: '📋', path: '/employee-operation-tasks/tasks' },
-        { title: 'Assigned Tasks ', icon: '👥', path: '/employee-operation-tasks/assignedtasks' },
+      icon: <AssignmentOutlined />,
+      text: 'Tasks',
+      color: iconColors.tasks,
+      subItems: [
+        { text: 'My Tasks', link: '/employee-operation-tasks/tasks' },
+        { text: 'Assigned Tasks', link: '/employee-operation-tasks/assignedtasks' }
       ],
+      open: openTasks,
+      onClick: () => setOpenTasks(!openTasks)
     },
     {
-      title: 'Schedule',
-      icon: '📅',
-      path: '/employee-operation/schedule',
+      icon: <CalendarToday />,
+      text: 'Schedule',
+      color: iconColors.schedule,
+      link: '/employee-operation/schedule'
     },
     {
-      title: 'Leaves',
-      icon: '🗓️',
-      path: '/employee-operation/leaves',
+      icon: <EventNote />,
+      text: 'Leaves',
+      color: iconColors.leaves,
+      link: '/employee-operation/leaves'
     },
     {
-      title: 'Reports',
-      icon: '📋',
-      path: '/employee-operation/studentreport',
-      submenu: [
-        { title: 'Student Attendance', icon: '📋', path: '/employee-operation/studentreport' },
-        { title: 'Coach Feedback', icon: '👥', path: '/employee-operation/coachfeedback' },
+      icon: <Assessment />,
+      text: 'Reports',
+      color: iconColors.reports,
+      subItems: [
+        { text: 'Student Attendance', link: '/employee-operation/studentreport' },
+        { text: 'Coach Feedback', link: '/employee-operation/coachfeedback' }
       ],
+      open: openReports,
+      onClick: () => setOpenReports(!openReports)
     },
-    { title: 'Invoices', icon: '📄', path: '/employee-operation/invoice' },
     {
-      title: 'Support',
-      icon: '🔧',
-      path: '/employee-operation-tasks/supports',
-      submenu: [
-        { title: 'System Admin', icon: '🔧', path: '/employee-operation-tasks/supports' },
-        { title: 'MyKart Status', icon: '📊', path: '/employee-operation-tasks/supportTrack' },
-      ],
+      icon: <Receipt />,
+      text: 'Invoices',
+      color: iconColors.invoices,
+      link: '/employee-operation/invoice'
     },
+    {
+      icon: <HelpOutline />,
+      text: 'Support',
+      color: iconColors.support,
+      subItems: [
+        { text: 'System Admin', link: '/employee-operation-tasks/supports' },
+        { text: 'MyKart Status', link: '/employee-operation-tasks/supportTrack' }
+      ],
+      open: openSupport,
+      onClick: () => setOpenSupport(!openSupport)
+    }
   ];
 
   return (
-    <div
-      className="transition-all duration-300 h-screen bg-white shadow-lg fixed flex flex-col"
-      style={{ 
-        width: isExpanded ? '256px' : '80px',
-        height: "-webkit-fill-available" 
-      }}
-    >
-      {/* Sidebar Toggle Button */}
-      <div className="flex items-center justify-end p-2" style={{ background: '#642b8f' }}>
-        <button
-          className="bg-purple-600 text-white rounded-full p-2 hover:bg-purple-700 transition-all"
-          onClick={onToggle}
-        >
-          <Menu size={18} />
-        </button>
-      </div>
-
-      {/* Profile Section */}
-      <div 
-        style={{ background: '#642b8f' }}
-        className="flex flex-col items-center py-6 border-b"
-      >
-        <Link to="/employee-operation/profile">
-          <img
-            src={account}
-            alt="Profile"
-            className={`rounded-full shadow-lg transition-all duration-200 ${
-              isExpanded ? 'w-16 h-16' : 'w-10 h-10'
-            }`}
-          />
-        </Link>
-        {isExpanded && (
-          <>
-            <h2 className="text-white text-lg font-semibold mt-2">Operations Mindmentoz</h2>
-            <span className="text-sm text-white">Operational Manager at MindMentoz</span>
-          </>
-        )}
-      </div>
-
-      {/* Navigation Links */}
-      <nav className="flex flex-col mt-4 overflow-y-auto">
-        {navLinks.map((link, index) => (
-          <div key={index} className="relative">
-            <Link
-              to={link.path}
-              onClick={() => link.submenu && isExpanded && toggleSubmenu(link.path)}
-              className={`w-full flex items-center px-4 py-3 relative transition-all duration-300 rounded-lg ${
-                isActive(link.path)
-                  ? 'bg-purple-100 text-purple-700'
-                  : 'hover:bg-[#642b8f] hover:text-white'
-              }`}
+    <StyledDrawer variant="permanent">
+      <Box sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        py: 2,
+        px: 2
+      }}>
+        {!isCollapsed && (
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center',
+            width: '100%',
+            gap: 1
+          }}>
+            <Box sx={{
+              width: 60,
+              height: 60,
+              backgroundColor: iconColors.profile,
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: 2
+            }}>
+              <ProfileIcon sx={{ color: 'white', fontSize: 30 }} />
+            </Box>
+            <Typography 
+              variant="body2" 
+              color="#642b8f" 
+              fontWeight="bold"
+              textAlign="center"
             >
-              <div className={`flex items-center ${isExpanded ? 'space-x-3' : 'justify-center'}`}>
-                <div
-                  className={`flex items-center justify-center rounded-lg transition-transform duration-200 ${
-                    isActive(link.path)
-                      ? 'bg-purple-200 text-purple-700'
-                      : 'bg-white hover:bg-[#642b8f] hover:text-white'
-                  }`}
-                  style={{
-                    width: isExpanded ? '40px' : '32px',
-                    height: isExpanded ? '40px' : '32px'
-                  }}
-                >
-                  <span className="text-lg">{link.icon}</span>
-                </div>
-                
-                {isExpanded && (
-                  <span className={`text-base font-medium ${
-                    isActive(link.path) ? 'text-purple-700' : 'text-gray-700 hover:text-white'
-                  }`}>
-                    {link.title}
-                  </span>
-                )}
-              </div>
+              Operations Manager
+            </Typography>
+            <Divider sx={{ width: '100%' }} />
+          </Box>
+        )}
+        <IconButton onClick={() => setIsCollapsed(!isCollapsed)}>
+          {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
+        </IconButton>
+      </Box>
 
-              {/* Chevron for Submenu - Only show when expanded */}
-              {link.submenu && isExpanded && (
-                <div className="ml-auto">
-                  {expandedMenus[link.path] ? (
-                    <ChevronUp className="w-5 h-5 text-gray-500" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-500" />
-                  )}
-                </div>
-              )}
-            </Link>
-
-            {/* Submenu - Only show when expanded */}
-            {link.submenu && expandedMenus[link.path] && isExpanded && (
-              <div className="ml-14 bg-gray-50 rounded-md mt-1 shadow-md">
-                {link.submenu.map((subLink) => (
-                  <Link
-                    key={subLink.path}
-                    to={subLink.path}
-                    className={`flex items-center px-3 py-2 rounded-lg transition-all duration-200 ${
-                      isActive(subLink.path)
-                        ? 'bg-purple-50 text-purple-700'
-                        : 'hover:bg-[#642b8f] hover:text-white'
-                    }`}
-                  >
-                    <div
-                      className={`flex items-center justify-center rounded-md ${
-                        isActive(subLink.path)
-                          ? 'bg-purple-100 text-purple-700'
-                          : 'bg-white hover:bg-[#642b8f] hover:text-white'
-                      }`}
-                      style={{ width: '32px', height: '32px' }}
-                    >
-                      <span className="text-base">{subLink.icon}</span>
-                    </div>
-                    <span className="ml-3 text-sm font-medium">{subLink.title}</span>
+      <Box sx={{ overflow: 'auto' }}>
+        <List disablePadding>
+          {menuItems.map((item, index) => (
+            <React.Fragment key={index}>
+              <Tooltip title={item.text} placement="right">
+                {item.link ? (
+                  <Link to={item.link} style={{ textDecoration: 'none', color: 'inherit' }}>
+                    <StyledListItem button>
+                      <ListItemIcon sx={{ color: item.color }}>
+                        {item.icon}
+                      </ListItemIcon>
+                      {!isCollapsed && (
+                        <>
+                          <ListItemText primary={item.text} />
+                          {item.subItems && (
+                            item.open ? <ExpandLess /> : <ExpandMore />
+                          )}
+                        </>
+                      )}
+                    </StyledListItem>
                   </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-      </nav>
-
-      <Divider />
-
-      
-    </div>
+                ) : (
+                  <StyledListItem button onClick={item.onClick}>
+                    <ListItemIcon sx={{ color: item.color }}>
+                      {item.icon}
+                    </ListItemIcon>
+                    {!isCollapsed && (
+                      <>
+                        <ListItemText primary={item.text} />
+                        {item.subItems && (
+                          item.open ? <ExpandLess /> : <ExpandMore />
+                        )}
+                      </>
+                    )}
+                  </StyledListItem>
+                )}
+              </Tooltip>
+              {!isCollapsed && item.subItems && (
+                <Collapse in={item.open} timeout="auto" unmountOnExit>
+                  <List component="div" disablePadding>
+                    {item.subItems.map((subItem, subIndex) => (
+                      <Link key={subIndex} to={subItem.link} style={{ textDecoration: 'none', color: 'inherit' }}>
+                        <StyledListItem button sx={{ pl: 4 }}>
+                          <ListItemIcon sx={{ color: item.color }}>
+                            {React.cloneElement(item.icon, { fontSize: 'small' })}
+                          </ListItemIcon>
+                          <ListItemText primary={subItem.text} />
+                        </StyledListItem>
+                      </Link>
+                    ))}
+                  </List>
+                </Collapse>
+              )}
+            </React.Fragment>
+          ))}
+        </List>
+      </Box>
+    </StyledDrawer>
   );
 };
 
-export default Sidebar;
+export default ModernSidebar;

@@ -428,3 +428,22 @@ export const deleteHoliday = async (id) => {
 };
 
 
+
+export const createChat = async (payload) => {
+  try {
+    const response = await userInstance.post('/chats/', payload, { // Use userInstance for the POST request
+      headers: {
+        'empId': localStorage.getItem('empId') // Pass empId from localStorage for authorization
+      },
+    });
+
+    return response.data; // Return the response data
+  } catch (error) {
+    throw new Error(error.message || 'Error submitting chat');
+  }
+};
+
+export const getAllEmployeesByName = async () => {
+  const response = await userInstance.get("/employeesbyname");
+  return response.data;
+};

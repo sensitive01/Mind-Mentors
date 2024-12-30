@@ -116,32 +116,41 @@ import AssignClassToKid from "./pages/employee/servicedelivery/AssignClassToKid"
 // ...........................................................................................................
 
 // import RenewalAttendance from './pages/renewalassociate/RenewalAttendance';
-// import RenewalAttendanceReport from "./pages/renewalassociate/RenewalAttendanceReport";
-// import RenewalDashboard from "./pages/renewalassociate/RenewalDashboard";
-// import RenewalFeedback from "./pages/renewalassociate/RenewalFeedback";
-// import RenewalInvoice from "./pages/renewalassociate/RenewalInvoice";
-// import RenewalKids from "./pages/renewalassociate/RenewalKids";
-// import RenewalLeaves from "./pages/renewalassociate/RenewalLeaves";
-// import RenewalLeavesAdd from "./pages/renewalassociate/RenewalLeavesAdd";
-// import RenewalMessageStusTrackPage from "./pages/renewalassociate/RenewalMessageStusTrackPage";
-// import RenewalMyAssignTasks from "./pages/renewalassociate/RenewalMyAssignTasks";
-// import RenewalMyAssignTasksTable from "./pages/renewalassociate/RenewalMyAssignTasksTable";
-// import RenewalMyTasks from "./pages/renewalassociate/RenewalMyTasks";
-// import RenewalParents from './pages/renewalassociate/RenewalParents';
-// import RenewalProfile from "./pages/renewalassociate/RenewalProfile";
-// import RenewalPrograms from "./pages/renewalassociate/RenewalPrograms";
-// import RenewalReferal from "./pages/renewalassociate/RenewalReferal";
-// import RenewalRenewal from './pages/renewalassociate/RenewalRenewal';
-// import RenewalScheduleClass from "./pages/renewalassociate/RenewalScheduleClass";
-// import RenewalSupport from "./pages/renewalassociate/RenewalSupport";
-// import RenewalSupportRequest from "./pages/renewalassociate/RenewalSupportRequest";
-// import RenewalLogin from "./renewalassociate/components/LoginPage";
 
+
+
+import RenewalAttendance from './pages/employee/renewalassociate/RenewalAttendance';
+import RenewalAttendanceReport from "./pages/employee/renewalassociate/RenewalAttendanceReport";
+import RenewalDashboard from "./pages/employee/renewalassociate/RenewalDashboard";
+import RenewalFeedback from "./pages/employee/renewalassociate/RenewalFeedback";
+import RenewalInvoice from "./pages/employee/renewalassociate/RenewalInvoice";
+import RenewalKids from "./pages/employee/renewalassociate/RenewalKids";
+import RenewalLeaves from "./pages/employee/renewalassociate/RenewalLeaves";
+import RenewalLeavesAdd from "./pages/employee/renewalassociate/RenewalLeavesAdd";
+import RenewalMessageStusTrackPage from "./pages/employee/renewalassociate/RenewalMessageStusTrackPage";
+import RenewalMyAssignTasks from "./pages/employee/renewalassociate/RenewalMyAssignTasks";
+import RenewalMyAssignTasksTable from "./pages/employee/renewalassociate/RenewalMyAssignTasksTable";
+import RenewalMyTasks from "./pages/employee/renewalassociate/RenewalMyTasks";
+import RenewalParents from './pages/employee/renewalassociate/RenewalParents';
+import RenewalProfile from "./pages/employee/renewalassociate/RenewalProfile";
+import RenewalPrograms from "./pages/employee/renewalassociate/RenewalPrograms";
+import RenewalReferal from "./pages/employee/renewalassociate/RenewalReferal";
+import RenewalRenewal from './pages/employee/renewalassociate/RenewalRenewal';
+import RenewalScheduleClass from "./pages/employee/renewalassociate/RenewalScheduleClass";
+import RenewalSupport from "./pages/employee/renewalassociate/RenewalSupport";
+import RenewalSupportRequest from "./pages/employee/renewalassociate/RenewalSupportRequest";
+import RenewalTaskLogs from "./pages/employee/renewalassociate/RenewalTaskLogs";
+
+
+
+
+// import RenewalLogin from "./renewalassociate/components/LoginPage";
+// import CoachFeedback from "./pages/coach/CoachFeedback";
 // import CoachLogin from "./coach/components/LoginPage";
+
 import CoachAttendance from './pages/employee/coach/CoachAttendance';
 import CoachAttendanceReport from "./pages/employee/coach/CoachAttendanceReport";
 import CoachDashboard from "./pages/employee/coach/CoachDashboard";
-// import CoachFeedback from "./pages/coach/CoachFeedback";
 import CoachFeedbackAdd from "./pages/employee/coach/CoachFeedbackAdd";
 import CoachInvoice from "./pages/employee/coach/CoachInvoice";
 import CoachLeaves from "./pages/employee/coach/CoachLeaves";
@@ -227,7 +236,6 @@ import CoachTaskLogs from "./pages/employee/coach/CoachTaskLogs";
 // import KidsAchievementsPage from "./pages/kids/KidsAchievementsPage";
 // import KidsJourneyPage from "./pages/kids/KidsJourneyPage";
 // import AddKidAvailabilityPage from "./pages/parent/AddKidAvailabilityPage";
-// import RenewalTaskLogs from "./pages/renewalassociate/RenewalTaskLogs";
 // import CenterAdminTaskLogs from "./pages/centeradmin/CenterAdminTaskLogs";
 // import SuperAdminTaskAllLogs from "./pages/superadmin/SuperAdminTaskAllLogs";
 
@@ -355,7 +363,7 @@ function App() {
 
           {/* <Route path="/serviceLogin" element={<ServiceLogin />} /> */}
 
-          {/* <Route path="/renewalDashboard" element={<RenewalDashboard />} />
+        <Route path="/renewalDashboard" element={<RenewalDashboard />} />
         <Route path="/renewalProfile" element={<RenewalProfile />} />
         <Route path="/renewalAttendance" element={<RenewalAttendance />} />
         <Route path="/renewalLeaves" element={<RenewalLeaves />} />
@@ -374,8 +382,8 @@ function App() {
         <Route path="/renewalPrograms" element={<RenewalPrograms />} />
         <Route path="/renewalParents" element={<RenewalParents />} />
         <Route path="/renewalRenewals" element={<RenewalRenewal />} />
-        <Route path="/renewalLogin" element={<RenewalLogin />} />
-        <Route path="/renewal-associate/taskslogs/:id" element={<RenewalTaskLogs />} /> */}
+        <Route path="/renewal-associate/taskslogs/:id" element={<RenewalTaskLogs />} /> 
+        {/* <Route path="/renewalLogin" element={<RenewalLogin />} /> */}
           {/* <Route path="/renewalReferrals" element={<RenewalReferal />} /> */}
 
         
@@ -395,11 +403,11 @@ function App() {
         <Route path="/coachSupport/add" element={<CoachSupport />} />
         <Route path="/coachSupport/" element={<CoachSupportRequest />} />
         <Route path="/coachFeedaback/add" element={<CoachFeedbackAdd />} />
-        {/* <Route path="/coachLogin" element={<CoachLogin />} /> */}
         <Route path="/coachAvailability" element={<CoachAvailabilityPage />} />
-        {/* <Route path="/coachAvailability" element={<CoachAvailabilityPage />} /> */}
         <Route path="/coachAttandanceFeedback/:classId" element={<CoachAddAttandaceFeedBack />} />
         <Route path="/coach/taskslogs/:id" element={<CoachTaskLogs />} /> 
+        {/* <Route path="/coachAvailability" element={<CoachAvailabilityPage />} /> */}
+        {/* <Route path="/coachLogin" element={<CoachLogin />} /> */}
 
           {/* 
         <Route path="/marketingDashboard" element={<MarketingDashboard />} />
