@@ -1,6 +1,6 @@
 import { Divider } from "@mui/material";
-import Profiles from "../../../employee-component/operation-new/dashboard/Profile";
-import Sidebar from "../../../employee-component/operation-new/layout/Sidebar";
+import Profiles from "../../../department-components/operation-new/dashboard/Profile";
+import Sidebar from "../../../department-components/operation-new/layout/Sidebar";
 import Topbar from './../../../component/parent-component/parent-dashboard/layout/Topbar';
 
 const Profile = () => {

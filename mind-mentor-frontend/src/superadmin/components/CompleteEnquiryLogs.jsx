@@ -12,8 +12,7 @@ import {
 import { useParams } from "react-router-dom";
 import { alpha } from "@mui/material/styles";
 import { Link } from "react-router-dom";
-import { fetchAllLogs } from "../../api/service/employee/EmployeeService";
-
+import { fetchAllLogs } from "../../../api/service/employee/EmployeeService";
 
 const CompleteEnquiryLogs = () => {
   const { id } = useParams();
@@ -54,7 +53,9 @@ const CompleteEnquiryLogs = () => {
       field: "createdAt",
       headerName: "Created At",
       flex: 5,
-      valueFormatter: (params) => {params.value},
+      valueFormatter: (params) => {
+        params.value;
+      },
     },
     {
       field: "action",
@@ -152,7 +153,6 @@ const CompleteEnquiryLogs = () => {
               >
                 Enquiry Logs
               </Typography>
-              
             </Box>
             <DataGrid
               rows={rows}

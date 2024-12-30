@@ -1,23 +1,27 @@
-import { Button } from '@mui/material';
+import { Button } from "@mui/material";
 import axios from "axios";
-import { useState, useEffect } from 'react';
-import PhoneInput from 'react-phone-input-2';
-import 'react-phone-input-2/lib/style.css';
-import { Link, useParams } from 'react-router-dom';
-import { createUser, updateUser,fetchUsersByName } from '../../api/service/employee/EmployeeService';
+import { useState, useEffect } from "react";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
+import { Link, useParams } from "react-router-dom";
+import {
+  createUser,
+  updateUser,
+  fetchUsersByName,
+} from "../../../api/service/employee/EmployeeService";
 
 const EmployeeMasterForm = () => {
   const { id } = useParams();
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phoneNumber: '',
-    address: '',
-    dateOfBirth: '',
-    gender: '',
+    firstName: "",
+    lastName: "",
+    email: "",
+    phoneNumber: "",
+    address: "",
+    dateOfBirth: "",
+    gender: "",
     profilePicture: null,
-    bio: '',
+    bio: "",
     skills: [],
     education: [],
   });
@@ -36,8 +40,8 @@ const EmployeeMasterForm = () => {
     setFormData((prev) => ({
       ...prev,
       skills: prev.skills.includes(skill)
-        ? prev.skills.filter(s => s !== skill)
-        : [...prev.skills, skill]
+        ? prev.skills.filter((s) => s !== skill)
+        : [...prev.skills, skill],
     }));
   };
 
@@ -55,7 +59,10 @@ const EmployeeMasterForm = () => {
   const handleAddEducation = () => {
     setFormData((prev) => ({
       ...prev,
-      education: [...prev.education, { degree: '', institution: '', graduationYear: '' }]
+      education: [
+        ...prev.education,
+        { degree: "", institution: "", graduationYear: "" },
+      ],
     }));
   };
 
@@ -68,18 +75,21 @@ const EmployeeMasterForm = () => {
     const apiUrl = `${import.meta.env.VITE_BASE_URL_USER}get-user`; // Base URL for users
     try {
       const response = await axios.get(`${apiUrl}/${id}`); // Dynamically append the user ID
-      console.log('Fetched User Data:', response.data);
+      console.log("Fetched User Data:", response.data);
       // Populate the form with fetched data
       setFormData(response.data);
     } catch (error) {
-      console.error('Error fetching user by ID:', error.response ? error.response.data : error.message);
-      alert('There was an error fetching the user data.');
+      console.error(
+        "Error fetching user by ID:",
+        error.response ? error.response.data : error.message
+      );
+      alert("There was an error fetching the user data.");
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     try {
       // Prepare the data to be submitted
       const formDataToSubmit = {
@@ -95,45 +105,46 @@ const EmployeeMasterForm = () => {
         skills: formData.skills,
         education: formData.education,
       };
-  
+
       let response;
       if (formData.id) {
         // Update user if an ID exists
         response = await updateUser(formData.id, formDataToSubmit);
-        console.log('User updated:', response.data);
-        alert('User updated successfully!');
+        console.log("User updated:", response.data);
+        alert("User updated successfully!");
       } else {
         // Create a new user otherwise
         response = await createUser(formDataToSubmit);
-        alert('Data submitted successfully!');
+        alert("Data submitted successfully!");
 
-        console.log('Response:', response.data);
+        console.log("Response:", response.data);
       }
-  
+
       // Clear form data after a timeout
       setTimeout(() => {
         setFormData({
-          firstName: '',
-          lastName: '',
-          email: '',
-          phoneNumber: '',
-          address: '',
-          dateOfBirth: '',
-          gender: '',
+          firstName: "",
+          lastName: "",
+          email: "",
+          phoneNumber: "",
+          address: "",
+          dateOfBirth: "",
+          gender: "",
           profilePicture: null,
-          bio: '',
+          bio: "",
           skills: [],
           education: [],
         });
       }, 20);
-      alert('Form Data reset successfully!');
-
+      alert("Form Data reset successfully!");
     } catch (error) {
-      console.error('Error:', error.response ? error.response.data : error.message);
+      console.error(
+        "Error:",
+        error.response ? error.response.data : error.message
+      );
       // alert('There was an error submitting the data.');
     }
   };
-  
 
   return (
     <div className="min-h-screen p-6 bg-gray-100">
@@ -141,13 +152,15 @@ const EmployeeMasterForm = () => {
         <div className="bg-gradient-to-r from-[#642b8f] to-[#aa88be] p-8 text-white flex justify-between items-center">
           <div>
             <h2 className="text-3xl font-bold mb-2">
-              {formData.id ? 'Edit User Data' : 'New User Data'}
+              {formData.id ? "Edit User Data" : "New User Data"}
             </h2>
-            <p className="text-sm opacity-90">Please fill in all the required user information</p>
+            <p className="text-sm opacity-90">
+              Please fill in all the required user information
+            </p>
           </div>
           <Button
             variant="contained"
-            style={{ backgroundColor: '#642b8f', color: 'white' }}
+            style={{ backgroundColor: "#642b8f", color: "white" }}
             component={Link}
             to="/users"
           >
@@ -168,7 +181,9 @@ const EmployeeMasterForm = () => {
                     placeholder="First Name"
                     className="flex-1 p-3 rounded-lg border-2 border-gray-300 focus:border-[#642b8f] focus:outline-none"
                     value={formData.firstName}
-                    onChange={(e) => handleInputChange('firstName', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("firstName", e.target.value)
+                    }
                     required
                   />
                   <input
@@ -176,7 +191,9 @@ const EmployeeMasterForm = () => {
                     placeholder="Last Name"
                     className="flex-1 p-3 rounded-lg border-2 border-gray-300 focus:border-[#642b8f] focus:outline-none"
                     value={formData.lastName}
-                    onChange={(e) => handleInputChange('lastName', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("lastName", e.target.value)
+                    }
                     required
                   />
                 </div>
@@ -186,20 +203,23 @@ const EmployeeMasterForm = () => {
                     placeholder="Email"
                     className="flex-1 p-3 rounded-lg border-2 border-gray-300 focus:border-[#642b8f] focus:outline-none"
                     value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
                     required
                   />
                   <PhoneInput
-                    country={'in'}
+                    country={"in"}
                     value={formData.phoneNumber}
-                    onChange={(value) => handleInputChange('phoneNumber', value)}
+                    onChange={(value) =>
+                      handleInputChange("phoneNumber", value)
+                    }
                     inputProps={{
-                      placeholder: 'Phone Number',
-                      className: 'flex-1 p-3 rounded-lg !border-gray-300 focus:!border-[#642b8f]',
+                      placeholder: "Phone Number",
+                      className:
+                        "flex-1 p-3 rounded-lg !border-gray-300 focus:!border-[#642b8f]",
                     }}
                     containerClass="flex-1"
                     buttonClass="!border-gray-300 !rounded-lg"
-                    preferredCountries={['in']}
+                    preferredCountries={["in"]}
                   />
                 </div>
                 <div className="flex gap-4">
@@ -208,21 +228,25 @@ const EmployeeMasterForm = () => {
                     placeholder="Address"
                     className="flex-1 p-3 rounded-lg border-2 border-gray-300 focus:border-[#642b8f] focus:outline-none"
                     value={formData.address}
-                    onChange={(e) => handleInputChange('address', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("address", e.target.value)
+                    }
                     required
                   />
                   <input
                     type="date"
                     className="flex-1 p-3 rounded-lg border-2 border-gray-300 focus:border-[#642b8f] focus:outline-none"
                     value={formData.dateOfBirth}
-                    onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("dateOfBirth", e.target.value)
+                    }
                     required
                   />
                 </div>
                 <select
                   className="w-full p-3 rounded-lg border-2 border-gray-300 focus:border-[#642b8f] focus:outline-none bg-white"
                   value={formData.gender}
-                  onChange={(e) => handleInputChange('gender', e.target.value)}
+                  onChange={(e) => handleInputChange("gender", e.target.value)}
                   required
                 >
                   <option value="">Select Gender</option>
@@ -242,7 +266,7 @@ const EmployeeMasterForm = () => {
                   onChange={handleFileUpload}
                   className="w-full p-3 rounded-lg border-2 border-gray-300 focus:border-[#642b8f] focus:outline-none"
                 /> */}
-              </ div>
+              </div>
             </div>
             {/* Right Column */}
             <div className="space-y-8">
@@ -254,7 +278,7 @@ const EmployeeMasterForm = () => {
                   placeholder="Short Biography"
                   className="w-full p-3 rounded-lg border-2 border-gray-300 focus:border-[#642b8f] focus:outline-none"
                   value={formData.bio}
-                  onChange={(e) => handleInputChange('bio', e.target.value)}
+                  onChange={(e) => handleInputChange("bio", e.target.value)}
                 />
               </div>
               <div className="space-y-4">
@@ -262,7 +286,15 @@ const EmployeeMasterForm = () => {
                   Skills
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {['React', 'Node.js', 'Python', 'JavaScript', 'SQL', 'Cloud', 'DevOps'].map(skill => (
+                  {[
+                    "React",
+                    "Node.js",
+                    "Python",
+                    "JavaScript",
+                    "SQL",
+                    "Cloud",
+                    "DevOps",
+                  ].map((skill) => (
                     <div key={skill} className="flex items-center">
                       <input
                         type="checkbox"
@@ -287,7 +319,9 @@ const EmployeeMasterForm = () => {
                       placeholder="Degree"
                       className="flex-1 p-3 rounded-lg border-2 border-gray-300 focus:border-[#642b8f] focus:outline-none"
                       value={edu.degree}
-                      onChange={(e) => handleEducationChange(index, 'degree', e.target.value)}
+                      onChange={(e) =>
+                        handleEducationChange(index, "degree", e.target.value)
+                      }
                       required
                     />
                     <input
@@ -295,7 +329,13 @@ const EmployeeMasterForm = () => {
                       placeholder="Institution"
                       className="flex-1 p-3 rounded-lg border-2 border-gray-300 focus:border-[#642b8f] focus:outline-none"
                       value={edu.institution}
-                      onChange={(e) => handleEducationChange(index, 'institution', e.target.value)}
+                      onChange={(e) =>
+                        handleEducationChange(
+                          index,
+                          "institution",
+                          e.target.value
+                        )
+                      }
                       required
                     />
                     <input
@@ -303,7 +343,13 @@ const EmployeeMasterForm = () => {
                       placeholder="Year of Graduation"
                       className="flex-1 p-3 rounded-lg border-2 border-gray-300 focus:border-[#642b8f] focus:outline-none"
                       value={edu.graduationYear}
-                      onChange={(e) => handleEducationChange(index, 'graduationYear', e.target.value)}
+                      onChange={(e) =>
+                        handleEducationChange(
+                          index,
+                          "graduationYear",
+                          e.target.value
+                        )
+                      }
                       required
                     />
                     <button
@@ -345,4 +391,4 @@ const EmployeeMasterForm = () => {
   );
 };
 
-export default EmployeeMasterForm
+export default EmployeeMasterForm;

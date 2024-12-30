@@ -9,9 +9,9 @@ import {
   Chip,
   Paper,
   styled,
-  Modal,  createTheme,
+  Modal,
+  createTheme,
   ThemeProvider,
-
   Backdrop,
   Fade,
   IconButton,
@@ -27,7 +27,7 @@ import {
   CalendarToday as DayIcon,
 } from "@mui/icons-material";
 import { Link } from "react-router-dom";
-import { getClassShedules } from "../../api/service/employee/serviceDeliveryService";
+import { getClassShedules } from "../../../../api/service/employee/serviceDeliveryService";
 
 // Custom theme colors remain the same
 const customColors = {
@@ -173,22 +173,13 @@ const ScheduleKanban = () => {
   const [selectedDay, setSelectedDay] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-
-  useEffect(()=>{
-    const fetchAllClassShedules = async()=>{
-      const response = await getClassShedules()
-      console.log(response)
-
-    }
-    fetchAllClassShedules()
-
-  },[])
-
-
-
-
-
-
+  useEffect(() => {
+    const fetchAllClassShedules = async () => {
+      const response = await getClassShedules();
+      console.log(response);
+    };
+    fetchAllClassShedules();
+  }, []);
 
   // Schedule data remains the same
   const scheduleData = {
@@ -312,269 +303,279 @@ const ScheduleKanban = () => {
   };
 
   return (
-        <ThemeProvider theme={theme}>
-          <Fade in={true}>
-
-    <Box
-      sx={{
-        p: 3,
-        bgcolor: customColors.background,
-        minHeight: "100vh",
-        background: `linear-gradient(45deg, ${customColors.background} 0%, #ffffff 100%)`,
-      }}
-    >
-      <Box
-        mb={3}
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-      >
-        <Typography
-          variant="h5"
-          gutterBottom
-          sx={{ color: "text.primary", fontWeight: 600, mb: 3 }}
-          >
-          Class Schedule Form
-        </Typography>
-        <Button
-          variant="contained"
-          component={Link}
-          to="/serviceClassShedule"
-          color="primary"
-
+    <ThemeProvider theme={theme}>
+      <Fade in={true}>
+        <Box
+          sx={{
+            p: 3,
+            bgcolor: customColors.background,
+            minHeight: "100vh",
+            background: `linear-gradient(45deg, ${customColors.background} 0%, #ffffff 100%)`,
+          }}
         >
-          + Create Shedules
-        </Button>
-      </Box>
+          <Box
+            mb={3}
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Typography
+              variant="h5"
+              gutterBottom
+              sx={{ color: "text.primary", fontWeight: 600, mb: 3 }}
+            >
+              Class Schedule Form
+            </Typography>
+            <Button
+              variant="contained"
+              component={Link}
+              to="/serviceClassShedule"
+              color="primary"
+            >
+              + Create Shedules
+            </Button>
+          </Box>
 
-      <Grid container spacing={3}>
-        {Object.entries(scheduleData).map(([day, classes], dayIndex) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={day}>
-            <AnimatedCard>
-              <CardHeader
-                title={day}
-                sx={{
-                  bgcolor: customColors.primary,
-                  color: "#ffffff",
-                  "& .MuiCardHeader-title": {
-                    fontWeight: "bold",
-                    textAlign: "center",
-                    fontSize: "1.2rem",
-                  },
-                }}
-              />
-              <CardContent>
-                {classes.map((classItem, index) => (
-                  <ClassCard
-                    key={`${day}-${index}`}
-                    elevation={2}
-                    onClick={() => handleCardClick(classItem, day)}
+          <Grid container spacing={3}>
+            {Object.entries(scheduleData).map(([day, classes], dayIndex) => (
+              <Grid item xs={12} sm={6} md={4} lg={3} key={day}>
+                <AnimatedCard>
+                  <CardHeader
+                    title={day}
                     sx={{
-                      opacity: 1,
-                      transform: "translateY(0)",
+                      bgcolor: customColors.primary,
+                      color: "#ffffff",
+                      "& .MuiCardHeader-title": {
+                        fontWeight: "bold",
+                        textAlign: "center",
+                        fontSize: "1.2rem",
+                      },
                     }}
-                  >
-                    <IconText>
-                      <TimeIcon sx={{ color: customColors.primary }} />
-                      <Typography
-                        variant="body1"
-                        sx={{ color: customColors.primary }}
+                  />
+                  <CardContent>
+                    {classes.map((classItem, index) => (
+                      <ClassCard
+                        key={`${day}-${index}`}
+                        elevation={2}
+                        onClick={() => handleCardClick(classItem, day)}
+                        sx={{
+                          opacity: 1,
+                          transform: "translateY(0)",
+                        }}
                       >
-                        {classItem.time}
-                      </Typography>
-                    </IconText>
+                        <IconText>
+                          <TimeIcon sx={{ color: customColors.primary }} />
+                          <Typography
+                            variant="body1"
+                            sx={{ color: customColors.primary }}
+                          >
+                            {classItem.time}
+                          </Typography>
+                        </IconText>
 
-                    <IconText>
-                      <SubjectIcon sx={{ color: customColors.secondary }} />
+                        <IconText>
+                          <SubjectIcon sx={{ color: customColors.secondary }} />
+                          <Typography
+                            variant="h6"
+                            component="h2"
+                            sx={{
+                              color: customColors.primary,
+                              fontWeight: "bold",
+                            }}
+                          >
+                            {classItem.subject}
+                          </Typography>
+                        </IconText>
+
+                        <IconText>
+                          <TeacherIcon sx={{ color: customColors.accent }} />
+                          <Typography
+                            variant="body2"
+                            sx={{ color: customColors.accent }}
+                          >
+                            {classItem.teacher}
+                          </Typography>
+                        </IconText>
+
+                        <IconText>
+                          <StudentsIcon
+                            sx={{ color: customColors.highlight }}
+                          />
+                          <Chip
+                            label={`${classItem.students} students`}
+                            size="small"
+                            sx={{
+                              borderColor: customColors.primary,
+                              color: customColors.primary,
+                              "&:hover": {
+                                backgroundColor: "rgba(100, 43, 143, 0.1)",
+                              },
+                            }}
+                            variant="outlined"
+                          />
+                        </IconText>
+                      </ClassCard>
+                    ))}
+                  </CardContent>
+                </AnimatedCard>
+              </Grid>
+            ))}
+          </Grid>
+
+          {/* Animated Modal */}
+          <Modal
+            open={modalOpen}
+            onClose={handleCloseModal}
+            closeAfterTransition
+            BackdropComponent={Backdrop}
+            BackdropProps={{
+              timeout: 500,
+              sx: {
+                backgroundColor: "rgba(100, 43, 143, 0.4)",
+              },
+            }}
+          >
+            <Fade in={modalOpen}>
+              <ModalContent>
+                {selectedClass && (
+                  <>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        mb: 3,
+                      }}
+                    >
                       <Typography
-                        variant="h6"
+                        variant="h4"
                         component="h2"
                         sx={{
                           color: customColors.primary,
                           fontWeight: "bold",
                         }}
                       >
-                        {classItem.subject}
+                        Class Details
                       </Typography>
-                    </IconText>
-
-                    <IconText>
-                      <TeacherIcon sx={{ color: customColors.accent }} />
-                      <Typography
-                        variant="body2"
-                        sx={{ color: customColors.accent }}
-                      >
-                        {classItem.teacher}
-                      </Typography>
-                    </IconText>
-
-                    <IconText>
-                      <StudentsIcon sx={{ color: customColors.highlight }} />
-                      <Chip
-                        label={`${classItem.students} students`}
-                        size="small"
+                      <IconButton
+                        onClick={handleCloseModal}
                         sx={{
-                          borderColor: customColors.primary,
                           color: customColors.primary,
                           "&:hover": {
-                            backgroundColor: "rgba(100, 43, 143, 0.1)",
+                            backgroundColor: `${customColors.primary}20`,
                           },
                         }}
-                        variant="outlined"
+                      >
+                        <CloseIcon />
+                      </IconButton>
+                    </Box>
+
+                    <DetailRow>
+                      <DayIcon
+                        sx={{ color: customColors.primary, fontSize: 28 }}
                       />
-                    </IconText>
-                  </ClassCard>
-                ))}
-              </CardContent>
-            </AnimatedCard>
-          </Grid>
-        ))}
-      </Grid>
-
-      {/* Animated Modal */}
-      <Modal
-        open={modalOpen}
-        onClose={handleCloseModal}
-        closeAfterTransition
-        BackdropComponent={Backdrop}
-        BackdropProps={{
-          timeout: 500,
-          sx: {
-            backgroundColor: "rgba(100, 43, 143, 0.4)",
-          },
-        }}
-      >
-        <Fade in={modalOpen}>
-          <ModalContent>
-            {selectedClass && (
-              <>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    mb: 3,
-                  }}
-                >
-                  <Typography
-                    variant="h4"
-                    component="h2"
-                    sx={{
-                      color: customColors.primary,
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Class Details
-                  </Typography>
-                  <IconButton
-                    onClick={handleCloseModal}
-                    sx={{
-                      color: customColors.primary,
-                      "&:hover": {
-                        backgroundColor: `${customColors.primary}20`,
-                      },
-                    }}
-                  >
-                    <CloseIcon />
-                  </IconButton>
-                </Box>
-
-                <DetailRow>
-                  <DayIcon sx={{ color: customColors.primary, fontSize: 28 }} />
-                  <Typography variant="h6" sx={{ color: customColors.primary }}>
-                    {selectedDay}
-                  </Typography>
-                </DetailRow>
-
-                <DetailRow>
-                  <SubjectIcon
-                    sx={{ color: customColors.secondary, fontSize: 28 }}
-                  />
-                  <Box>
-                    <Typography
-                      variant="h6"
-                      sx={{ color: customColors.primary }}
-                    >
-                      {selectedClass.subject}
-                    </Typography>
-                  </Box>
-                </DetailRow>
-
-                <DetailRow>
-                  <TimeIcon sx={{ color: customColors.accent, fontSize: 28 }} />
-                  <Typography variant="h6" sx={{ color: customColors.accent }}>
-                    {selectedClass.time}
-                  </Typography>
-                </DetailRow>
-
-                <DetailRow>
-                  <TeacherIcon
-                    sx={{ color: customColors.highlight, fontSize: 28 }}
-                  />
-                  <Box>
-                    <Typography
-                      variant="body1"
-                      sx={{ color: customColors.primary }}
-                    >
-                      Instructor
-                    </Typography>
-                    <Typography
-                      variant="h6"
-                      sx={{ color: customColors.highlight }}
-                    >
-                      {selectedClass.teacher}
-                    </Typography>
-                  </Box>
-                </DetailRow>
-
-                <DetailRow>
-                  <StudentsIcon
-                    sx={{ color: customColors.secondary, fontSize: 28 }}
-                  />
-                  <Box>
-                    <Typography
-                      variant="body1"
-                      sx={{ color: customColors.primary }}
-                    >
-                      Class Size
-                    </Typography>
-                    <Typography
-                      variant="h6"
-                      sx={{ color: customColors.secondary }}
-                    >
-                      {selectedClass.students} Students
-                    </Typography>
-                  </Box>
-                </DetailRow>
-
-                {selectedClass.level !== "N/A" && (
-                  <DetailRow>
-                    <LevelIcon
-                      sx={{ color: customColors.accent, fontSize: 28 }}
-                    />
-                    <Box>
                       <Typography
-                        variant="body1"
+                        variant="h6"
                         sx={{ color: customColors.primary }}
                       >
-                        Level
+                        {selectedDay}
                       </Typography>
+                    </DetailRow>
+
+                    <DetailRow>
+                      <SubjectIcon
+                        sx={{ color: customColors.secondary, fontSize: 28 }}
+                      />
+                      <Box>
+                        <Typography
+                          variant="h6"
+                          sx={{ color: customColors.primary }}
+                        >
+                          {selectedClass.subject}
+                        </Typography>
+                      </Box>
+                    </DetailRow>
+
+                    <DetailRow>
+                      <TimeIcon
+                        sx={{ color: customColors.accent, fontSize: 28 }}
+                      />
                       <Typography
                         variant="h6"
                         sx={{ color: customColors.accent }}
                       >
-                        {selectedClass.level}
+                        {selectedClass.time}
                       </Typography>
-                    </Box>
-                  </DetailRow>
+                    </DetailRow>
+
+                    <DetailRow>
+                      <TeacherIcon
+                        sx={{ color: customColors.highlight, fontSize: 28 }}
+                      />
+                      <Box>
+                        <Typography
+                          variant="body1"
+                          sx={{ color: customColors.primary }}
+                        >
+                          Instructor
+                        </Typography>
+                        <Typography
+                          variant="h6"
+                          sx={{ color: customColors.highlight }}
+                        >
+                          {selectedClass.teacher}
+                        </Typography>
+                      </Box>
+                    </DetailRow>
+
+                    <DetailRow>
+                      <StudentsIcon
+                        sx={{ color: customColors.secondary, fontSize: 28 }}
+                      />
+                      <Box>
+                        <Typography
+                          variant="body1"
+                          sx={{ color: customColors.primary }}
+                        >
+                          Class Size
+                        </Typography>
+                        <Typography
+                          variant="h6"
+                          sx={{ color: customColors.secondary }}
+                        >
+                          {selectedClass.students} Students
+                        </Typography>
+                      </Box>
+                    </DetailRow>
+
+                    {selectedClass.level !== "N/A" && (
+                      <DetailRow>
+                        <LevelIcon
+                          sx={{ color: customColors.accent, fontSize: 28 }}
+                        />
+                        <Box>
+                          <Typography
+                            variant="body1"
+                            sx={{ color: customColors.primary }}
+                          >
+                            Level
+                          </Typography>
+                          <Typography
+                            variant="h6"
+                            sx={{ color: customColors.accent }}
+                          >
+                            {selectedClass.level}
+                          </Typography>
+                        </Box>
+                      </DetailRow>
+                    )}
+                  </>
                 )}
-              </>
-            )}
-          </ModalContent>
-        </Fade>
-      </Modal>
-    </Box>
-    </Fade>
+              </ModalContent>
+            </Fade>
+          </Modal>
+        </Box>
+      </Fade>
     </ThemeProvider>
   );
 };

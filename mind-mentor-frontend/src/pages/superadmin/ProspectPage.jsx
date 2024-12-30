@@ -1,5 +1,5 @@
-import Prospects from "../../../employee-component/operation-new/dashboard/Prospects";
-import Sidebar from "../../../employee-component/operation-new/layout/Sidebar";
+import Prospects from "../../../department-components/operation-new/dashboard/Prospects";
+import Sidebar from "../../../department-components/operation-new/layout/Sidebar";
 import Topbar from './../../../component/parent-component/parent-dashboard/layout/Topbar';
 
 

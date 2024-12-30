@@ -24,8 +24,11 @@ import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import columns from "./TaskColumn";
-import { addNotesToTasks, fetchTaskAmAssignedToOthers, updateTaskStatus } from "../../api/service/employee/EmployeeService";
-
+import {
+  addNotesToTasks,
+  fetchTaskAmAssignedToOthers,
+  updateTaskStatus,
+} from "../../../api/service/employee/EmployeeService";
 
 const theme = createTheme({
   palette: {
@@ -139,27 +142,22 @@ const Prospects = () => {
   const [logDialog, setLogDialog] = useState({ open: false, rowData: null });
   const empId = localStorage.getItem("empId");
 
-
   useEffect(() => {
     const fetchTask = async () => {
       try {
-        const response = await fetchTaskAmAssignedToOthers(empId); 
-        console.log("My task",response)
+        const response = await fetchTaskAmAssignedToOthers(empId);
+        console.log("My task", response);
         const formattedData = response.map((task) => ({
           ...task, // Spread all properties of the task
           id: task._id, // Map MongoDB's _id to the id expected by the table
           taskTime: task.taskTime, // Already formatted by the controller
           createdAt: task.createdAt, // Already formatted by the controller
           updatedAt: task.updatedAt, // Already formatted by the controller
-          assignedBy: task.assignedBy
+          assignedBy: task.assignedBy,
         }));
         setRows(formattedData);
 
-        console.log("New row",rows)
-
-
-
-
+        console.log("New row", rows);
       } catch (error) {
         console.error("Failed to fetch tasks:", error);
       }
@@ -182,7 +180,7 @@ const Prospects = () => {
   const handleStatusToggle = async (id, newStatus) => {
     try {
       // Get empId from localStorage
-      const empId = localStorage.getItem('empId');
+      const empId = localStorage.getItem("empId");
       if (!empId) {
         console.error("Employee ID (empId) is missing.");
         return;
@@ -231,7 +229,7 @@ const Prospects = () => {
           return;
         }
         // Get empId from localStorage
-        const empId = localStorage.getItem('empId');
+        const empId = localStorage.getItem("empId");
         if (!empId) {
           console.error("Employee ID (empId) is missing.");
           return;

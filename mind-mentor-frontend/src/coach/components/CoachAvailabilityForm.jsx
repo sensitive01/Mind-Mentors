@@ -15,7 +15,7 @@ import {
   DialogActions,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { saveAvailableDays } from "../../api/service/employee/coachService";
+import { saveAvailableDays } from "../../../api/service/employee/coachService";
 
 const customColors = {
   primary: "#642B8F",

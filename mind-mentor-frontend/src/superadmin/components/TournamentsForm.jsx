@@ -1,10 +1,23 @@
-import { Button, Select, Divider, MenuItem, TextField, OutlinedInput, Checkbox, ListItemText } from "@mui/material";
+import {
+  Button,
+  Select,
+  Divider,
+  MenuItem,
+  TextField,
+  OutlinedInput,
+  Checkbox,
+  ListItemText,
+} from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import axios from "axios";
 import { Trash } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { fetchTournamentById, createTournament, updateTournament } from "../../api/service/employee/EmployeeService";
+import {
+  fetchTournamentById,
+  createTournament,
+  updateTournament,
+} from "../../../api/service/employee/EmployeeService";
 
 const ChessTournamentForm = () => {
   const { id } = useParams(); // Get the ID from the URL
@@ -30,7 +43,7 @@ const ChessTournamentForm = () => {
       handleFetchTournament(id);
     }
   }, [id]);
-  
+
   const handleFetchTournament = async (id) => {
     try {
       const data = await fetchTournamentById(id);
@@ -213,7 +226,13 @@ const ChessTournamentForm = () => {
                     type="time"
                     label="Time"
                     value={tournament.time}
-                    onChange={(e) => handleTournamentChange(tournament.id, 'time', e.target.value)}
+                    onChange={(e) =>
+                      handleTournamentChange(
+                        tournament.id,
+                        "time",
+                        e.target.value
+                      )
+                    }
                     fullWidth
                     InputLabelProps={{ shrink: true }}
                   />
@@ -238,7 +257,6 @@ const ChessTournamentForm = () => {
                       </MenuItem>
                     ))}
                   </TextField>
-
 
                   {/* Type of Tournament - Select input */}
                   <TextField
@@ -281,51 +299,59 @@ const ChessTournamentForm = () => {
                     id="registered-kids"
                     multiple
                     value={tournament.registeredKids}
-                    onChange={(e) => handleTournamentChange(tournament.id, "registeredKids", e.target.value)}
+                    onChange={(e) =>
+                      handleTournamentChange(
+                        tournament.id,
+                        "registeredKids",
+                        e.target.value
+                      )
+                    }
                     input={<OutlinedInput label="Registered Kids" />}
                     MenuProps={{
                       PaperProps: {
                         style: {
                           maxHeight: 250,
-                          width: '100%',
+                          width: "100%",
                           maxWidth: 300,
                         },
                       },
                       anchorOrigin: {
-                        vertical: 'bottom',
-                        horizontal: 'left',
+                        vertical: "bottom",
+                        horizontal: "left",
                       },
                       transformOrigin: {
-                        vertical: 'top',
-                        horizontal: 'left',
+                        vertical: "top",
+                        horizontal: "left",
                       },
                     }}
                     fullWidth
                     sx={{
-                      width: '100%',
+                      width: "100%",
                       maxWidth: 400,
-                      '& .MuiSelect-select': {
-                        display: 'flex',
-                        flexWrap: 'wrap',
+                      "& .MuiSelect-select": {
+                        display: "flex",
+                        flexWrap: "wrap",
                         gap: 0.5,
-                        padding: '8px 14px',
+                        padding: "8px 14px",
                       },
                     }}
                     renderValue={(selected) => (
-                      <div style={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: '4px'
-                      }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: "4px",
+                        }}
+                      >
                         {selected.map((value) => (
                           <div
                             key={value}
                             style={{
-                              backgroundColor: '#e0e0e0',
-                              borderRadius: '4px',
-                              padding: '2px 6px',
-                              margin: '2px',
-                              fontSize: '0.8rem'
+                              backgroundColor: "#e0e0e0",
+                              borderRadius: "4px",
+                              padding: "2px 6px",
+                              margin: "2px",
+                              fontSize: "0.8rem",
                             }}
                           >
                             {value}
@@ -343,7 +369,6 @@ const ChessTournamentForm = () => {
                       </MenuItem>
                     ))}
                   </Select>
-
 
                   {/* Number of Participants - Text input */}
                   <TextField

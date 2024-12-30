@@ -7,8 +7,8 @@ const Topbar = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col   w-full shadow-lg">
-      <div className="flex justify-between items-center px-5 py-2 bg-white">
+    <div className="bg-white shadow-lg">
+      <div className="flex justify-between items-center px-5 py-2">
         <div className="flex items-center">
           <img
             src={mindmentors}

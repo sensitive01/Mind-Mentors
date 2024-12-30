@@ -1,7 +1,6 @@
-import NewEnquiryForm from "../../../employee-component/operation-new/dashboard/NewEnquiryForm";
-import Sidebar from "../../../employee-component/operation-new/layout/Sidebar";
-import Topbar from './../../../component/parent-component/parent-dashboard/layout/Topbar';
-
+import NewEnquiryForm from "../../../department-components/operation-new/dashboard/NewEnquiryForm";
+import Sidebar from "../../../department-components/operation-new/layout/Sidebar";
+import Topbar from "./../../../component/parent-component/parent-dashboard/layout/Topbar";
 
 const SEnquiryFormPage = () => {
   return (
@@ -12,8 +11,8 @@ const SEnquiryFormPage = () => {
 
       {/* Add a flex-grow class to make the enquiry form take the full width */}
       <div className="flex-grow p-6">
-        <Topbar/>
-        <NewEnquiryForm/>
+        <Topbar />
+        <NewEnquiryForm />
       </div>
     </div>
   );

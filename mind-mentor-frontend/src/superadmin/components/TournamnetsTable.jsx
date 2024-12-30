@@ -150,9 +150,7 @@
 
 // export default TournamentDetailsTable;
 
-
-
-import { Delete, Edit, Visibility } from '@mui/icons-material';
+import { Delete, Edit, Visibility } from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -164,25 +162,28 @@ import {
   Paper,
   ThemeProvider,
   Typography,
-} from '@mui/material';
-import { DataGrid, GridActionsCellItem, GridToolbar } from '@mui/x-data-grid';
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import{fetchAllTournaments,deleteTournament } from '../../api/service/employee/EmployeeService'
+} from "@mui/material";
+import { DataGrid, GridActionsCellItem, GridToolbar } from "@mui/x-data-grid";
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  fetchAllTournaments,
+  deleteTournament,
+} from "../../../api/service/employee/EmployeeService";
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#642b8f', // Indigo
-      light: '#818CF8',
-      dark: '#4F46E5',
+      main: "#642b8f", // Indigo
+      light: "#818CF8",
+      dark: "#4F46E5",
     },
     background: {
-      default: '#F1F5F9',
-      paper: '#FFFFFF',
+      default: "#F1F5F9",
+      paper: "#FFFFFF",
     },
     text: {
-      primary: '#1E293B',
-      secondary: '#64748B',
+      primary: "#1E293B",
+      secondary: "#64748B",
     },
   },
   components: {
@@ -190,9 +191,9 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 12,
-          border: 'none',
-          '& .MuiDataGrid-cell:focus': {
-            outline: 'none',
+          border: "none",
+          "& .MuiDataGrid-cell:focus": {
+            outline: "none",
           },
         },
       },
@@ -210,29 +211,29 @@ const TournamentMasterList = () => {
     const fetchTournamentData = async () => {
       try {
         const data = await fetchAllTournaments(); // No need to call .json() here
-        
+
         // Map API response to the format expected by the DataGrid
-        const mappedData = data.map(tournament => ({
+        const mappedData = data.map((tournament) => ({
           id: tournament._id,
           tournamentType: tournament.tournamentType,
           registrationFee: `₹${tournament.registrationFee}`,
           numberOfParticipants: tournament.numberOfParticipants,
-          tournamentDate: new Date(tournament.tournamentDate).toLocaleDateString(),
+          tournamentDate: new Date(
+            tournament.tournamentDate
+          ).toLocaleDateString(),
           time: tournament.time,
           tournamentCentre: tournament.tournamentCentre,
-          registeredKids: tournament.registeredKids.join(', '),
+          registeredKids: tournament.registeredKids.join(", "),
         }));
-  
+
         setRows(mappedData);
       } catch (error) {
-        console.error('Error fetching tournament data:', error);
+        console.error("Error fetching tournament data:", error);
       }
     };
-  
+
     fetchTournamentData();
   }, []);
-  
-
 
   const handleView = (tournament) => {
     setSelectedTournament(tournament);
@@ -243,40 +244,45 @@ const TournamentMasterList = () => {
     console.log(`Editing tournament with ID: ${id}`);
   };
 
-   const handleDelete = async (id) => {
-     // Ask for confirmation before proceeding with the deletion
-     const isConfirmed = window.confirm("Are you sure you want to delete this Tournaments?");
-     
-     if (!isConfirmed) {
-       console.log("Deletion canceled.");
-       return; // Exit the function if the user cancels
-     }
-   
-     try {
-       const response = await deleteTournament(id); // Call the service function to delete the user
-   
-       // Update the UI only if the delete operation was successful
-       setRows(rows.filter((row) => row.id !== id));
-       console.log(`User with ID ${id} deleted successfully.`);
-     } catch (error) {
-       console.error("Error deleting user:", error);
-     }
-   };
-   
+  const handleDelete = async (id) => {
+    // Ask for confirmation before proceeding with the deletion
+    const isConfirmed = window.confirm(
+      "Are you sure you want to delete this Tournaments?"
+    );
+
+    if (!isConfirmed) {
+      console.log("Deletion canceled.");
+      return; // Exit the function if the user cancels
+    }
+
+    try {
+      const response = await deleteTournament(id); // Call the service function to delete the user
+
+      // Update the UI only if the delete operation was successful
+      setRows(rows.filter((row) => row.id !== id));
+      console.log(`User with ID ${id} deleted successfully.`);
+    } catch (error) {
+      console.error("Error deleting user:", error);
+    }
+  };
 
   const columns = [
     // { field: 'tournamentId', headerName: 'Tournament ID', width: 150 },
-    { field: 'tournamentType', headerName: 'Type', flex: 150 },
-    { field: 'registrationFee', headerName: 'Fees', flex: 150 },
-    { field: 'numberOfParticipants', headerName: 'No of Participants', flex: 200 },
-    { field: 'tournamentDate', headerName: 'Tournament Date', width: 150 },
-    { field: 'time', headerName: 'Time', flex: 150 },
-    { field: 'tournamentCentre', headerName: 'Tournament Centre', width: 150 },
-    { field: 'registeredKids', headerName: 'Registered Kids', width: 200 },
+    { field: "tournamentType", headerName: "Type", flex: 150 },
+    { field: "registrationFee", headerName: "Fees", flex: 150 },
     {
-      field: 'actions',
-      type: 'actions',
-      headerName: 'Actions',
+      field: "numberOfParticipants",
+      headerName: "No of Participants",
+      flex: 200,
+    },
+    { field: "tournamentDate", headerName: "Tournament Date", width: 150 },
+    { field: "time", headerName: "Time", flex: 150 },
+    { field: "tournamentCentre", headerName: "Tournament Centre", width: 150 },
+    { field: "registeredKids", headerName: "Registered Kids", width: 200 },
+    {
+      field: "actions",
+      type: "actions",
+      headerName: "Actions",
       flex: 200,
       getActions: (params) => [
         <GridActionsCellItem
@@ -300,19 +306,28 @@ const TournamentMasterList = () => {
 
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ width: '100%', height: '100%', p: 3 }}>
+      <Box sx={{ width: "100%", height: "100%", p: 3 }}>
         <Paper
           elevation={0}
           sx={{
             p: 3,
-            backgroundColor: 'background.paper',
+            backgroundColor: "background.paper",
             borderRadius: 3,
             height: 650,
-            boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.05)',
+            boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.05)",
           }}
         >
-          <Box mb={3} display="flex" justifyContent="space-between" alignItems="center">
-            <Typography variant="h5" gutterBottom sx={{ color: '#642b8f', fontWeight: 600, mb: 3 }}>
+          <Box
+            mb={3}
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Typography
+              variant="h5"
+              gutterBottom
+              sx={{ color: "#642b8f", fontWeight: 600, mb: 3 }}
+            >
               Tournament Data
             </Typography>
             <Button
@@ -341,26 +356,25 @@ const TournamentMasterList = () => {
             }}
             sx={{
               height: 500,
-              '& .MuiDataGrid-cell:focus': {
-                outline: 'none',
+              "& .MuiDataGrid-cell:focus": {
+                outline: "none",
               },
-              '& .MuiDataGrid-row:hover': {
+              "& .MuiDataGrid-row:hover": {
                 backgroundColor: theme.palette.action.hover,
               },
-              '& .MuiDataGrid-columnHeader': {
-                backgroundColor: '#642b8f',
-                color: 'white',
+              "& .MuiDataGrid-columnHeader": {
+                backgroundColor: "#642b8f",
+                color: "white",
                 fontWeight: 600,
               },
-              '& .MuiCheckbox-root.Mui-checked': {
-                color: '#FFFFFF',
+              "& .MuiCheckbox-root.Mui-checked": {
+                color: "#FFFFFF",
               },
-              '& .MuiDataGrid-columnHeader .MuiCheckbox-root': {
-                color: '#FFFFFF',
+              "& .MuiDataGrid-columnHeader .MuiCheckbox-root": {
+                color: "#FFFFFF",
               },
             }}
           />
-
         </Paper>
 
         {/* View Tournament Dialog */}
@@ -373,34 +387,42 @@ const TournamentMasterList = () => {
           <DialogTitle>Tournament Details</DialogTitle>
           <DialogContent>
             {selectedTournament && (
-              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+              <Box
+                sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}
+              >
                 <Typography>
-                  <strong>Tournament Date:</strong> {new Date(selectedTournament.tournamentDate).toLocaleDateString()}
+                  <strong>Tournament Date:</strong>{" "}
+                  {new Date(
+                    selectedTournament.tournamentDate
+                  ).toLocaleDateString()}
                 </Typography>
                 <Typography>
                   <strong>Tournament Time:</strong> {selectedTournament.time}
                 </Typography>
 
                 <Typography>
-                  <strong>Tournament Center :</strong> {selectedTournament.tournamentCentre}
+                  <strong>Tournament Center :</strong>{" "}
+                  {selectedTournament.tournamentCentre}
                 </Typography>
                 <Typography>
-
                   <strong>Type:</strong> {selectedTournament.tournamentType}
                 </Typography>
                 <Typography>
-                  <strong>Registration Fees:</strong> {selectedTournament.registrationFee}
+                  <strong>Registration Fees:</strong>{" "}
+                  {selectedTournament.registrationFee}
                 </Typography>
 
                 <Typography>
-                  <strong>Registered Kids:</strong> {selectedTournament.registeredKids}
+                  <strong>Registered Kids:</strong>{" "}
+                  {selectedTournament.registeredKids}
                 </Typography>
                 <Typography>
-                  <strong>Number of Participants:</strong> {selectedTournament.numberOfParticipants}
+                  <strong>Number of Participants:</strong>{" "}
+                  {selectedTournament.numberOfParticipants}
                 </Typography>
                 <Typography>
-                  <strong>Created At:</strong> {new Date(selectedTournament.createdAt).toLocaleDateString()}
-
+                  <strong>Created At:</strong>{" "}
+                  {new Date(selectedTournament.createdAt).toLocaleDateString()}
                 </Typography>
               </Box>
             )}

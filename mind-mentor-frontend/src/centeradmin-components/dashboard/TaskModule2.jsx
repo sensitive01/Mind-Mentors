@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
-import { createTasks } from "../../api/service/employee/EmployeeService";
-
+import { createTasks } from "../../../api/service/employee/EmployeeService";
 
 const TaskModule = () => {
   const empId = localStorage.getItem("empId");
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   // State to manage form inputs
   const [formData, setFormData] = useState({
     kidsRelatedTo: "",
@@ -14,7 +13,7 @@ const TaskModule = () => {
     taskDate: "",
     taskTime: "",
     assignedTo: "",
-    assignedBy: empId || ""
+    assignedBy: empId || "",
   });
 
   // State to manage form submission and display
@@ -58,8 +57,8 @@ const TaskModule = () => {
     }
 
     // Get the current employee details (assumed to be saved in localStorage or state)
-    const empId = localStorage.getItem('empId'); // Assuming empId is stored after login
-    const employeeName = localStorage.getItem('employeeName'); // Employee name from login or profile
+    const empId = localStorage.getItem("empId"); // Assuming empId is stored after login
+    const employeeName = localStorage.getItem("employeeName"); // Employee name from login or profile
 
     // Call the createTasks function to save the task
     try {
@@ -68,7 +67,7 @@ const TaskModule = () => {
       // Log the activity (creating the task)
       const activityLog = {
         taskId: formData.taskId, // Assuming taskId is available after task creation
-        action: 'Created Task',
+        action: "Created Task",
         performedBy: empId,
         performedByName: employeeName,
         details: `Assigned task: ${task} to ${assignedTo} for ${kidsRelatedTo} on ${taskDate} at ${taskTime}`,
@@ -91,7 +90,6 @@ const TaskModule = () => {
         taskTime: "",
         assignedTo: "",
       });
-
     } catch (error) {
       console.error("Error creating task:", error);
       setSubmissionStatus({
@@ -127,12 +125,7 @@ const TaskModule = () => {
               Please fill in the required information below
             </p>
           </div>
-          <Button
-            variant="contained"
-            color="#642b8f"
-            component={Link}
-            to="#"
-          >
+          <Button variant="contained" color="#642b8f" component={Link} to="#">
             View Tasks
           </Button>
         </div>
@@ -142,10 +135,11 @@ const TaskModule = () => {
           <div
             className={`
             p-4 m-4 rounded-lg text-center font-medium 
-            ${submissionStatus.message.includes("Successfully")
+            ${
+              submissionStatus.message.includes("Successfully")
                 ? "bg-green-100 text-green-800"
                 : "bg-red-100 text-red-800"
-              }
+            }
           `}
           >
             {submissionStatus.message}
@@ -227,11 +221,14 @@ const TaskModule = () => {
                 className="w-full p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors bg-white"
               >
                 <option value="">-Select-</option>
-                <option value="marketingassociate@mindmentorz.com">Marketing</option>
+                <option value="marketingassociate@mindmentorz.com">
+                  Marketing
+                </option>
                 <option value="coach@mindmentorz.com">Coach</option>
                 <option value="operations@mindmentorz.com">Operations</option>
-                <option value="serviceDelivery@mindmentorz.com">Service delivery</option>
-
+                <option value="serviceDelivery@mindmentorz.com">
+                  Service delivery
+                </option>
               </select>
             </div>
           </div>

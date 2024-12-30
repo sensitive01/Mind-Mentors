@@ -3,7 +3,10 @@ import axios from "axios";
 import { Button, Grid, MenuItem, TextField } from "@mui/material";
 import { Trash } from "lucide-react";
 import { Link } from "react-router-dom";
-import { createLeave, updateLeave } from "../../api/service/employee/EmployeeService";
+import {
+  createLeave,
+  updateLeave,
+} from "../../../api/service/employee/EmployeeService";
 import FileUpload from "../../components/uploader/FileUpload";
 
 const EmployeeLeaveForm = () => {
@@ -50,7 +53,6 @@ const EmployeeLeaveForm = () => {
       console.error("Error processing leave request:", error);
     }
   };
-
 
   return (
     <div className="min-h-screen p-6">
@@ -126,7 +128,6 @@ const EmployeeLeaveForm = () => {
                     console.log("File uploaded:", url); // Debug: check file URL
                   }}
                 />
-
               </Grid>
             </div>
           </div>
@@ -152,4 +153,3 @@ const EmployeeLeaveForm = () => {
 };
 
 export default EmployeeLeaveForm;
-

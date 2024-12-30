@@ -1,5 +1,5 @@
-import Enquires from "../../../employee-component/operation-new/dashboard/Enquires";
-import Sidebar from "../../../employee-component/operation-new/layout/Sidebar";
+import Enquires from "../../../department-components/operation-new/dashboard/Enquires";
+import Sidebar from "../../../department-components/operation-new/layout/Sidebar";
 import Topbar from './../../../component/parent-component/parent-dashboard/layout/Topbar';
 
 const ListingEnquiries = () => {

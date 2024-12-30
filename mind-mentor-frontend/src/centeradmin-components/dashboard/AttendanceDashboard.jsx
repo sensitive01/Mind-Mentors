@@ -1,5 +1,3 @@
-
-
 import {
   Calendar as CalendarIcon,
   ChevronLeft,
@@ -12,11 +10,9 @@ import {
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { toast } from "react-hot-toast"; // Assuming you're using react-hot-toast, adjust import if using a different library
-import {  markAttendance } from "../../api/service/employee/EmployeeService";
-
+import { markAttendance } from "../../../api/service/employee/EmployeeService";
 
 const AttendanceCalendar = () => {
-
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [hoveredDate, setHoveredDate] = useState(null);
@@ -46,9 +42,6 @@ const AttendanceCalendar = () => {
     absent: 0,
   });
 
-
-
-  
   const today = new Date();
   const todayString = `${today.getFullYear()}-${(today.getMonth() + 1)
     .toString()
@@ -141,31 +134,31 @@ const AttendanceCalendar = () => {
     const currentHour = today.getHours();
     return currentHour >= 0 && currentHour <= 24; // 5 PM to 8 PM
   };
-// Function to calculate attendance counts
-const calculateAttendanceCounts = () => {
-  let presentCount = 0;
-  let absentCount = 0;
+  // Function to calculate attendance counts
+  const calculateAttendanceCounts = () => {
+    let presentCount = 0;
+    let absentCount = 0;
 
-  // Iterate through local storage to count present and absent days
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key.startsWith("attendance_")) {
-      const value = localStorage.getItem(key);
-      if (value === "true") {
-        presentCount++;
-      } else {
-        absentCount++;
+    // Iterate through local storage to count present and absent days
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key.startsWith("attendance_")) {
+        const value = localStorage.getItem(key);
+        if (value === "true") {
+          presentCount++;
+        } else {
+          absentCount++;
+        }
       }
     }
-  }
 
-  setAttendanceCounts({ present: presentCount, absent: absentCount });
-};
+    setAttendanceCounts({ present: presentCount, absent: absentCount });
+  };
 
-// Check attendance counts on component mount
-useEffect(() => {
-  calculateAttendanceCounts();
-}, []);
+  // Check attendance counts on component mount
+  useEffect(() => {
+    calculateAttendanceCounts();
+  }, []);
   // Rest of the component remains the same as in the original code...
   const months = [
     "January",
@@ -493,7 +486,6 @@ useEffect(() => {
                 title="Present Days"
                 // value={statistics.summary.present}
                 value={attendanceCounts.present}
-
                 color="border-green-500"
               />
             </div>
@@ -503,7 +495,6 @@ useEffect(() => {
               title="Absent Days"
               // value={statistics.summary.absent}
               value={attendanceCounts.absent}
-
               color="border-red-500"
             />
             {/* Third Card - Half Width */}

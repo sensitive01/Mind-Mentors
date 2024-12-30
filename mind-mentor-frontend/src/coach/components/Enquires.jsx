@@ -23,7 +23,7 @@ import { alpha } from "@mui/material/styles";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom"; // Import Link for navigation
-import { fetchAllEnquiries } from "../../../api/service/employee/EmployeeRenewal"; // Adjust the import path as necessary
+import { fetchAllEnquiries } from "../../../../api/service/employee/EmployeeRenewal"; // Adjust the import path as necessary
 import columns from "./Columns"; // Import columns from the separate file
 
 // Updated modern color scheme

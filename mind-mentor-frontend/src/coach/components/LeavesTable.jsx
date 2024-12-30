@@ -1,7 +1,7 @@
 import EditIcon from "@mui/icons-material/Edit";
 import HistoryIcon from "@mui/icons-material/History";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import AssignmentIcon from '@mui/icons-material/Assignment';
+import AssignmentIcon from "@mui/icons-material/Assignment";
 
 import {
   Box,
@@ -22,7 +22,7 @@ import { alpha } from "@mui/material/styles";
 import { DataGrid, GridActionsCellItem, GridToolbar } from "@mui/x-data-grid";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { fetchMyLeaves } from "../../api/service/employee/EmployeeService";
+import { fetchMyLeaves } from "../../../api/service/employee/EmployeeService";
 
 const theme = createTheme({
   palette: {
@@ -312,7 +312,7 @@ const EmployeeLeaveManagement = () => {
             >
               <CircularProgress />
             </Box>
-          )  : rows.length === 0 ? (
+          ) : rows.length === 0 ? (
             <NoLeavesMessage />
           ) : (
             <DataGrid

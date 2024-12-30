@@ -14,7 +14,7 @@ import {
   CheckCircleOutline as ConductedIcon,
 } from "@mui/icons-material";
 import { Link } from "react-router-dom";
-import { getMyClassData } from "../../api/service/employee/coachService";
+import { getMyClassData } from "../../../api/service/employee/coachService";
 import { customColors, theme } from "../Layout/customStyle";
 import RenderClassList from "./shedule-components/RenderClassList";
 import UpcomingClasses from "./shedule-components/UpcommingClasses";
@@ -31,30 +31,30 @@ const TabPanel = ({ children, value, index, ...other }) => (
       <Box
         sx={{
           p: 3,
-          transition: 'all 0.3s ease',
-          backgroundColor: 'background.paper',
+          transition: "all 0.3s ease",
+          backgroundColor: "background.paper",
           borderRadius: 2,
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          margin: '16px 0',
-          border: '1px solid',
-          borderColor: 'divider',
-          minHeight: '200px',
-          '& > *': {
-            animation: 'fadeIn 0.5s ease-in-out',
+          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+          margin: "16px 0",
+          border: "1px solid",
+          borderColor: "divider",
+          minHeight: "200px",
+          "& > *": {
+            animation: "fadeIn 0.5s ease-in-out",
           },
-          '@keyframes fadeIn': {
-            '0%': {
+          "@keyframes fadeIn": {
+            "0%": {
               opacity: 0,
-              transform: 'translateY(10px)'
+              transform: "translateY(10px)",
             },
-            '100%': {
+            "100%": {
               opacity: 1,
-              transform: 'translateY(0)'
-            }
+              transform: "translateY(0)",
+            },
           },
-          '&:hover': {
-            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-          }
+          "&:hover": {
+            boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+          },
         }}
       >
         {children}
@@ -88,18 +88,24 @@ const ScheduleKanban = () => {
     return hours * 60 + minutes;
   };
 
-
   const getDayPosition = (day) => {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const days = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
     const today = new Date().getDay();
     const targetDay = days.indexOf(day);
-    
- 
+
     let position = targetDay - today;
-    if (position <= 0) { 
-      position += 7;    
+    if (position <= 0) {
+      position += 7;
     }
-    
+
     return position;
   };
 
@@ -109,17 +115,26 @@ const ScheduleKanban = () => {
     const currentDay = today.toLocaleDateString("en-US", { weekday: "long" });
     const currentTime = today.getHours() * 60 + today.getMinutes();
     const classTime = parseTime(classItem.classTime);
-    console.log( Math.abs(currentTime - classTime))
+    console.log(Math.abs(currentTime - classTime));
 
-    return classItem.day == currentDay && 
-           Math.abs(currentTime - classTime) <= 120;
+    return (
+      classItem.day == currentDay && Math.abs(currentTime - classTime) <= 120
+    );
   };
 
   // Check if a class has been conducted
   const isConducted = (classItem) => {
     const today = new Date();
     const currentDay = today.getDay();
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const days = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
     const classDay = days.indexOf(classItem.day);
     const currentTime = today.getHours() * 60 + today.getMinutes();
     const classTime = parseTime(classItem.classTime);
@@ -146,10 +161,12 @@ const ScheduleKanban = () => {
 
         const currentConductedClasses = sortedClasses.filter(isConducted);
         const currentLiveClasses = sortedClasses.filter(isLiveToday);
-        
+
         // Group upcoming classes by day
         const upcomingClassesByDay = sortedClasses
-          .filter(classItem => !isConducted(classItem) && !isLiveToday(classItem))
+          .filter(
+            (classItem) => !isConducted(classItem) && !isLiveToday(classItem)
+          )
           .reduce((acc, classItem) => {
             if (!acc[classItem.day]) {
               acc[classItem.day] = [];
@@ -179,7 +196,7 @@ const ScheduleKanban = () => {
     };
 
     fetchClassSchedules();
-    
+
     // Refresh the data every minute to update live classes
     const intervalId = setInterval(fetchClassSchedules, 60000);
 
@@ -256,7 +273,6 @@ const ScheduleKanban = () => {
             <RenderClassList
               classes={conductedClasses}
               handleCardClick={handleCardClick}
-             
             />
           </TabPanel>
 
@@ -264,7 +280,7 @@ const ScheduleKanban = () => {
             <RenderClassList
               classes={liveClasses}
               handleCardClick={handleCardClick}
-              isLiveTab 
+              isLiveTab
             />
           </TabPanel>
 
@@ -274,7 +290,7 @@ const ScheduleKanban = () => {
               handleCardClick={handleCardClick}
             />
           </TabPanel>
-          
+
           <ClassDetailsModal
             modalOpen={modalOpen}
             handleCloseModal={handleCloseModal}

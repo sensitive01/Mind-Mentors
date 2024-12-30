@@ -65,7 +65,7 @@ const KidsRegistration = () => {
   // Filter available slots based on selected program and level
   const getMatchingSlots = (program, level) => {
     return availableSlots.filter(
-      slot => slot.program === program && slot.level === level
+      (slot) => slot.program === program && slot.level === level
     );
   };
 
@@ -89,7 +89,7 @@ const KidsRegistration = () => {
     const formData = {
       programs: programsData,
       scheduleId: selectedSlot?._id,
-      hasSchedule: !!selectedSlot
+      hasSchedule: !!selectedSlot,
     };
 
     dispatch(
@@ -101,11 +101,13 @@ const KidsRegistration = () => {
 
     try {
       const response = await parentBookDemoClass(formData, state);
-      
+
       if (response.status === 201) {
-        toast.success(selectedSlot 
-          ? "Registration successful! Your demo class has been scheduled."
-          : "Registration successful! Our team will contact you soon to schedule your demo class.");
+        toast.success(
+          selectedSlot
+            ? "Registration successful! Your demo class has been scheduled."
+            : "Registration successful! Our team will contact you soon to schedule your demo class."
+        );
         localStorage.setItem("parentId", response?.data?.parentId);
         setTimeout(() => {
           navigate("/parent/dashboard");
@@ -199,26 +201,38 @@ const KidsRegistration = () => {
                     {/* Available Slots Section */}
                     {enrollment.program && enrollment.programLevel && (
                       <div className="mt-4">
-                        <h4 className="font-medium text-gray-700 mb-2">Available Demo Classes</h4>
-                        {getMatchingSlots(enrollment.program, enrollment.programLevel).length > 0 ? (
+                        <h4 className="font-medium text-gray-700 mb-2">
+                          Available Demo Classes
+                        </h4>
+                        {getMatchingSlots(
+                          enrollment.program,
+                          enrollment.programLevel
+                        ).length > 0 ? (
                           <div className="space-y-2">
-                            {getMatchingSlots(enrollment.program, enrollment.programLevel).map((slot) => (
-                              <div 
+                            {getMatchingSlots(
+                              enrollment.program,
+                              enrollment.programLevel
+                            ).map((slot) => (
+                              <div
                                 key={slot._id}
                                 className={`p-4 rounded-lg border cursor-pointer transition-all duration-200 ${
-                                  selectedSlot?._id === slot._id 
-                                    ? 'border-primary bg-purple-50' 
-                                    : 'border-gray-200 hover:border-primary'
+                                  selectedSlot?._id === slot._id
+                                    ? "border-primary bg-purple-50"
+                                    : "border-gray-200 hover:border-primary"
                                 }`}
                                 onClick={() => setSelectedSlot(slot)}
                               >
                                 <div className="flex justify-between items-center">
                                   <div>
                                     <p className="font-medium">{slot.day}</p>
-                                    <p className="text-gray-600">{slot.classTime}</p>
+                                    <p className="text-gray-600">
+                                      {slot.classTime}
+                                    </p>
                                   </div>
                                   <div className="text-right">
-                                    <p className="font-medium">Coach: {slot.coachName}</p>
+                                    <p className="font-medium">
+                                      Coach: {slot.coachName}
+                                    </p>
                                   </div>
                                 </div>
                               </div>
@@ -226,8 +240,9 @@ const KidsRegistration = () => {
                           </div>
                         ) : (
                           <p className="text-gray-600 italic">
-                            No scheduled demo classes available for this program and level. 
-                            You can still register and our team will contact you to schedule your demo class.
+                            No scheduled demo classes available for this program
+                            and level. You can still register and our team will
+                            contact you to schedule your demo class.
                           </p>
                         )}
                       </div>

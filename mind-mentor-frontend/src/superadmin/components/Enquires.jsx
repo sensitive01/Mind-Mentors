@@ -25,9 +25,12 @@ import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import columns from "./Columns";
-import { addNotes, fetchAllEnquiries, moveToProspects, updateEnquiryStatus } from "../../api/service/employee/EmployeeService";
-
-
+import {
+  addNotes,
+  fetchAllEnquiries,
+  moveToProspects,
+  updateEnquiryStatus,
+} from "../../../api/service/employee/EmployeeService";
 
 const theme = createTheme({
   palette: {
@@ -310,8 +313,7 @@ const Enquiries = () => {
           noteText: "",
           enquiryStatus: "",
           disposition: "",
-        })
-
+        });
       } catch (error) {
         console.error("Error saving notes:", error);
       }

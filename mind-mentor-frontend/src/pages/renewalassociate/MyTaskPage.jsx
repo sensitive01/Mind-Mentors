@@ -1,5 +1,5 @@
-import TaskModule from "../../../employee-component/operation-new/dashboard/TaskModule";
-import Sidebar from "../../../employee-component/operation-new/layout/Sidebar";
+import TaskModule from "../../../department-components/operation-new/dashboard/TaskModule";
+import Sidebar from "../../../department-components/operation-new/layout/Sidebar";
 import Topbar from './../../../component/parent-component/parent-dashboard/layout/Topbar';
 
 

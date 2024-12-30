@@ -27,7 +27,7 @@ import {
   addNotesToTasks,
   fetchAllTasks,
   updateTaskStatus,
-} from "../../api/service/employee/EmployeeService";
+} from "../../../api/service/employee/EmployeeService";
 import columns from "./TaskColumn";
 
 const theme = createTheme({
@@ -183,7 +183,7 @@ const Prospects = () => {
     pageSize: 5,
   });
   const handleStatusToggle = async (id, newStatus) => {
-    console.log("Toggle")
+    console.log("Toggle");
     try {
       // Get empId from localStorage
       const empId = localStorage.getItem("empId");

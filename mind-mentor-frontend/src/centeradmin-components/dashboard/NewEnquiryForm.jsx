@@ -8,10 +8,13 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 // import { operationDeptInstance } from "../../../api/axios/operationDeptInstance";
 
 import { toast, ToastContainer } from "react-toastify";
-import { createEnquiry, updateEnquiry } from "../../api/service/employee/EmployeeService";
+import {
+  createEnquiry,
+  updateEnquiry,
+} from "../../../api/service/employee/EmployeeService";
 
 const NewEnquiryForm = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const empId = localStorage.getItem("empId");
   const { id } = useParams();
   const [formData, setFormData] = useState({
@@ -92,8 +95,7 @@ const NewEnquiryForm = () => {
         await createEnquiry(formData);
         toast.success("Enquiry submitted successfully!");
         setTimeout(() => {
-          navigate("/centeradmin-enquiry-list")
-          
+          navigate("/centeradmin-enquiry-list");
         }, 1500);
       }
     } catch (error) {

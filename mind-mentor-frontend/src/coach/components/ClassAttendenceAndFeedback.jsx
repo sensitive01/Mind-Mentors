@@ -1,26 +1,35 @@
-import { useEffect, useState } from 'react';
-import { Calendar, Clock, User, BookOpen, GraduationCap, MessageCircle } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { addFeedbackAndAttandance, getClassData } from '../../api/service/employee/coachService';
-import { toast, ToastContainer } from 'react-toastify';
+import { useEffect, useState } from "react";
+import {
+  Calendar,
+  Clock,
+  User,
+  BookOpen,
+  GraduationCap,
+  MessageCircle,
+} from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  addFeedbackAndAttandance,
+  getClassData,
+} from "../../../api/service/employee/coachService";
+import { toast, ToastContainer } from "react-toastify";
 
 const ClassAttendanceAndFeedback = () => {
-  const navigate = useNavigate()
-  const empId = localStorage.getItem("empId")
-  const {classId} = useParams()
-  const [classDetails,setClassDetails]  =useState({})
+  const navigate = useNavigate();
+  const empId = localStorage.getItem("empId");
+  const { classId } = useParams();
+  const [classDetails, setClassDetails] = useState({});
 
-  useEffect(()=>{
-    const fetchclassData = async()=>{
-      const response= await getClassData(classId)
-      console.log(response)
-      if(response.status===200){
-        setClassDetails(response.data.ClassScheduleData)
+  useEffect(() => {
+    const fetchclassData = async () => {
+      const response = await getClassData(classId);
+      console.log(response);
+      if (response.status === 200) {
+        setClassDetails(response.data.ClassScheduleData);
       }
-    }
-    fetchclassData()
-  },[])
-  
+    };
+    fetchclassData();
+  }, []);
 
   const [attendance, setAttendance] = useState({});
   const [feedback, setFeedback] = useState({});
@@ -33,7 +42,7 @@ const ClassAttendanceAndFeedback = () => {
     }));
   };
 
-  const handleSubmit = async() => {
+  const handleSubmit = async () => {
     const submissionData = classDetails?.selectedStudents?.map((student) => ({
       studentId: student.kidId,
       studentName: student.kidName,
@@ -41,12 +50,16 @@ const ClassAttendanceAndFeedback = () => {
       feedback: feedback[student.kidId] || "",
     }));
     console.log("Submission data:", submissionData);
-    const response = await addFeedbackAndAttandance(empId,classId,submissionData)
-    console.log(response)
-    if(response.status===201){
-      toast.success(response.data.message)
+    const response = await addFeedbackAndAttandance(
+      empId,
+      classId,
+      submissionData
+    );
+    console.log(response);
+    if (response.status === 201) {
+      toast.success(response.data.message);
       setTimeout(() => {
-        navigate("/coachScheduleClass")
+        navigate("/coachScheduleClass");
       }, 1500);
     }
   };
@@ -98,7 +111,7 @@ const ClassAttendanceAndFeedback = () => {
             <h3 className="text-lg font-semibold text-gray-700">
               Students ({classDetails?.selectedStudents?.length})
             </h3>
-            
+
             {classDetails?.selectedStudents?.map((student) => (
               <div
                 key={student.kidId}
@@ -111,8 +124,8 @@ const ClassAttendanceAndFeedback = () => {
                       onClick={() => toggleAttendance(student.kidId)}
                       className={`px-4 py-2 rounded-md text-white transition-colors ${
                         attendance[student.kidId]
-                          ? 'bg-green-600 hover:bg-green-700'
-                          : 'bg-red-600 hover:bg-red-700'
+                          ? "bg-green-600 hover:bg-green-700"
+                          : "bg-red-600 hover:bg-red-700"
                       }`}
                     >
                       {attendance[student.kidId] ? "Present" : "Absent"}
@@ -131,7 +144,7 @@ const ClassAttendanceAndFeedback = () => {
                     </button>
                   </div>
                 </div>
-                
+
                 {showFeedbackInput[student.kidId] && (
                   <div className="mt-4">
                     <textarea
@@ -139,10 +152,12 @@ const ClassAttendanceAndFeedback = () => {
                       rows="3"
                       placeholder="Enter your feedback here..."
                       value={feedback[student.kidId] || ""}
-                      onChange={(e) => setFeedback((prev) => ({
-                        ...prev,
-                        [student.kidId]: e.target.value,
-                      }))}
+                      onChange={(e) =>
+                        setFeedback((prev) => ({
+                          ...prev,
+                          [student.kidId]: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                 )}
@@ -152,7 +167,7 @@ const ClassAttendanceAndFeedback = () => {
         </div>
 
         <div className="p-6 border-t">
-          <button 
+          <button
             onClick={handleSubmit}
             className="w-full py-2 bg-primary hover:bg-primary text-white rounded-md transition-colors"
           >

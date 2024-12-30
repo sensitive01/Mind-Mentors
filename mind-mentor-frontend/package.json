@@ -47,6 +47,7 @@
     "sendbird-calls": "^1.10.20",
     "sonner": "^1.7.0",
     "stream-browserify": "^3.0.0",
+    "tailwind-scrollbar-hide": "^2.0.0",
     "util": "^0.12.5",
     "webex": "^1.0.0",
     "zego-express-engine-webrtc": "^3.5.1"

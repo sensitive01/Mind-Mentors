@@ -1,5 +1,5 @@
-import AttendanceDashboard from "../../../employee-component/operation-new/dashboard/AttendanceDashboard";
-import Sidebar from "../../../employee-component/operation-new/layout/Sidebar";
+import AttendanceDashboard from "../../../department-components/operation-new/dashboard/AttendanceDashboard";
+import Sidebar from "../../../department-components/operation-new/layout/Sidebar";
 import Topbar from './../../../component/parent-component/parent-dashboard/layout/Topbar';
 
 const DashboardPage = () => {

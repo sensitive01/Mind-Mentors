@@ -7,7 +7,7 @@ import {
 } from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import React, { useEffect, useState } from "react";
-import { getKidData } from "../../api/service/employee/EmployeeService";
+import { getKidData } from "../../../api/service/employee/EmployeeService";
 
 const theme = createTheme({
   palette: {
