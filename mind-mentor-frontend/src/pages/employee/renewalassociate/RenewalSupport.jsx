@@ -5,18 +5,21 @@ import Topbar from '../../../component/parent-component/parent-dashboard/layout/
 
 const SEnquiryFormPage = () => {
   return (
-    <div className="flex min-h-screen bg-white">
-      <div className="fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0">
+    <div className="flex h-screen w-screen overflow-hidden">
+      <div className="z-30">
         <Sidebar />
       </div>
-
-      {/* Add a flex-grow class to make the enquiry form take the full width */}
-      <div className="flex-grow p-6">
-        <Topbar/>
-        <TaskModule/>
+      <div className="flex-1 flex flex-col relative">
+        <div className="sticky top-0 z-20">
+          <Topbar />
+        </div>
+        <div className="flex-1 overflow-hidden relative z-10">
+          <div className="h-full overflow-y-auto scrollbar-hide">
+            <TaskModule />
+          </div>
+        </div>
       </div>
     </div>
   );
 };
-
 export default SEnquiryFormPage;

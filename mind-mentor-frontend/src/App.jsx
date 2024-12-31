@@ -170,19 +170,20 @@ import CoachTaskLogs from "./pages/employee/coach/CoachTaskLogs";
 
 
 
-// import MarketingAttendance from './pages/marketing/MarketingAttendance';
-// import MarketingAttendanceReport from "./pages/marketing/MarketingAttendanceReport";
-// import MarketingDashboard from "./pages/marketing/MarketingDashboard";
-// import MarketingFeedback from "./pages/marketing/MarketingFeedback";
-// // import MarketingInvoice from "./pages/marketing/MarketingInvoice";
-// import MarketingLeaves from "./pages/marketing/MarketingLeaves";
-// import MarketingLeavesAdd from "./pages/marketing/MarketingLeavesAdd";
-// import MarketingProfile from "./pages/marketing/MarketingProfile";
-// import MarketingSupport from "./pages/marketing/MarketingSupport";
-// import MarketingSupportRequest from "./pages/marketing/MarketingSupportRequest";
+import MarketingAttendance from './pages/employee/marketing/MarketingAttendance';
+import MarketingAttendanceReport from "./pages/employee/marketing/MarketingAttendanceReport";
+import MarketingDashboard from "./pages/employee/marketing/MarketingDashboard";
+import MarketingFeedback from "./pages/employee/marketing/MarketingFeedback";
+// import MarketingInvoice from "./pages/marketing/MarketingInvoice";
+import MarketingLeaves from "./pages/employee/marketing/MarketingLeaves";
+import MarketingLeavesAdd from "./pages/employee/marketing/MarketingLeavesAdd";
+import MarketingProfile from "./pages/employee/marketing/MarketingProfile";
+import MarketingSupport from "./pages/employee/marketing/MarketingSupport";
+import MarketingSupportRequest from "./pages/employee/marketing/MarketingSupportRequest";
+import MarketingCompleteLogs from "./pages/employee/marketing/MarketingCompleteLogs";
 
 // import MarketingLogin from "./marketing/components/LoginPage";
-// import MarketingEnquiry from "./pages/marketing/MarketingEnquiry";
+import MarketingEnquiry from "./pages/employee/marketing/MarketingEnquiry";
 
 // import AllowDeductForm from "./pages/superadmin/AllowDeductForm";
 // import AllowDeductTable from "./pages/superadmin/AllowDeductTable";
@@ -227,7 +228,6 @@ import CoachTaskLogs from "./pages/employee/coach/CoachTaskLogs";
 // import UsersTable from "./pages/superadmin/UsersTable";
 // import SuperadminAttendance from "./pages/superadmin/SuperadminAttendance";
 // import SuperadminEnquiries from "./pages/superadmin/ListingEnquiries";
-// import MarketingCompleteLogs from "./pages/marketing/MarketingCompleteLogs";
 // import CenterAdminEnquiryLogs from "./pages/centeradmin/CenterAdminEnquiryLogs";
 // import SuperAdminEnquiryLogs from "./pages/superadmin/SuperAdminEnquiryLogs";
 // import KidsDemoClassPage from "./pages/kids/KidsDemoClassPage";
@@ -409,7 +409,7 @@ function App() {
         {/* <Route path="/coachAvailability" element={<CoachAvailabilityPage />} /> */}
         {/* <Route path="/coachLogin" element={<CoachLogin />} /> */}
 
-          {/* 
+          
         <Route path="/marketingDashboard" element={<MarketingDashboard />} />
         <Route path="/marketingProfile" element={<MarketingProfile />} />
         <Route path="/marketingAttendance" element={<MarketingAttendance />} />
@@ -420,9 +420,9 @@ function App() {
         <Route path="/marketingAttendanceReport" element={<MarketingAttendanceReport />} />
         <Route path="/marketingSupport/add" element={<MarketingSupport />} />
         <Route path="/marketingSupport/" element={<MarketingSupportRequest />} />
-        <Route path="/marketingLogin" element={<MarketingLogin />} />
-        <Route path="/showCompleteLogsMarketing/:id" element={< MarketingCompleteLogs/>} /> */}
+        <Route path="/showCompleteLogsMarketing/:id" element={< MarketingCompleteLogs/>} />
           {/* <Route path="/marketingScheduleClass/" element={<MarketingScheduleClass />} /> */}
+        {/* <Route path="/marketingLogin" element={<MarketingLogin />} /> */}
 
           {/*         
         <Route path="/centeradmin-login" element={<CenterLoginPage />} />

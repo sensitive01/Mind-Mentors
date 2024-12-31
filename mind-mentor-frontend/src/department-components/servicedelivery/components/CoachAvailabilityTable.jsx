@@ -142,7 +142,6 @@ const CoachAvailabilityTable = () => {
           <DataGrid
             rows={rows}
             columns={columns}
-            checkboxSelection
             disableRowSelectionOnClick
             pagination
             pageSizeOptions={[5]}

@@ -75,24 +75,24 @@ const KidsTable = () => {
 
   return (
     <ThemeProvider theme={theme}>
-      <Box 
-        sx={{ 
-          width: '100%',
-          height: '100%',
-          overflow: 'hidden'
+      <Box
+        sx={{
+          width: "100%",
+          height: "100%",
+          overflow: "hidden",
         }}
       >
         <Paper
           elevation={0}
           sx={{
-            height: 'calc(100vh - 32px)', // Adjust based on your layout
+            height: "calc(100vh - 32px)", // Adjust based on your layout
             m: 2,
             backgroundColor: "background.paper",
             borderRadius: 3,
             boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.05)",
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column'
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column",
           }}
         >
           <Typography
@@ -101,16 +101,15 @@ const KidsTable = () => {
               color: "text.primary",
               fontWeight: 600,
               p: 3,
-              pb: 2
+              pb: 2,
             }}
           >
             Enrollment Data
           </Typography>
-          <Box sx={{ flex: 1, width: '100%', p: 3, pt: 0 }}>
+          <Box sx={{ flex: 1, width: "100%", p: 3, pt: 0 }}>
             <DataGrid
               rows={rows}
               columns={columns}
-              checkboxSelection
               disableRowSelectionOnClick
               slots={{ toolbar: GridToolbar }}
               slotProps={{
@@ -120,8 +119,8 @@ const KidsTable = () => {
                 },
               }}
               sx={{
-                height: '100%',
-                width: '100%',
+                height: "100%",
+                width: "100%",
                 "& .MuiDataGrid-cell:focus": {
                   outline: "none",
                 },

@@ -1,30 +1,34 @@
-
-
-import { Button, Divider, MenuItem, TextField } from '@mui/material';
-import { DataGrid } from '@mui/x-data-grid';
-import { Trash } from 'lucide-react';
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Button, Divider, MenuItem, TextField } from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
+import { Trash } from "lucide-react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const NotificationForm = () => {
-  const [notifications, setNotifications] = useState([{ id: 1, title: '', body: '', type: '' }]);
-  const notificationTypes = ['Info', 'Warning', 'Error', 'Success'];
+  const [notifications, setNotifications] = useState([
+    { id: 1, title: "", body: "", type: "" },
+  ]);
+  const notificationTypes = ["Info", "Warning", "Error", "Success"];
   const [loading, setLoading] = useState(false);
 
   const addNotification = () => {
     setNotifications([
       ...notifications,
-      { id: notifications.length + 1, title: '', body: '', type: '' }
+      { id: notifications.length + 1, title: "", body: "", type: "" },
     ]);
   };
 
   const removeNotification = (id) => {
-    setNotifications(notifications.filter((notification) => notification.id !== id));
+    setNotifications(
+      notifications.filter((notification) => notification.id !== id)
+    );
   };
 
   const handleNotificationChange = (id, field, value) => {
     const updatedNotifications = notifications.map((notification) =>
-      notification.id === id ? { ...notification, [field]: value } : notification
+      notification.id === id
+        ? { ...notification, [field]: value }
+        : notification
     );
     setNotifications(updatedNotifications);
   };
@@ -40,7 +44,7 @@ const NotificationForm = () => {
           const notificationData = {
             title: notification.title,
             body: notification.body,
-            type: notification.type
+            type: notification.type,
           };
 
           // Logic to save the notification (placeholder)
@@ -49,7 +53,7 @@ const NotificationForm = () => {
       }
 
       // Reset notifications after submission
-      setNotifications([{ id: 1, title: '', body: '', type: '' }]);
+      setNotifications([{ id: 1, title: "", body: "", type: "" }]);
       alert("Notifications submitted successfully!");
     } catch (error) {
       alert("Error while submitting notifications. Please try again.");
@@ -59,13 +63,13 @@ const NotificationForm = () => {
   };
 
   const columns = [
-    { field: 'id', headerName: 'ID', width: 70 },
-    { field: 'title', headerName: 'Title', width: 200 },
-    { field: 'body', headerName: 'Body', width: 300 },
-    { field: 'type', headerName: 'Type', width: 150 },
+    { field: "id", headerName: "ID", width: 70 },
+    { field: "title", headerName: "Title", width: 200 },
+    { field: "body", headerName: "Body", width: 300 },
+    { field: "type", headerName: "Type", width: 150 },
     {
-      field: 'actions',
-      headerName: 'Actions',
+      field: "actions",
+      headerName: "Actions",
       width: 100,
       renderCell: (params) => (
         <button
@@ -75,8 +79,8 @@ const NotificationForm = () => {
         >
           <Trash className="h-5 w-5" />
         </button>
-      )
-    }
+      ),
+    },
   ];
 
   return (
@@ -85,7 +89,9 @@ const NotificationForm = () => {
         <div className="bg-gradient-to-r from-[#642b8f] to-[#aa88be] p-8 text-white flex justify-between items-center">
           <div>
             <h2 className="text-3xl font-bold mb-2">Notification Form</h2>
-            <p className="text-sm opacity-90">Fill in the details to create notifications</p>
+            <p className="text-sm opacity-90">
+              Fill in the details to create notifications
+            </p>
           </div>
           <Button
             variant="contained"
@@ -105,7 +111,9 @@ const NotificationForm = () => {
             {notifications.map((notification, index) => (
               <div key={notification.id} className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-[#642b8f]">Notification {index + 1}</label>
+                  <label className="text-sm font-medium text-[#642b8f]">
+                    Notification {index + 1}
+                  </label>
                   {notifications.length > 1 && (
                     <button
                       type="button"
@@ -121,21 +129,39 @@ const NotificationForm = () => {
                     label="Notification Title"
                     variant="outlined"
                     value={notification.title}
-                    onChange={(e) => handleNotificationChange(notification.id, 'title', e.target.value)}
+                    onChange={(e) =>
+                      handleNotificationChange(
+                        notification.id,
+                        "title",
+                        e.target.value
+                      )
+                    }
                     fullWidth
                   />
                   <TextField
                     label="Notification Body"
                     variant="outlined"
                     value={notification.body}
-                    onChange={(e) => handleNotificationChange(notification.id, 'body', e.target.value)}
+                    onChange={(e) =>
+                      handleNotificationChange(
+                        notification.id,
+                        "body",
+                        e.target.value
+                      )
+                    }
                     fullWidth
                   />
                   <TextField
                     select
                     label="Notification Type"
                     value={notification.type}
-                    onChange={(e) => handleNotificationChange(notification.id, 'type', e.target.value)}
+                    onChange={(e) =>
+                      handleNotificationChange(
+                        notification.id,
+                        "type",
+                        e.target.value
+                      )
+                    }
                     fullWidth
                   >
                     {notificationTypes.map((type) => (
@@ -158,13 +184,12 @@ const NotificationForm = () => {
 
           <Divider className="my-6" />
 
-          <div style={{ height: 400, width: '100%' }}>
+          <div style={{ height: 400, width: "100%" }}>
             <DataGrid
               rows={notifications}
               columns={columns}
               pageSize={5}
               disableSelectionOnClick
-              checkboxSelection
             />
           </div>
 
@@ -174,7 +199,7 @@ const NotificationForm = () => {
               disabled={loading}
               className="px-8 py-3 bg-[#642b8f] text-white rounded-lg font-medium hover:bg-[#aa88be] transition-colors shadow-lg hover:shadow-xl"
             >
-              {loading ? 'Submitting...' : 'Submit Notifications'}
+              {loading ? "Submitting..." : "Submit Notifications"}
             </button>
             <button
               type="reset"

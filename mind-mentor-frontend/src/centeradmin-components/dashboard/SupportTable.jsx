@@ -212,7 +212,7 @@
 //               paginationModel={paginationModel}
 //               onPaginationModelChange={setPaginationModel}
 //               pageSizeOptions={[5, 10, 25]}
-//               checkboxSelection
+//
 //               disableRowSelectionOnClick
 //               slots={{ toolbar: GridToolbar }}
 //               slotProps={{
@@ -379,7 +379,7 @@
 import { useState } from "react";
 import { Search, Send, Filter, Plus, Clock, X } from "lucide-react";
 import avatar from "../../images/accountInage.webp";
-import { Link } from 'react-router-dom'; // Import Link for navigation
+import { Link } from "react-router-dom"; // Import Link for navigation
 
 const DemoTickets = [
   {

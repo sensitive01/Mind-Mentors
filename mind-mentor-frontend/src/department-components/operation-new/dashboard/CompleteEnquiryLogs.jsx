@@ -168,7 +168,7 @@ const CompleteEnquiryLogs = () => {
                 },
               }}
               pageSizeOptions={[10, 25, 50]}
-              checkboxSelection
+             
               disableRowSelectionOnClick
               getRowId={(row) => row.id}
               slots={{ toolbar: GridToolbar }}

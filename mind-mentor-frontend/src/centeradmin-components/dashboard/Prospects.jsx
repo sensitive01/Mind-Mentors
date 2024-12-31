@@ -162,7 +162,6 @@ const Prospects = () => {
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel}
               pageSizeOptions={[5, 10, 25]}
-              checkboxSelection
               disableRowSelectionOnClick
               editMode="row"
               onRowDoubleClick={(params) => {

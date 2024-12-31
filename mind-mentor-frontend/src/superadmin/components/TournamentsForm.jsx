@@ -404,7 +404,6 @@ const ChessTournamentForm = () => {
               columns={columns}
               pageSize={5}
               disableSelectionOnClick
-              checkboxSelection
               getRowId={(row) => row.id}
             />
           </div>

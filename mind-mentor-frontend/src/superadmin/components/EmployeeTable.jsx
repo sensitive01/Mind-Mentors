@@ -202,7 +202,6 @@ const EmployeeMasterList = () => {
             rows={rows}
             columns={columns}
             autoHeight
-            checkboxSelection
             disableRowSelectionOnClick
             slots={{ toolbar: GridToolbar }}
             slotProps={{

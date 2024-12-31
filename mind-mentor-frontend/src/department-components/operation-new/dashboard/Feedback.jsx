@@ -99,7 +99,7 @@ const CoachFeedback = () => {
           <DataGrid
             rows={rows}
             columns={feedbackColumns}
-            checkboxSelection
+          
             disableRowSelectionOnClick
             slots={{ toolbar: GridToolbar }}
             slotProps={{

@@ -139,16 +139,9 @@ const ScheduleKanban = () => {
               gutterBottom
               sx={{ color: "text.primary", fontWeight: 600, mb: 3 }}
             >
-              Class Schedules
+             Demo Class Schedules
             </Typography>
-            {/* <Button
-              variant="contained"
-              component={Link}
-              to="/employee-operation/demoSheduleForm"
-              color="primary"
-            >
-              + Create Schedules
-            </Button> */}
+            
           </Box>
 
           <Box

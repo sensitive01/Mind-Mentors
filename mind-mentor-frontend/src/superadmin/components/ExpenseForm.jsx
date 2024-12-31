@@ -1,18 +1,26 @@
-import { Button, Divider, MenuItem, TextField } from '@mui/material';
-import { DataGrid } from '@mui/x-data-grid';
-import { Trash } from 'lucide-react';
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Button, Divider, MenuItem, TextField } from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
+import { Trash } from "lucide-react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const ExpensesForm = () => {
-  const [expenseDetails, setExpenseDetails] = useState([{ id: 1, category: '', description: '', amount: '', date: '' }]);
-  const expenseCategories = ['Travel', 'Food', 'Utilities', 'Others']; // Options for the category field
+  const [expenseDetails, setExpenseDetails] = useState([
+    { id: 1, category: "", description: "", amount: "", date: "" },
+  ]);
+  const expenseCategories = ["Travel", "Food", "Utilities", "Others"]; // Options for the category field
   const [loading, setLoading] = useState(false);
 
   const addExpenseDetail = () => {
     setExpenseDetails([
       ...expenseDetails,
-      { id: expenseDetails.length + 1, category: '', description: '', amount: '', date: '' }
+      {
+        id: expenseDetails.length + 1,
+        category: "",
+        description: "",
+        amount: "",
+        date: "",
+      },
     ]);
   };
 
@@ -33,7 +41,12 @@ const ExpensesForm = () => {
 
     try {
       for (let expense of expenseDetails) {
-        if (expense.category && expense.description && expense.amount && expense.date) {
+        if (
+          expense.category &&
+          expense.description &&
+          expense.amount &&
+          expense.date
+        ) {
           const expenseData = {
             category: expense.category,
             description: expense.description,
@@ -46,7 +59,9 @@ const ExpensesForm = () => {
         }
       }
 
-      setExpenseDetails([{ id: 1, category: '', description: '', amount: '', date: '' }]);
+      setExpenseDetails([
+        { id: 1, category: "", description: "", amount: "", date: "" },
+      ]);
       alert("Expenses submitted successfully!");
     } catch (error) {
       alert("Error while submitting expenses. Please try again.");
@@ -56,14 +71,14 @@ const ExpensesForm = () => {
   };
 
   const columns = [
-    { field: 'id', headerName: 'ID', width: 70 },
-    { field: 'category', headerName: 'Category', width: 200 },
-    { field: 'description', headerName: 'Description', width: 300 },
-    { field: 'amount', headerName: 'Amount', width: 150 },
-    { field: 'date', headerName: 'Date', width: 180 },
+    { field: "id", headerName: "ID", width: 70 },
+    { field: "category", headerName: "Category", width: 200 },
+    { field: "description", headerName: "Description", width: 300 },
+    { field: "amount", headerName: "Amount", width: 150 },
+    { field: "date", headerName: "Date", width: 180 },
     {
-      field: 'actions',
-      headerName: 'Actions',
+      field: "actions",
+      headerName: "Actions",
       width: 100,
       renderCell: (params) => (
         <button
@@ -73,28 +88,29 @@ const ExpensesForm = () => {
         >
           <Trash className="h-5 w-5" />
         </button>
-      )
-    }
+      ),
+    },
   ];
 
   return (
     <div className="min-h-screen p-6">
       <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-xl overflow-hidden">
-      <div className="bg-gradient-to-r from-[#642b8f] to-[#aa88be] p-8 text-white flex justify-between items-center">
-                    <div>
-                        <h2 className="text-3xl font-bold mb-2">Expense Form</h2>
-                        <p className="text-sm opacity-90">Please fill in the details for holidays</p>
-                    </div>
-                    <Button
-                        variant="contained"
-                        color="#642b8f"
-                        component={Link}
-                        to="/expenses"
-                    >
-                        View Expenses
-                    </Button>
-                </div>
-
+        <div className="bg-gradient-to-r from-[#642b8f] to-[#aa88be] p-8 text-white flex justify-between items-center">
+          <div>
+            <h2 className="text-3xl font-bold mb-2">Expense Form</h2>
+            <p className="text-sm opacity-90">
+              Please fill in the details for holidays
+            </p>
+          </div>
+          <Button
+            variant="contained"
+            color="#642b8f"
+            component={Link}
+            to="/expenses"
+          >
+            View Expenses
+          </Button>
+        </div>
 
         <form className="p-8" onSubmit={handleSubmit}>
           <div className="space-y-8">
@@ -104,7 +120,9 @@ const ExpensesForm = () => {
             {expenseDetails.map((expense, index) => (
               <div key={expense.id} className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-[#642b8f]">Expense {index + 1}</label>
+                  <label className="text-sm font-medium text-[#642b8f]">
+                    Expense {index + 1}
+                  </label>
                   {expenseDetails.length > 1 && (
                     <button
                       type="button"
@@ -120,7 +138,13 @@ const ExpensesForm = () => {
                     select
                     label="Category"
                     value={expense.category}
-                    onChange={(e) => handleExpenseChange(expense.id, 'category', e.target.value)}
+                    onChange={(e) =>
+                      handleExpenseChange(
+                        expense.id,
+                        "category",
+                        e.target.value
+                      )
+                    }
                     fullWidth
                   >
                     {expenseCategories.map((category) => (
@@ -133,7 +157,9 @@ const ExpensesForm = () => {
                     label="Amount"
                     variant="outlined"
                     value={expense.amount}
-                    onChange={(e) => handleExpenseChange(expense.id, 'amount', e.target.value)}
+                    onChange={(e) =>
+                      handleExpenseChange(expense.id, "amount", e.target.value)
+                    }
                     fullWidth
                   />
                   <TextField
@@ -141,7 +167,9 @@ const ExpensesForm = () => {
                     label="Date"
                     variant="outlined"
                     value={expense.date}
-                    onChange={(e) => handleExpenseChange(expense.id, 'date', e.target.value)}
+                    onChange={(e) =>
+                      handleExpenseChange(expense.id, "date", e.target.value)
+                    }
                     fullWidth
                     InputLabelProps={{ shrink: true }}
                   />
@@ -151,7 +179,13 @@ const ExpensesForm = () => {
                     label="Description"
                     variant="outlined"
                     value={expense.description}
-                    onChange={(e) => handleExpenseChange(expense.id, 'description', e.target.value)}
+                    onChange={(e) =>
+                      handleExpenseChange(
+                        expense.id,
+                        "description",
+                        e.target.value
+                      )
+                    }
                     multiline
                     rows={4}
                     fullWidth
@@ -170,13 +204,12 @@ const ExpensesForm = () => {
 
           <Divider className="my-6" />
 
-          <div style={{ height: 400, width: '100%' }}>
+          <div style={{ height: 400, width: "100%" }}>
             <DataGrid
               rows={expenseDetails}
               columns={columns}
               pageSize={5}
               disableSelectionOnClick
-              checkboxSelection
             />
           </div>
 
@@ -186,7 +219,7 @@ const ExpensesForm = () => {
               disabled={loading}
               className="px-8 py-3 bg-[#642b8f] text-white rounded-lg font-medium hover:bg-[#642b8f] transition-colors shadow-lg hover:shadow-xl"
             >
-              {loading ? 'Submitting...' : 'Submit Expenses'}
+              {loading ? "Submitting..." : "Submit Expenses"}
             </button>
             <button
               type="reset"
@@ -202,25 +235,6 @@ const ExpensesForm = () => {
 };
 
 export default ExpensesForm;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 const App = () => {
   return (

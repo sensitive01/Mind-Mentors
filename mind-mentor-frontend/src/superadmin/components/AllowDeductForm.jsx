@@ -1,19 +1,27 @@
-import { Button, Divider, MenuItem, TextField } from '@mui/material';
-import { DataGrid } from '@mui/x-data-grid';
-import { Trash } from 'lucide-react';
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Button, Divider, MenuItem, TextField } from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
+import { Trash } from "lucide-react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const AllowanceDeductionForm = () => {
-  const [entries, setEntries] = useState([{ id: 1, name: '', allowance: '', deduction: '', amount: '' }]);
-  const allowanceTypes = ['HRA', 'Travel', 'Medical', 'Other'];
-  const deductionTypes = ['Tax', 'Loan', 'Other'];
+  const [entries, setEntries] = useState([
+    { id: 1, name: "", allowance: "", deduction: "", amount: "" },
+  ]);
+  const allowanceTypes = ["HRA", "Travel", "Medical", "Other"];
+  const deductionTypes = ["Tax", "Loan", "Other"];
   const [loading, setLoading] = useState(false);
 
   const addEntry = () => {
     setEntries([
       ...entries,
-      { id: entries.length + 1, name: '', allowance: '', deduction: '', amount: '' }
+      {
+        id: entries.length + 1,
+        name: "",
+        allowance: "",
+        deduction: "",
+        amount: "",
+      },
     ]);
   };
 
@@ -48,7 +56,9 @@ const AllowanceDeductionForm = () => {
         }
       }
 
-      setEntries([{ id: 1, name: '', allowance: '', deduction: '', amount: '' }]);
+      setEntries([
+        { id: 1, name: "", allowance: "", deduction: "", amount: "" },
+      ]);
       alert("Entries submitted successfully!");
     } catch (error) {
       alert("Error while submitting entries. Please try again.");
@@ -58,14 +68,14 @@ const AllowanceDeductionForm = () => {
   };
 
   const columns = [
-    { field: 'id', headerName: 'ID', width: 70 },
-    { field: 'name', headerName: 'Employee Name', width: 200 },
-    { field: 'allowance', headerName: 'Allowance Type', width: 150 },
-    { field: 'deduction', headerName: 'Deduction Type', width: 150 },
-    { field: 'amount', headerName: 'Amount', width: 150 },
+    { field: "id", headerName: "ID", width: 70 },
+    { field: "name", headerName: "Employee Name", width: 200 },
+    { field: "allowance", headerName: "Allowance Type", width: 150 },
+    { field: "deduction", headerName: "Deduction Type", width: 150 },
+    { field: "amount", headerName: "Amount", width: 150 },
     {
-      field: 'actions',
-      headerName: 'Actions',
+      field: "actions",
+      headerName: "Actions",
       width: 100,
       renderCell: (params) => (
         <button
@@ -84,8 +94,12 @@ const AllowanceDeductionForm = () => {
       <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-xl overflow-hidden">
         <div className="bg-gradient-to-r from-[#642b8f] to-[#aa88be] p-8 text-white flex justify-between items-center">
           <div>
-            <h2 className="text-3xl font-bold mb-2">Allowance and Deduction Form</h2>
-            <p className="text-sm opacity-90">Fill in the details for employee allowances and deductions</p>
+            <h2 className="text-3xl font-bold mb-2">
+              Allowance and Deduction Form
+            </h2>
+            <p className="text-sm opacity-90">
+              Fill in the details for employee allowances and deductions
+            </p>
           </div>
           <Button
             variant="contained"
@@ -105,7 +119,9 @@ const AllowanceDeductionForm = () => {
             {entries.map((entry, index) => (
               <div key={entry.id} className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-[#642b8f]">Entry {index + 1}</label>
+                  <label className="text-sm font-medium text-[#642b8f]">
+                    Entry {index + 1}
+                  </label>
                   {entries.length > 1 && (
                     <button
                       type="button"
@@ -121,14 +137,18 @@ const AllowanceDeductionForm = () => {
                     label="Employee Name"
                     variant="outlined"
                     value={entry.name}
-                    onChange={(e) => handleEntryChange(entry.id, 'name', e.target.value)}
+                    onChange={(e) =>
+                      handleEntryChange(entry.id, "name", e.target.value)
+                    }
                     fullWidth
                   />
                   <TextField
                     select
                     label="Allowance Type"
                     value={entry.allowance}
-                    onChange={(e) => handleEntryChange(entry.id, 'allowance', e.target.value)}
+                    onChange={(e) =>
+                      handleEntryChange(entry.id, "allowance", e.target.value)
+                    }
                     fullWidth
                   >
                     {allowanceTypes.map((type) => (
@@ -141,7 +161,9 @@ const AllowanceDeductionForm = () => {
                     select
                     label="Deduction Type"
                     value={entry.deduction}
-                    onChange={(e) => handleEntryChange(entry.id, 'deduction', e.target.value)}
+                    onChange={(e) =>
+                      handleEntryChange(entry.id, "deduction", e.target.value)
+                    }
                     fullWidth
                   >
                     {deductionTypes.map((type) => (
@@ -154,7 +176,9 @@ const AllowanceDeductionForm = () => {
                     label="Amount"
                     variant="outlined"
                     value={entry.amount}
-                    onChange={(e) => handleEntryChange(entry.id, 'amount', e.target.value)}
+                    onChange={(e) =>
+                      handleEntryChange(entry.id, "amount", e.target.value)
+                    }
                     fullWidth
                   />
                 </div>
@@ -171,13 +195,12 @@ const AllowanceDeductionForm = () => {
 
           <Divider className="my-6" />
 
-          <div style={{ height: 400, width: '100%' }}>
+          <div style={{ height: 400, width: "100%" }}>
             <DataGrid
               rows={entries}
               columns={columns}
               pageSize={5}
               disableSelectionOnClick
-              checkboxSelection
             />
           </div>
 
@@ -187,7 +210,7 @@ const AllowanceDeductionForm = () => {
               disabled={loading}
               className="px-8 py-3 bg-[#642b8f] text-white rounded-lg font-medium hover:bg-[#aa88be] transition-colors shadow-lg hover:shadow-xl"
             >
-              {loading ? 'Submitting...' : 'Submit Entries'}
+              {loading ? "Submitting..." : "Submit Entries"}
             </button>
             <button
               type="reset"

@@ -182,7 +182,7 @@ const Prospects = () => {
           <DataGrid
             rows={rows}
             columns={columns}
-            checkboxSelection
+       
             disableRowSelectionOnClick
             loading={loading}
             slots={{ toolbar: GridToolbar }}

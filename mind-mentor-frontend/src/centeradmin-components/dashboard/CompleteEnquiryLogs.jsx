@@ -158,7 +158,7 @@ const CompleteEnquiryLogs = () => {
               rows={rows}
               columns={columns}
               pageSizeOptions={[5, 10, 25]}
-              checkboxSelection
+            
               disableRowSelectionOnClick
               editMode="row"
               getRowId={(row) => row.id}

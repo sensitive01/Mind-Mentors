@@ -112,7 +112,7 @@
 //           <DataGrid
 //             rows={rows}
 //             columns={tournamentColumns}
-//             checkboxSelection
+//
 //             disableRowSelectionOnClick
 //             slots={{ toolbar: GridToolbar }}
 //             slotProps={{
@@ -345,7 +345,6 @@ const TournamentMasterList = () => {
             autoHeight
             pageSize={5} // This is the default number of rows per page
             pageSizeOptions={[5, 10, 20]} // Option to change the page size
-            checkboxSelection
             disableRowSelectionOnClick
             slots={{ toolbar: GridToolbar }}
             slotProps={{

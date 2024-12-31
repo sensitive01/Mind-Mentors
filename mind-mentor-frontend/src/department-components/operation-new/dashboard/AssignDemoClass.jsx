@@ -1,150 +1,19 @@
 import { useEffect, useState } from "react";
-import {
-  Grid,
-  Box,
-  Typography,
-  Button,
-  Checkbox,
-  FormControlLabel,
-  FormGroup,
-  Paper,
-  Chip,
-  Divider,
-  List,
-  ListItem,
-  ListItemIcon,
-} from "@mui/material";
-import ChildCareIcon from "@mui/icons-material/ChildCare";
-import {
-  CalendarToday as DayIcon,
-  AccessTime as TimeIcon,
-  Person as TeacherIcon,
-  Group as StudentsIcon,
-  Label as LevelIcon,
-  Book as ProgramIcon,
-  Close as CloseIcon,
-} from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
 import {
-  getDemoClassandStudentData,
-  saveDemoClassDetails,
-} from "../../../api/service/employee/EmployeeService";
+  Calendar,
+  Clock,
+  User,
+  Users,
+  Tag,
+  BookOpen,
+  X,
+  CheckCircle,
+  GraduationCap
+} from "lucide-react";
+import { getDemoClassandStudentData, saveDemoClassDetails } from "../../../api/service/employee/EmployeeService";
 import { toast } from "react-toastify";
 
-const customColors = {
-  primary: "#3f51b5",
-  secondary: "#f50057",
-  background: "#f4f4f4",
-  text: "#333333",
-  accent: "#4caf50",
-  highlight: "#2196f3",
-};
-
-// Student Multi-Select Component
-const StudentMultiSelect = ({
-  students,
-  onStudentSelect,
-  selectedStudents,
-}) => {
-  const [localSelectedStudents, setLocalSelectedStudents] = useState(
-    selectedStudents || []
-  );
-
-  const handleStudentToggle = (student) => {
-    setLocalSelectedStudents((prev) => {
-      // Check if the student is already in the list
-      const isStudentSelected = prev.some(
-        (selectedStudent) => selectedStudent._id === student._id
-      );
-
-      return isStudentSelected
-        ? prev.filter((selectedStudent) => selectedStudent._id !== student._id)
-        : [...prev, student];
-    });
-  };
-
-  return (
-    <Paper
-      elevation={3}
-      sx={{
-        p: 3,
-        backgroundColor: "white",
-        borderRadius: 2,
-        height: "500px", // Fixed height
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <Typography
-        variant="h6"
-        sx={{
-          color: customColors.primary,
-          mb: 2,
-          fontWeight: 600,
-        }}
-      >
-        Demo Assign
-      </Typography>
-      <Divider sx={{ mb: 2 }} />
-
-      <Box
-        sx={{
-          overflowY: "auto",
-          flexGrow: 1,
-          pr: 1,
-        }}
-      >
-        <FormGroup>
-          {students?.map((student, index) => (
-            <FormControlLabel
-              key={index}
-              control={
-                <Checkbox
-                  checked={localSelectedStudents.some(
-                    (selectedStudent) => selectedStudent._id === student._id
-                  )}
-                  onChange={() => handleStudentToggle(student)}
-                  color="primary"
-                />
-              }
-              label={student.kidFirstName}
-            />
-          ))}
-        </FormGroup>
-      </Box>
-
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          mt: 2,
-          borderTop: "1px solid rgba(0,0,0,0.12)",
-          pt: 2,
-        }}
-      >
-        <Typography variant="body2" color="textSecondary">
-          {localSelectedStudents.length} students selected
-        </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => onStudentSelect(localSelectedStudents)}
-          sx={{
-            textTransform: "none",
-            boxShadow: "none",
-            "&:hover": {
-              boxShadow: "none",
-            },
-          }}
-        >
-          Confirm Selection
-        </Button>
-      </Box>
-    </Paper>
-  );
-};
-
-// Main Class Display Component
 const AssignDemoClass = () => {
   const navigate = useNavigate();
   const empId = localStorage.getItem("empId");
@@ -157,7 +26,6 @@ const AssignDemoClass = () => {
     const fetchRequiredClassStudentData = async () => {
       try {
         const response = await getDemoClassandStudentData(id);
-        console.log("Use effect data in demo assign", response);
         setClassData(response?.data?.classData);
         setStudents(response?.data?.kidsData);
       } catch (error) {
@@ -167,176 +35,166 @@ const AssignDemoClass = () => {
     fetchRequiredClassStudentData();
   }, [id]);
 
-  const handleStudentSelection = async (students) => {
-    console.log("Selected Students:", students);
-    setSelectedStudents(students);
+  const handleStudentSelection = async (studentId) => {
+    const updatedSelection = selectedStudents.includes(studentId)
+      ? selectedStudents.filter(id => id !== studentId)
+      : [...selectedStudents, studentId];
+    
+    setSelectedStudents(updatedSelection);
+  };
 
-    const studentIds = students.map((student) => student._id);
-
+  const handleSaveAssignments = async () => {
     try {
-      const response = await saveDemoClassDetails(id, studentIds, empId);
-      console.log("Save Demo Class Response:", response);
+      const response = await saveDemoClassDetails(id, selectedStudents, empId);
       if (response.status === 200) {
         toast.success(response.data.message);
-        setTimeout(() => {
-          navigate("/employee-operation/schedule");
-        }, 1500);
+        setTimeout(() => navigate("/employee-operation/schedule"), 1500);
       }
     } catch (error) {
-      console.error("Error saving demo class details:", error);
+      toast.error("Failed to save assignments");
     }
   };
 
-  const handleRemoveStudent = (studentToRemove) => {
-    setSelectedStudents((prev) =>
-      prev.filter((student) => student._id !== studentToRemove._id)
-    );
-  };
+  const InfoCard = ({ icon: Icon, label, value, color = "text-purple-600" }) => (
+    <div className="flex items-center space-x-2 bg-white p-3 rounded-lg shadow-sm">
+      <Icon className={`${color} w-5 h-5`} />
+      <div>
+        <p className="text-sm text-gray-500">{label}</p>
+        <p className="font-semibold text-gray-900">{value}</p>
+      </div>
+    </div>
+  );
 
   return (
-    <Box
-      sx={{
-        p: 4,
-        backgroundColor: customColors.background,
-        minHeight: "100vh",
-      }}
-    >
-      <Typography
-        variant="h4"
-        sx={{
-          color: customColors.primary,
-          mb: 4,
-          fontWeight: 700,
-          textAlign: "center",
-        }}
-      >
-        Student Assignment Dashboard
-      </Typography>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-bold text-purple-600 mb-2">Demo Class Assign</h1>
+          <p className="text-gray-600">Assign students to available demo classes</p>
+        </div>
 
-      <Grid container spacing={4}>
-        <Grid item xs={12} md={8}>
-          <Paper
-            elevation={3}
-            sx={{
-              p: 3,
-              borderRadius: 2,
-              backgroundColor: "white",
-            }}
-          >
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Class Details Section */}
+          <div className="lg:col-span-2 space-y-6">
             {classData.map((classItem, index) => (
-              <Box key={index}>
-                <Grid container spacing={2} sx={{ mb: 3 }}>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <DayIcon color="primary" />
-                      <Typography variant="subtitle1">
-                        {classItem.day}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <TimeIcon color="secondary" />
-                      <Typography variant="subtitle1">
-                        {classItem.classTime}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <TeacherIcon color="success" />
-                      <Typography variant="subtitle1">
-                        {classItem.coachName}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <StudentsIcon color="primary" />
-                      <Typography variant="subtitle1">
-                        {classItem.students || 0} Students
-                      </Typography>
-                    </Box>
-                  </Grid>
-                </Grid>
+              <div key={index} className="bg-white rounded-xl shadow-sm p-6">
+                <div className="mb-6">
+                  <h2 className="text-xl font-semibold text-purple-600 mb-4">
+                    Class Information
+                  </h2>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <InfoCard
+                      icon={Calendar}
+                      label="Day"
+                      value={classItem.day}
+                    />
+                    <InfoCard
+                      icon={Clock}
+                      label="Time"
+                      value={classItem.classTime}
+                    />
+                    <InfoCard
+                      icon={User}
+                      label="Coach"
+                      value={classItem.coachName}
+                    />
+                    <InfoCard
+                      icon={Users}
+                      label="Students"
+                      value={`${classItem.students || 0} Enrolled`}
+                    />
+                  </div>
+                </div>
 
-                <Grid container spacing={2} sx={{ mb: 3 }}>
-                  <Grid item xs={6} sm={6}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <ProgramIcon color="primary" />
-                      <Typography variant="subtitle1">
-                        {classItem.program}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={6} sm={6}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <LevelIcon color="secondary" />
-                      <Typography variant="subtitle1">
-                        {classItem.level}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Typography variant="h6">Selected Students</Typography>
-                    </Box>
-                    {/* List of selected students with icons */}
-                    <List>
-                      {classItem.selectedStudents &&
-                        classItem.selectedStudents.map((student, index) => (
-                          <ListItem key={index}>
-                            <ListItemIcon>
-                              <ChildCareIcon color="primary" />{" "}
-                              {/* Icon for each student */}
-                            </ListItemIcon>
-                            <Typography variant="body1">
-                              {student.kidName}
-                            </Typography>
-                          </ListItem>
-                        ))}
-                    </List>
-                  </Grid>
-                </Grid>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <InfoCard
+                    icon={BookOpen}
+                    label="Program"
+                    value={classItem.program}
+                  />
+                  <InfoCard
+                    icon={Tag}
+                    label="Level"
+                    value={classItem.level}
+                  />
+                </div>
 
-                {/* Selected Students Chips */}
-                {selectedStudents.length > 0 && (
-                  <Box sx={{ mt: 2 }}>
-                    <Typography
-                      variant="subtitle2"
-                      color="textSecondary"
-                      sx={{ mb: 1 }}
-                    >
-                      Selected Students:
-                    </Typography>
-                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                      {selectedStudents.map((student, index) => (
-                        <Chip
-                          key={index}
-                          label={student.kidFirstName}
-                          onDelete={() => handleRemoveStudent(student)}
-                          deleteIcon={<CloseIcon />}
-                          color="primary"
-                          variant="outlined"
-                        />
+                {classItem.selectedStudents?.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="text-lg font-semibold text-gray-700 mb-3">
+                      Currently Enrolled Students
+                    </h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      {classItem.selectedStudents.map((student, idx) => (
+                        <div key={idx} className="flex items-center space-x-2 p-2 bg-purple-50 rounded-lg">
+                          <GraduationCap className="w-4 h-4 text-purple-500" />
+                          <span className="text-sm text-gray-700">{student.kidName}</span>
+                        </div>
                       ))}
-                    </Box>
-                  </Box>
+                    </div>
+                  </div>
                 )}
-              </Box>
+              </div>
             ))}
-          </Paper>
-        </Grid>
+          </div>
 
-        <Grid item xs={12} md={4}>
-          <StudentMultiSelect
-            students={students}
-            onStudentSelect={handleStudentSelection}
-            selectedStudents={selectedStudents}
-          />
-        </Grid>
-      </Grid>
-    </Box>
+          {/* Student Selection Panel */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-xl shadow-sm p-6 sticky top-6">
+              <h2 className="text-xl font-semibold text-purple-600 mb-4">
+                Select Students
+              </h2>
+              
+              <div className="space-y-2 max-h-[400px] overflow-y-auto mb-4">
+                {students.map((student) => (
+                  <div
+                    key={student._id}
+                    onClick={() => handleStudentSelection(student._id)}
+                    className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors
+                      ${selectedStudents.includes(student._id)
+                        ? 'bg-purple-50 border-purple-200'
+                        : 'bg-gray-50 hover:bg-gray-100'
+                      }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <GraduationCap className={`w-5 h-5 ${
+                        selectedStudents.includes(student._id)
+                          ? 'text-purple-600'
+                          : 'text-gray-400'
+                      }`} />
+                      <span className="font-medium text-gray-700">
+                        {student.kidFirstName}
+                      </span>
+                    </div>
+                    {selectedStudents.includes(student._id) && (
+                      <CheckCircle className="w-5 h-5 text-purple-600" />
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="border-t pt-4">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-sm text-gray-600">
+                    {selectedStudents.length} students selected
+                  </span>
+                </div>
+                <button
+                  onClick={handleSaveAssignments}
+                  disabled={selectedStudents.length === 0}
+                  className="w-full bg-purple-600 text-white py-2 px-4 rounded-lg
+                    hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed
+                    transition-colors duration-200"
+                >
+                  Confirm Assignments
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
