@@ -9,6 +9,8 @@ userRoute.get('/users', userController.getAllUser); // Get all users
 userRoute.put('/user/:id', userController.updateUser ); // Update a user by ID
 userRoute.delete('/user/:id', userController.deleteUser ); // Delete a user by ID
 userRoute.get('/user/:id', userController.getUserById ); // Update a user by ID
+userRoute.get('/employeesbyname', userController.getAllEmployeesByName ); // Create a new user
+
 
 userRoute.get('/usersbyname', userController.getAllUserByName ); // Create a new user
 
@@ -87,8 +89,8 @@ userRoute.delete('/transactions/:id', userController.deleteTransaction);
 
 userRoute.post('/chats', userController.createChat);
 userRoute.get('/chats', userController.getAllChats);
-userRoute.get('/chats/:id',userController.getChatById);
-userRoute.put('/chats/:id', userController.updateChat);
+userRoute.get('/chats/:ticketId',userController.getChatByTicketId);
+userRoute.put("/chats/ticket/:ticketId", userController.updateChat);
 userRoute.delete('/chats/:id', userController.deleteChat);
 
 

@@ -1,13 +1,11 @@
-
-
-import {
-  Button,
-  Grid
-} from "@mui/material";
+import { Button, Grid } from "@mui/material";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import FileUpload from "../../../components/uploader/FileUpload";
-import { createChat, getAllEmployeesByName } from "../../../api/service/employee/EmployeeService";
+import {
+  createChat,
+  getAllEmployeesByName,
+} from "../../../api/service/employee/EmployeeService";
 
 const TaskModule = () => {
   const [users, setUsers] = useState([]); // Store user data for the dropdown
@@ -73,7 +71,6 @@ const TaskModule = () => {
       setLoading(false);
     }
     console.log("Selected User ID:", formData.selectedUser);
-
   };
 
   return (
@@ -99,7 +96,9 @@ const TaskModule = () => {
               <select
                 className="w-1/2 p-3 rounded-lg border-2 border-gray-300 focus:border-[#642b8f] focus:outline-none bg-white"
                 value={formData.selectedUser || ""}
-                onChange={(e) => handleInputChange("selectedUser", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("selectedUser", e.target.value)
+                }
               >
                 <option value="">Select User</option>
                 {users.map((user) => (
@@ -118,7 +117,9 @@ const TaskModule = () => {
               <textarea
                 rows={4}
                 value={formData.requestDetails}
-                onChange={(e) => handleInputChange("requestDetails", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("requestDetails", e.target.value)
+                }
                 className="w-full p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors resize-none"
                 placeholder="Enter your request details here..."
               />
@@ -160,28 +161,3 @@ const TaskModule = () => {
 };
 
 export default TaskModule;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

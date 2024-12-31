@@ -116,6 +116,16 @@ const getUserById = async (req, res) => {
   }
 };
 
+const getAllEmployeesByName = async (req, res) => {
+  try {
+    const applications = await Employee.find({}, "_id firstName lastName email"); // Only fetch _id, firstName, and lastName
+    console.log(applications);
+    res.status(200).json(applications);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching applications" });
+  }
+};
+
 // Delete User Application
 const deleteUser = async (req, res) => {
   try {
@@ -740,21 +750,74 @@ const deleteTransaction = async (req, res) => {
 // Create a new chat message
 const createChat = async (req, res) => {
   try {
-    const { category, message, attachment, status } = req.body;
+    console.log("Headers:", req.headers); // Log headers to check if empId is present
+    console.log("Body:", req.body); // Log the request body
 
-    const newChat = new Chat({
-      category,
+    const { category, message, attachment, status, receiverId } = req.body;
+
+    // Extract sender's employee ID from headers or body
+    const senderId = req.headers.empId || req.body.senderId;
+
+    // Check if senderId is provided
+    if (!senderId) {
+      return res.status(400).json({ message: "Sender ID (empId) is required" });
+    }
+
+    // Verify the senderId in the Employee collection
+    const sender = await Employee.findOne({ _id: senderId });
+    if (!sender) {
+      return res.status(404).json({ message: "Sender not found" });
+    }
+
+    // Verify the receiverId in the Employee collection
+    const receiver = await Employee.findOne({ _id: receiverId });
+    if (!receiver) {
+      return res.status(404).json({ message: "Receiver not found" });
+    }
+
+    // Find or create a chat ticket
+    let chat = await Chat.findOne({ ticketId: receiverId });
+    if (!chat) {
+      // Generate a custom ticket ID
+      const randomDigits = Math.floor(1000 + Math.random() * 9000); // 4 random digits
+      const randomLetters = Math.random().toString(36).substring(2, 4).toUpperCase(); // 2 random letters
+      const ticketId = `TKT${randomDigits}${randomLetters}`; // Combine to form ticketId
+
+      chat = new Chat({
+        ticketId,
+        category,
+        messages: [],
+        status
+      });
+    }
+
+    // Add a new message to the chat
+    chat.messages.push({
+      sender: {
+        _id: sender._id,
+        firstName: sender.firstName,
+        lastName: sender.lastName
+      },
+      receiver: {
+        _id: receiver._id,
+        firstName: receiver.firstName,
+        lastName: receiver.lastName
+      },
       message,
-      attachment,
-      status,
+      attachment
     });
 
-    await newChat.save();
+    // Save the updated chat document
+    await chat.save();
+
+    // Send a response back to the client
     res.status(201).json({
       message: "Chat created successfully",
-      newChat,
+      chat
     });
   } catch (error) {
+    // Log and return error if something goes wrong
+    console.error("Error:", error);
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
@@ -762,7 +825,32 @@ const createChat = async (req, res) => {
 // Get all chat messages
 const getAllChats = async (req, res) => {
   try {
-    const chats = await Chat.find();
+    // Get empId from headers sent by the frontend
+    const empId = req.headers.empid; // Ensure header name matches exactly
+
+    if (!empId) {
+      return res.status(400).json({ message: "Employee ID is required" });
+    }
+
+    // Fetch chats where the empId is either the sender or the receiver
+    const chats = await Chat.find({
+      $or: [
+        { "messages.sender._id": empId },  // Check if empId is sender
+        { "messages.receiver._id": empId }  // Check if empId is receiver
+      ]
+    }).populate({
+      path: 'messages.sender._id', // Populate sender's _id inside the message
+      select: 'firstName lastName email',
+    }).populate({
+      path: 'messages.receiver._id', // Populate receiver's _id inside the message
+      select: 'firstName lastName email',
+    });
+
+    // If no chats found, return an appropriate message
+    if (chats.length === 0) {
+      return res.status(400).json({ message: "No chats found for this employee." });
+    }
+
     res.status(200).json({
       message: "Chats retrieved successfully",
       chats,
@@ -773,19 +861,39 @@ const getAllChats = async (req, res) => {
 };
 
 // Get a specific chat message by ID
-const getChatById = async (req, res) => {
+const getChatByTicketId = async (req, res) => {
   try {
-    const chat = await Chat.findById(req.params.id);
+    const { ticketId } = req.params;
+
+    // Check if ticketId is provided
+    if (!ticketId) {
+      console.log("No ticketId provided");
+      return res.status(400).json({ message: "Ticket ID is required" });
+    }
+
+    console.log("Received Ticket ID:", ticketId);
+
+    // Query chat by ticketId
+    const chat = await Chat.findOne({ ticketId }) // Query using an object with ticketId
+      .populate({
+        path: 'messages.sender._id', // Populate sender's _id inside the message
+        select: 'firstName lastName email',
+      })
+      .populate({
+        path: 'messages.receiver._id', // Populate receiver's _id inside the message
+        select: 'firstName lastName email',
+      });
 
     if (!chat) {
+      console.log("No chat found for ticketId:", ticketId);
       return res.status(404).json({ message: "Chat not found" });
     }
 
-    res.status(200).json({
-      message: "Chat retrieved successfully",
-      chat,
-    });
+    console.log("Chat retrieved successfully:", chat);
+
+    res.status(200).json({ message: "Chat retrieved successfully", chat });
   } catch (error) {
+    console.error("Error retrieving chat by ticketId:", error.message);
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
@@ -793,23 +901,70 @@ const getChatById = async (req, res) => {
 // Update a chat message
 const updateChat = async (req, res) => {
   try {
-    const { category, message, attachment, status } = req.body;
+    const { ticketId } = req.params;
+    const senderId = req.headers.empid || req.headers.empId;
+    console.log("Received Ticket ID:", ticketId);
+    console.log("Sender ID from headers:", senderId);
 
-    const updatedChat = await Chat.findByIdAndUpdate(
-      req.params.id,
-      { category, message, attachment, status },
-      { new: true }
-    );
+    // Validate senderId
+    if (!senderId) {
+      return res.status(400).json({ message: "Sender ID (empId) is required" });
+    }
+
+    // Validate the sender in the Employee collection
+    const sender = await Employee.findOne({ _id: senderId });
+    if (!sender) {
+      return res.status(404).json({ message: "Sender not found" });
+    }
+
+    // Validate the receiverId in the request body
+    const { receiverId, message, attachment, status, category } = req.body;
+    // if (!receiverId) {
+    //   return res.status(400).json({ message: "Receiver ID is required" });
+    // }
+    const chat = await Chat.findOne({ ticketId }) // Query using an object with ticketId
+
+    // Find the chat by ticketId
+    const updatedChat = await Chat.findOne({ ticketId }).populate({
+      path: 'messages.sender._id',
+      select: 'firstName lastName email',
+    }).populate({
+      path: 'messages.receiver._id',
+      select: 'firstName lastName email',
+    });
 
     if (!updatedChat) {
       return res.status(404).json({ message: "Chat not found" });
     }
 
+    // Optionally update category and status if provided
+    if (category) updatedChat.category = category;
+    if (status) updatedChat.status = status;
+
+    // Add new message or attachment to the chat
+    if (message || attachment) {
+      updatedChat.messages.push({
+        sender: {
+          _id: sender._id,
+          firstName: sender.firstName,
+          lastName: sender.lastName,
+        },
+
+        message,
+        attachment,
+      });
+    }
+
+    // Save the updated chat document
+    await updatedChat.save();
+
+    // Send a response back to the client
     res.status(200).json({
       message: "Chat updated successfully",
       updatedChat,
     });
   } catch (error) {
+    console.error("Error:", error);
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
@@ -876,7 +1031,8 @@ module.exports = {
   getAllowanceDeductionById,
   createChat,
   getAllChats,
-  getChatById,
+  getChatByTicketId,
   updateChat,
   deleteChat,
+  getAllEmployeesByName
 };

@@ -272,14 +272,7 @@ const ScheduleKanban = () => {
           <Typography variant="h5" sx={{ color: "text.primary", fontWeight: 600 }}>
             Class Schedules
           </Typography>
-          {/* <Button
-            variant="contained"
-            component={Link}
-            to="/serviceClassShedule"
-            color="primary"
-          >
-            + Create Schedules
-          </Button> */}
+
         </Box>
 
         <Grid
