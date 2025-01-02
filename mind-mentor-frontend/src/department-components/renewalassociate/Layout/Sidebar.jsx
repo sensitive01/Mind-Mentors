@@ -29,6 +29,7 @@ import {
   Typography
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { TentTree } from 'lucide-react';
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -186,6 +187,12 @@ const ModernSidebar = () => {
       text: 'Renewals',
       color: iconColors.renewals,
       link: '#',
+    },
+    {
+      icon: <TentTree />,
+      text: 'Holidays',
+      color: iconColors.renewals,
+      link: '/renewal-associate/holidays',
     },
     {
       icon: <ReportsIcon />,

@@ -33,6 +33,12 @@ import ParentReferalPage from "./pages/parent/ParentReferalPage";
 import SupportPage from "./pages/parent/SupportPage";
 import WalkThroughPage from "./pages/parent/WalkThroughPage";
 
+// import KidsDemoClassPage from "./pages/kids/KidsDemoClassPage";
+// import KidsClassShedulePage from "./pages/kids/KidsClassShedulePage";
+// import KidsGamesListPage from "./pages/kids/KidsGamesListPage";
+// import KidsAchievementsPage from "./pages/kids/KidsAchievementsPage";
+// import KidsJourneyPage from "./pages/kids/KidsJourneyPage";
+// import AddKidAvailabilityPage from "./pages/parent/AddKidAvailabilityPage";
 import LoginPage from "./department-components/operation-new/dashboard/LoginPage";
 
 import OperationDashboardPage from "./pages/employee/operation-employee/OperationDashboardPage";
@@ -64,28 +70,37 @@ import ShowAllEnquiryLogs from "./pages/employee/operation-employee/ShowAllEnqui
 import DemoClassShedulePage from "./pages/employee/operation-employee/DemoClassShedulePage";
 import AssignDemoClassPage from "./pages/employee/operation-employee/AssignDemoClassPage";
 
-// import CenterOperationDashboardPage from "./pages/centeradmin/CenterOperationDashboardPage;";
-// import CenterSEnquiryFormPage from "./pages/centeradmin/CenterSEnquiryFormPage";
-// import CenterListingEnquiries from "./pages/centeradmin/CenterListingEnquiries";
-// import CenterMyTaskPage from "./pages/centeradmin/CenterMyTaskPage";
-// import CenterProspectPage from "./pages/centeradmin/CenterProspectPage";
-// import CenterReferalPage from "./pages/centeradmin/CenterReferalPage";
-// import CenterTaskAssignByMePage from "./pages/centeradmin/CenterTaskAssignByMePage";
-// import CenterAssigneTasksPage from "./pages/centeradmin/CenterAssigneTasksPage";
-// import CenterTasksPage from "./pages/centeradmin/CenterTasksPage";
-// import CenterSupportPage from "./pages/centeradmin/CenterSupportPage";
-// import CenterMessageStusTrackPage from "./pages/centeradmin/CenterMessageStusTrackPage";
-// import CenterSupportRequest from "./pages/centeradmin/CenterSupportRequest";
-// import CenterScheduleClass from "./pages/centeradmin/CenterScheduleClass";
-// import CenterLeavesPage from "./pages/centeradmin/CenterLeavesPage";
-// import CenterLeaveFormPage from "./pages/centeradmin/CenterLeaveFormPage";
-// import CenterAdminAttendance from "./pages/centeradmin/CenterAdminAttendance";
-// import CenterProfile from "./pages/centeradmin/CenterProfile";
-// import CenterInvoicePage from "./pages/centeradmin/CenterInvoicePage";
-// import CenterStudentReport from "./pages/centeradmin/CenterStudentReport";
-// import CenterCoachFeedback from "./pages/centeradmin/CenterCoachFeedback";
+import HolidayPage from "./pages/employee/operation-employee/HolidayPage";
+
+
+
+
+
+
+import CenterOperationDashboardPage from "./pages/employee/centeradmin/CenterOperationDashboardPage;";
+import CenterSEnquiryFormPage from "./pages/employee/centeradmin/CenterSEnquiryFormPage";
+import CenterListingEnquiries from "./pages/employee/centeradmin/CenterListingEnquiries";
+import CenterMyTaskPage from "./pages/employee/centeradmin/CenterMyTaskPage";
+import CenterProspectPage from "./pages/employee/centeradmin/CenterProspectPage";
+import CenterReferalPage from "./pages/employee/centeradmin/CenterReferalPage";
+import CenterTaskAssignByMePage from "./pages/employee/centeradmin/CenterTaskAssignByMePage";
+import CenterAssigneTasksPage from "./pages/employee/centeradmin/CenterAssigneTasksPage";
+import CenterTasksPage from "./pages/employee/centeradmin/CenterTasksPage";
+import CenterSupportPage from "./pages/employee/centeradmin/CenterSupportPage";
+import CenterMessageStusTrackPage from "./pages/employee/centeradmin/CenterMessageStusTrackPage";
+import CenterSupportRequest from "./pages/employee/centeradmin/CenterSupportRequest";
+import CenterScheduleClass from "./pages/employee/centeradmin/CenterScheduleClass";
+import CenterLeavesPage from "./pages/employee/centeradmin/CenterLeavesPage";
+import CenterLeaveFormPage from "./pages/employee/centeradmin/CenterLeaveFormPage";
+import CenterAdminAttendance from "./pages/employee/centeradmin/CenterAdminAttendance";
+import CenterProfile from "./pages/employee/centeradmin/CenterProfile";
+import CenterInvoicePage from "./pages/employee/centeradmin/CenterInvoicePage";
+import CenterStudentReport from "./pages/employee/centeradmin/CenterStudentReport";
+import CenterCoachFeedback from "./pages/employee/centeradmin/CenterCoachFeedback";
 // import CenterLoginPage from "./centeradmin-components/CenterLoginPage";
-// import CenterAdminKidsPage from "./pages/centeradmin/CenterAdminKidsPage";
+import CenterAdminKidsPage from "./pages/employee/centeradmin/CenterAdminKidsPage";
+import CenterAdminEnquiryLogs from "./pages/employee/centeradmin/CenterAdminEnquiryLogs";
+import CenterAdminTaskLogs from "./pages/employee/centeradmin/CenterAdminTaskLogs";
 
 // ...................................................................................................
 import ServiceAttendance from "./pages/employee/servicedelivery/ServiceAttendance";
@@ -185,59 +200,55 @@ import MarketingCompleteLogs from "./pages/employee/marketing/MarketingCompleteL
 // import MarketingLogin from "./marketing/components/LoginPage";
 import MarketingEnquiry from "./pages/employee/marketing/MarketingEnquiry";
 
-// import AllowDeductForm from "./pages/superadmin/AllowDeductForm";
-// import AllowDeductTable from "./pages/superadmin/AllowDeductTable";
-// import ChessKid from "./pages/superadmin/ChessKid";
-// import SuperadminDashboard from "./pages/superadmin/SuperadminDashboard";
-// import DocumentsForm from "./pages/superadmin/DocumentsForm";
-// import DocumentsTable from "./pages/superadmin/DocumentsTable";
-// import EmployeeForm from "./pages/superadmin/EmployeeForm";
-// import EmployeeTable from "./pages/superadmin/EmployeeTable";
-// import ExpenseForm from "./pages/superadmin/ExpenseForm";
-// import ExpensesTable from "./pages/superadmin/Expenses";
-// import HolidayTable from "./pages/superadmin/Holiday";
-// import HolidayForm from "./pages/superadmin/HolidayForm";
-// import NotificationForm from "./pages/superadmin/NotificationForm";
-// import NotificationTable from "./pages/superadmin/NotificationTable";
-// import SuperadminParents from "./pages/superadmin/SuperadminParents";
-// import Participents from "./pages/superadmin/Participents";
-// import Payroll from "./pages/superadmin/Payroll";
-// import SuperadminAttendanceReport from "./pages/superadmin/SuperadminAttendanceReport";
-// import SuperadminFeedback from "./pages/superadmin/SuperadminFeedback";
-// import SuperadminInvoice from "./pages/superadmin/SuperadminInvoice";
-// import SuperadminKids from "./pages/superadmin/SuperadminKids";
-// import SuperadminLeaves from "./pages/superadmin/SuperadminLeaves";
-// import SuperadminLeavesAdd from "./pages/superadmin/SuperadminLeavesAdd";
+import AllowDeductForm from "./pages/employee/superadmin/AllowDeductForm";
+import AllowDeductTable from "./pages/employee/superadmin/AllowDeductTable";
+import ChessKid from "./pages/employee/superadmin/ChessKid";
+import SuperadminDashboard from "./pages/employee/superadmin/SuperadminDashboard";
+import DocumentsForm from "./pages/employee/superadmin/DocumentsForm";
+import DocumentsTable from "./pages/employee/superadmin/DocumentsTable";
+import EmployeeForm from "./pages/employee/superadmin/EmployeeForm";
+import EmployeeTable from "./pages/employee/superadmin/EmployeeTable";
+import ExpenseForm from "./pages/employee/superadmin/ExpenseForm";
+import ExpensesTable from "./pages/employee/superadmin/Expenses";
+import HolidayTable from "./pages/employee/superadmin/Holiday";
+import HolidayForm from "./pages/employee/superadmin/HolidayForm";
+import NotificationForm from "./pages/employee/superadmin/NotificationForm";
+import NotificationTable from "./pages/employee/superadmin/NotificationTable";
+import SuperadminParents from "./pages/employee/superadmin/SuperadminParents";
+import Participents from "./pages/employee/superadmin/Participents";
+import Payroll from "./pages/employee/superadmin/Payroll";
+import SuperadminAttendanceReport from "./pages/employee/superadmin/SuperadminAttendanceReport";
+import SuperadminFeedback from "./pages/employee/superadmin/SuperadminFeedback";
+import SuperadminInvoice from "./pages/employee/superadmin/SuperadminInvoice";
+import SuperadminKids from "./pages/employee/superadmin/SuperadminKids";
+import SuperadminLeaves from "./pages/employee/superadmin/SuperadminLeaves";
+import SuperadminLeavesAdd from "./pages/employee/superadmin/SuperadminLeavesAdd";
 // import SuperadminLogin from "./superadmin/components/LoginPage";
-// import SuperadminMessageStusTrackPage from "./pages/superadmin/SuperadminMessageStusTrackPage";
-// import SuperadminMyAssignTasks from "./pages/superadmin/SuperadminMyAssignTasks";
-// import SuperadminMyAssignTasksTable from "./pages/superadmin/SuperadminMyAssignTasksTable";
-// import SuperadminMyTasks from "./pages/superadmin/SuperadminMyTasks";
-// import SuperadminProfile from "./pages/superadmin/SuperadminProfile";
-// import SuperadminPrograms from "./pages/superadmin/SuperadminPrograms";
-// import SuperadminReferral from "./pages/superadmin/SuperadminReferal";
-// import SuperadminRenewal from "./pages/superadmin/SuperadminRenewal";
-// import SuperadminScheduleClass from "./pages/superadmin/SuperadminScheduleClass";
-// import SuperadminSupport from "./pages/superadmin/SuperadminSupport";
-// import SuperadminSupportRequest from "./pages/superadmin/SuperadminSupportRequest";
-// import TournamentsForm from "./pages/superadmin/Tournaments";
-// import TournamnetsTable from "./pages/superadmin/TournamnetsTable";
-// import TransactionForm from "./pages/superadmin/TransactionForm";
-// import TransactionTable from "./pages/superadmin/TransactionTable";
-// import UserForm from "./pages/superadmin/UserForm";
-// import UsersTable from "./pages/superadmin/UsersTable";
-// import SuperadminAttendance from "./pages/superadmin/SuperadminAttendance";
-// import SuperadminEnquiries from "./pages/superadmin/ListingEnquiries";
-// import CenterAdminEnquiryLogs from "./pages/centeradmin/CenterAdminEnquiryLogs";
-// import SuperAdminEnquiryLogs from "./pages/superadmin/SuperAdminEnquiryLogs";
-// import KidsDemoClassPage from "./pages/kids/KidsDemoClassPage";
-// import KidsClassShedulePage from "./pages/kids/KidsClassShedulePage";
-// import KidsGamesListPage from "./pages/kids/KidsGamesListPage";
-// import KidsAchievementsPage from "./pages/kids/KidsAchievementsPage";
-// import KidsJourneyPage from "./pages/kids/KidsJourneyPage";
-// import AddKidAvailabilityPage from "./pages/parent/AddKidAvailabilityPage";
-// import CenterAdminTaskLogs from "./pages/centeradmin/CenterAdminTaskLogs";
-// import SuperAdminTaskAllLogs from "./pages/superadmin/SuperAdminTaskAllLogs";
+import SuperadminMessageStusTrackPage from "./pages/employee/superadmin/SuperadminMessageStusTrackPage";
+import SuperadminMyAssignTasks from "./pages/employee/superadmin/SuperadminMyAssignTasks";
+import SuperadminMyAssignTasksTable from "./pages/employee/superadmin/SuperadminMyAssignTasksTable";
+import SuperadminMyTasks from "./pages/employee/superadmin/SuperadminMyTasks";
+import SuperadminProfile from "./pages/employee/superadmin/SuperadminProfile";
+import SuperadminPrograms from "./pages/employee/superadmin/SuperadminPrograms";
+import SuperadminReferral from "./pages/employee/superadmin/SuperadminReferal";
+import SuperadminRenewal from "./pages/employee/superadmin/SuperadminRenewal";
+import SuperadminScheduleClass from "./pages/employee/superadmin/SuperadminScheduleClass";
+import SuperadminSupport from "./pages/employee/superadmin/SuperadminSupport";
+import SuperadminSupportRequest from "./pages/employee/superadmin/SuperadminSupportRequest";
+import TournamentsForm from "./pages/employee/superadmin/Tournaments";
+import TournamnetsTable from "./pages/employee/superadmin/TournamnetsTable";
+import TransactionForm from "./pages/employee/superadmin/TransactionForm";
+import TransactionTable from "./pages/employee/superadmin/TransactionTable";
+import UserForm from "./pages/employee/superadmin/UserForm";
+import UsersTable from "./pages/employee/superadmin/UsersTable";
+import SuperadminAttendance from "./pages/employee/superadmin/SuperadminAttendance";
+import SuperadminEnquiries from "./pages/employee/superadmin/ListingEnquiries";
+import SuperAdminEnquiryLogs from "./pages/employee/superadmin/SuperAdminEnquiryLogs";
+import SuperAdminTaskAllLogs from "./pages/employee/superadmin/SuperAdminTaskAllLogs";
+import CenterAdminHolidayPage from "./pages/employee/centeradmin/CenterAdminHolidayPage";
+import RenewalHolidayPage from "./pages/employee/renewalassociate/RenewalHolidayPage";
+import MarketingHolidayPage from "./pages/employee/marketing/MarketingHolidayPage";
+import ServiceDelivaryHolidayPage from "./pages/employee/servicedelivery/ServiceDelivaryHolidayPage";
 
 function App() {
   return (
@@ -312,30 +323,37 @@ function App() {
 
           <Route path="/employee-login" element={<LoginPage />} />
           <Route path="/employee-operation-dashboard"  element={<OperationDashboardPage />} />
-          <Route path="/employee-operation-enquiry-form" element={<SEnquiryFormPage />}/>
           <Route path="/employee-operation-enquiry-list" element={<ListingEnquiries />} />
+          <Route path="/showCompleteLogs/:id"  element={<ShowAllEnquiryLogs />}/>
+          <Route path="/employee-operation-enquiry-form" element={<SEnquiryFormPage />}/>
           <Route path="/employee-operation/prospects"  element={<ProspectPage />} />
+
+          
           <Route path="/employee-operation/attendance" element={<EmpAttendance />}/>
-          <Route path="/employee-operation/leaves" element={<LeavesPage />} />
-          <Route path="/employee-operation/leaves/add" element={<LeaveFormPage />} />
+
           <Route path="/employee-operation-tasks/tasks"  element={<TasksPage />} />
           <Route path="/employee-operation-tasks/assignedtasks" element={<AssigneTaskPage />} />
-          <Route path="/employee-operation/taskslogs/:id" element={<TasksLogs />}/>
           <Route path="/employee-operation-tasks/assigntask" element={<TaskAssignByMePage />} />
-          <Route path="/showCompleteLogs/:id"  element={<ShowAllEnquiryLogs />}/>
+          <Route path="/employee-operation/taskslogs/:id"  element={<TasksLogs />}/>
+          <Route path="/employee-operation/taskslogs/:id" element={<TasksLogs />}/>
           <Route path="/employee-operation/schedule"  element={<ScheduleClass />}/>
-          <Route path="/employee-operation/studentreport"  element={<StudentReport />}  />
-          <Route path="/employee-operation/invoice" element={<InvoicePage />} />
-          <Route path="/employee-operation/coachfeedback"  element={<CoachFeedback />} />
           <Route path="/employeeAssignDemoClass/:id"  element={<AssignDemoClassPage />} />
+          <Route path="/employee-operation/leaves" element={<LeavesPage />} />
+          <Route path="/employee-operation/leaves/add" element={<LeaveFormPage />} />
+          <Route path="/employee-operation/studentreport"  element={<StudentReport />}  />
+          <Route path="/employee-operation/coachfeedback"  element={<CoachFeedback />} />
+          <Route path="/employee-operation/invoice" element={<InvoicePage />} />
+          <Route path="/employee-operation/holidays"   element={<HolidayPage />}  />
           <Route path="/employee-operation-tasks/supports" element={<SupportRequest />} />
           <Route path="/employee-operation-tasks/support/add" element={<SupportPages />}  />
+          
+
           <Route path="/employee-operation-tasks/supportTrack"  element={<MessageStusTrackPage />}  />
           <Route path="/employee-operation-tasks/add" element={<MyTaskPage />}  />
           <Route path="/employee-operation/referal" element={<ReferalPage />} />
-          <Route path="/employee-operation/taskslogs/:id"  element={<TasksLogs />}/>
           <Route path="/employee-operation/profile" element={<Profile />} />
           <Route path="/employee-operation/demoSheduleForm"   element={<DemoClassShedulePage />}  />
+
 
 
           <Route path="/serviceProfile" element={<ServiceProfile />} />
@@ -360,6 +378,8 @@ function App() {
           <Route path="/coachAvailabilityTable"  element={<CoachAvailabilityTablePage />}  />
           <Route path="/serviceAssignClassToKid/:id" element={<AssignClassToKid />}/>
           <Route path="/service-delivary/taskslogs/:id"  element={<ServiceTaskLogs />}/>
+          <Route path="/service-delivary/holidays"  element={<ServiceDelivaryHolidayPage />}/>
+
 
           {/* <Route path="/serviceLogin" element={<ServiceLogin />} /> */}
 
@@ -383,6 +403,8 @@ function App() {
         <Route path="/renewalParents" element={<RenewalParents />} />
         <Route path="/renewalRenewals" element={<RenewalRenewal />} />
         <Route path="/renewal-associate/taskslogs/:id" element={<RenewalTaskLogs />} /> 
+        <Route path="/renewal-associate/holidays" element={<RenewalHolidayPage />} /> 
+
         {/* <Route path="/renewalLogin" element={<RenewalLogin />} /> */}
           {/* <Route path="/renewalReferrals" element={<RenewalReferal />} /> */}
 
@@ -421,82 +443,97 @@ function App() {
         <Route path="/marketingSupport/add" element={<MarketingSupport />} />
         <Route path="/marketingSupport/" element={<MarketingSupportRequest />} />
         <Route path="/showCompleteLogsMarketing/:id" element={< MarketingCompleteLogs/>} />
+        <Route path="/marketing-associate/holidays" element={< MarketingHolidayPage/>} />
+
+
+
+        
           {/* <Route path="/marketingScheduleClass/" element={<MarketingScheduleClass />} /> */}
         {/* <Route path="/marketingLogin" element={<MarketingLogin />} /> */}
 
-          {/*         
-        <Route path="/centeradmin-login" element={<CenterLoginPage />} />
+                  
+        {/* <Route path="/centeradmin-login" element={<CenterLoginPage />} /> */}
+
+
+        <Route path="/centeradmin/profile" element={<CenterProfile/>} />
         <Route path="/centeradmin-dashboard" element={<CenterOperationDashboardPage />} />
-        <Route path="/centeradmin-enquiry-form" element={<CenterSEnquiryFormPage />} /> 
         <Route path="/centeradmin-enquiry-list" element={<CenterListingEnquiries/>} />
+        <Route path="/centeradmin-enquiry-form" element={<CenterSEnquiryFormPage />} /> 
+        <Route path="/centeradmin-kids" element={<CenterAdminKidsPage/>} />
+        <Route path="/centeradmin/leaves" element={<CenterLeavesPage/>} />
+        <Route path="/centeradmin/attendance" element={<CenterAdminAttendance/>} />
+        <Route path="/centeradmin/leaves/add" element={<CenterLeaveFormPage/>} />
+        <Route path="/centeradmin/coachfeedback" element={<CenterCoachFeedback/>} />
+        <Route path="/centeradmin/studentreport" element={<CenterStudentReport/>} />
+        <Route path="/centeradmin-tasks/tasks" element={<CenterTasksPage/>} />
+        <Route path="/centeradmin-tasks/assignedtasks" element={<CenterAssigneTasksPage/>} />
+        <Route path="/centeradmin-tasks/assigntask" element={<CenterTaskAssignByMePage/>} />
+        <Route path="/centeradmin/schedule" element={<CenterScheduleClass/>} />
+        <Route path="/centeradmin-tasks/supports" element={<CenterSupportRequest/>} />
+        <Route path="/centeradmin/invoice" element={<CenterInvoicePage/>} />
+        <Route path="/centeradmin/taskslogs/:id" element={<CenterAdminTaskLogs />} />
+        <Route path="/showCompleteLogsCenterAdmin/:id" element={<CenterAdminEnquiryLogs/>} />
+        <Route path="/centreAdminHoliday" element={<CenterAdminHolidayPage/>} />
+
+
+
+
         <Route path="/centeradmin-tasks/add" element={<CenterMyTaskPage/>} />
         <Route path="/centeradmin/prospects" element={<CenterProspectPage/>} />
         <Route path="/centeradmin/referal" element={<CenterReferalPage/>} />
-        <Route path="/centeradmin-tasks/assigntask" element={<CenterTaskAssignByMePage/>} />
-        <Route path="/centeradmin-tasks/assignedtasks" element={<CenterAssigneTasksPage/>} />
-        <Route path="/centeradmin-kids" element={<CenterAdminKidsPage/>} />
-        <Route path="/centeradmin-tasks/tasks" element={<CenterTasksPage/>} />
         <Route path="/centeradmin-tasks/support/add" element={<CenterSupportPage/>} />
         <Route path="/centeradmin-tasks/supportTrack" element={<CenterMessageStusTrackPage/>} />
-        <Route path="/centeradmin-tasks/supports" element={<CenterSupportRequest/>} />
-        <Route path="/centeradmin/schedule" element={<CenterScheduleClass/>} />
-        <Route path="/centeradmin/leaves" element={<CenterLeavesPage/>} />
-        <Route path="/centeradmin/leaves/add" element={<CenterLeaveFormPage/>} />
-        <Route path="/centeradmin/attendance" element={<CenterAdminAttendance/>} />
-        <Route path="/centeradmin/profile" element={<CenterProfile/>} />
-        <Route path="/centeradmin/invoice" element={<CenterInvoicePage/>} />
-        <Route path="/centeradmin/studentreport" element={<CenterStudentReport/>} />
-        <Route path="/centeradmin/coachfeedback" element={<CenterCoachFeedback/>} />
-        <Route path="/showCompleteLogsCenterAdmin/:id" element={<CenterAdminEnquiryLogs/>} />
-        <Route path="/centeradmin/taskslogs/:id" element={<CenterAdminTaskLogs />} /> */}
 
-          {/* 
+
+
+
         <Route path="/superadminDashboard" element={<SuperadminDashboard />} />
-        <Route path="/superadminProfile" element={<SuperadminProfile />} />
-        <Route path="/superadminAttendance" element={<SuperadminAttendance />} />
-        <Route path="/superadminLeaves" element={<SuperadminLeaves />} />
-        <Route path="/superadminLeaves/add" element={<SuperadminLeavesAdd />} />
+        <Route path="/superadminEnquiries" element={<SuperadminEnquiries />} />
+        <Route path="/superadminKids" element={<SuperadminKids />} />
+        <Route path="/superadminParents" element={<SuperadminParents />} />
+        <Route path="/superadminMyTasks" element={<SuperadminMyTasks />} />
+        <Route path="/superadminMyTasks/assigntask" element={<SuperadminMyAssignTasks />} />
+        <Route path="/superadminAssignedTasks/" element={<SuperadminMyAssignTasksTable />} />
+        <Route path="/superadminRenewals" element={<SuperadminRenewal />} />
         <Route path="/superadminInvoices" element={<SuperadminInvoice />} />
+        <Route path="/chessKids/" element={< ChessKid />} />
         <Route path="/superadminFeedback" element={<SuperadminFeedback />} />
         <Route path="/superadminAttendanceReport" element={<SuperadminAttendanceReport />} />
-        <Route path="/superadminMyTasks/assigntask" element={<SuperadminMyAssignTasks />} />
-        <Route path="/superadminMyTasks" element={<SuperadminMyTasks />} />
-        <Route path="/superadminAssignedTasks/" element={<SuperadminMyAssignTasksTable />} />
-        <Route path="/superadminScheduleClass/" element={<SuperadminScheduleClass />} />
-        <Route path="/superadminSupport/add" element={<SuperadminSupport />} />
-        <Route path="/superadminSupport/" element={<SuperadminSupportRequest />} />
-        <Route path="/superadminMessageStatus/" element={<SuperadminMessageStusTrackPage />} />
-        <Route path="/superadminKids" element={<SuperadminKids />} />
-        <Route path="/superadminEnquiries" element={<SuperadminEnquiries />} />
-
         <Route path="/superadminPrograms" element={<SuperadminPrograms />} />
-        <Route path="/superadminParents" element={<SuperadminParents />} />
-        <Route path="/superadminRenewals" element={<SuperadminRenewal />} />
-        <Route path="/superadminLogin" element={<SuperadminLogin />} />
-        <Route path="/notifications/add" element={<NotificationForm />} />
+        <Route path="/superadminSupport/" element={<SuperadminSupportRequest />} />
         <Route path="/notifications" element={<NotificationTable />} />
-        <Route path="/employee/add" element={<EmployeeForm />} />
         <Route path="/employees/" element={<EmployeeTable />} />
-        <Route path="/allowdeduct/add" element={<AllowDeductForm />} />
+        <Route path="/employee/add" element={<EmployeeForm />} />
+        <Route path="/superadminAttendance" element={<SuperadminAttendance />} />
         <Route path="/allowdeduct/" element={< AllowDeductTable />} />
         <Route path="/payroll/" element={< Payroll />} />
-        <Route path="/transactions/" element={<TransactionTable />} />
-        <Route path="/expenses/" element={< ExpensesTable />} />
+        <Route path="/documents/" element={< DocumentsTable />} />
+        <Route path="/users/" element={< UsersTable />} />
+        <Route path="/users/add" element={< UserForm />} />
+        <Route path="/tournaments/" element={< TournamnetsTable />} />
+        <Route path="/tournaments/add" element={< TournamentsForm />} />
+        <Route path="/superadminScheduleClass/" element={<SuperadminScheduleClass />} />
+        <Route path="/participents/" element={< Participents />} />
         <Route path="/holiday/" element={< HolidayTable />} />
         <Route path="/holiday/add" element={<HolidayForm />} />
-        <Route path="/expenses/add" element={< ExpenseForm />} />
+        <Route path="/expenses/" element={< ExpensesTable />} />
+        <Route path="/transactions/" element={<TransactionTable />} />
         <Route path="/transactions/add" element={< TransactionForm />} />
-        <Route path="/tournaments/" element={< TournamnetsTable />} />
+
+        
+        <Route path="/superadminProfile" element={<SuperadminProfile />} />
+        <Route path="/superadminLeaves" element={<SuperadminLeaves />} />
+        <Route path="/superadminLeaves/add" element={<SuperadminLeavesAdd />} />
+        <Route path="/superadminSupport/add" element={<SuperadminSupport />} />
+        <Route path="/superadminMessageStatus/" element={<SuperadminMessageStusTrackPage />} />
+        {/* <Route path="/superadminLogin" element={<SuperadminLogin />} /> */}
+        <Route path="/notifications/add" element={<NotificationForm />} />
+        <Route path="/allowdeduct/add" element={<AllowDeductForm />} />
+        <Route path="/expenses/add" element={< ExpenseForm />} />
         <Route path="/documents/add" element={< DocumentsForm />} />
-        <Route path="/documents/" element={< DocumentsTable />} />
-        <Route path="/tournaments/add" element={< TournamentsForm />} />
-        <Route path="/users/add" element={< UserForm />} />
-        <Route path="/users/" element={< UsersTable />} />
-        <Route path="/participents/" element={< Participents />} />
-        <Route path="/chessKids/" element={< ChessKid />} />
         <Route path="/showCompleteLogsAdmin/:id" element={<SuperAdminEnquiryLogs/>} />
-        <Route path="/superadmin/taskslogs/:id" element={<SuperAdminTaskAllLogs />} /> */}
-          {/* <Route path="/superadminReferrals" element={<SuperadminReferral />} /> */}
+        <Route path="/superadmin/taskslogs/:id" element={<SuperAdminTaskAllLogs />} /> 
+        <Route path="/superadminReferrals" element={<SuperadminReferral />} /> 
         </Routes>
       </Router>
     </>

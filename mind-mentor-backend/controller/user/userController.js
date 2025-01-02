@@ -414,25 +414,27 @@ const deleteNotification = async (req, res) => {
   }
 };
 
-// Create a new holiday
+
 const createHoliday = async (req, res) => {
   try {
-    const { holidayName, startDate, endDate, description, status } = req.body;
+    console.log("Request body:", req.body); // Debugging req.body
+    const { holidayName, startDate, endDate, description, attachment, category } = req.body;
     const newHoliday = new Holiday({
       holidayName,
       startDate,
       endDate,
       description,
-      status,
+      attachment,
+      category,
     });
     await newHoliday.save();
-    res.status(201).json(newHoliday);
+    console.log("Saved holiday:", newHoliday); // Debugging saved data
+    res.status(200).json(newHoliday); 
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
 
-// Get all holidays
 const getAllHolidays = async (req, res) => {
   try {
     const holidays = await Holiday.find();
@@ -442,7 +444,7 @@ const getAllHolidays = async (req, res) => {
   }
 };
 
-// Get a holiday by ID
+
 const getHolidayById = async (req, res) => {
   try {
     const holiday = await Holiday.findById(req.params.id);
@@ -455,13 +457,13 @@ const getHolidayById = async (req, res) => {
   }
 };
 
-// Update a holiday by ID
+
 const updateHoliday = async (req, res) => {
   try {
-    const { holidayName, startDate, endDate, description, status } = req.body;
+    const { holidayName, startDate, endDate, description, attachment, category } = req.body;
     const updatedHoliday = await Holiday.findByIdAndUpdate(
       req.params.id,
-      { holidayName, startDate, endDate, description, status },
+       { holidayName, startDate, endDate, description, attachment, category },
       { new: true }
     );
     if (!updatedHoliday) {
@@ -473,7 +475,7 @@ const updateHoliday = async (req, res) => {
   }
 };
 
-// Delete a holiday by ID
+
 const deleteHoliday = async (req, res) => {
   try {
     const holiday = await Holiday.findByIdAndDelete(req.params.id);

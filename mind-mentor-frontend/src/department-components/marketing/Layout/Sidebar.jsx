@@ -31,6 +31,7 @@ import {
   Typography
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { TentTree } from 'lucide-react';
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -158,6 +159,12 @@ const ModernSidebar = () => {
       text: 'Leaves',
       color: iconColors.leaves,
       link: '/marketingLeaves',
+    },
+    {
+      icon: <TentTree />,
+      text: 'Holidays',
+      color: iconColors.renewals,
+      link: '/marketing-associate/holidays',
     },
  
     {

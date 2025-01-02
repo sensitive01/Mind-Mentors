@@ -35,20 +35,11 @@ userRoute.get('/notifications/:id', userController.getNotificationById);
 userRoute.put('/notifications/:id',userController.updateNotification);
 userRoute.delete('/notifications/:id', userController.deleteNotification);
 
-// Create a new holiday
- userRoute.post('/holidays',  userController.createHoliday);
-
-// Get all holidays
- userRoute.get('/holidays',  userController.getAllHolidays);
-
-// Get a single holiday by ID
- userRoute.get('/holidays/:id',  userController.getHolidayById);
-
-// Update a holiday by ID
- userRoute.put('/holidays/:id',  userController.updateHoliday);
-
-// Delete a holiday by ID
- userRoute.delete('/holidays/:id',  userController.deleteHoliday);
+userRoute.post('/holidays',  userController.createHoliday);
+userRoute.get('/holidays',  userController.getAllHolidays);
+userRoute.get('/holidays/:id',  userController.getHolidayById);
+userRoute.put('/holidays/:id',  userController.updateHoliday);
+userRoute.delete('/holidays/:id',  userController.deleteHoliday);
 
  // Create new allowance/deduction
 userRoute.post('/allowance-deductions', userController.createAllowanceDeduction);

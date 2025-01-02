@@ -232,8 +232,8 @@ export const getParentData = async () => {
   return response.data;
 };
 
-export const attandaceData = async (email) => {
-  const response = await operationDeptInstance.get(`/get-attandace-data/${email}`);
+export const attandaceData = async (empId) => {
+  const response = await operationDeptInstance.get(`/get-attandace-data/${empId}`);
   return response.data;
 };
 

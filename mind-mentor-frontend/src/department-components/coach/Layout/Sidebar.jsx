@@ -133,6 +133,12 @@ const ModernSidebar = () => {
       link: '/coachDashboard',
     },
     {
+      icon: <ClassScheduleIcon />,
+      text: 'Class Schedules',
+      color: iconColors.classSchedules,
+      link: '/coachScheduleClass',
+    },
+    {
       icon: <TaskIcon />,
       text: 'Tasks',
       color: iconColors.tasks,
@@ -175,12 +181,6 @@ const ModernSidebar = () => {
       onClick: handleReportsClick,
     },    
     
-    {
-      icon: <ClassScheduleIcon />,
-      text: 'Class Schedules',
-      color: iconColors.classSchedules,
-      link: '/coachScheduleClass',
-    },
     {
       icon: <SupportIcon />,
       text: 'Support',

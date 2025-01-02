@@ -3,7 +3,7 @@ import AttendanceCalendar from "../../../department-components/marketing/compone
 import Topbar from '../../../component/parent-component/parent-dashboard/layout/Topbar';
 import Sidebar from "../../../department-components/marketing/Layout/Sidebar";
 
-const DashboardPage = () => {
+const MarketingAttendance = () => {
   return (
     <div className="flex h-screen w-screen overflow-hidden">
       <div className="z-30">
@@ -22,4 +22,4 @@ const DashboardPage = () => {
     </div>
   );
 };
-export default DashboardPage;
+export default MarketingAttendance;

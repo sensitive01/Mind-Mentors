@@ -13,6 +13,7 @@ import {
   ChevronRight,
   Person as ProfileIcon,
 } from "@mui/icons-material";
+
 import {
   Box,
   Collapse,
@@ -27,6 +28,7 @@ import {
   Typography,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
+import { TentTree } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -39,10 +41,10 @@ const ModernSidebar = () => {
 
   // Auto-expand parent menu when child is active
   useEffect(() => {
-    menuItems.forEach(item => {
+    menuItems.forEach((item) => {
       if (item.subItems) {
-        const isSubItemActive = item.subItems.some(subItem => 
-          location.pathname === subItem.link
+        const isSubItemActive = item.subItems.some(
+          (subItem) => location.pathname === subItem.link
         );
         if (isSubItemActive) {
           if (item.text === "Reports") setOpenReports(true);
@@ -76,7 +78,7 @@ const ModernSidebar = () => {
     position: "relative",
     overflow: "hidden",
     gap: 8,
-  
+
     ...(active && {
       backgroundColor: "#642b8f",
       "& .MuiListItemIcon-root": {
@@ -92,27 +94,27 @@ const ModernSidebar = () => {
         backgroundColor: "#642b8f", // Fixed the typo here (was "white")
       },
     }),
-  
+
     "&:hover": {
       backgroundColor: "#642b8f",
       "& .MuiListItemIcon-root": {
         color: "white",
       },
       "& .MuiListItemText-primary": {
-        color: "white", 
+        color: "white",
       },
       "& .MuiSvgIcon-root": {
         color: "white",
       },
       boxShadow: theme.shadows[2],
     },
-  
+
     "& .MuiListItemText-primary": {
       color: active ? "#ffffff" : theme.palette.text.primary, // Added active state color check
       fontWeight: active ? 600 : 400,
       transition: "all 0.3s ease",
     },
-  
+
     "& .MuiListItemIcon-root": {
       minWidth: 40,
       transition: "all 0.3s ease",
@@ -203,6 +205,13 @@ const ModernSidebar = () => {
       link: "/employee-operation/invoice",
     },
     {
+      icon: <TentTree />,
+
+      text: "Holidays",
+      color: iconColors.invoices,
+      link: "/employee-operation/holidays",
+    },
+    {
       icon: <HelpOutline />,
       text: "Support",
       color: iconColors.support,
@@ -218,7 +227,7 @@ const ModernSidebar = () => {
   const isParentActive = (item) => {
     if (item.link) return isItemActive(item.link);
     if (item.subItems) {
-      return item.subItems.some(subItem => isItemActive(subItem.link));
+      return item.subItems.some((subItem) => isItemActive(subItem.link));
     }
     return false;
   };
@@ -237,7 +246,9 @@ const ModernSidebar = () => {
             color: isActive ? "white" : item.color,
           }}
         >
-          {isSubItem ? React.cloneElement(item.icon, { fontSize: "small" }) : item.icon}
+          {isSubItem
+            ? React.cloneElement(item.icon, { fontSize: "small" })
+            : item.icon}
         </ListItemIcon>
         {!isCollapsed && (
           <>
@@ -307,9 +318,9 @@ const ModernSidebar = () => {
             <Divider sx={{ width: "100%", my: 1 }} />
           </Box>
         )}
-        <IconButton 
+        <IconButton
           onClick={() => setIsCollapsed(!isCollapsed)}
-          sx={{ 
+          sx={{
             bgcolor: "#642b8f",
             color: "white",
             "&:hover": { bgcolor: "#4a1d6e" },
@@ -327,7 +338,7 @@ const ModernSidebar = () => {
             <Tooltip title={isCollapsed ? item.text : ""} placement="right">
               {renderMenuItem(item)}
             </Tooltip>
-            
+
             {!isCollapsed && item.subItems && (
               <Collapse in={item.open} timeout="auto" unmountOnExit>
                 <List component="div" disablePadding>
@@ -344,7 +355,9 @@ const ModernSidebar = () => {
                       >
                         <ListItemIcon
                           sx={{
-                            color: isItemActive(subItem.link) ? "white" : item.color,
+                            color: isItemActive(subItem.link)
+                              ? "white"
+                              : item.color,
                           }}
                         >
                           {React.cloneElement(item.icon, { fontSize: "small" })}

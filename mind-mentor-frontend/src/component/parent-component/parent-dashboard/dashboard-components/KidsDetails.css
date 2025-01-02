@@ -1,90 +1,93 @@
-.animated-border-card {
-  position: relative;
-  cursor: pointer;
-  transition: transform 0.3s ease;
-  border-radius: 0.75rem;
+/* Border animation styles */
+.card-border-animation {
+  --border-width: 2px;
+  --border-color: #642b8f;
+  --animation-duration: 2s;
 }
 
-.animated-border-card:hover {
-  transform: translateY(-4px);
-}
-
-.card-content {
-  position: relative;
-  z-index: 1;
-  background: white;
-  transition: all 0.3s ease;
-}
-
-.animated-border-card::before,
-.animated-border-card::after {
-  content: "";
+.card-border-animation .line-top,
+.card-border-animation .line-right,
+.card-border-animation .line-bottom,
+.card-border-animation .line-left {
   position: absolute;
-  left: 0;
-  top: 0;
+  background: var(--border-color);
+}
+
+.card-border-animation .line-top {
+  height: var(--border-width);
   width: 100%;
+  top: 0;
+  left: -100%;
+  animation: line-top var(--animation-duration) infinite;
+}
+
+.card-border-animation .line-right {
   height: 100%;
-  border-radius: 0.75rem;
-  background: linear-gradient(90deg, #642b8f, #9f2bc1, #642b8f, #9f2bc1);
-  background-size: 300% 100%;
-  z-index: 0;
-  animation: gradientBG 4s linear infinite;
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  width: var(--border-width);
+  top: -100%;
+  right: 0;
+  animation: line-right var(--animation-duration) infinite;
+  animation-delay: 0.5s;
 }
 
-.animated-border-card::after {
-  filter: blur(10px);
+.card-border-animation .line-bottom {
+  height: var(--border-width);
+  width: 100%;
+  bottom: 0;
+  right: -100%;
+  animation: line-bottom var(--animation-duration) infinite;
+  animation-delay: 1s;
 }
 
-.animated-border-card:hover::before,
-.animated-border-card:hover::after {
-  opacity: 1;
+.card-border-animation .line-left {
+  height: 100%;
+  width: var(--border-width);
+  bottom: -100%;
+  left: 0;
+  animation: line-left var(--animation-duration) infinite;
+  animation-delay: 1.5s;
 }
 
-.card-content::before {
-  content: "";
-  position: absolute;
-  inset: 2px;
-  background: white;
-  border-radius: 0.75rem;
-  z-index: -1;
-}
-
-@keyframes gradientBG {
+@keyframes line-top {
   0% {
-    background-position: 0% 50%;
+    left: -100%;
   }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
+  40%, 100% {
+    left: 100%;
   }
 }
 
-/* Add glowing effect for the border */
-.animated-border-card::before {
-  animation: rotate 3s linear infinite;
-}
-
-@keyframes rotate {
+@keyframes line-right {
   0% {
-    transform: rotate(0deg);
+    top: -100%;
   }
-  100% {
-    transform: rotate(360deg);
+  40%, 100% {
+    top: 100%;
   }
 }
 
-/* Enhanced shadow effect */
-.card-content {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  transition: box-shadow 0.3s ease;
+@keyframes line-bottom {
+  0% {
+    right: -100%;
+  }
+  40%, 100% {
+    right: 100%;
+  }
 }
 
-.animated-border-card:hover .card-content {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+@keyframes line-left {
+  0% {
+    bottom: -100%;
+  }
+  40%, 100% {
+    bottom: 100%;
+  }
+}
+
+/* Add hover effect to make border more visible */
+.card-wrapper:hover .card-border-animation .line-top,
+.card-wrapper:hover .card-border-animation .line-right,
+.card-wrapper:hover .card-border-animation .line-bottom,
+.card-wrapper:hover .card-border-animation .line-left {
+  --border-color: #f8a213;
 }

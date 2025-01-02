@@ -15,7 +15,8 @@ import {
   School as ProgramsIcon,
   Assessment as ReportsIcon,
   Help as SupportIcon,
-  Assignment as TaskIcon
+  Assignment as TaskIcon,
+  EventAvailable as CoachTime
 } from '@mui/icons-material';
 import {
   Box,
@@ -31,6 +32,7 @@ import {
   Typography
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { TentTree } from 'lucide-react';
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -52,7 +54,8 @@ const ModernSidebar = () => {
     classSchedules: '#E67E22',
     programs: '#1ABC9C',
     support: '#E74C3C',
-    logout: '#95A5A6'
+    logout: '#95A5A6',
+    coach:"#6C5CE7"
   };
 
   const StyledListItem = styled(ListItem)(({ theme }) => ({
@@ -122,10 +125,27 @@ const ModernSidebar = () => {
       link: '/serviceDashboard',
     },
     {
-      icon: <KidsIcon />,
-      text: 'Kids',
-      color: iconColors.kids,
-      link: '/servicekids',
+      icon: <CoachTime />,
+      text: 'Coach Availability',
+      color: iconColors.coach,
+      link: '/coachAvailabilityTable',
+    },
+    {
+      icon: <ClassScheduleIcon />,
+      text: 'Class Schedules',
+      color: iconColors.classSchedules,
+      link: '/serviceScheduleClass',
+    },
+    {
+      icon: <TaskIcon />,
+      text: 'Tasks',
+      color: iconColors.tasks,
+      subItems: [
+        { icon: <TaskIcon />, text: 'My Tasks', link: '/serviceMyTasks' },
+        { icon: <TaskIcon />, text: 'Tasks Assigned By Me', link: '/serviceAssignedTasks' },
+      ],
+      open: openTasks,
+      onClick: handleTasksClick,
     },
     {
       icon: <AttendanceIcon />,
@@ -138,6 +158,18 @@ const ModernSidebar = () => {
       text: 'Leaves',
       color: iconColors.leaves,
       link: '/serviceLeaves',
+    },
+    {
+      icon: <KidsIcon />,
+      text: 'Kids',
+      color: iconColors.kids,
+      link: '/servicekids',
+    },
+    {
+      icon: <TentTree />,
+      text: 'Holidays',
+      color: iconColors.renewals,
+      link: '/service-delivary/holidays',
     },
     {
       icon: <InvoicesIcon />,
@@ -162,29 +194,6 @@ const ModernSidebar = () => {
       ],
       open: openReports,
       onClick: handleReportsClick,
-    },
-    {
-      icon: <TaskIcon />,
-      text: 'Tasks',
-      color: iconColors.tasks,
-      subItems: [
-        { icon: <TaskIcon />, text: 'My Tasks', link: '/serviceMyTasks' },
-        { icon: <TaskIcon />, text: 'Tasks Assigned By Me', link: '/serviceAssignedTasks' },
-      ],
-      open: openTasks,
-      onClick: handleTasksClick,
-    },
-    {
-      icon: <ClassScheduleIcon />,
-      text: 'Coach Availability',
-      color: iconColors.classSchedules,
-      link: '/coachAvailabilityTable',
-    },
-    {
-      icon: <ClassScheduleIcon />,
-      text: 'Class Schedules',
-      color: iconColors.classSchedules,
-      link: '/serviceScheduleClass',
     },
     {
       icon: <ProgramsIcon />,

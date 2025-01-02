@@ -1117,96 +1117,50 @@ const AttendanceCalendar = () => {
                   )
                 )}
               </div>
-              {/* <div className="grid grid-cols-7 gap-2">
-                {generateCalendarDays(currentYear, selectedMonth).map((day, index) => {
-                  const dateString = day ? `${currentYear}-${(selectedMonth + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}` : '';
-                  const status = attendanceData[dateString] || 'none';
-                  const isToday = dateString === todayString;
-                  return (
-                    <div
-                      key={index}
-                      className={`relative aspect-square ${day ? getStatusColor(status) : 'bg-transparent'} 
-                        rounded-lg border transition-all duration-300 transform
-                        ${day ? 'hover:scale-105' : ''}`}
-                      onMouseEnter={() => setHoveredDate(dateString)}
-                      onMouseLeave={() => setHoveredDate(null)}
-                    >
-                      {day && (
-                        <>
-                          <div className="absolute top-1 left-2 text-gray-700">
-                            {day}
-                          </div>
-                          {isToday && !attendanceData[todayString] && (
-                            <button
-                              onClick={handleMarkAttendance}
-                              disabled={!isWithinAttendanceTime()} // Disable button outside of allowed time
-                              className="absolute inset-0 flex items-center justify-center bg-green-500 bg-opacity-0 hover:bg-opacity-20 transition-all duration-300"
-                            >
-                              <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-                                Mark Attendance
-                              </span>
-                            </button>
-                          )}
-                          {hoveredDate === dateString && status !== 'none' && (
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="bg-white px-2 py-1 rounded-full text-sm shadow-lg capitalize">
-                                {status}
-                              </div>
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  );
-                })}
-              </div> */}
+
               <div className="grid grid-cols-7 gap-2">
                 {generateCalendarDays(currentYear, selectedMonth).map(
                   (item, index) => {
+                    if (!item) {
+                      return <div key={index} className="bg-transparent" />;
+                    }
+
                     const { day, status } = item;
-                    const dateString = day
-                      ? `${currentYear}-${(selectedMonth + 1)
-                          .toString()
-                          .padStart(2, "0")}-${day.toString().padStart(2, "0")}`
-                      : "";
+                    const dateString = `${currentYear}-${(selectedMonth + 1)
+                      .toString()
+                      .padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
                     const isToday = dateString === todayString;
 
                     return (
                       <div
                         key={index}
-                        className={`relative aspect-square ${
-                          day ? getStatusColor(status) : "bg-transparent"
-                        } 
-          rounded-lg border transition-all duration-300 transform
-          ${day ? "hover:scale-105" : ""}`}
+                        className={`relative aspect-square ${getStatusColor(
+                          status
+                        )} 
+        rounded-lg border transition-all duration-300 transform hover:scale-105`}
                         onMouseEnter={() => setHoveredDate(dateString)}
                         onMouseLeave={() => setHoveredDate(null)}
                       >
-                        {day && (
-                          <>
-                            <div className="absolute top-1 left-2 text-gray-700">
-                              {day}
+                        <div className="absolute top-1 left-2 text-gray-700">
+                          {day}
+                        </div>
+                        {isToday && !attendanceData[todayString] && (
+                          <button
+                            onClick={handleMarkAttendance}
+                            disabled={!isWithinAttendanceTime()}
+                            className="absolute inset-0 flex items-center justify-center bg-green-500 bg-opacity-0 hover:bg-opacity-20 transition-all duration-300"
+                          >
+                            <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                              Mark Attendance
+                            </span>
+                          </button>
+                        )}
+                        {hoveredDate === dateString && status !== "none" && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="bg-white px-2 py-1 rounded-full text-sm shadow-lg capitalize">
+                              {status}
                             </div>
-                            {isToday && !attendanceData[todayString] && (
-                              <button
-                                onClick={handleMarkAttendance}
-                                disabled={!isWithinAttendanceTime()} // Disable button outside of allowed time
-                                className="absolute inset-0 flex items-center justify-center bg-green-500 bg-opacity-0 hover:bg-opacity-20 transition-all duration-300"
-                              >
-                                <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-                                  Mark Attendance
-                                </span>
-                              </button>
-                            )}
-                            {hoveredDate === dateString &&
-                              status !== "none" && (
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                  <div className="bg-white px-2 py-1 rounded-full text-sm shadow-lg capitalize">
-                                    {status}
-                                  </div>
-                                </div>
-                              )}
-                          </>
+                          </div>
                         )}
                       </div>
                     );

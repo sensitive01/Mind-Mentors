@@ -20,13 +20,13 @@ const notificationSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-// Holiday Schema
 const holidaySchema = new mongoose.Schema({
-  holidayName: { type: String, },
-  startDate: { type: Date, },
-  endDate: { type: Date, },
-  description: { type: String, },
-  status: { type: String, enum: ['Active', 'Inactive'] },
+  holidayName: { type: String,  },
+  startDate: { type: Date,  },
+  endDate: { type: Date,  },
+  description: { type: String,  },
+  attachment: { type: String },
+  category: { type: String,  }, 
 }, { timestamps: true });
 
 // allowanceDeductionSchema
