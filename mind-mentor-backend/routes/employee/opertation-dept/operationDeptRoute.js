@@ -36,7 +36,7 @@ operationRoute.put("/enquiry-form/:id", operationController.updateEnquiry)
 operationRoute.put("/prospect-status/:id",operationController.updateProspectStatus);
 operationRoute.put("/enquiry-status/:id",operationController.updateEnquiryStatus);
 operationRoute.put("/schedule-demo/:id", operationController.scheduleDemo);
-operationRoute.put("/update-conducted-enrollment-status/:id", operationController.updateEnrollmentStatus);
+operationRoute.put("/update-conducted-enrollment-status/:empId/:id", operationController.updateEnrollmentStatus);
 operationRoute.put("/add-notes/:id", operationController.addNotes);
 
 

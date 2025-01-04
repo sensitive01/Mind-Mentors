@@ -288,8 +288,8 @@ export const getConductedDemo = async () => {
   return response;
 };
 
-export const updateDemoStatus = async (id) => {
-  const response = await operationDeptInstance.put(`/update-conducted-enrollment-status/${id}`);
+export const updateDemoStatus = async (id,empId) => {
+  const response = await operationDeptInstance.put(`/update-conducted-enrollment-status/${empId}/${id}`);
   return response;
 };
 

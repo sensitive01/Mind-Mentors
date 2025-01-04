@@ -33,12 +33,12 @@ import ParentReferalPage from "./pages/parent/ParentReferalPage";
 import SupportPage from "./pages/parent/SupportPage";
 import WalkThroughPage from "./pages/parent/WalkThroughPage";
 
-// import KidsDemoClassPage from "./pages/kids/KidsDemoClassPage";
-// import KidsClassShedulePage from "./pages/kids/KidsClassShedulePage";
-// import KidsGamesListPage from "./pages/kids/KidsGamesListPage";
-// import KidsAchievementsPage from "./pages/kids/KidsAchievementsPage";
-// import KidsJourneyPage from "./pages/kids/KidsJourneyPage";
-// import AddKidAvailabilityPage from "./pages/parent/AddKidAvailabilityPage";
+import KidsDemoClassPage from "./pages/kids/KidsDemoClassPage";
+import KidsClassShedulePage from "./pages/kids/KidsClassShedulePage";
+import KidsGamesListPage from "./pages/kids/KidsGamesListPage";
+import KidsAchievementsPage from "./pages/kids/KidsAchievementsPage";
+import KidsJourneyPage from "./pages/kids/KidsJourneyPage";
+import AddKidAvailabilityPage from "./pages/parent/AddKidAvailabilityPage";
 import LoginPage from "./department-components/operation-new/dashboard/LoginPage";
 
 import OperationDashboardPage from "./pages/employee/operation-employee/OperationDashboardPage";
@@ -249,6 +249,7 @@ import CenterAdminHolidayPage from "./pages/employee/centeradmin/CenterAdminHoli
 import RenewalHolidayPage from "./pages/employee/renewalassociate/RenewalHolidayPage";
 import MarketingHolidayPage from "./pages/employee/marketing/MarketingHolidayPage";
 import ServiceDelivaryHolidayPage from "./pages/employee/servicedelivery/ServiceDelivaryHolidayPage";
+import ServiceCompleteEnquiryLogs from "./pages/employee/servicedelivery/ShowAllEnquiryLogs";
 
 function App() {
   return (
@@ -306,16 +307,16 @@ function App() {
           <Route path="/parent/new-referal" element={<ParentReferalPage />} />
           <Route path="/parent/support" element={<SupportPage />} />
           <Route path="/parent/walkthrough-video"  element={<WalkThroughPage />} />
-          {/* <Route path="/parent/add-kid-availability/:kidId" element={<AddKidAvailabilityPage />} /> */}
+          <Route path="/parent/add-kid-availability/:kidId" element={<AddKidAvailabilityPage />} />
 
           <Route path="/kids/login" element={<KidsLoginPage />} />
           <Route path="/kid/otp" element={<KidsPinPage />} />
           <Route path="/kids/dashboard" element={<KidsDashboard />} />
-          {/* <Route path="/kids/demo-class" element={<KidsDemoClassPage />} />
+          <Route path="/kids/demo-class" element={<KidsDemoClassPage />} />
           <Route path="/kids/class-schedule" element={<KidsClassShedulePage />} />
           <Route path="/kids/game-list" element={<KidsGamesListPage />} />
           <Route path="/kids/achievements-list" element={<KidsAchievementsPage />} />
-          <Route path="/kids/travel-journey" element={<KidsJourneyPage />} /> */}
+          <Route path="/kids/travel-journey" element={<KidsJourneyPage />} />
 
           <Route path="/fee-details" element={<FeeDetailsPage />} />
           <Route path="/class-schedule" element={<ClassShedulePage />} />
@@ -379,6 +380,8 @@ function App() {
           <Route path="/serviceAssignClassToKid/:id" element={<AssignClassToKid />}/>
           <Route path="/service-delivary/taskslogs/:id"  element={<ServiceTaskLogs />}/>
           <Route path="/service-delivary/holidays"  element={<ServiceDelivaryHolidayPage />}/>
+          <Route path="/service-delivary/completeEnquiryLogs/:id"  element={<ServiceCompleteEnquiryLogs />}/>
+
 
 
           {/* <Route path="/serviceLogin" element={<ServiceLogin />} /> */}

@@ -9,7 +9,7 @@ const logEntrySchema = new mongoose.Schema({
 });
 
 const logSchema = new mongoose.Schema({
-  enqId: { type: mongoose.Schema.Types.ObjectId, ref: "OperationDept", required: true },
+  enqId: { type: mongoose.Schema.Types.ObjectId, ref: "OperationDept",},
   logs: [logEntrySchema], 
 });
 

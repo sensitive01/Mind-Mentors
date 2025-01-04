@@ -258,7 +258,7 @@ const updateProspectData = async (req, res) => {
       address: enquiryData.address,
       pincode: enquiryData.pincode,
       parentId: parentData._id,
-      selectedProgram: enquiryData.programs||"", 
+      selectedProgram: enquiryData.programs || "",
       chessId,
       kidPin,
     });
@@ -723,9 +723,12 @@ const addNotesToTasks = async (req, res) => {
     console.log("Incoming Request to Add Notes to Task"); // Start of function debug
     const { id } = req.params; // Task ID
     const { enquiryStageTag, addNoteTo, notes } = req.body;
-    
+
     // Retrieve empId from localStorage (client-side)
-    const empId = req.headers.empid || req.body.addedBy || req.headers['empid-from-localstorage']; // Attempting to get from headers
+    const empId =
+      req.headers.empid ||
+      req.body.addedBy ||
+      req.headers["empid-from-localstorage"]; // Attempting to get from headers
 
     console.log("Params (Task ID):", id);
     console.log("Request Body Received:", req.body);
@@ -773,7 +776,7 @@ const addNotesToTasks = async (req, res) => {
     // Log the activity (Adding Note)
     await ActivityLog.create({
       taskId: updatedEntry._id,
-      action: 'ADD_NOTE',
+      action: "ADD_NOTE",
       details: `Note added to task ID: ${id} by ${addingEmployee.firstName}.${addingEmployee.email}`,
       performedBy: empId,
       performedByName: `${addingEmployee.firstName} ,${addingEmployee.email}`,
@@ -796,22 +799,6 @@ const addNotesToTasks = async (req, res) => {
     });
   }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // Referral to a Friend
 const referToFriend = async (req, res) => {
@@ -838,13 +825,13 @@ const referToFriend = async (req, res) => {
 };
 const createLeave = async (req, res) => {
   try {
-    console.log("Create leave",req.body)
+    console.log("Create leave", req.body);
     const leaveData = req.body;
-    const {empId} = req.body
-    const empData = await Employee.findOne({_id:empId},{firstName:1})
+    const { empId } = req.body;
+    const empData = await Employee.findOne({ _id: empId }, { firstName: 1 });
     const newLeave = await leaves.create(leaveData);
-    newLeave.employeeName = empData.firstName
-    await newLeave.save()
+    newLeave.employeeName = empData.firstName;
+    await newLeave.save();
 
     // Format dates to dd/mm/yy
     const formatDate = (date) => {
@@ -939,7 +926,6 @@ const createAttendance = async (req, res) => {
   }
 };
 
-
 const getMyLeaveData = async (req, res) => {
   try {
     console.log("Welcome to fetch the leaves");
@@ -948,16 +934,18 @@ const getMyLeaveData = async (req, res) => {
 
     if (empLeaves && empLeaves.length > 0) {
       // Format the dates before sending the response
-      const formattedLeaves = empLeaves.map(leave => ({
+      const formattedLeaves = empLeaves.map((leave) => ({
         ...leave._doc,
-        leaveStartDate: new Date(leave.leaveStartDate).toLocaleDateString("en-US"),
+        leaveStartDate: new Date(leave.leaveStartDate).toLocaleDateString(
+          "en-US"
+        ),
         leaveEndDate: new Date(leave.leaveEndDate).toLocaleDateString("en-US"),
       }));
 
       res.status(200).json({
         success: true,
         message: "Employee leave data fetched successfully",
-      formattedLeaves,
+        formattedLeaves,
       });
     } else {
       res.status(401).json({
@@ -974,19 +962,6 @@ const getMyLeaveData = async (req, res) => {
     });
   }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 const updateLeave = async (req, res) => {
   try {
@@ -1051,7 +1026,9 @@ const createTask = async (req, res) => {
     const empId = req.headers.empId || req.body.assignedBy;
 
     if (!empId) {
-      return res.status(400).json({ message: "AssignedBy (empId) is required" });
+      return res
+        .status(400)
+        .json({ message: "AssignedBy (empId) is required" });
     }
 
     if (!empId) {
@@ -1079,7 +1056,7 @@ const createTask = async (req, res) => {
     // Log the activity
     await ActivityLog.create({
       taskId: newTask._id,
-      action: 'CREATE',
+      action: "CREATE",
       details: `Task "${task}" created by ${assigningEmployee.firstName}.${assigningEmployee.email}`,
       performedBy: empId,
       performedByName: `${assigningEmployee.firstName}  ${assigningEmployee.email}`,
@@ -1099,8 +1076,8 @@ const createTask = async (req, res) => {
 const getAllTasks = async (req, res) => {
   try {
     // Fetch all tasks and populate 'assignedBy'
-    const tasks = await Task.find().populate('assignedBy', 'name email');
-    console.log("Task==>",tasks)
+    const tasks = await Task.find().populate("assignedBy", "name email");
+    console.log("Task==>", tasks);
 
     // Format date and time to dd/mm/yy HH:mm
     const formatDateTime = (date) => {
@@ -1118,7 +1095,7 @@ const getAllTasks = async (req, res) => {
       taskTime: formatDateTime(task.taskTime),
       createdAt: formatDateTime(task.createdAt),
       updatedAt: formatDateTime(task.updatedAt),
-      assignedBy: task.assignedBy || { name: 'No assigned person', email: '' }, // Keep it as an object
+      assignedBy: task.assignedBy || { name: "No assigned person", email: "" }, // Keep it as an object
     }));
 
     res.status(200).json(formattedTasks);
@@ -1133,7 +1110,7 @@ const getAllTasks = async (req, res) => {
 
 const getTaskById = async (req, res) => {
   try {
-    console.log("Welcome to my task")
+    console.log("Welcome to my task");
     const { id } = req.params; // Get the task ID from the route parameters
 
     // Validate the task ID format
@@ -1142,7 +1119,7 @@ const getTaskById = async (req, res) => {
     }
 
     // Fetch the task by ID and populate 'assignedBy'
-    const task = await Task.findById(id).populate('assignedBy', 'name email');
+    const task = await Task.findById(id).populate("assignedBy", "name email");
 
     if (!task) {
       return res.status(404).json({ message: "Task not found" });
@@ -1164,7 +1141,7 @@ const getTaskById = async (req, res) => {
       taskTime: formatDateTime(task.taskTime),
       createdAt: formatDateTime(task.createdAt),
       updatedAt: formatDateTime(task.updatedAt),
-      assignedBy: task.assignedBy || { name: 'No assigned person', email: '' }, // Ensure assignedBy is always an object
+      assignedBy: task.assignedBy || { name: "No assigned person", email: "" }, // Ensure assignedBy is always an object
     };
 
     res.status(200).json(formattedTask);
@@ -1218,13 +1195,15 @@ const updateTaskStatus = async (req, res) => {
     );
 
     if (!updatedTask) {
-      return res.status(404).json({ message: "Task not found with the provided ID" });
+      return res
+        .status(404)
+        .json({ message: "Task not found with the provided ID" });
     }
 
     // Log the activity
     await ActivityLog.create({
       taskId: updatedTask._id,
-      action: 'UPDATE',
+      action: "UPDATE",
       details: `Task status updated to "${status}" by ${updatingEmployee.firstName}.${updatingEmployee.email}`,
       performedBy: empId,
       performedByName: `${updatingEmployee.firstName} ${updatingEmployee.email}`,
@@ -1241,20 +1220,19 @@ const updateTaskStatus = async (req, res) => {
   }
 };
 
-
 const getMyPendingTasks = async (req, res) => {
   try {
-    console.log("Welcome to get all task",req.params)
-    
+    console.log("Welcome to get all task", req.params);
+
     const { id } = req.params;
-    console.log(id)
+    console.log(id);
 
     if (!id) {
       return res.status(400).json({ message: "empId are required" });
     }
 
-    const empData = await Employee.findOne({_id:id},{email:1})
-    console.log(empData)
+    const empData = await Employee.findOne({ _id: id }, { email: 1 });
+    console.log(empData);
 
     // Fetch tasks assigned to the employee
     const tasks = await Task.find({
@@ -1294,21 +1272,19 @@ const getMyPendingTasks = async (req, res) => {
   }
 };
 
-
-
 const assignTaskToOthers = async (req, res) => {
   try {
-    console.log("Welcome to get all task",req.params)
-    
+    console.log("Welcome to get all task", req.params);
+
     const { id } = req.params;
-    console.log(id)
+    console.log(id);
 
     if (!id) {
       return res.status(400).json({ message: "empId are required" });
     }
 
-    const empData = await Employee.findOne({_id:id},{email:1})
-    console.log(empData)
+    const empData = await Employee.findOne({ _id: id }, { email: 1 });
+    console.log(empData);
 
     // Fetch tasks assigned to the employee
     const tasks = await Task.find({
@@ -1348,18 +1324,10 @@ const assignTaskToOthers = async (req, res) => {
   }
 };
 
-
-
-
-
-
-
-
-
 const getMyTasks = async (req, res) => {
   try {
-    console.log("Welcome to get all task",req.params)
-    
+    console.log("Welcome to get all task", req.params);
+
     // Fetch tasks assigned to the employee
     const tasks = await Task.find();
 
@@ -1403,7 +1371,9 @@ const updateTask = async (req, res) => {
     const empId = req.headers.empId || req.body.empId; // Employee ID from headers or body
 
     if (!empId) {
-      return res.status(400).json({ message: "Employee ID (empId) is required" });
+      return res
+        .status(400)
+        .json({ message: "Employee ID (empId) is required" });
     }
 
     // Fetch task before updating to get the task details
@@ -1431,8 +1401,10 @@ const updateTask = async (req, res) => {
 
     await ActivityLog.create({
       taskId: updatedTask._id,
-      action: 'UPDATE',
-      details: `Task updated by ${updatingEmployee.firstName}  Changes: ${JSON.stringify(req.body)}`,
+      action: "UPDATE",
+      details: `Task updated by ${
+        updatingEmployee.firstName
+      }  Changes: ${JSON.stringify(req.body)}`,
       performedBy: empId,
       performedByName: `${updatingEmployee.firstName}`,
     });
@@ -1453,7 +1425,6 @@ const updateTask = async (req, res) => {
   }
 };
 
-
 const getActivityLogsByTaskId = async (req, res) => {
   try {
     const { id } = req.params; // 'id' from the route parameter
@@ -1463,14 +1434,20 @@ const getActivityLogsByTaskId = async (req, res) => {
 
     // Validate the task ID format
     if (!id) {
-      return res.status(400).json({ message: "Invalid Task ID format", taskId: id });
+      return res
+        .status(400)
+        .json({ message: "Invalid Task ID format", taskId: id });
     }
 
     // Fetch all activity logs associated with the provided task ID
-    const activityLogs = await ActivityLog.find({ taskId: id }).sort({ createdAt: -1 }); // Sort by most recent first
+    const activityLogs = await ActivityLog.find({ taskId: id }).sort({
+      createdAt: -1,
+    }); // Sort by most recent first
 
     if (!activityLogs || activityLogs.length === 0) {
-      return res.status(404).json({ message: "No activity logs found for the provided task" });
+      return res
+        .status(404)
+        .json({ message: "No activity logs found for the provided task" });
     }
 
     res.status(200).json({
@@ -1482,11 +1459,7 @@ const getActivityLogsByTaskId = async (req, res) => {
     console.error("Error fetching activity logs by task ID", error);
     res.status(500).json({ message: "Failed to fetch activity logs", error });
   }
-}
-
-
-
-
+};
 
 // Delete Task
 const deleteTask = async (req, res) => {
@@ -1809,6 +1782,7 @@ const getAllSheduleClass = async (req, res) => {
 
 const fetchAllLogs = async (req, res) => {
   try {
+    console.log("Welcome to fetch logs")
     const { id } = req.params;
     const logsData = await enquiryLogs.findOne({ enqId: id });
 
@@ -1854,10 +1828,10 @@ const getDemoClassAndStudentsData = async (req, res) => {
           $elemMatch: {
             program: classData[0].program,
             level: classData[0].level,
-          },  
+          },
         },
       },
-      { kidFirstName: 1 } // Project only the required fields
+      { kidFirstName: 1,kidId:1 } // Project only the required fields
     );
 
     console.log("Class Data", classData);
@@ -1880,12 +1854,12 @@ const saveDemoClassData = async (req, res) => {
     // Fetch employee data
     const empData = await Employee.findOne(
       { _id: empId },
-      { name: 1, department: 1 }
+      { firstName: 1, department: 1 }
     );
 
     // Fetch kids data
     const kidsData = await OperationDept.find(
-      { _id: { $in: students } },
+      { kidId: { $in: students } },
       { kidFirstName: 1, _id: 1, logs: 1, kidId: 1 }
     );
 
@@ -1902,7 +1876,7 @@ const saveDemoClassData = async (req, res) => {
     // Prepare new selected students data
     const updatedSelectedStudents = students.map((studentId) => {
       console.log();
-      const kid = kidsData.find((kid) => kid._id.toString() === studentId);
+      const kid = kidsData.find((kid) => kid.kidId === studentId);
       return {
         kidId: kid.kidId,
         kidName: kid ? kid.kidFirstName : "Unknown",
@@ -1921,7 +1895,7 @@ const saveDemoClassData = async (req, res) => {
         $set: {
           "scheduledBy.id": empData._id,
           "scheduledBy.department": empData.department,
-          "scheduledBy.name": empData.name || "",
+          "scheduledBy.name": empData.firstName || "",
         },
       },
       { new: true }
@@ -1929,7 +1903,7 @@ const saveDemoClassData = async (req, res) => {
 
     // Update the scheduleDemo field in the kidsData
     const updatedKidsDataPromises = kidsData.map(async (kid) => {
-      if (students.includes(kid._id.toString())) {
+      if (students.includes(kid.kidId)) {
         kid.scheduleDemo = {
           status: "Scheduled",
           scheduledDay: classSchedule.day,
@@ -1942,21 +1916,34 @@ const saveDemoClassData = async (req, res) => {
     // Wait for all updates to finish
     await Promise.all(updatedKidsDataPromises);
 
-    const logUpdate = await enquiryLogs.findByIdAndUpdate(
-      { _id: kidsData.logs },
-      {
-        $push: {
-          logs: {
-            employeeId: empId,
-            employeeName: empData.firstName, // empData.firstName should exist here
-            comment: `Status updated from '${previousStatus}' to '${enquiryStatus}'`,
-            action: ` ${empData.firstName} in ${empData.department} department sheduled demo class. created on ${formattedDateTime}`,
-            createdAt: new Date(),
+    const formattedDateTime = new Intl.DateTimeFormat("en-US", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(new Date());
+
+    // Update logs for each student
+    const logUpdatePromises = kidsData.map(async (kid) => {
+      if (students.includes(kid.kidId)) {
+        // Find the log entry specific to this student
+        await enquiryLogs.findByIdAndUpdate(
+          kid.logs, // Assuming 'logs' in kidsData contains the ID of the log document
+          {
+            $push: {
+              logs: {
+                employeeId: empId,
+                employeeName: empData.firstName, // Assuming 'name' contains the employee's full name
+                action: ` ${empData.firstName} in the ${empData.department} department scheduled a demo class for the ${classSchedule.program} program at the ${classSchedule.level} level with coach ${classSchedule.coachName}. Created on ${formattedDateTime}`,
+                createdAt: new Date(),
+              },
+            },
           },
-        },
-      },
-      { new: true }
-    );
+          { new: true }
+        );
+      }
+    });
+
+    // Wait for all log updates to finish
+    await Promise.all(logUpdatePromises);
 
     // Respond with success
     res.status(200).json({
@@ -1975,62 +1962,68 @@ const saveDemoClassData = async (req, res) => {
 // const getConductedDemoClass = async (req, res) => {
 //   try {
 //     const classSchedule = await ClassSchedule.find({ classType: "Demo" });
-//     console.log("classSchedule",classSchedule)
+//     console.log("classSchedule", classSchedule);
 //     const conductedClasses = await ConductedClass.find();
-//     console.log("conductedClasses",conductedClasses)
+//     console.log("conductedClasses", conductedClasses);
+//     const kidsWithPaymentSucess = await OperationDept.find({payment:"Success"},{kidId:1})
+//     console.log("kidsWithPaymentSucess",kidsWithPaymentSucess)
 
-//     const conductedDemoClasses = classSchedule 
-//       .filter(schedule => 
-//         conductedClasses.some(conducted => conducted.classID.toString() === schedule._id.toString())
-//       )
-//       .map(schedule => {
-//         const conductedDetails = conductedClasses.find(
-//           conducted => conducted.classID.toString() === schedule._id.toString()
-//         );
-//         return {
-//           ...schedule.toObject(),
-//           conductedDate: conductedDetails.conductedDate,
-//           status: conductedDetails.status,
-//           students: conductedDetails.students,
-//         };
-//       });
+//     const conductedDemoClasses = classSchedule.map(schedule => {
 
-//       console.log("Conducted demo class",conductedDemoClasses) 
+//       const conductedDetails = conductedClasses.filter(
+//         conducted => conducted.classID.toString() === schedule._id.toString()
+//       );
 
-//     res.status(200).json(conductedDemoClasses);
+//       return conductedDetails.map(conducted => ({
+//         ...schedule.toObject(),
+//         conductedDate: conducted.conductedDate,
+//         status: conducted.status,
+//         students: conducted.students,
+//       }));
+//     });
+
+//     const flattenedDemoClasses = conductedDemoClasses.flat();
+
+//     console.log("Conducted demo class", flattenedDemoClasses);
+
+//     res.status(200).json(flattenedDemoClasses);
 //   } catch (err) {
 //     console.log("Error in getting the conducted demo class", err);
-//     res.status(500).json({ error: "Internal Server Error" }); 
+//     res.status(500).json({ error: "Internal Server Error" });
 //   }
 // };
+
 
 const getConductedDemoClass = async (req, res) => {
   try {
     const classSchedule = await ClassSchedule.find({ classType: "Demo" });
-    console.log("classSchedule", classSchedule);
     const conductedClasses = await ConductedClass.find();
-    console.log("conductedClasses", conductedClasses);
+    const kidsWithPaymentSucess = await OperationDept.find({ payment: "Success" }, { kidId: 1 });
 
-    // Build the conductedDemoClasses array
+    const paidKidIds = kidsWithPaymentSucess.map(kid => kid.kidId.toString());
+
     const conductedDemoClasses = classSchedule.map(schedule => {
-      // Fetch all conducted classes for the current schedule
       const conductedDetails = conductedClasses.filter(
         conducted => conducted.classID.toString() === schedule._id.toString()
       );
 
-      // Map over the conducted classes and create individual entries
-      return conductedDetails.map(conducted => ({
-        ...schedule.toObject(),
-        conductedDate: conducted.conductedDate,
-        status: conducted.status,
-        students: conducted.students,
-      }));
+      return conductedDetails.map(conducted => {
+        // Filter out students who have not made a successful payment
+        const studentsWithoutPayment = conducted.students.filter(student => {
+          const studentId = student.studentID ? student.studentID.toString() : student.toString();  // Handle both cases where student could be a direct ID or an object
+          return !paidKidIds.includes(studentId); // Only students who haven't paid
+        });
+        return {
+          ...schedule.toObject(),
+          conductedDate: conducted.conductedDate,
+          status: conducted.status,
+          students: studentsWithoutPayment, 
+        };
+      });
     });
 
-    // Flatten the array since `map` with `filter` creates nested arrays
     const flattenedDemoClasses = conductedDemoClasses.flat();
 
-    console.log("Conducted demo class", flattenedDemoClasses);
 
     res.status(200).json(flattenedDemoClasses);
   } catch (err) {
@@ -2040,13 +2033,41 @@ const getConductedDemoClass = async (req, res) => {
 };
 
 
+
+
 const updateEnrollmentStatus = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id,empId } = req.params;
     console.log("Id status", id);
+    const empData=await Employee.findOne({_id:empId},{firstName:1,department:1})
 
-    const enrollmentData = await kidSchema.findOne({ _id: id }, { enqId: 1 });
+    const enrollmentData = await kidSchema.findOne({ _id: id }, { enqId: 1,kidsName:1 });
+    const logId = await OperationDept.findOne({_id:enrollmentData.enqId},{logs:1})
+    console.log("logId",logId.logs)
+    console.log("enrollmentData",enrollmentData)
+
+
     
+    const formattedDateTime = new Intl.DateTimeFormat("en-US", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(new Date());
+
+    await enquiryLogs.findByIdAndUpdate(
+      logId.logs, 
+      {
+        $push: {
+          logs: {
+            employeeId: empId,
+            employeeName: empData.firstName,
+            action: ` ${empData.firstName} in the ${empData.department} department confirmed the payment success for the kid ${enrollmentData.kidsName} . Created on ${formattedDateTime}`,
+            createdAt: new Date(),
+          },
+        },
+      },
+      { new: true }
+    );
+
     if (!enrollmentData) {
       return res.status(404).json({ message: "Enrollment not found" });
     }
@@ -2057,34 +2078,27 @@ const updateEnrollmentStatus = async (req, res) => {
       { _id: enrollmentData.enqId, payment: "Pending" },
       { $set: { payment: "Success" } },
       { new: true }
-    ); 
+    );
 
     if (!updateEqStatus) {
-      return res.status(404).json({ message: "Enrollment with pending payment not found" });
+      return res
+        .status(404)
+        .json({ message: "Enrollment with pending payment not found" });
     }
 
     console.log("Updated Enrollment Status", updateEqStatus);
 
     return res.status(200).json({
       message: "Payment status updated successfully",
-      updatedStatus: updateEqStatus
+      updatedStatus: updateEqStatus,
     });
-
   } catch (err) {
     console.error("Error in updating the status", err);
-    return res.status(500).json({ message: "Server error while updating the status" });
+    return res
+      .status(500)
+      .json({ message: "Server error while updating the status" });
   }
 };
-
-
-
-
-
-
-
-
-
-
 
 module.exports = {
   operationEmailVerification,
@@ -2129,5 +2143,5 @@ module.exports = {
   getMyPendingTasks,
   assignTaskToOthers,
   addNotesToTasks,
-  getMyLeaveData
+  getMyLeaveData,
 };

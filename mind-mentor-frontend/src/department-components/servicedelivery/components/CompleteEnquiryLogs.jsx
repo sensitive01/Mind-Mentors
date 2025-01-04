@@ -10,8 +10,8 @@ import {
 } from "@mui/material";
 import { useParams } from "react-router-dom";
 import { alpha } from "@mui/material/styles";
-
 import { fetchAllLogs } from "../../../api/service/employee/EmployeeService";
+
 
 const CompleteEnquiryLogs = () => {
   const { id } = useParams();

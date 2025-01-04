@@ -48,6 +48,7 @@ const theme = createTheme({
 });
 
 const Prospects = () => {
+  const empId = localStorage.getItem("empId")
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [snackbar, setSnackbar] = useState({
@@ -125,7 +126,7 @@ const Prospects = () => {
     try {
       setLoading(true);
       console.log(row.id);
-      const response = await updateDemoStatus(row.id);
+      const response = await updateDemoStatus(row.id,empId);
       console.log("response", response);
 
       if (response.status === 200) {

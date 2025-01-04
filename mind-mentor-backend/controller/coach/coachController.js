@@ -6,6 +6,7 @@ const CoachAvailability = require("../../model/availabilityModel");
 const ClassSchedule = require("../../model/classSheduleModel");
 const ConductedClass = require("../../model/conductedClassSchema");
 const Employee = require("../../model/employeeModel");
+const enquiryLogs = require("../../model/enquiryLogs");
 const operationDeptModel = require("../../model/operationDeptModel");
 
 
@@ -63,7 +64,13 @@ const saveCoachAvailability = async (req, res) => {
 const getMyScheduledClasses = async (req, res) => {
   try {
     const { id } = req.params;
-    const classData = await ClassSchedule.find({ coachId: id });
+    const classData = await ClassSchedule.find({ coachId: id, });
+
+    console.log("classData",classData)
+
+    const conductedClassData = await ConductedClass.find({status:"Conducted"})
+    console.log("conductedClass",conductedClassData)
+
 
     if (!classData || classData.length === 0) {
       return res.status(404).json({ message: "No classes scheduled for this coach." });
@@ -72,6 +79,7 @@ const getMyScheduledClasses = async (req, res) => {
     return res.status(200).json({
       message: "Classes retrieved successfully",
       classData,
+      conductedClassData
     });
   } catch (err) {
     return res.status(500).json({ message: "Error in getting the coach scheduled classes", error: err.message });
@@ -79,21 +87,73 @@ const getMyScheduledClasses = async (req, res) => {
 };
 
 
-const addFeedBackAndAttandance = async (req, res) => {
+// const addFeedBackAndAttandance = async (req, res) => {
+//   try {
+//     const { submissionData } = req.body;
+//     const { classId,coachId } = req.params;
+
+//     const classType = await ClassSchedule.findOne({ _id: classId, classType: "Demo" });
+
+//     if (classType) {
+//       await ClassSchedule.updateOne(
+//         { _id: classId },
+//         { $pull: { selectedStudents: { kidId: { $in: submissionData.map(student => student.studentId) } } } }
+//       );
+      
+//     }
+
+//     const newClass = new ConductedClass({
+//       classID: classId,
+//       coachId,
+//       students: submissionData.map((student) => ({
+//         studentID: student.studentId,
+//         name: student.studentName,
+//         attendance: student.present ? "Present" : "Absent",
+//         feedback: student.feedback || "",
+//       })),
+//       conductedDate: Date.now(),
+//       status: "Conducted",
+//     });
+
+//     await newClass.save();
+
+
+
+//     res.status(201).json({
+//       message: "New class with attendance and feedback added successfully",
+//       class: newClass,
+//     });
+//   } catch (err) {
+//     console.log("Error in adding attendance and feedback", err);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
+
+const addFeedBackAndAttendance = async (req, res) => {
   try {
     const { submissionData } = req.body;
-    const { classId,coachId } = req.params;
+    const { classId, coachId } = req.params;
 
-    const classType = await ClassSchedule.findOne({ _id: classId, classType: "Demo" });
+    // Check if the class is a "Demo" type and update the schedule accordingly
+    const classType = await ClassSchedule.findOne({
+      _id: classId,
+      classType: "Demo",
+    });
 
     if (classType) {
       await ClassSchedule.updateOne(
         { _id: classId },
-        { $pull: { selectedStudents: { kidId: { $in: submissionData.map(student => student.studentId) } } } }
+        {
+          $pull: {
+            selectedStudents: {
+              kidId: { $in: submissionData.map((student) => student.studentId) },
+            },
+          },
+        }
       );
-      
     }
 
+    // Create a new ConductedClass document
     const newClass = new ConductedClass({
       classID: classId,
       coachId,
@@ -109,10 +169,53 @@ const addFeedBackAndAttandance = async (req, res) => {
 
     await newClass.save();
 
+    // Fetch kids data in bulk
+    const kidIds = submissionData.map((student) => student.studentId);
+    console.log("kidId",kidIds)
+    const kidsData = await operationDeptModel.find(
+      { kidId: { $in: kidIds } },
+      { logs: 1, kidId: 1 } // Fetch only logs and kidId
+    );
+    console.log("kidsData operation",kidsData)
 
 
+    // Format the current date and time
+    const formattedDateTime = new Intl.DateTimeFormat("en-US", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(new Date());
+
+    // Update logs for each student
+    const logUpdatePromises = submissionData.map(async (student) => {
+      const kid = kidsData.find((k) => k.kidId === student.studentId);
+      console.log("kids",kid)
+      if (kid && kid.logs) {
+        console.log("ok")
+        await enquiryLogs.findByIdAndUpdate(
+          kid.logs, // Assuming logs contain the log document ID
+          {
+            $push: {
+              logs: {
+                coachId,
+                action: `Attendance marked as ${
+                  student.present ? "Present" : "Absent"
+                }. Feedback: "${student.feedback || "No feedback provided"}". Created on ${formattedDateTime}`,
+                conductedClassId: classId,
+                createdAt: new Date(),
+              },
+            },
+          },
+          { new: true }
+        );
+      }
+    });
+
+    // Wait for all log updates to complete
+    await Promise.all(logUpdatePromises);
+
+    // Send response
     res.status(201).json({
-      message: "New class with attendance and feedback added successfully",
+      message: "New class with attendance and feedback added successfully, logs updated.",
       class: newClass,
     });
   } catch (err) {
@@ -120,6 +223,7 @@ const addFeedBackAndAttandance = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 
 
@@ -592,7 +696,7 @@ module.exports = {
 
   saveCoachAvailability,
   getMyScheduledClasses,
-  addFeedBackAndAttandance,
+  addFeedBackAndAttendance,
   getClassData
   
 

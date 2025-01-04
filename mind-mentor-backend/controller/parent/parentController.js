@@ -9,6 +9,7 @@ const operationDeptModel = require("../../model/operationDeptModel");
 const ClassSchedule = require("../../model/classSheduleModel");
 const kidAvailability = require("../../model/kidAvailability");
 const ConductedClass = require("../../model/conductedClassSchema");
+const enquiryLogs = require("../../model/enquiryLogs");
 
 const parentLogin = async (req, res) => {
   try {
@@ -23,13 +24,13 @@ const parentLogin = async (req, res) => {
     req.app.locals.otpExpiry = Date.now() + 5 * 60 * 1000;
 
     const parentExist = await parentModel.findOne({ parentMobile: mobile });
-    console.log("Prent exist",parentExist)
+    console.log("Prent exist", parentExist);
 
     if (parentExist) {
       res.status(200).json({
         success: true,
         message: "Parent exists. OTP has been sent for verification.",
-        value:1,
+        value: 1,
 
         otp,
         data: {
@@ -43,21 +44,19 @@ const parentLogin = async (req, res) => {
       });
 
       await newParent.save();
-      
+
       const enqList = await operationDeptModel.create({
         whatsappNumber: mobile,
         parentFirstName: "Parent_New Enquiry",
       });
 
-      console.log("Saving the data in enquiry list",enqList)
-
-      
+      console.log("Saving the data in enquiry list", enqList);
 
       res.status(201).json({
         success: true,
         message:
           "Parent registered successfully. OTP has been sent for verification.",
-          value:0,
+        value: 0,
 
         otp,
         data: {
@@ -78,7 +77,7 @@ const parentLogin = async (req, res) => {
 const parentVerifyOtp = async (req, res) => {
   try {
     const { otp } = req.body;
-    console.log("OTP",otp)
+    console.log("OTP", otp);
     const storedOtp = req.app.locals.otp;
     const otpExpiry = req.app.locals.otpExpiry;
 
@@ -94,8 +93,7 @@ const parentVerifyOtp = async (req, res) => {
       { type: 1, _id: 1 }
     );
 
-    // const otpString = otp.join("");
-    // console.log("otpString", otpString);
+
 
     if (storedOtp == otp || otp == "0000") {
       res.status(200).json({
@@ -187,76 +185,105 @@ const parentStudentRegistration = async (req, res) => {
   }
 };
 
-// const parentBookDemoClass = async (req, res) => {
-//   try {
-//     console.log("Welcome to demo class booking", req.body);
-
-//     const { formData, state,filteredSlots } = req.body;
-//     const { parent, kid } = state;
-
-//     formData.programs.map((data) => {
-//       console.log(data);
-//     });
-//     console.log("formData",formData)
-//     console.log("parent",parent)
-//     console.log("kid",kid)
-//     console.log("filteredSlots",filteredSlots)
 
 
+const createEnquiryParent = async (formData, state) => {
+ 
 
-//     console.log("Parent ID:", parent._id, "Kid ID:", kid._id);
-//     if(formData.usePredefineSlot){
-//       console.log("Yes")
-//       const updateDemoClassDetails = await ClassSchedule.findOne({_id:filteredSlots[0]._id})
-//       console.log(updateDemoClassDetails)
-//     }
+  try {
+    // Extract data
+    const { parent, kid } = state;
+    const { programs, scheduleId, hasSchedule } = formData;
 
-//     // const demoClass = new demoClassModel({
-//     //   programs: formData.programs.map((programObj) => ({
-//     //     program: programObj.program,
-//     //     programLevel: programObj.programLevel,
-//     //   })),
-//     //   date: formData.date,
-//     //   time: formData.time,
-//     //   parentId: parent._id,
-//     //   kidId: kid._id,
-//     // });
+    // Format date and time
+    const formattedDateTime = new Date().toLocaleString("en-US", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
 
-//     // await demoClass.save();
-//     // console.log("Demo class saved");
+    const logUpdate = {
+      employeeId: "",
+      employeeName:"" ,
+      action: `Demo class booking for ${parent.parentName} on ${formattedDateTime}`,
+      updatedAt: new Date(),
+    };
 
-    
-//     // await parentModel.findByIdAndUpdate(parent._id, {
-//     //   type: "exist",
-//     // });
+   
+    const newLog = new enquiryLogs(logUpdate);
+    const savedLog = await newLog.save();
+    console.log("savedLog",savedLog)
 
-    
-//     // const updatedKid = await kidModel.findByIdAndUpdate({ _id: kid._id }, kid, {
-//     //   new: true,
-//     // });
+ 
+    const operationDeptData = {
+      parentFirstName: parent.parentName.split(" ")[0], 
+      parentLastName: parent.parentName.split(" ")[1] || "",
+      kidFirstName: kid.kidsName.split(" ")[0],
+      kidLastName: kid.kidsName.split(" ")[1] || "",
+      whatsappNumber: parent.parentMobile.toString(),
+      email: parent.parentEmail,
+      message: "",
+      source: "Demo Class Booking", 
+      kidId: kid.chessId,
+      kidsAge: kid.age,
+      kidsGender: kid.gender,
+      programs: programs.map((program) => ({
+        program: program.name, // Adjust key based on the program object structure
+        level: program.level, // Adjust key based on the program object structure
+      })),
+      intentionOfParents: kid.intention,
+      schoolName: kid.schoolName,
+      address: kid.address,
+      schoolPincode: "", // Add if available
+      enquiryStatus: "Pending",
+      enquiryType: "warm",
+      disposition: "None",
+      enquiryField: "prospects",
+      payment: "Pending",
+      notes: "",
+      scheduleDemo: {
+        status: hasSchedule ? "Scheduled" : "Pending",
+        sheduledDay: hasSchedule ? scheduleId : null, // Assuming scheduleId is a day; adjust as needed
+      },
+      referral: {
+        referredTo: "",
+        referredEmail: "",
+      },
+      logs: savedLog._id, // Reference the saved log
+    };
 
-//     // res.status(201).json({
-//     //   success: true,
-//     //   message: "Demo class booked successfully, and chess ID updated.",
-//     //   parentId: parent._id,
-//     // });
+    // Save the OperationDept document
+    const newOperationDept = new operationDeptModel(operationDeptData);
+    const savedOperationDept = await newOperationDept.save();
+
+    console.log("savedOperationDept",savedOperationDept)
 
 
-//   } catch (err) {
-//     console.error("Error in parent Book Demo Class", err);
-//     res.status(500).json({
-//       success: false,
-//       message: "Internal server error. Please try again later.",
-//     });
-//   }
-// };
+
+    savedLog.enqId = savedOperationDept._id
+    await savedLog.save()
+
+    console.log("savedLog 2",savedLog)
+
+
+
+
+    console.log(
+      "OperationDept entry created successfully with log:",
+      savedOperationDept
+    );
+    return savedOperationDept;
+  } catch (error) {
+    console.error("Error creating OperationDept entry with log:", error);
+    throw error;
+  }
+};
 
 
 const parentBookDemoClass = async (req, res) => {
   try {
     console.log("Welcome to demo class booking", req.body);
 
-    const { formData, state,} = req.body;
+    const { formData, state } = req.body;
     const { parent, kid } = state;
 
     formData.programs.map((data) => {
@@ -267,13 +294,14 @@ const parentBookDemoClass = async (req, res) => {
     console.log("parent", parent);
     console.log("kid", kid);
 
-
     console.log("Parent ID:", parent._id, "Kid ID:", kid._id);
 
     if (formData.hasSchedule) {
       console.log("Using predefined slot");
-      const updateDemoClassDetails = await ClassSchedule.findOne({ _id: formData.scheduleId });
-      
+      const updateDemoClassDetails = await ClassSchedule.findOne({
+        _id: formData.scheduleId,
+      });
+
       if (updateDemoClassDetails) {
         console.log("Demo class details found", updateDemoClassDetails);
 
@@ -286,32 +314,30 @@ const parentBookDemoClass = async (req, res) => {
         // Save the updated demo class details
         await updateDemoClassDetails.save();
 
-        console.log("Updated demo class details with selected student:", updateDemoClassDetails);
+        console.log(
+          "Updated demo class details with selected student:",
+          updateDemoClassDetails
+        );
       }
-      
-
     }
 
-    // Additional operations for saving demo class or updating parent/kid models
-    // Uncomment if needed:
-    // const demoClass = new demoClassModel({
-    //   programs: formData.programs.map((programObj) => ({
-    //     program: programObj.program,
-    //     programLevel: programObj.programLevel,
-    //   })),
-    //   date: formData.date,
-    //   time: formData.time,
-    //   parentId: parent._id,
-    //   kidId: kid._id,
-    // });
-    // await demoClass.save();
-    // console.log("Demo class saved");
+    const parentData = await parentModel.findByIdAndUpdate(parent._id, {
+      type: "exist",
+    });
+    parentData.kids.push({ kidId: kid._id });
+    await parentData.save();
 
-    const parentData = await parentModel.findByIdAndUpdate(parent._id, { type: "exist" });
-    parentData.kids.push({kidId:kid._id})
-    await parentData.save()
+    const updatedKid = await kidModel.findByIdAndUpdate({ _id: kid._id }, kid, {
+      new: true,
+    });
 
-    const updatedKid = await kidModel.findByIdAndUpdate({ _id: kid._id }, kid, { new: true });
+
+
+ 
+
+    // Invoke the logging function
+    const logResult = await createEnquiryParent(formData, state);
+    console.log("Log entry created:", logResult);
 
     res.status(201).json({
       success: true,
@@ -331,6 +357,75 @@ const parentBookDemoClass = async (req, res) => {
 
 
 
+
+
+// const parentBookDemoClass = async (req, res) => {
+//   try {
+//     console.log("Welcome to demo class booking", req.body);
+
+//     const { formData, state } = req.body;
+//     const { parent, kid } = state;
+
+//     formData.programs.map((data) => {
+//       console.log(data);
+//     });
+
+//     console.log("formData", formData);
+//     console.log("parent", parent);
+//     console.log("kid", kid);
+
+//     console.log("Parent ID:", parent._id, "Kid ID:", kid._id);
+
+//     if (formData.hasSchedule) {
+//       console.log("Using predefined slot");
+//       const updateDemoClassDetails = await ClassSchedule.findOne({
+//         _id: formData.scheduleId,
+//       });
+
+//       if (updateDemoClassDetails) {
+//         console.log("Demo class details found", updateDemoClassDetails);
+
+//         // Push the kid details into selectedStudents array
+//         updateDemoClassDetails.selectedStudents.push({
+//           kidId: kid._id,
+//           kidName: kid.kidsName, // Assuming the kid's name is available in the `kid` object
+//         });
+
+//         // Save the updated demo class details
+//         await updateDemoClassDetails.save();
+
+//         console.log(
+//           "Updated demo class details with selected student:",
+//           updateDemoClassDetails
+//         );
+//       }
+//     }
+
+
+
+//     const parentData = await parentModel.findByIdAndUpdate(parent._id, {
+//       type: "exist",
+//     });
+//     parentData.kids.push({ kidId: kid._id });
+//     await parentData.save();
+
+//     const updatedKid = await kidModel.findByIdAndUpdate({ _id: kid._id }, kid, {
+//       new: true,
+//     });
+
+//     res.status(201).json({
+//       success: true,
+//       message: "Demo class updated with selected student successfully.",
+//       parentId: parent._id,
+//     });
+//   } catch (err) {
+//     console.error("Error in parent Book Demo Class", err);
+//     res.status(500).json({
+//       success: false,
+//       message: "Internal server error. Please try again later.",
+//     });
+//   }
+// };
 
 const getKidsDataList = async (req, res) => {
   try {
@@ -404,7 +499,10 @@ const getDemoClassDetails = async (req, res) => {
   try {
     console.log("Welcome to get demo class data");
     const { kidId } = req.params;
-    const demoClassData = await demoClassModel.findOne({ kidId: kidId ,status:"Scheduled"});
+    const demoClassData = await demoClassModel.findOne({
+      kidId: kidId,
+      status: "Scheduled",
+    });
     console.log("demoClassData", demoClassData);
 
     if (!demoClassData) {
@@ -462,11 +560,9 @@ const parentBookNewDemoClass = async (req, res) => {
     }
   } catch (err) {
     console.log("Error in booking or updating demo class", err);
-    res
-      .status(500)
-      .json({
-        message: "An error occurred while booking or updating the demo class",
-      });
+    res.status(500).json({
+      message: "An error occurred while booking or updating the demo class",
+    });
   }
 };
 
@@ -545,12 +641,10 @@ const editParentData = async (req, res) => {
       return res.status(404).json({ message: "Parent not found" });
     }
 
-    return res
-      .status(200)
-      .json({
-        message: "Parent data updated successfully",
-        data: updatedParent,
-      });
+    return res.status(200).json({
+      message: "Parent data updated successfully",
+      data: updatedParent,
+    });
   } catch (err) {
     console.log("Error updating parent data:", err);
     return res.status(500).json({ message: "Internal server error" });
@@ -609,7 +703,9 @@ const parentAddNewKid = async (req, res) => {
 const getParentProfileData = async (req, res) => {
   try {
     const { parentId } = req.params;
-    const parentData = await parentModel.findOne({ _id: parentId }).populate('kids.kidId');
+    const parentData = await parentModel
+      .findOne({ _id: parentId })
+      .populate("kids.kidId");
 
     if (!parentData) {
       return res.status(404).json({ message: "Parent not found" });
@@ -619,10 +715,11 @@ const getParentProfileData = async (req, res) => {
       message: "Parent data fetched successfully",
       parent: parentData,
     });
-
   } catch (err) {
     console.log("Error in get parent data", err);
-    return res.status(500).json({ message: "An error occurred while fetching parent data" });
+    return res
+      .status(500)
+      .json({ message: "An error occurred while fetching parent data" });
   }
 };
 
@@ -632,12 +729,9 @@ const getParentProfileData = async (req, res) => {
 
 //     const {  kidId } = req.params;
 
-
 //     const demoClassDetails = await ClassSchedule.findOne({
 //       "selectedStudents.kidId": kidId,status:"Scheduled"
 //     });
-
-
 
 //     if (!demoClassDetails) {
 //       const conductedDemoClass = await ConductedClass.findOne({"students.studentID": kidId,status:"Conducted"})
@@ -653,9 +747,8 @@ const getParentProfileData = async (req, res) => {
 //       return res.status(404).json({ message: "Student not found in the demo class." });
 //     }
 
-   
 //     const updatedDemoClassDetails = {
-//       ...demoClassDetails._doc, 
+//       ...demoClassDetails._doc,
 //       selectedStudents: filteredStudents,
 //     };
 
@@ -672,7 +765,7 @@ const getParentProfileData = async (req, res) => {
 const getKidDemoClassDetails = async (req, res) => {
   try {
     const { kidId } = req.params;
-    console.log(kidId)
+    console.log(kidId);
 
     const demoClassDetails = await ClassSchedule.findOne({
       "selectedStudents.kidId": kidId,
@@ -686,10 +779,14 @@ const getKidDemoClassDetails = async (req, res) => {
       });
 
       if (!conductedDemoClass) {
-        return res.status(404).json({ message: "No demo class found for the given kid." });
+        return res
+          .status(404)
+          .json({ message: "No demo class found for the given kid." });
       }
 
-      const classScheduleDetails = await ClassSchedule.findById(conductedDemoClass.classID);
+      const classScheduleDetails = await ClassSchedule.findById(
+        conductedDemoClass.classID
+      );
 
       if (classScheduleDetails && classScheduleDetails.classType === "Demo") {
         const studentData = conductedDemoClass.students.find(
@@ -724,7 +821,9 @@ const getKidDemoClassDetails = async (req, res) => {
           combinedData,
         });
       } else {
-        return res.status(404).json({ message: "The class type is not a Demo class." });
+        return res
+          .status(404)
+          .json({ message: "The class type is not a Demo class." });
       }
     }
 
@@ -733,7 +832,9 @@ const getKidDemoClassDetails = async (req, res) => {
     );
 
     if (filteredStudents.length === 0) {
-      return res.status(404).json({ message: "Student not found in the demo class." });
+      return res
+        .status(404)
+        .json({ message: "Student not found in the demo class." });
     }
 
     const updatedDemoClassDetails = {
@@ -746,11 +847,13 @@ const getKidDemoClassDetails = async (req, res) => {
       classDetails: updatedDemoClassDetails,
     });
   } catch (err) {
-    res.status(500).json({ error: "An error occurred while fetching the demo class details." });
+    res
+      .status(500)
+      .json({
+        error: "An error occurred while fetching the demo class details.",
+      });
   }
 };
-
-
 
 const saveKidAvailability = async (req, res) => {
   try {
@@ -758,7 +861,6 @@ const saveKidAvailability = async (req, res) => {
     const { day, availableFrom, availableTo, status } = req.body.data;
 
     console.log("Welcome to save kid availability", req.body, kidId);
-
 
     if (!kidId) {
       return res.status(404).json({ message: "Kid not found" });
@@ -774,119 +876,122 @@ const saveKidAvailability = async (req, res) => {
 
     await newAvailability.save();
 
-    return res.status(201).json({ message: "Kid availability saved successfully", newAvailability });
-
+    return res
+      .status(201)
+      .json({
+        message: "Kid availability saved successfully",
+        newAvailability,
+      });
   } catch (err) {
     console.error("Error in saving the kid availability", err);
-    return res.status(500).json({ message: "Error in saving the kid availability" });
+    return res
+      .status(500)
+      .json({ message: "Error in saving the kid availability" });
   }
 };
-
 
 const getKidAvailability = async (req, res) => {
   try {
     const { kidId } = req.params;
     const KidAvailableData = await kidAvailability.find({ kidId: kidId });
 
-
     if (!KidAvailableData || KidAvailableData.length === 0) {
-      return res.status(404).json({ message: "No availability data found for the kid" });
+      return res
+        .status(404)
+        .json({ message: "No availability data found for the kid" });
     }
 
     // Send the data as the response
-    return res.status(200).json({ message: "Kid availability data fetched successfully",  KidAvailableData });
-
+    return res
+      .status(200)
+      .json({
+        message: "Kid availability data fetched successfully",
+        KidAvailableData,
+      });
   } catch (err) {
     console.log("Error in fetching the available data", err);
-    return res.status(500).json({ message: "Error in fetching the availability data" });
+    return res
+      .status(500)
+      .json({ message: "Error in fetching the availability data" });
   }
 };
-
-
 
 const updateKidAvailability = async (req, res) => {
   try {
     console.log("Update availability", req.body);
-    
-    const { availId } = req.params;
-    console.log(availId)
-    const updatedData = req.body.data;
 
+    const { availId } = req.params;
+    console.log(availId);
+    const updatedData = req.body.data;
 
     const availability = await kidAvailability.findById(availId);
     if (!availability) {
       return res.status(404).json({ message: "Availability not found" });
     }
 
-
     const updatedAvailability = await kidAvailability.findByIdAndUpdate(
-      {_id:availId},
+      { _id: availId },
       {
         $set: {
           day: updatedData.day,
           availableFrom: updatedData.availableFrom,
           availableTo: updatedData.availableTo,
-          status: updatedData.status
-        }
+          status: updatedData.status,
+        },
       },
-      { new: true } 
+      { new: true }
     );
 
- 
     return res.status(200).json({
       message: "Availability updated successfully",
-      data: updatedAvailability
+      data: updatedAvailability,
     });
-    
   } catch (err) {
     console.log("Error in updating availability", err);
     return res.status(500).json({ message: "Error in updating availability" });
   }
 };
 
-
 const updateKidAvailabilityStatus = async (req, res) => {
   try {
     console.log("Welcome to update the status", req.body);
-    
+
     const { availId } = req.params;
-    const { status } = req.body; 
+    const { status } = req.body;
     console.log("AvailId", availId);
 
-   
     const availability = await kidAvailability.findById(availId);
     if (!availability) {
       return res.status(404).json({ message: "Availability not found" });
     }
 
-    
     const updatedAvailability = await kidAvailability.findByIdAndUpdate(
       availId,
       {
-        $set: { status }
+        $set: { status },
       },
       { new: true }
     );
 
-
     return res.status(200).json({
       message: "Availability status updated successfully",
-      data: updatedAvailability
+      data: updatedAvailability,
     });
-    
   } catch (err) {
     console.log("Error in updating the status", err);
-    return res.status(500).json({ message: "Error in updating availability status" });
+    return res
+      .status(500)
+      .json({ message: "Error in updating availability status" });
   }
 };
-
-
 
 const deleteKidAvailabilityStatus = async (req, res) => {
   try {
     const { availId } = req.params;
-    console.log(availId)
-    const deletedAvailability = await kidAvailability.findByIdAndDelete(availId);
+    console.log(availId);
+    const deletedAvailability = await kidAvailability.findByIdAndDelete(
+      availId
+    );
 
     if (!deletedAvailability) {
       return res.status(404).json({ message: "Availability not found" });
@@ -897,15 +1002,15 @@ const deleteKidAvailabilityStatus = async (req, res) => {
       data: deletedAvailability,
     });
   } catch (err) {
-    return res.status(500).json({ message: "Error in deleting availability data" });
+    return res
+      .status(500)
+      .json({ message: "Error in deleting availability data" });
   }
 };
-
 
 const getKidClassData = async (req, res) => {
   try {
     const { kidId } = req.params;
-  
 
     if (!kidId) {
       return res.status(400).json({ message: "Invalid kidId provided." });
@@ -940,23 +1045,26 @@ const getKidClassData = async (req, res) => {
     // Retrieve the class details for conducted classes
     const conductedClassDetails = await Promise.all(
       conductedClasses.map(async (conductedClass) => {
-        const classData = await ClassSchedule.findById(conductedClass.classID).lean();
+        const classData = await ClassSchedule.findById(
+          conductedClass.classID
+        ).lean();
         return { ...conductedClass, classData };
       })
     );
 
-    console.log("conductedClassDetails",conductedClassDetails)
- 
+    console.log("conductedClassDetails", conductedClassDetails);
+
     // Fetch all scheduled classes
     const allClasses = await ClassSchedule.find({
       "selectedStudents.kidId": kidId,
       status: "Scheduled",
     }).lean();
-    console.log("All class shedules",allClasses)
+    console.log("All class shedules", allClasses);
 
- 
     const currentDate = new Date();
-    const currentDay = currentDate.toLocaleDateString("en-US", { weekday: "long" });
+    const currentDay = currentDate.toLocaleDateString("en-US", {
+      weekday: "long",
+    });
     const currentTime = currentDate.getTime();
 
     const liveClasses = [];
@@ -966,11 +1074,13 @@ const getKidClassData = async (req, res) => {
     allClasses.forEach((classItem) => {
       const [startTime, endTime] = classItem.classTime
         .split(" - ")
-        .map((time) => new Date(`${currentDate.toDateString()} ${time}`).getTime());
+        .map((time) =>
+          new Date(`${currentDate.toDateString()} ${time}`).getTime()
+        );
 
-      if (classItem.day == currentDay) { 
+      if (classItem.day == currentDay) {
         if (currentTime >= startTime || currentTime <= endTime) {
-          liveClasses.push(classItem); 
+          liveClasses.push(classItem);
         } else if (currentTime < startTime) {
           upcomingClasses.push(classItem);
         }
@@ -985,7 +1095,7 @@ const getKidClassData = async (req, res) => {
       upcoming: upcomingClasses,
     };
 
-    console.log(responseData) 
+    console.log(responseData);
 
     return res.status(200).json({
       message: "Kid's class data retrieved successfully.",
@@ -993,10 +1103,11 @@ const getKidClassData = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "An error occurred while fetching the class details." });
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching the class details." });
   }
 };
-
 
 const getKidClassAttendanceData = async (req, res) => {
   try {
@@ -1033,7 +1144,9 @@ const getKidClassAttendanceData = async (req, res) => {
     // Fetch class details for each conducted class
     const conductedClassDetails = await Promise.all(
       conductedClasses.map(async (conductedClass) => {
-        const classData = await ClassSchedule.findById(conductedClass.classID).lean();
+        const classData = await ClassSchedule.findById(
+          conductedClass.classID
+        ).lean();
         return { ...conductedClass, classData };
       })
     );
@@ -1059,18 +1172,11 @@ const getKidClassAttendanceData = async (req, res) => {
     });
   } catch (err) {
     console.log("Error in getting the kidAttendance data", err);
-    return res.status(500).json({ error: "An error occurred while fetching attendance data." });
+    return res
+      .status(500)
+      .json({ error: "An error occurred while fetching attendance data." });
   }
 };
-
-
-
-
-
-
-
-
-
 
 module.exports = {
   parentLogin,
@@ -1089,13 +1195,12 @@ module.exports = {
   parentAddNewKid,
   getParentProfileData,
   getKidDemoClassDetails,
-  saveKidAvailability, 
+  saveKidAvailability,
   getKidAvailability,
   updateKidAvailability,
   updateKidAvailabilityStatus,
   deleteKidAvailabilityStatus,
   getKidClassData,
   getKidClassData,
-  getKidClassAttendanceData
-
+  getKidClassAttendanceData,
 };

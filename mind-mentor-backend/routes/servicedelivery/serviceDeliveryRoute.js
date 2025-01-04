@@ -16,6 +16,15 @@ serviceRoute.post("/save-coach-availabledays",serviceController.saveCoachAvailab
 serviceRoute.post("/save-class-data/:empId", serviceController.saveClassData);
 
 
+serviceRoute.put("/edit-coach-availability/:id", serviceController.updateCoachAvailabilityData);
+
+
+serviceRoute.delete("/delete-coach-availability/:id", serviceController.deleteCoachAvailability);
+
+
+
+
+
 
 
 

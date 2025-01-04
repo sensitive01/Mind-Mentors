@@ -7,7 +7,9 @@ import {
   Select,
   Grid,
   IconButton,
-  TextField,
+  Checkbox,
+  ListItemText,
+  OutlinedInput,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import {
@@ -41,6 +43,21 @@ const days = [
   "Sunday",
 ];
 
+// Generate time slots with 15-minute intervals
+const generateTimeSlots = () => {
+  const slots = [];
+  for (let hour = 0; hour < 24; hour++) {
+    for (let minute of [0, 15, 30, 45]) {
+      const formattedHour = hour.toString().padStart(2, "0");
+      const formattedMinute = minute.toString().padStart(2, "0");
+      slots.push(`${formattedHour}:${formattedMinute}`);
+    }
+  }
+  return slots;
+};
+
+const timeSlots = generateTimeSlots();
+
 const CoachAvailabilityForm = () => {
   const navigate = useNavigate();
   const empId = localStorage.getItem("empId");
@@ -48,9 +65,8 @@ const CoachAvailabilityForm = () => {
   const [availabilities, setAvailabilities] = useState([
     {
       coachName: "",
-      day: "",
+      days: [], // Changed from day to days for multiple selection
       program: "",
-
       fromTime: "",
       toTime: "",
     },
@@ -58,7 +74,6 @@ const CoachAvailabilityForm = () => {
 
   const [loading, setLoading] = useState(false);
 
-  // Fetch coaches when component mounts
   useEffect(() => {
     const fetchCoaches = async () => {
       try {
@@ -67,7 +82,6 @@ const CoachAvailabilityForm = () => {
           throw new Error("Failed to fetch coaches");
         }
 
-        // Map data correctly
         const formattedCoaches = response.data.coachData.map((coach) => ({
           id: coach._id,
           name: coach.firstName,
@@ -76,7 +90,7 @@ const CoachAvailabilityForm = () => {
         setCoaches(formattedCoaches);
       } catch (error) {
         console.error("Error fetching coaches:", error);
-        alert("Could not load coaches. Please try again later.");
+        toast.error("Could not load coaches. Please try again later.");
       }
     };
 
@@ -97,9 +111,8 @@ const CoachAvailabilityForm = () => {
       ...availabilities,
       {
         coachName: "",
-        day: "",
+        days: [], // Initialize with empty array for multiple days
         program: "",
-
         fromTime: "",
         toTime: "",
       },
@@ -117,18 +130,27 @@ const CoachAvailabilityForm = () => {
     setLoading(true);
 
     try {
-      // Console log the entire availabilities array
-      console.log("Submitted Availabilities:", availabilities);
-      const response = await saveAvailabletime(availabilities);
-      console.log(response);
+      // Transform the data to match your API requirements
+      const formattedAvailabilities = availabilities.flatMap((availability) =>
+        availability.days.map((day) => ({
+          coachName: availability.coachName,
+          day: day,
+          program: availability.program,
+          fromTime: availability.fromTime,
+          toTime: availability.toTime,
+        }))
+      );
+
+      console.log("Submitted Availabilities:", formattedAvailabilities);
+      const response = await saveAvailabletime(formattedAvailabilities);
+
       if (response.status === 200) {
         toast.success(response.data.message);
-
         navigate("/coachAvailabilityTable");
       }
     } catch (error) {
       console.error("Submission error:", error);
-      alert("Could not submit availability");
+      toast.error("Could not submit availability");
     } finally {
       setLoading(false);
     }
@@ -138,9 +160,8 @@ const CoachAvailabilityForm = () => {
     setAvailabilities([
       {
         coachName: "",
-        day: "",
+        days: [],
         program: "",
-
         fromTime: "",
         toTime: "",
       },
@@ -165,7 +186,7 @@ const CoachAvailabilityForm = () => {
               key={index}
               sx={{ mb: 2, alignItems: "center" }}
             >
-              <Grid item xs={12} sm={5}>
+              <Grid item xs={12} sm={3}>
                 <FormControl fullWidth margin="normal">
                   <InputLabel>Coach</InputLabel>
                   <Select
@@ -184,24 +205,31 @@ const CoachAvailabilityForm = () => {
                 </FormControl>
               </Grid>
 
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12} sm={2}>
                 <FormControl fullWidth margin="normal">
-                  <InputLabel>Day</InputLabel>
+                  <InputLabel>Days</InputLabel>
                   <Select
-                    value={availability.day}
-                    onChange={(e) => handleChange(index, "day", e.target.value)}
-                    label="Day"
+                    multiple
+                    value={availability.days}
+                    onChange={(e) =>
+                      handleChange(index, "days", e.target.value)
+                    }
+                    input={<OutlinedInput label="Days" />}
+                    renderValue={(selected) => selected.join(", ")}
                   >
                     {days.map((day) => (
                       <MenuItem key={day} value={day}>
-                        {day}
+                        <Checkbox
+                          checked={availability.days.indexOf(day) > -1}
+                        />
+                        <ListItemText primary={day} />
                       </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
               </Grid>
 
-              <Grid item xs={12} sm={4}>
+              <Grid item xs={12} sm={2}>
                 <FormControl fullWidth margin="normal">
                   <InputLabel>Program</InputLabel>
                   <Select
@@ -220,40 +248,54 @@ const CoachAvailabilityForm = () => {
                 </FormControl>
               </Grid>
 
-              <Grid item xs={12} sm={4}>
-                <TextField
-                  fullWidth
-                  label="From Time"
-                  type="time"
-                  value={availability.fromTime}
-                  onChange={(e) =>
-                    handleChange(index, "fromTime", e.target.value)
-                  }
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  inputProps={{
-                    step: 300, // 5 min
-                  }}
-                />
+              <Grid item xs={12} sm={2}>
+                <FormControl fullWidth margin="normal">
+                  <InputLabel>From Time</InputLabel>
+                  <Select
+                    value={availability.fromTime}
+                    onChange={(e) =>
+                      handleChange(index, "fromTime", e.target.value)
+                    }
+                    label="From Time"
+                  >
+                    {timeSlots.map((time) => (
+                      <MenuItem
+                        key={time}
+                        value={time}
+                        disabled={
+                          availability.toTime && time >= availability.toTime
+                        }
+                      >
+                        {time}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </Grid>
 
-              <Grid item xs={12} sm={3}>
-                <TextField
-                  fullWidth
-                  label="To Time"
-                  type="time"
-                  value={availability.toTime}
-                  onChange={(e) =>
-                    handleChange(index, "toTime", e.target.value)
-                  }
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  inputProps={{
-                    step: 300, // 5 min
-                  }}
-                />
+              <Grid item xs={12} sm={2}>
+                <FormControl fullWidth margin="normal">
+                  <InputLabel>To Time</InputLabel>
+                  <Select
+                    value={availability.toTime}
+                    onChange={(e) =>
+                      handleChange(index, "toTime", e.target.value)
+                    }
+                    label="To Time"
+                  >
+                    {timeSlots.map((time) => (
+                      <MenuItem
+                        key={time}
+                        value={time}
+                        disabled={
+                          availability.fromTime && time <= availability.fromTime
+                        }
+                      >
+                        {time}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </Grid>
 
               {availabilities.length > 1 && (

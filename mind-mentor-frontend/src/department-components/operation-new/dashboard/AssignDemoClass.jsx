@@ -149,17 +149,17 @@ const AssignDemoClass = () => {
               <div className="space-y-2 max-h-[400px] overflow-y-auto mb-4">
                 {students.map((student) => (
                   <div
-                    key={student._id}
-                    onClick={() => handleStudentSelection(student._id)}
+                    key={student.kidId}
+                    onClick={() => handleStudentSelection(student.kidId)}
                     className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors
-                      ${selectedStudents.includes(student._id)
+                      ${selectedStudents.includes(student.KidId)
                         ? 'bg-purple-50 border-purple-200'
                         : 'bg-gray-50 hover:bg-gray-100'
                       }`}
                   >
                     <div className="flex items-center space-x-3">
                       <GraduationCap className={`w-5 h-5 ${
-                        selectedStudents.includes(student._id)
+                        selectedStudents.includes(student.KidId)
                           ? 'text-purple-600'
                           : 'text-gray-400'
                       }`} />
@@ -167,7 +167,7 @@ const AssignDemoClass = () => {
                         {student.kidFirstName}
                       </span>
                     </div>
-                    {selectedStudents.includes(student._id) && (
+                    {selectedStudents.includes(student.kidId) && (
                       <CheckCircle className="w-5 h-5 text-purple-600" />
                     )}
                   </div>

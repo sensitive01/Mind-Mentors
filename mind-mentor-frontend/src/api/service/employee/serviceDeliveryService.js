@@ -61,3 +61,14 @@ export const saveClassDetails = async (classId,students,empId) => {
   const response = await serviceInstance.post(`/service/save-class-data/${empId}`,{classId,students});
   return response;
 };
+
+
+export const updateCoachAvailability = async (id,data) => {
+  const response = await serviceInstance.put(`/service/edit-coach-availability/${id}`,{data});
+  return response;
+};
+
+export const deleteCoachAvailability = async (id) => {
+  const response = await serviceInstance.delete(`/service/delete-coach-availability/${id}`);
+  return response;
+};

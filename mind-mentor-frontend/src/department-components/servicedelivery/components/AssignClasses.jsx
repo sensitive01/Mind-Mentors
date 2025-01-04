@@ -1,353 +1,222 @@
+// AssignClasses.js
 import React, { useEffect, useState } from "react";
-import {
-  Grid,
-  Box,
-  Typography,
-  Button,
-  Checkbox,
-  FormControlLabel,
-  FormGroup,
-  Paper,
-  Chip,
-  Divider,
-  List,
-  ListItem,
-  ListItemIcon,
-} from "@mui/material";
-import ChildCareIcon from "@mui/icons-material/ChildCare";
-import {
-  CalendarToday as DayIcon,
-  School as SubjectIcon,
-  AccessTime as TimeIcon,
-  Person as TeacherIcon,
-  Group as StudentsIcon,
-  Label as LevelIcon,
-  Book as ProgramIcon,
-  Close as CloseIcon,
-} from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
-
-import { toast } from "react-toastify";
-// import { getClassandStudentData, saveClassDetails } from "../../../api/service/employee/serviceDeliveryService";
-
 import {
-  getClassandStudentData,
-  saveClassDetails,
-} from "../../../api/service/employee/serviceDeliveryService";
+  Calendar,
+  Clock,
+  User,
+  Users,
+  Tag,
+  BookOpen,
+  CheckCircle,
+  GraduationCap,
+  AlertTriangle,
+  History
+} from "lucide-react";
+import { toast } from "react-toastify";
+import { getClassandStudentData, saveClassDetails } from "../../../api/service/employee/serviceDeliveryService";
 
-// Enhanced color palette
-const customColors = {
-  primary: "#3f51b5",
-  secondary: "#f50057",
-  background: "#f4f4f4",
-  text: "#333333",
-  accent: "#4caf50",
-  highlight: "#2196f3",
-};
+const InfoCard = ({ icon: Icon, label, value, color = "text-purple-600" }) => (
+  <div className="flex items-center space-x-2 bg-white p-3 rounded-lg shadow-sm">
+    <Icon className={`${color} w-5 h-5`} />
+    <div>
+      <p className="text-sm text-gray-500">{label}</p>
+      <p className="font-semibold text-gray-900">{value}</p>
+    </div>
+  </div>
+);
 
-// Student Multi-Select Component
-const StudentMultiSelect = ({
-  students,
-  onStudentSelect,
-  selectedStudents,
-}) => {
-  const [localSelectedStudents, setLocalSelectedStudents] = useState(
-    selectedStudents || []
-  );
+const EmptyState = ({ icon: Icon, title, message }) => (
+  <div className="flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-sm">
+    <Icon className="w-12 h-12 text-gray-400 mb-4" />
+    <h3 className="text-lg font-semibold text-gray-700 mb-2">{title}</h3>
+    <p className="text-gray-500 text-center">{message}</p>
+  </div>
+);
 
-  const handleStudentToggle = (student) => {
-    setLocalSelectedStudents((prev) => {
-      // Check if the student is already in the list
-      const isStudentSelected = prev.some(
-        (selectedStudent) => selectedStudent._id === student._id
-      );
-
-      return isStudentSelected
-        ? prev.filter((selectedStudent) => selectedStudent._id !== student._id)
-        : [...prev, student];
-    });
-  };
-
-  return (
-    <Paper
-      elevation={3}
-      sx={{
-        p: 3,
-        backgroundColor: "white",
-        borderRadius: 2,
-        height: "500px", // Fixed height
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <Typography
-        variant="h6"
-        sx={{
-          color: customColors.primary,
-          mb: 2,
-          fontWeight: 600,
-        }}
-      >
-        Class Assign
-      </Typography>
-      <Divider sx={{ mb: 2 }} />
-
-      {/* Scrollable student list */}
-      <Box
-        sx={{
-          overflowY: "auto",
-          flexGrow: 1,
-          pr: 1, // Add some padding for scrollbar
-        }}
-      >
-        <FormGroup>
-          {students?.map((student, index) => (
-            <FormControlLabel
-              key={index}
-              control={
-                <Checkbox
-                  checked={localSelectedStudents.some(
-                    (selectedStudent) => selectedStudent._id === student._id
-                  )}
-                  onChange={() => handleStudentToggle(student)}
-                  color="primary"
-                />
-              }
-              label={student.kidFirstName}
-            />
-          ))}
-        </FormGroup>
-      </Box>
-
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          mt: 2,
-          borderTop: "1px solid rgba(0,0,0,0.12)",
-          pt: 2,
-        }}
-      >
-        <Typography variant="body2" color="textSecondary">
-          {localSelectedStudents.length} students selected
-        </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => onStudentSelect(localSelectedStudents)}
-          sx={{
-            textTransform: "none",
-            boxShadow: "none",
-            "&:hover": {
-              boxShadow: "none",
-            },
-          }}
-        >
-          Confirm Selection
-        </Button>
-      </Box>
-    </Paper>
-  );
-};
-
-// Main Class Display Component
 const AssignClasses = () => {
   const navigate = useNavigate();
   const empId = localStorage.getItem("empId");
   const { id } = useParams();
   const [selectedStudents, setSelectedStudents] = useState([]);
-  const [classData, setClassData] = useState([]);
+  const [classData, setClassData] = useState(null);
   const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchRequiredClassStudentData = async () => {
       try {
+        setLoading(true);
         const response = await getClassandStudentData(id);
-        console.log("Use effect data in demo assign", response);
+        console.log(response)
         setClassData(response?.data?.classData);
-        setStudents(response?.data?.kidsData);
+        setStudents(response?.data?.unselectedKids || []);
       } catch (error) {
         console.error("Error fetching class and student data:", error);
+        toast.error("Failed to fetch class data");
+      } finally {
+        setLoading(false);
       }
     };
     fetchRequiredClassStudentData();
   }, [id]);
 
-  const handleStudentSelection = async (students) => {
-    console.log("Selected Students:", students);
-    setSelectedStudents(students);
+  const handleStudentSelection = (student) => {
+    setSelectedStudents(prev => {
+      const isSelected = prev.some(s => s.kidId === student.kidId);
+      return isSelected ? prev.filter(s => s.kidId !== student.kidId) : [...prev, student];
+    });
+  };
 
-    // Extract student IDs for the API call
-    const studentIds = students.map((student) => student._id);
-
+  const handleSaveAssignments = async () => {
     try {
+      const studentIds = selectedStudents.map(student => student.kidId);
       const response = await saveClassDetails(id, studentIds, empId);
-      console.log("Save  Class Response:", response);
       if (response.status === 200) {
         toast.success(response.data.message);
-        setTimeout(() => {
-          navigate("/serviceScheduleClass");
-        }, 1500);
+        setTimeout(() => navigate("/serviceScheduleClass"), 1500);
       }
     } catch (error) {
-      console.error("Error saving demo class details:", error);
+      toast.error("Failed to save assignments");
     }
   };
 
-  const handleRemoveStudent = (studentToRemove) => {
-    setSelectedStudents((prev) =>
-      prev.filter((student) => student._id !== studentToRemove._id)
-    );
+  const handleViewLogs = (logId, e) => {
+    e.stopPropagation(); // Prevent student selection when clicking the logs icon
+    navigate(`/service-delivary/completeEnquiryLogs/${logId}`);
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
+        <p className="text-gray-600">Loading...</p>
+      </div>
+    );
+  }
+
   return (
-    <Box
-      sx={{
-        p: 4,
-        backgroundColor: customColors.background,
-        minHeight: "100vh",
-      }}
-    >
-      <Typography
-        variant="h4"
-        sx={{
-          color: customColors.primary,
-          mb: 4,
-          fontWeight: 700,
-          textAlign: "center",
-        }}
-      >
-        Student Class Assign Dashboard
-      </Typography>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-bold text-purple-600 mb-2">Student Class Assign Dashboard</h1>
+          <p className="text-gray-600">Assign students to available classes</p>
+        </div>
 
-      <Grid container spacing={4}>
-        {/* Class Details Column */}
-        <Grid item xs={12} md={8}>
-          <Paper
-            elevation={3}
-            sx={{
-              p: 3,
-              borderRadius: 2,
-              backgroundColor: "white",
-            }}
-          >
-            {classData.map((classItem, index) => (
-              <Box key={index}>
-                {/* Class Details Grid */}
-                <Grid container spacing={2} sx={{ mb: 3 }}>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <DayIcon color="primary" />
-                      <Typography variant="subtitle1">
-                        {classItem.day}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <TimeIcon color="secondary" />
-                      <Typography variant="subtitle1">
-                        {classItem.classTime}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <TeacherIcon color="success" />
-                      <Typography variant="subtitle1">
-                        {classItem.coachName}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <StudentsIcon color="primary" />
-                      <Typography variant="subtitle1">
-                        {classItem.students || 0} Students
-                      </Typography>
-                    </Box>
-                  </Grid>
-                </Grid>
-
-                {/* Program and Level Row */}
-                <Grid container spacing={2} sx={{ mb: 3 }}>
-                  <Grid item xs={6} sm={6}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <ProgramIcon color="primary" />
-                      <Typography variant="subtitle1">
-                        {classItem.program}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={6} sm={6}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <LevelIcon color="secondary" />
-                      <Typography variant="subtitle1">
-                        {classItem.level}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Typography variant="h6">Selected Students</Typography>
-                    </Box>
-                    {/* List of selected students with icons */}
-                    <List>
-                      {classItem.selectedStudents &&
-                        classItem.selectedStudents.map((student, index) => (
-                          <ListItem key={index}>
-                            <ListItemIcon>
-                              <ChildCareIcon color="primary" />{" "}
-                              {/* Icon for each student */}
-                            </ListItemIcon>
-                            <Typography variant="body1">
-                              {student.kidName}
-                            </Typography>
-                          </ListItem>
-                        ))}
-                    </List>
-                  </Grid>
-                </Grid>
-
-                {/* Selected Students Chips */}
-                {selectedStudents.length > 0 && (
-                  <Box sx={{ mt: 2 }}>
-                    <Typography
-                      variant="subtitle2"
-                      color="textSecondary"
-                      sx={{ mb: 1 }}
-                    >
-                      Selected Students:
-                    </Typography>
-                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                      {selectedStudents.map((student, index) => (
-                        <Chip
-                          key={index}
-                          label={student.kidFirstName}
-                          onDelete={() => handleRemoveStudent(student)}
-                          deleteIcon={<CloseIcon />}
-                          color="primary"
-                          variant="outlined"
-                        />
-                      ))}
-                    </Box>
-                  </Box>
-                )}
-              </Box>
-            ))}
-          </Paper>
-        </Grid>
-
-        {/* Student Selection Column */}
-        <Grid item xs={12} md={4}>
-          <StudentMultiSelect
-            students={students}
-            onStudentSelect={handleStudentSelection}
-            selectedStudents={selectedStudents}
+        {!classData && (
+          <EmptyState 
+            icon={AlertTriangle}
+            title="No Class Data Available"
+            message="There is no class information available for this selection."
           />
-        </Grid>
-      </Grid>
-    </Box>
+        )}
+
+        {classData && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="mb-6">
+                  <h2 className="text-xl font-semibold text-purple-600 mb-4">Class Information</h2>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <InfoCard icon={Calendar} label="Day" value={classData.day} />
+                    <InfoCard icon={Clock} label="Time" value={classData.classTime} />
+                    <InfoCard icon={User} label="Coach" value={classData.coachName} />
+                    <InfoCard icon={Users} label="Students" value={`${classData.students || 0} Enrolled`} />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <InfoCard icon={BookOpen} label="Program" value={classData.program} />
+                  <InfoCard icon={Tag} label="Level" value={classData.level} />
+                </div>
+
+                {classData.selectedStudents?.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="text-lg font-semibold text-gray-700 mb-3">Currently Enrolled Students</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      {classData.selectedStudents.map((student, idx) => (
+                        <div key={idx} className="flex items-center space-x-2 p-2 bg-purple-50 rounded-lg">
+                          <GraduationCap className="w-4 h-4 text-purple-500" />
+                          <span className="text-sm text-gray-700">{student.kidName}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-xl shadow-sm p-6 sticky top-6">
+                <h2 className="text-xl font-semibold text-purple-600 mb-4">Select Students</h2>
+                
+                {students.length === 0 ? (
+                  <div className="text-center py-8">
+                    <GraduationCap className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600">No students available for assignment</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-2 max-h-96 overflow-y-auto mb-4">
+                      {students.map((student) => (
+                        <div
+                          key={student.kidId}
+                          className={`flex items-center justify-between p-3 rounded-lg
+                            ${selectedStudents.some(s => s.kidId === student.kidId)
+                              ? 'bg-purple-50 border-purple-200'
+                              : 'bg-gray-50 hover:bg-gray-100'
+                            }`}
+                        >
+                          <div 
+                            className="flex items-center space-x-3 flex-grow cursor-pointer"
+                            onClick={() => handleStudentSelection(student)}
+                          >
+                            <GraduationCap className={`w-5 h-5 ${
+                              selectedStudents.some(s => s.kidId === student.kidId)
+                                ? 'text-purple-600'
+                                : 'text-gray-400'
+                            }`} />
+                            <span className="font-medium text-gray-700">{student.kidFirstName}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={(e) => handleViewLogs(student._id, e)}
+                              className="p-2 hover:bg-purple-100 rounded-full transition-colors"
+                              title="View Logs"
+                            >
+                              <History className="w-5 h-5 text-purple-600" />
+                            </button>
+                            {selectedStudents.some(s => s.kidId === student.kidId) && (
+                              <CheckCircle className="w-5 h-5 text-purple-600" />
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="border-t pt-4">
+                      <div className="flex justify-between items-center mb-4">
+                        <span className="text-sm text-gray-600">
+                          {selectedStudents.length} students selected
+                        </span>
+                      </div>
+                      <button
+                        onClick={handleSaveAssignments}
+                        disabled={selectedStudents.length === 0}
+                        className="w-full bg-purple-600 text-white py-2 px-4 rounded-lg
+                          hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed
+                          transition-colors duration-200"
+                      >
+                        Confirm Assignments
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
