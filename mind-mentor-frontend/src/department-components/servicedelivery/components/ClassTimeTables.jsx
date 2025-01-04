@@ -68,6 +68,25 @@ const ClassScheduleForm = () => {
     (coach, index, self) => index === self.findIndex((c) => c.id === coach.id)
   );
 
+  // Helper function to generate time options in 15-minute intervals
+  const generateTimeOptions = (startTime, endTime) => {
+    const times = [];
+    let currentTime = new Date(`2024-01-01T${startTime}`);
+    const endTimeDate = new Date(`2024-01-01T${endTime}`);
+
+    while (currentTime <= endTimeDate) {
+      times.push(
+        currentTime.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        })
+      );
+      currentTime.setMinutes(currentTime.getMinutes() + 15);
+    }
+    return times;
+  };
+
   const timeToMinutes = (timeStr) => {
     if (!timeStr) return null;
     try {
@@ -78,10 +97,9 @@ const ClassScheduleForm = () => {
     }
   };
 
-  // Helper function to check if a time is within available slots
   const validateTimeSlot = (schedule, fromTime, toTime) => {
     if (!schedule.coachName || !schedule.program || !schedule.day) {
-      return true; // Skip validation if required fields are not filled
+      return true;
     }
 
     const timeSlots = getTimeSlots(
@@ -94,7 +112,7 @@ const ClassScheduleForm = () => {
     const selectedStart = timeToMinutes(fromTime);
     const selectedEnd = timeToMinutes(toTime);
 
-    if (!selectedStart || !selectedEnd) return true; // Skip validation if times are incomplete
+    if (!selectedStart || !selectedEnd) return true;
 
     return timeSlots.some((slot) => {
       const slotStart = timeToMinutes(slot.fromTime);
@@ -108,7 +126,6 @@ const ClassScheduleForm = () => {
     const currentSchedule = { ...newSchedules[index] };
 
     if (field === "coachName") {
-      // When coach is selected, find and set both name and ID
       const selectedCoach = coaches.find((coach) => coach.name === value);
       if (selectedCoach) {
         currentSchedule.coachName = selectedCoach.name;
@@ -118,7 +135,6 @@ const ClassScheduleForm = () => {
       currentSchedule[field] = value;
     }
 
-    // Validate time slots if either time is changed
     if (field === "fromTime" || field === "toTime") {
       const isValid = validateTimeSlot(
         currentSchedule,
@@ -191,9 +207,7 @@ const ClassScheduleForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate all schedules
     const isValid = schedules.every((schedule) => {
-      // Check required fields
       if (
         !schedule.coachName ||
         !schedule.program ||
@@ -206,7 +220,6 @@ const ClassScheduleForm = () => {
         return false;
       }
 
-      // Validate time slots
       const isTimeValid = validateTimeSlot(
         schedule,
         schedule.fromTime,
@@ -255,10 +268,13 @@ const ClassScheduleForm = () => {
     ]);
   };
 
-  // Helper function to get available time range for a schedule
   const getAvailableTimeRange = (schedule) => {
     if (!schedule.coachName || !schedule.program || !schedule.day) {
-      return { min: "00:00", max: "23:59" };
+      return {
+        min: "00:00",
+        max: "23:59",
+        options: generateTimeOptions("00:00", "23:59"),
+      };
     }
 
     const timeSlots = getTimeSlots(
@@ -266,21 +282,29 @@ const ClassScheduleForm = () => {
       schedule.program,
       schedule.day
     );
-    if (!timeSlots.length) return { min: "00:00", max: "23:59" };
+    if (!timeSlots.length)
+      return {
+        min: "00:00",
+        max: "23:59",
+        options: generateTimeOptions("00:00", "23:59"),
+      };
 
     const fromTimes = timeSlots.map((slot) => slot.fromTime);
     const toTimes = timeSlots.map((slot) => slot.toTime);
+    const min = fromTimes.sort()[0];
+    const max = toTimes.sort()[toTimes.length - 1];
 
     return {
-      min: fromTimes.sort()[0],
-      max: toTimes.sort()[toTimes.length - 1],
+      min,
+      max,
+      options: generateTimeOptions(min, max),
     };
   };
 
   return (
-    <div className="min-h-screen p-6 ">
-      <div className="max-w-7xl mx-auto bg-white border  shadow-xl">
-        <div className="bg-gradient-to-r from-[#642b8f] to-[#aa88be] p-8 border-white rounded-xl  text-white">
+    <div className="min-h-screen p-6">
+      <div className="max-w-7xl mx-auto bg-white border shadow-xl">
+        <div className="bg-gradient-to-r from-[#642b8f] to-[#aa88be] p-8 border-white rounded-xl text-white">
           <h2 className="text-3xl font-bold mb-2">Class Schedule Form</h2>
           <p className="text-sm opacity-90">Enter class schedule details</p>
         </div>
@@ -297,7 +321,6 @@ const ClassScheduleForm = () => {
                   className="mb-4 p-4 border rounded-lg"
                   alignItems="center"
                 >
-                  {/* Coach Dropdown */}
                   <Grid item xs={12} sm={4}>
                     <FormControl fullWidth>
                       <InputLabel>Coach</InputLabel>
@@ -321,7 +344,6 @@ const ClassScheduleForm = () => {
                     </FormControl>
                   </Grid>
 
-                  {/* Program Dropdown */}
                   <Grid item xs={12} sm={3}>
                     <FormControl fullWidth>
                       <InputLabel>Program</InputLabel>
@@ -345,7 +367,6 @@ const ClassScheduleForm = () => {
                     </FormControl>
                   </Grid>
 
-                  {/* Level Dropdown */}
                   <Grid item xs={12} sm={3}>
                     <FormControl fullWidth>
                       <InputLabel>Level</InputLabel>
@@ -369,7 +390,6 @@ const ClassScheduleForm = () => {
                     </FormControl>
                   </Grid>
 
-                  {/* Demo/Class Switch */}
                   <Grid
                     item
                     xs={12}
@@ -404,7 +424,6 @@ const ClassScheduleForm = () => {
                   className="mb-8 p-4 border rounded-lg"
                   alignItems="center"
                 >
-                  {/* Day Dropdown */}
                   <Grid item xs={12} sm={3}>
                     <FormControl fullWidth>
                       <InputLabel>Day</InputLabel>
@@ -430,48 +449,50 @@ const ClassScheduleForm = () => {
                     </FormControl>
                   </Grid>
 
-                  {/* Time Selection */}
                   <Grid item xs={12} sm={2}>
-                    <TextField
-                      fullWidth
-                      label="Start Time"
-                      type="time"
-                      value={schedule.fromTime}
-                      onChange={(e) =>
-                        handleScheduleChange(index, "fromTime", e.target.value)
-                      }
-                      InputLabelProps={{
-                        shrink: true,
-                      }}
-                      inputProps={{
-                        min: timeRange.min,
-                        max: timeRange.max,
-                        step: 300,
-                      }}
-                    />
+                    <FormControl fullWidth>
+                      <InputLabel>Start Time</InputLabel>
+                      <Select
+                        value={schedule.fromTime}
+                        label="Start Time"
+                        onChange={(e) =>
+                          handleScheduleChange(
+                            index,
+                            "fromTime",
+                            e.target.value
+                          )
+                        }
+                      >
+                        {timeRange.options.map((time) => (
+                          <MenuItem key={time} value={time}>
+                            {time}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
                   </Grid>
 
                   <Grid item xs={12} sm={2}>
-                    <TextField
-                      fullWidth
-                      label="End Time"
-                      type="time"
-                      value={schedule.toTime}
-                      onChange={(e) =>
-                        handleScheduleChange(index, "toTime", e.target.value)
-                      }
-                      InputLabelProps={{
-                        shrink: true,
-                      }}
-                      inputProps={{
-                        min: timeRange.min,
-                        max: timeRange.max,
-                        step: 300,
-                      }}
-                    />
+                    <FormControl fullWidth>
+                      <InputLabel>End Time</InputLabel>
+                      <Select
+                        value={schedule.toTime}
+                        label="End Time"
+                        onChange={(e) =>
+                          handleScheduleChange(index, "toTime", e.target.value)
+                        }
+                      >
+                        {timeRange.options
+                          .filter((time) => time > schedule.fromTime)
+                          .map((time) => (
+                            <MenuItem key={time} value={time}>
+                              {time}
+                            </MenuItem>
+                          ))}
+                      </Select>
+                    </FormControl>
                   </Grid>
 
-                  {/* Meeting Link */}
                   <Grid item xs={12} sm={3}>
                     <TextField
                       fullWidth
