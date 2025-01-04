@@ -2100,6 +2100,39 @@ const updateEnrollmentStatus = async (req, res) => {
   }
 };
 
+const getDropDownData = async (req, res) => {
+  try {
+    const kidsData = await kidSchema.find({}, { _id: 1, kidsName: 1 });
+    const employeeData = await Employee.find({}, { _id: 1, firstName: 1,email:1,department:1 });
+
+    res.status(200).json({
+      success: true,
+      message: "Dropdown data fetched successfully.",
+      data: {
+        kidsData,
+        employeeData,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching dropdown data.",
+      error: err.message,
+    });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
 module.exports = {
   operationEmailVerification,
   operationPasswordVerification,
@@ -2144,4 +2177,5 @@ module.exports = {
   assignTaskToOthers,
   addNotesToTasks,
   getMyLeaveData,
+  getDropDownData
 };

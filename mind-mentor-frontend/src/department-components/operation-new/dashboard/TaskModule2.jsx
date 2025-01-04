@@ -1,12 +1,18 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@mui/material";
-import { Link, useNavigate } from "react-router-dom";
-import { createTasks } from "../../../api/service/employee/EmployeeService";
+import { Link } from "react-router-dom";
+import {
+  createTasks,
+  getDropDownData,
+} from "../../../api/service/employee/EmployeeService";
 
 const TaskModule = () => {
   const empId = localStorage.getItem("empId");
-  const navigate = useNavigate();
-  // State to manage form inputs
+  // Add new state for kids and employees data
+  const [kidsData, setKidsData] = useState([]);
+  const [employeesData, setEmployeesData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   const [formData, setFormData] = useState({
     kidsRelatedTo: "",
     task: "",
@@ -16,20 +22,39 @@ const TaskModule = () => {
     assignedBy: empId || "",
   });
 
-  // State to manage form submission and display
   const [submissionStatus, setSubmissionStatus] = useState({
     submitted: false,
     message: "",
   });
 
-  // Handle input changes
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevState) => ({
-      ...prevState,
-      [name]: value,
-    }));
-  };
+  // Add new useEffect for fetching kids and employees data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Replace these with your actual API endpoints
+        const dropDownData = await getDropDownData();
+        console.log("dropDownData", dropDownData);
+
+        if (!dropDownData.status === 200) {
+          throw new Error("Failed to fetch data");
+        }
+
+        setKidsData(dropDownData.data.kidsData);
+        setEmployeesData(dropDownData.data.employeeData);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setSubmissionStatus({
+          submitted: true,
+          message: "Error loading data. Please refresh the page.",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   useEffect(() => {
     const storedempId = localStorage.getItem("empId");
     if (storedempId) {
@@ -40,12 +65,16 @@ const TaskModule = () => {
     }
   }, []);
 
-  // Handle form submission
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form data", formData);
-
-    // Validate form fields
     const { kidsRelatedTo, task, taskDate, taskTime, assignedTo } = formData;
 
     if (!kidsRelatedTo || !task || !taskDate || !taskTime || !assignedTo) {
@@ -56,39 +85,23 @@ const TaskModule = () => {
       return;
     }
 
-    // Get the current employee details (assumed to be saved in localStorage or state)
-    const empId = localStorage.getItem("empId"); // Assuming empId is stored after login
-    const employeeName = localStorage.getItem("employeeName"); // Employee name from login or profile
-
-    // Call the createTasks function to save the task
     try {
       await createTasks(formData);
 
-      // Log the activity (creating the task)
-      const activityLog = {
-        taskId: formData.taskId, // Assuming taskId is available after task creation
-        action: "Created Task",
-        performedBy: empId,
-        performedByName: employeeName,
-        details: `Assigned task: ${task} to ${assignedTo} for ${kidsRelatedTo} on ${taskDate} at ${taskTime}`,
-      };
+      const empId = localStorage.getItem("empId");
 
-      // Call your API or function to log the activity
-      // await logActivity(activityLog);  // Assuming logActivity is a function to send data to the backend
-
-      // If all fields are filled, show success message
       setSubmissionStatus({
         submitted: true,
         message: `Task Successfully Assigned to ${assignedTo} for ${kidsRelatedTo} on ${taskDate} at ${taskTime}`,
       });
 
-      // Optional: Reset form after submission
       setFormData({
         kidsRelatedTo: "",
         task: "",
         taskDate: "",
         taskTime: "",
         assignedTo: "",
+        assignedBy: empId || "",
       });
     } catch (error) {
       console.error("Error creating task:", error);
@@ -99,7 +112,6 @@ const TaskModule = () => {
     }
   };
 
-  // Reset form and submission status
   const handleReset = () => {
     setFormData({
       kidsRelatedTo: "",
@@ -107,6 +119,7 @@ const TaskModule = () => {
       taskDate: "",
       taskTime: "",
       assignedTo: "",
+      assignedBy: empId || "",
     });
     setSubmissionStatus({
       submitted: false,
@@ -114,10 +127,17 @@ const TaskModule = () => {
     });
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen p-6 flex items-center justify-center">
+        <div className="text-[#642b8f]">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen p-6">
-      <div className="max-w-9xl mx-auto bg-white rounded-xl shadow-xl overflow-hidden">
-        {/* Header Section */}
+      <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-xl overflow-hidden">
         <div className="bg-gradient-to-r from-[#642b8f] to-[#aa88be] p-8 text-white flex justify-between items-center">
           <div>
             <h2 className="text-3xl font-bold mb-2">Task Assignment Form</h2>
@@ -130,7 +150,6 @@ const TaskModule = () => {
           </Button>
         </div>
 
-        {/* Submission Status Message */}
         {submissionStatus.submitted && (
           <div
             className={`
@@ -148,7 +167,7 @@ const TaskModule = () => {
 
         <form onSubmit={handleSubmit} onReset={handleReset} className="p-8">
           <div className="space-y-8">
-            {/* Kids Related To */}
+            {/* Updated Kids Related To dropdown */}
             <div className="space-y-4">
               <label className="block text-sm font-medium text-[#642b8f]">
                 Kids Related To
@@ -160,13 +179,15 @@ const TaskModule = () => {
                 className="w-full p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors bg-white"
               >
                 <option value="">-Select-</option>
-                <option value="groupA">Group A</option>
-                <option value="groupB">Group B</option>
-                <option value="groupC">Group C</option>
+                {kidsData?.map((kid) => (
+                  <option key={kid._id} value={kid._id}>
+                    {kid.kidsName}
+                  </option>
+                ))}
               </select>
             </div>
 
-            {/* Task */}
+            {/* Task textarea remains the same */}
             <div className="space-y-4">
               <label className="block text-sm font-medium text-[#642b8f]">
                 Task
@@ -181,7 +202,7 @@ const TaskModule = () => {
               />
             </div>
 
-            {/* Task Time */}
+            {/* Date and Time inputs remain the same */}
             <div className="flex gap-4">
               <div className="flex-1 space-y-4">
                 <label className="block text-sm font-medium text-[#642b8f]">
@@ -209,7 +230,7 @@ const TaskModule = () => {
               </div>
             </div>
 
-            {/* Assigned To */}
+            {/* Updated Assigned To dropdown */}
             <div className="space-y-4">
               <label className="block text-sm font-medium text-[#642b8f]">
                 Assigned To
@@ -221,19 +242,15 @@ const TaskModule = () => {
                 className="w-full p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors bg-white"
               >
                 <option value="">-Select-</option>
-                <option value="marketingassociate@mindmentorz.com">
-                  Marketing
-                </option>
-                <option value="coach@mindmentorz.com">Coach</option>
-                <option value="operations@mindmentorz.com">Operations</option>
-                <option value="serviceDelivery@mindmentorz.com">
-                  Service delivery
-                </option>
+                {employeesData.map((employee) => (
+                  <option key={employee._id} value={employee.email}>
+                    {employee.firstName}-{employee.department}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
 
-          {/* Form Buttons */}
           <div className="flex justify-center gap-6 mt-8">
             <button
               type="submit"

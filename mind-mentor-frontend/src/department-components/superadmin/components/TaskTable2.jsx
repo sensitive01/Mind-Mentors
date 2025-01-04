@@ -304,9 +304,9 @@ const Prospects = () => {
                 variant="contained"
                 color="primary"
                 component={Link}
-                to="/superadminMyTasks/assigntask"
+                to="/centeradmin-tasks/assigntask"
               >
-                + Assign New Task
+                + My Task
               </Button>
             </Box>
             <DataGrid

@@ -447,3 +447,9 @@ export const getAllEmployeesByName = async () => {
   const response = await userInstance.get("/employeesbyname");
   return response.data;
 };
+
+export const getDropDownData = async () => {
+  const response = await operationDeptInstance.get("/get-dropdown-data");
+  return response.data;
+};
+

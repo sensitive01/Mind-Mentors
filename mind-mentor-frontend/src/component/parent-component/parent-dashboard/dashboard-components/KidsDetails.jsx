@@ -51,7 +51,7 @@ const KidsDetails = ({ kids }) => {
                 className="group relative cursor-pointer"
               >
                 {/* Border animation container */}
-                <div className="absolute -inset-[0.5px] bg-gradient-to-r from-primary via-secondary to-primary rounded-xl animate-border-run bg-[length:200%_auto] group-hover:opacity-100 transition-all duration-300"></div>
+                <div className="absolute -inset-[1px] bg-gradient-to-r from-primary via-white to-white rounded-xl animate-border-run bg-[length:300%_auto] group-hover:opacity-80 transition-all duration-500"></div>
                 
                 {/* Main card content */}
                 <div className="relative bg-white rounded-xl m-[2px] overflow-hidden">

@@ -17,6 +17,8 @@ operationRoute.get("/get-prospects-data", operationController.getProspectsData);
 operationRoute.get("/get-prospects-student-data", operationController.getProspectsStudentsData);
 operationRoute.get("/get-conducted-demo-class", operationController.getConductedDemoClass);
 operationRoute.get("/get-my-leaves/:empId", operationController.getMyLeaveData);
+operationRoute.get("/get-dropdown-data", operationController.getDropDownData);
+
 
 
 

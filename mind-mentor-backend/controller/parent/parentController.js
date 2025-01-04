@@ -128,10 +128,8 @@ const parentStudentRegistration = async (req, res) => {
 
     const newKid = new kidModel({
       kidsName: formData.kidsName,
-
       age: formData.age,
       gender: formData.gender,
-
       intention: formData.intention,
       schoolName: formData.schoolName,
       address: formData.address,
@@ -142,6 +140,8 @@ const parentStudentRegistration = async (req, res) => {
     });
 
     await newKid.save();
+
+    console.log("New kid data",newKid)
 
     if (parentData) {
       parentData = await parentModel.findOneAndUpdate(
@@ -188,12 +188,12 @@ const parentStudentRegistration = async (req, res) => {
 
 
 const createEnquiryParent = async (formData, state) => {
- 
-
   try {
     // Extract data
     const { parent, kid } = state;
     const { programs, scheduleId, hasSchedule } = formData;
+
+    console.log("programs",programs)
 
     // Format date and time
     const formattedDateTime = new Date().toLocaleString("en-US", {
@@ -209,9 +209,17 @@ const createEnquiryParent = async (formData, state) => {
     };
 
    
-    const newLog = new enquiryLogs(logUpdate);
+    const newLog = new enquiryLogs({
+      logs: [
+        {
+          action: `Request for demo class booking raised by parent ${parent.parentName} on ${formattedDateTime}`,
+          createdAt: new Date(),
+          employeeId: "",
+          employeeName: "",
+        },
+      ],
+    });
     const savedLog = await newLog.save();
-    console.log("savedLog",savedLog)
 
  
     const operationDeptData = {
@@ -227,8 +235,8 @@ const createEnquiryParent = async (formData, state) => {
       kidsAge: kid.age,
       kidsGender: kid.gender,
       programs: programs.map((program) => ({
-        program: program.name, // Adjust key based on the program object structure
-        level: program.level, // Adjust key based on the program object structure
+        program: program.program, // Adjust key based on the program object structure
+        level: program.programLevel, // Adjust key based on the program object structure
       })),
       intentionOfParents: kid.intention,
       schoolName: kid.schoolName,
@@ -251,7 +259,9 @@ const createEnquiryParent = async (formData, state) => {
       logs: savedLog._id, // Reference the saved log
     };
 
-    // Save the OperationDept document
+
+    console.log("operationDeptData",operationDeptData.logs)
+
     const newOperationDept = new operationDeptModel(operationDeptData);
     const savedOperationDept = await newOperationDept.save();
 
@@ -262,7 +272,7 @@ const createEnquiryParent = async (formData, state) => {
     savedLog.enqId = savedOperationDept._id
     await savedLog.save()
 
-    console.log("savedLog 2",savedLog)
+    // console.log("savedLog 2",savedLog)
 
 
 
@@ -336,6 +346,7 @@ const parentBookDemoClass = async (req, res) => {
  
 
     // Invoke the logging function
+    
     const logResult = await createEnquiryParent(formData, state);
     console.log("Log entry created:", logResult);
 
