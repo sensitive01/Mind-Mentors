@@ -304,7 +304,7 @@ const Prospects = () => {
                 variant="contained"
                 color="primary"
                 component={Link}
-                to="/employee-operation-tasks/assigntask"
+                to="/operation/department/assign-new-task"
               >
                 + Assign New Task
               </Button>

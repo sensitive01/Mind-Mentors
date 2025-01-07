@@ -79,8 +79,7 @@ const operationEmailVerification = async (req, res) => {
 
     const { email } = req.body;
     console.log(email);
-    const data = await Employee.find();
-    console.log(data);
+
 
     const operationEmail = await Employee.findOne({ email: email });
     console.log("operationEmail", operationEmail);
@@ -833,18 +832,16 @@ const createLeave = async (req, res) => {
     newLeave.employeeName = empData.firstName;
     await newLeave.save();
 
-    // Format dates to dd/mm/yy
     const formatDate = (date) => {
       const d = new Date(date);
       const day = String(d.getDate()).padStart(2, "0");
-      const month = String(d.getMonth() + 1).padStart(2, "0"); // Months are 0-based
-      const year = String(d.getFullYear()).slice(-2); // Get last 2 digits of the year
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const year = String(d.getFullYear()).slice(-2);
       return `${day}/${month}/${year}`;
     };
 
-    // Modify the newLeave data for response
     const formattedLeave = {
-      ...newLeave._doc, // Spread the original leave document
+      ...newLeave._doc,
       leaveStartDate: formatDate(newLeave.leaveStartDate),
       leaveEndDate: formatDate(newLeave.leaveEndDate),
     };
@@ -963,12 +960,40 @@ const getMyLeaveData = async (req, res) => {
   }
 };
 
+const getMyIndividualLeave = async (req, res) => {
+  try {
+    const { levId } = req.params;
+    const leavesData = await leaves.findOne({ _id: levId });
+
+    if (!leavesData) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Leave not found" });
+    }
+
+    console.log(leavesData);
+    return res.status(200).json({ success: true,  leavesData });
+  } catch (err) {
+    console.error("Error in getting the leave", err);
+    return res
+      .status(500)
+      .json({
+        success: false,
+        message: "Internal Server Error",
+        error: err.message,
+      });
+  }
+};
+
 const updateLeave = async (req, res) => {
   try {
+    console.log("Welcome to update leaves",req.params)
     const { id } = req.params;
-    const updatedLeave = await leaves.findByIdAndUpdate(id, req.body, {
+    console.log(id, req.body)
+    const updatedLeave = await leaves.findByIdAndUpdate(id, req.body.updatedData, {
       new: true,
     });
+    console.log("updatedLeave",updatedLeave)
     if (!updatedLeave) {
       return res.status(404).json({ message: "Leave not found" });
     }
@@ -1782,7 +1807,7 @@ const getAllSheduleClass = async (req, res) => {
 
 const fetchAllLogs = async (req, res) => {
   try {
-    console.log("Welcome to fetch logs")
+    console.log("Welcome to fetch logs");
     const { id } = req.params;
     const logsData = await enquiryLogs.findOne({ enqId: id });
 
@@ -1831,7 +1856,7 @@ const getDemoClassAndStudentsData = async (req, res) => {
           },
         },
       },
-      { kidFirstName: 1,kidId:1 } // Project only the required fields
+      { kidFirstName: 1, kidId: 1 } // Project only the required fields
     );
 
     console.log("Class Data", classData);
@@ -1993,37 +2018,40 @@ const saveDemoClassData = async (req, res) => {
 //   }
 // };
 
-
 const getConductedDemoClass = async (req, res) => {
   try {
     const classSchedule = await ClassSchedule.find({ classType: "Demo" });
     const conductedClasses = await ConductedClass.find();
-    const kidsWithPaymentSucess = await OperationDept.find({ payment: "Success" }, { kidId: 1 });
+    const kidsWithPaymentSucess = await OperationDept.find(
+      { payment: "Success" },
+      { kidId: 1 }
+    );
 
-    const paidKidIds = kidsWithPaymentSucess.map(kid => kid.kidId.toString());
+    const paidKidIds = kidsWithPaymentSucess.map((kid) => kid.kidId.toString());
 
-    const conductedDemoClasses = classSchedule.map(schedule => {
+    const conductedDemoClasses = classSchedule.map((schedule) => {
       const conductedDetails = conductedClasses.filter(
-        conducted => conducted.classID.toString() === schedule._id.toString()
+        (conducted) => conducted.classID.toString() === schedule._id.toString()
       );
 
-      return conductedDetails.map(conducted => {
+      return conductedDetails.map((conducted) => {
         // Filter out students who have not made a successful payment
-        const studentsWithoutPayment = conducted.students.filter(student => {
-          const studentId = student.studentID ? student.studentID.toString() : student.toString();  // Handle both cases where student could be a direct ID or an object
+        const studentsWithoutPayment = conducted.students.filter((student) => {
+          const studentId = student.studentID
+            ? student.studentID.toString()
+            : student.toString(); // Handle both cases where student could be a direct ID or an object
           return !paidKidIds.includes(studentId); // Only students who haven't paid
         });
         return {
           ...schedule.toObject(),
           conductedDate: conducted.conductedDate,
           status: conducted.status,
-          students: studentsWithoutPayment, 
+          students: studentsWithoutPayment,
         };
       });
     });
 
     const flattenedDemoClasses = conductedDemoClasses.flat();
-
 
     res.status(200).json(flattenedDemoClasses);
   } catch (err) {
@@ -2032,29 +2060,33 @@ const getConductedDemoClass = async (req, res) => {
   }
 };
 
-
-
-
 const updateEnrollmentStatus = async (req, res) => {
   try {
-    const { id,empId } = req.params;
+    const { id, empId } = req.params;
     console.log("Id status", id);
-    const empData=await Employee.findOne({_id:empId},{firstName:1,department:1})
+    const empData = await Employee.findOne(
+      { _id: empId },
+      { firstName: 1, department: 1 }
+    );
 
-    const enrollmentData = await kidSchema.findOne({ _id: id }, { enqId: 1,kidsName:1 });
-    const logId = await OperationDept.findOne({_id:enrollmentData.enqId},{logs:1})
-    console.log("logId",logId.logs)
-    console.log("enrollmentData",enrollmentData)
+    const enrollmentData = await kidSchema.findOne(
+      { _id: id },
+      { enqId: 1, kidsName: 1 }
+    );
+    const logId = await OperationDept.findOne(
+      { _id: enrollmentData.enqId },
+      { logs: 1 }
+    );
+    console.log("logId", logId.logs);
+    console.log("enrollmentData", enrollmentData);
 
-
-    
     const formattedDateTime = new Intl.DateTimeFormat("en-US", {
       dateStyle: "medium",
       timeStyle: "short",
     }).format(new Date());
 
     await enquiryLogs.findByIdAndUpdate(
-      logId.logs, 
+      logId.logs,
       {
         $push: {
           logs: {
@@ -2103,7 +2135,10 @@ const updateEnrollmentStatus = async (req, res) => {
 const getDropDownData = async (req, res) => {
   try {
     const kidsData = await kidSchema.find({}, { _id: 1, kidsName: 1 });
-    const employeeData = await Employee.find({}, { _id: 1, firstName: 1,email:1,department:1 });
+    const employeeData = await Employee.find(
+      {},
+      { _id: 1, firstName: 1, email: 1, department: 1 }
+    );
 
     res.status(200).json({
       success: true,
@@ -2121,17 +2156,6 @@ const getDropDownData = async (req, res) => {
     });
   }
 };
-
-
-
-
-
-
-
-
-
-
-
 
 module.exports = {
   operationEmailVerification,
@@ -2177,5 +2201,6 @@ module.exports = {
   assignTaskToOthers,
   addNotesToTasks,
   getMyLeaveData,
-  getDropDownData
+  getDropDownData,
+  getMyIndividualLeave,
 };

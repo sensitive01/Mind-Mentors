@@ -145,8 +145,13 @@ const TaskModule = () => {
               Please fill in the required information below
             </p>
           </div>
-          <Button variant="contained" color="#642b8f" component={Link} to="#">
-            View Tasks
+          <Button
+          variant="contained"
+            color="#642b8f"
+            component={Link}
+            to="/operation/department/list-task-assigned-me"
+          >
+            View Assigned Task
           </Button>
         </div>
 

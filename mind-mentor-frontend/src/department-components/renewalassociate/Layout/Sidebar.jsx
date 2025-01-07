@@ -168,13 +168,13 @@ const ModernSidebar = () => {
       icon: <AttendanceIcon />,
       text: 'Attendance',
       color: iconColors.attendance,
-      link: '/renewalAttendance',
+      link: '/renewal/department/attendance',
     },
     {
       icon: <LeavesIcon />,
       text: 'Leaves',
       color: iconColors.leaves,
-      link: '/renewalLeaves',
+      link: '/renewal/department/leaves',
     },
     {
       icon: <InvoicesIcon />,
@@ -211,8 +211,8 @@ const ModernSidebar = () => {
       text: 'Tasks',
       color: iconColors.tasks,
       subItems: [
-        { icon: <TaskIcon />, text: 'My Tasks', link: '/renewalMyTasks' },
-        { icon: <TaskIcon />, text: 'Tasks Assigned By Me', link: '/renewalAssignedTasks' },
+        { icon: <TaskIcon />, text: 'My Tasks', link: '/renewal/department/list-mytask' },
+        { icon: <TaskIcon />, text: 'Tasks Assigned By Me', link: '/renewal/department/list-task-assigned-me' },
       ],
       open: openTasks,
       onClick: handleTasksClick,
@@ -221,7 +221,7 @@ const ModernSidebar = () => {
       icon: <ClassScheduleIcon />,
       text: 'Class Schedules',
       color: iconColors.classSchedules,
-      link: '/renewalScheduleClass',
+      link: '/renewal/department/schedule-class-list',
     },
     {
       icon: <SupportIcon />,

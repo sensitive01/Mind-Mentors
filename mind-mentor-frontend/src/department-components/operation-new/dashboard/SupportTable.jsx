@@ -209,7 +209,7 @@ const Support = () => {
                   </div>
                   
                   <Link
-                    to="/employee-operation-tasks/support/add"
+                    to="/operation/department/support/add"
                     className="flex items-center space-x-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
                   >
                     <Plus size={16} />

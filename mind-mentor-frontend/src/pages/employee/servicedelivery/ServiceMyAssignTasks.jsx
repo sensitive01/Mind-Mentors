@@ -1,4 +1,4 @@
-import TaskModule2 from "../../../department-components/servicedelivery/components/TaskModule2";
+import NewTaskForm from "../../../department-components/common-components/task/NewTaskForm";
 import Sidebar from "../../../department-components/servicedelivery/Layout/Sidebar";
 import Topbar from "./../../../component/parent-component/parent-dashboard/layout/Topbar";
 
@@ -15,7 +15,7 @@ const ListingEnquiries = () => {
         <div className="flex-1 overflow-hidden relative z-10">
           <div className="h-full w-full overflow-auto scrollbar-hide">
             <div className="min-w-full p-4">
-              <TaskModule2 />
+              <NewTaskForm />
             </div>
           </div>
         </div>

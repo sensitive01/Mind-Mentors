@@ -29,119 +29,47 @@ import {
 } from "@mui/icons-material";
 import { Link, useNavigate } from "react-router-dom";
 import { getClassShedules } from "../../../api/service/employee/serviceDeliveryService";
-
-// Custom theme and colors
-export const customColors = {
-  primary: "#642b8f",
-  secondary: "#7e3cb5",
-  accent: "#9b4ddb",
-  highlight: "#b66dff",
-  background: "#f8f9fa",
-};
-
-export const theme = createTheme({
-  palette: {
-    primary: {
-      main: customColors.primary,
-      light: customColors.secondary,
-      dark: customColors.accent,
-    },
-    background: {
-      default: customColors.background,
-      paper: "#ffffff",
-    },
-  },
-  components: {
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: 12,
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-        },
-      },
-    },
-  },
-});
-
-// Styled Components
-export const AnimatedCard = styled(Card)(({ theme }) => ({
-  transition: "all 0.3s ease-in-out",
-  "&:hover": {
-    transform: "translateY(-4px)",
-    boxShadow: "0 8px 16px rgba(0, 0, 0, 0.1)",
-  },
-}));
-
-export const ClassCard = styled(Card)(({ theme }) => ({
-  padding: theme.spacing(2),
-  marginBottom: theme.spacing(2),
-  cursor: "pointer",
-  transition: "all 0.2s ease-in-out",
-  "&:hover": {
-    transform: "scale(1.02)",
-    boxShadow: "0 6px 12px rgba(0, 0, 0, 0.1)",
-  },
-}));
-
-export const IconText = styled(Box)({
-  display: "flex",
-  alignItems: "center",
-  gap: "8px",
-  marginBottom: "8px",
-});
-
-export const DetailRow = styled(Box)(({ theme }) => ({
-  display: "flex",
-  alignItems: "center",
-  gap: theme.spacing(2),
-  marginBottom: theme.spacing(3),
-}));
-
-export const ModalContent = styled(Box)(({ theme }) => ({
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: "90%",
-  maxWidth: 600,
-  backgroundColor: theme.palette.background.paper,
-  borderRadius: 12,
-  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
-  padding: theme.spacing(4),
-  outline: "none",
-}));
+import {
+  AnimatedCard,
+  ClassCard,
+  customColors,
+  DetailRow,
+  IconText,
+  ModalContent,
+  theme,
+} from "../../coach/Layout/customStyle";
 
 const NoScheduleCard = ({ day }) => (
   <ClassCard
     elevation={2}
     sx={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
       padding: 3,
-      backgroundColor: 'rgba(100, 43, 143, 0.05)',
-      border: '2px dashed rgba(100, 43, 143, 0.2)',
+      backgroundColor: "rgba(100, 43, 143, 0.05)",
+      border: "2px dashed rgba(100, 43, 143, 0.2)",
       opacity: 1,
-      transform: 'translateY(0)',
+      transform: "translateY(0)",
       mb: 2,
-      minHeight: '150px'
+      minHeight: "150px",
     }}
   >
-    <NoScheduleIcon 
-      sx={{ 
-        fontSize: 40, 
+    <NoScheduleIcon
+      sx={{
+        fontSize: 40,
         color: customColors.primary,
         opacity: 0.5,
-        mb: 2 
-      }} 
+        mb: 2,
+      }}
     />
     <Typography
       variant="body1"
       sx={{
         color: customColors.primary,
-        textAlign: 'center',
-        fontWeight: 500
+        textAlign: "center",
+        fontWeight: 500,
       }}
     >
       No classes scheduled for {day}
@@ -150,8 +78,8 @@ const NoScheduleCard = ({ day }) => (
       variant="body2"
       sx={{
         color: customColors.secondary,
-        textAlign: 'center',
-        mt: 1
+        textAlign: "center",
+        mt: 1,
       }}
     >
       Click "Create Schedules" to add a class
@@ -169,14 +97,14 @@ const ScheduleKanban = () => {
   const parseTime = (timeString) => {
     const [time, period] = timeString.split(" ");
     let [hours, minutes] = time.split(":").map(Number);
-    
+
     if (period === "PM" && hours !== 12) {
       hours += 12;
     }
     if (period === "AM" && hours === 12) {
       hours = 0;
     }
-    
+
     return hours * 60 + minutes;
   };
 
@@ -268,8 +196,16 @@ const ScheduleKanban = () => {
           background: `linear-gradient(45deg, ${customColors.background} 0%, #ffffff 100%)`,
         }}
       >
-        <Box mb={3} display="flex" justifyContent="space-between" alignItems="center">
-          <Typography variant="h5" sx={{ color: "text.primary", fontWeight: 600 }}>
+        <Box
+          mb={3}
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+        >
+          <Typography
+            variant="h5"
+            sx={{ color: "text.primary", fontWeight: 600 }}
+          >
             Class Schedules
           </Typography>
           <Button
@@ -359,28 +295,50 @@ const ScheduleKanban = () => {
                       >
                         <IconText>
                           <TimeIcon sx={{ color: customColors.primary }} />
-                          <Typography variant="body1" sx={{ color: customColors.primary }}>
+                          <Typography
+                            variant="body1"
+                            sx={{ color: customColors.primary }}
+                          >
                             {classItem.time}
                           </Typography>
                         </IconText>
 
                         <IconText>
                           <SubjectIcon sx={{ color: customColors.secondary }} />
-                          <Typography variant="h6" component="h2" sx={{ color: customColors.primary, fontWeight: "bold" }}>
+                          <Typography
+                            variant="h6"
+                            component="h2"
+                            sx={{
+                              color: customColors.primary,
+                              fontWeight: "bold",
+                            }}
+                          >
                             {classItem.subject}
                           </Typography>
                         </IconText>
 
                         <IconText>
                           <TeacherIcon sx={{ color: customColors.accent }} />
-                          <Typography variant="body2" sx={{ color: customColors.accent }}>
+                          <Typography
+                            variant="body2"
+                            sx={{ color: customColors.accent }}
+                          >
                             {classItem.teacher}
                           </Typography>
                         </IconText>
 
-                        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            width: "100%",
+                          }}
+                        >
                           <IconText>
-                            <StudentsIcon sx={{ color: customColors.highlight }} />
+                            <StudentsIcon
+                              sx={{ color: customColors.highlight }}
+                            />
                             <Chip
                               label={`${classItem.students} students`}
                               size="small"
@@ -427,15 +385,48 @@ const ScheduleKanban = () => {
           BackdropComponent={Backdrop}
           BackdropProps={{
             timeout: 500,
-            sx: { backgroundColor: "rgba(100, 43, 143, 0.4)" },
+            sx: {
+              backgroundColor: "rgba(100, 43, 143, 0.4)",
+            },
           }}
         >
           <Fade in={modalOpen}>
-            <ModalContent>
+            <ModalContent
+              sx={{
+                maxHeight: "80vh",
+                overflowY: "auto",
+                "&::-webkit-scrollbar": {
+                  width: "8px",
+                },
+                "&::-webkit-scrollbar-thumb": {
+                  backgroundColor: customColors.primary,
+                  borderRadius: "4px",
+                },
+              }}
+            >
               {selectedClass && (
                 <>
-                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-                    <Typography variant="h4" component="h2" sx={{ color: customColors.primary, fontWeight: "bold" }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+
+                      // position: "sticky",
+                      top: 0,
+                      backgroundColor: "white",
+                      zIndex: 10,
+                    }}
+                  >
+                    <Typography
+                      variant="h4"
+                      component="h2"
+                      sx={{
+                        color: customColors.primary,
+                        fontWeight: "bold",
+                        margin: 0,
+                      }}
+                    >
                       Class Details
                     </Typography>
                     <IconButton
@@ -452,47 +443,74 @@ const ScheduleKanban = () => {
                   </Box>
 
                   <DetailRow>
-                    <DayIcon sx={{ color: customColors.primary, fontSize: 28 }} />
-                    <Typography variant="h6" sx={{ color: customColors.primary }}>
+                    <DayIcon
+                      sx={{ color: customColors.primary, fontSize: 28 }}
+                    />
+                    <Typography
+                      variant="h6"
+                      sx={{ color: customColors.primary }}
+                    >
                       {selectedDay}
                     </Typography>
                   </DetailRow>
 
                   <DetailRow>
-                    <SubjectIcon sx={{ color: customColors.secondary, fontSize: 28 }} />
-                    <Typography variant="h6" sx={{ color: customColors.primary }}>
-                      {selectedClass.subject}
-                    </Typography>
+                    <SubjectIcon
+                      sx={{ color: customColors.secondary, fontSize: 28 }}
+                    />
+                    <Box>
+                      <Typography
+                        variant="h6"
+                        sx={{ color: customColors.primary }}
+                      >
+                        {selectedClass.subject}
+                      </Typography>
+                    </Box>
                   </DetailRow>
 
                   <DetailRow>
-                    <TimeIcon sx={{ color: customColors.accent, fontSize: 28 }} />
-                    <Typography variant="h6" sx={{ color: customColors.accent }}>
+                    <TimeIcon
+                      sx={{ color: customColors.accent, fontSize: 28 }}
+                    />
+                    <Typography
+                      variant="h6"
+                      sx={{ color: customColors.accent }}
+                    >
                       {selectedClass.time}
                     </Typography>
                   </DetailRow>
 
                   <DetailRow>
-                    <TeacherIcon sx={{ color: customColors.highlight, fontSize: 28 }} />
+                    <TeacherIcon
+                      sx={{ color: customColors.highlight, fontSize: 28 }}
+                    />
                     <Box>
-                      <Typography variant="body1" sx={{ color: customColors.primary }}>
+                      <Typography
+                        variant="body1"
+                        sx={{ color: customColors.primary }}
+                      >
                         Instructor
                       </Typography>
-                      <Typography variant="h6" sx={{ color: customColors.highlight }}>
+                      <Typography
+                        variant="h6"
+                        sx={{ color: customColors.highlight }}
+                      >
                         {selectedClass.teacher}
                       </Typography>
                     </Box>
                   </DetailRow>
-
-                  <DetailRow sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <StudentsIcon
-                        sx={{
-                          color: customColors.secondary,
-                          fontSize: 28,
-                          mr: 2,
-                        }}
-                      />
+                  <DetailRow>
+                    <StudentsIcon
+                      sx={{ color: customColors.secondary, fontSize: 28 }}
+                    />
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        width: "100%", // Ensure the row takes full width
+                      }}
+                    >
                       <Box>
                         <Typography
                           variant="body1"
@@ -504,25 +522,39 @@ const ScheduleKanban = () => {
                           variant="h6"
                           sx={{ color: customColors.secondary }}
                         >
-                          {selectedClass.students} Students
+                          {selectedClass?.students} Students
                         </Typography>
                       </Box>
-                    </Box>
-                    {selectedClass.classType === "Class" && (
                       <Button
-                        variant="contained"
-                        startIcon={<AddStudentIcon />}
-                        onClick={(e) => handleAddKids(e, selectedClass)}
+                        variant="outlined"
+                        color="primary"
+                        onClick={() => {
+                          navigate(
+                            `/employeeAssignDemoClass/${selectedClass.id}`
+                          );
+                        }}
+                        disabled={selectedClass.status !== "Scheduled"} // Disable button based on condition
                         sx={{
-                          backgroundColor: customColors.primary,
+                          height: "fit-content",
+                          backgroundColor:
+                            selectedClass.status !== "Scheduled"
+                              ? "#cccccc"
+                              : "#642b8f", // Grey out if disabled
+                          color:
+                            selectedClass.status !== "Scheduled"
+                              ? "black"
+                              : "white", // Adjust text color
                           "&:hover": {
-                            backgroundColor: customColors.secondary,
+                            backgroundColor:
+                              selectedClass.status !== "Scheduled"
+                                ? "#cccccc"
+                                : "#0056b3", // Maintain hover color for active button
                           },
                         }}
                       >
-                        Add Kids
+                        Add kids
                       </Button>
-                    )}
+                    </Box>
                   </DetailRow>
 
                   {selectedClass.level && selectedClass.level !== "N/A" && (

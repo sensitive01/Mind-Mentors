@@ -1,4 +1,3 @@
-
 import {
   Dashboard as DashboardIcon,
   Receipt as EnquiriesIcon,
@@ -40,10 +39,8 @@ import {
   Task as TasksAlternateIcon,
   HourglassEmpty as TemporaryIcon,
   AccountBalance as TransactionsAlternateIcon,
-  Boy as BoyIcon
-} from '@mui/icons-material';
-
-
+  Boy as BoyIcon,
+} from "@mui/icons-material";
 
 import {
   Box,
@@ -56,11 +53,11 @@ import {
   ListItemIcon,
   ListItemText,
   Tooltip,
-  Typography
-} from '@mui/material';
-import { styled } from '@mui/material/styles';
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+  Typography,
+} from "@mui/material";
+import { styled } from "@mui/material/styles";
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
 
 const ModernSidebar = () => {
   const [openReports, setOpenReports] = useState(false);
@@ -71,96 +68,105 @@ const ModernSidebar = () => {
   const [openParticipants, setOpenParticipants] = useState(false);
 
   // Enhanced color palette with more distinct colors
-const iconColors = {
-  profile: '#FF6B6B',
-  dashboard: '#4ECDC4',
-  kids: '#45B7D1',
-  parents: '#2980B9',
-  attendance: '#FDCB6E',
-  enquiries: '#E67E22',
-  invoices: '#FF8A5B',
-  reports: '#9B59B6',
-  tasks: '#3498DB',
-  classSchedules: '#E67E22',
-  programs: '#1ABC9C',
-  support: '#C73C45',
-  users: '#E74C3C',
-  employees: '#27AE60',
-  documents: '#8E44AD',
-  chessKid: '#16A085',
-  participants: '#2C3E50',
-  holidayManagement: '#D35400',
-  marketing: '#2ECC71',
-  expenses: '#F39C12',
-  transactions: '#34495E',
-  logout: '#95A5A6',
-  notifications: '#2980B9'
-};
+  const iconColors = {
+    profile: "#FF6B6B",
+    dashboard: "#4ECDC4",
+    kids: "#45B7D1",
+    parents: "#2980B9",
+    attendance: "#FDCB6E",
+    enquiries: "#E67E22",
+    invoices: "#FF8A5B",
+    reports: "#9B59B6",
+    tasks: "#3498DB",
+    classSchedules: "#E67E22",
+    programs: "#1ABC9C",
+    support: "#C73C45",
+    users: "#E74C3C",
+    employees: "#27AE60",
+    documents: "#8E44AD",
+    chessKid: "#16A085",
+    participants: "#2C3E50",
+    holidayManagement: "#D35400",
+    marketing: "#2ECC71",
+    expenses: "#F39C12",
+    transactions: "#34495E",
+    logout: "#95A5A6",
+    notifications: "#2980B9",
+  };
   // Function to lighten colors
   const lightenColor = (color, amount = 0.5) => {
-    const hex = color.replace('#', '');
+    const hex = color.replace("#", "");
     const num = parseInt(hex, 16);
-    const r = Math.min(255, Math.floor((num >> 16) + (255 - (num >> 16)) * amount));
-    const g = Math.min(255, Math.floor(((num >> 8) & 0x00FF) + (255 - ((num >> 8) & 0x00FF)) * amount));
-    const b = Math.min(255, Math.floor((num & 0x0000FF) + (255 - (num & 0x0000FF)) * amount));
-    return `#${(r << 16 | g << 8 | b).toString(16).padStart(6, '0')}`;
+    const r = Math.min(
+      255,
+      Math.floor((num >> 16) + (255 - (num >> 16)) * amount)
+    );
+    const g = Math.min(
+      255,
+      Math.floor(((num >> 8) & 0x00ff) + (255 - ((num >> 8) & 0x00ff)) * amount)
+    );
+    const b = Math.min(
+      255,
+      Math.floor((num & 0x0000ff) + (255 - (num & 0x0000ff)) * amount)
+    );
+    return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
   };
   // Styled components for enhanced interactivity
   const StyledListItem = styled(ListItem)(({ theme }) => ({
     borderRadius: 8,
-    margin: '2px 0',
-    padding: '8px 16px',
-    display: 'flex',
-    alignItems: 'center',
-    transition: 'all 0.3s ease',
-    position: 'relative',
-    overflow: 'hidden',
+    margin: "2px 0",
+    padding: "8px 16px",
+    display: "flex",
+    alignItems: "center",
+    transition: "all 0.3s ease",
+    position: "relative",
+    overflow: "hidden",
     gap: 8,
-    '&::before': {
+    "&::before": {
       content: '""',
-      position: 'absolute',
+      position: "absolute",
       top: 0,
       left: 0,
       width: 0,
-      height: '100%',
-      backgroundColor: '#642b8f',
-      transition: 'width 0.3s ease',
-      zIndex: 0
+      height: "100%",
+      backgroundColor: "#642b8f",
+      transition: "width 0.3s ease",
+      zIndex: 0,
     },
-    '&:hover': {
-      '&::before': {
-        width: '100%'
+    "&:hover": {
+      "&::before": {
+        width: "100%",
       },
-      '& .MuiListItemIcon-root, & .MuiListItemText-primary': {
-        color: 'white',
-        zIndex: 1
+      "& .MuiListItemIcon-root, & .MuiListItemText-primary": {
+        color: "white",
+        zIndex: 1,
       },
-      '& .MuiListItemIcon-root svg': {
-        filter: 'brightness(200%)' // Alternative way to lighten icons
+      "& .MuiListItemIcon-root svg": {
+        filter: "brightness(200%)", // Alternative way to lighten icons
       },
-      boxShadow: theme.shadows[2]
+      boxShadow: theme.shadows[2],
     },
-    '& .MuiListItemIcon-root, & .MuiListItemText-primary': {
-      position: 'relative',
+    "& .MuiListItemIcon-root, & .MuiListItemText-primary": {
+      position: "relative",
       zIndex: 1,
-      transition: 'color 0.3s ease'
+      transition: "color 0.3s ease",
     },
-    '& .MuiListItemIcon-root': {
+    "& .MuiListItemIcon-root": {
       marginRight: 8,
-      minWidth: 'auto'
-    }
+      minWidth: "auto",
+    },
   }));
   const StyledDrawer = styled(Drawer)(() => ({
     width: isCollapsed ? 80 : 280,
     flexShrink: 0,
-    '& .MuiDrawer-paper': {
+    "& .MuiDrawer-paper": {
       width: isCollapsed ? 80 : 280,
-      boxSizing: 'border-box',
-      backgroundColor: 'white',
-      borderRight: 'none',
-      transition: 'width 0.3s ease',
-      overflow: 'hidden'
-    }
+      boxSizing: "border-box",
+      backgroundColor: "white",
+      borderRight: "none",
+      transition: "width 0.3s ease",
+      overflow: "hidden",
+    },
   }));
   // Event handlers for toggling submenus
   const handleReportsClick = () => setOpenReports(!openReports);
@@ -173,229 +179,255 @@ const iconColors = {
   const menuItems = [
     {
       icon: <DashboardIcon />,
-      text: 'Dashboard',
+      text: "Dashboard",
       color: iconColors.dashboard,
-      link: '/superadminDashboard',
+      link: "/superadminDashboard",
     },
     {
       icon: <EnquiriesIcon />,
-      text: 'Enquiries',
+      text: "Enquiries",
       color: iconColors.enquiries,
-      link: '/superadminEnquiries',
+      link: "/superadminEnquiries",
     },
     {
       icon: <KidsIcon />,
-      text: 'Kids',
+      text: "Kids",
       color: iconColors.kids,
-      link: '/superadminKids',
+      link: "/superadminKids",
     },
     {
       icon: <ParentsIcon />,
-      text: 'Parents',
+      text: "Parents",
       color: iconColors.parents,
-      link: '/superadminParents',
+      link: "/superadminParents",
     },
     {
       icon: <TasksIcon />,
-      text: 'Tasks',
+      text: "Tasks",
       color: iconColors.tasks,
       subItems: [
-        { icon: <TasksIcon />, text: 'My Tasks', link: '/superadminMyTasks' },
-        { icon: <TasksIcon />, text: 'Tasks Assigned By Me', link:'/superadminAssignedTasks'},
+        { icon: <TasksIcon />, text: "My Tasks", link: "/super-admin/department/list-mytask" },
+        {
+          icon: <TasksIcon />,
+          text: "Tasks Assigned By Me",
+          link: "/super-admin/department/list-task-assigned-me",
+        },
       ],
       open: openTasks,
       onClick: handleTasksClick,
     },
     {
+      icon: <LeavesIcon />,
+      text: "Leaves",
+      color: iconColors.leaves,
+      link: "/super-admin/department/leaves",
+    },
+    {
       icon: <RenewalsIcon />,
-      text: 'Renewals',
+      text: "Renewals",
       color: iconColors.attendance,
-      link: '/superadminRenewals',
+      link: "/superadminRenewals",
     },
     {
       icon: <InvoicesIcon />,
-      text: 'Invoices',
+      text: "Invoices",
       color: iconColors.invoices,
-      link: '/superadminInvoices',
+      link: "/superadminInvoices",
     },
     {
       icon: <ReportsIcon />,
-      text: 'Reports',
+      text: "Reports",
       color: iconColors.reports,
       subItems: [
-        { icon: <ReportsIcon />, text: 'Students Feedback', link: '/superadminFeedback' },
-        { icon: <ReportsIcon />, text: 'Student Attendance Report', link: '/superadminAttendanceReport' },
+        {
+          icon: <ReportsIcon />,
+          text: "Students Feedback",
+          link: "/superadminFeedback",
+        },
+        {
+          icon: <ReportsIcon />,
+          text: "Student Attendance Report",
+          link: "/superadminAttendanceReport",
+        },
       ],
       open: openReports,
       onClick: handleReportsClick,
     },
     {
       icon: <ChessKidIcon />,
-      text: 'ChessKid',
+      text: "ChessKid",
       color: iconColors.chessKid,
-      link: '/chessKids',
+      link: "/chessKids",
     },
     {
       icon: <ProgramsIcon />,
-      text: 'Programs',
+      text: "Programs",
       color: iconColors.classSchedules,
-      link: '/superadminPrograms',
+      link: "/superadminPrograms",
     },
     {
       icon: <SupportIcon />,
-      text: 'Support',
+      text: "Support",
       color: iconColors.support,
-      link: '/superadminSupport',
+      link: "/superadminSupport",
     },
     {
       icon: <NotificationsIcon />,
-      text: 'Notifications',
+      text: "Notifications",
       color: iconColors.notifications,
-      link: '/notifications',
+      link: "/notifications",
     },
     {
       icon: <EmployeesIcon />,
-      text: 'Employees',
+      text: "Employees",
       color: iconColors.employees,
       subItems: [
-        { icon: <EmployeesIcon />, text: 'Master Data', link: '/employees' },
-        { icon: <RenewalsIcon />, text: 'Attendance', link: '/superadminAttendance' },
-        { icon: <ExpensesIcon />, text: 'Allowances / Deductions', link: '/allowdeduct' },
-        { icon: <TransactionsIcon />, text: 'Payroll', link: '/payroll' },
+        { icon: <EmployeesIcon />, text: "Master Data", link: "/employees" },
+        {
+          icon: <RenewalsIcon />,
+          text: "Attendance",
+          link: "/superadminAttendance",
+        },
+        {
+          icon: <ExpensesIcon />,
+          text: "Allowances / Deductions",
+          link: "/allowdeduct",
+        },
+        { icon: <TransactionsIcon />, text: "Payroll", link: "/payroll" },
       ],
       open: openEmployees,
       onClick: handleEmployeesClick,
     },
     {
       icon: <DocumentsIcon />,
-      text: 'Documents',
+      text: "Documents",
       color: iconColors.documents,
-      link: '/documents',
+      link: "/documents",
     },
     {
       icon: <UsersIcon />,
-      text: 'Users',
+      text: "Users",
       color: iconColors.users,
-      link: '/users',
+      link: "/users",
     },
     {
       icon: <TournamentsIcon />,
-      text: 'Tournaments',
+      text: "Tournaments",
       color: iconColors.users,
-      link: '/tournaments',
+      link: "/tournaments",
     },
     {
       icon: <ClassScheduleIcon />,
-      text: 'Class Schedules',
+      text: "Class Schedules",
       color: iconColors.classSchedules,
-      link: '/superadminScheduleClass',
+      link: "/superadminScheduleClass",
     },
     {
       icon: <ParticipantsIcon />,
-      text: 'Participants',
+      text: "Participants",
       color: iconColors.participants,
-      link:'/participents',
+      link: "/participents",
       open: openParticipants,
       onClick: handleParticipantsClick,
     },
     {
       icon: <HolidayIcon />,
-      text: 'Holiday Management',
+      text: "Holiday Management",
       color: iconColors.holidayManagement,
-      link: '/holiday',
+      link: "/holiday",
     },
     {
       icon: <MarketingIcon />,
-      text: 'Marketing Management',
+      text: "Marketing Management",
       color: iconColors.marketing,
     },
     {
       icon: <ExpensesIcon />,
-      text: 'Expenses',
+      text: "Expenses",
       color: iconColors.expenses,
-      link: '/expenses',
+      link: "/expenses",
     },
     {
       icon: <TransactionsIcon />,
-      text: 'Transactions',
+      text: "Transactions",
       color: iconColors.transactions,
-      link: '/transactions',
+      link: "/transactions",
     },
     {
       icon: <LogoutIcon />,
-      text: 'Logout',
+      text: "Logout",
       color: iconColors.logout,
-      link: '/',
+      link: "/",
     },
   ];
   return (
     <StyledDrawer variant="permanent">
-<Box
-  sx={{
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    py: 2,
-    px: 2,
-  }}
->
-  {!isCollapsed && (
-    <Box display="flex" flexDirection="column" alignItems="center" mt={2}>
-      {/* Profile Icon with Link */}
-      <Link to="/superadminProfile" style={{ textDecoration: 'none' }}>
-        <Box
-          sx={{
-            width: 60,
-            height: 60,
-            backgroundColor: iconColors.profile || 'primary.main',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            mb: 1,
-          }}
-        >
-          <ProfileIcon sx={{ color: 'white', fontSize: 30 }} />
-        </Box>
-        {/* Name and Role */}
-        <Typography
-          variant="body2"
-          color="#642b8f"
-          fontWeight="bold"
-          textAlign="center"
-        >
-          Super Admin
-        </Typography>
-      </Link>
-      <Divider />
-    </Box>
-  )}
-  <IconButton onClick={toggleSidebar}>
-    {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
-  </IconButton>
-</Box>
-      <Box sx={{ overflow: 'auto' }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          py: 2,
+          px: 2,
+        }}
+      >
+        {!isCollapsed && (
+          <Box display="flex" flexDirection="column" alignItems="center" mt={2}>
+            {/* Profile Icon with Link */}
+            <Link to="/superadminProfile" style={{ textDecoration: "none" }}>
+              <Box
+                sx={{
+                  width: 60,
+                  height: 60,
+                  backgroundColor: iconColors.profile || "primary.main",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  mb: 1,
+                }}
+              >
+                <ProfileIcon sx={{ color: "white", fontSize: 30 }} />
+              </Box>
+              {/* Name and Role */}
+              <Typography
+                variant="body2"
+                color="#642b8f"
+                fontWeight="bold"
+                textAlign="center"
+              >
+                Super Admin
+              </Typography>
+            </Link>
+            <Divider />
+          </Box>
+        )}
+        <IconButton onClick={toggleSidebar}>
+          {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
+        </IconButton>
+      </Box>
+      <Box sx={{ overflow: "auto" }}>
         <List disablePadding>
           {menuItems.map((item, index) => (
             <React.Fragment key={index}>
               <Tooltip title={item.text} placement="right">
                 {item.link ? (
-                  <Link 
-                    to={item.link} 
-                    style={{ textDecoration: 'none', color: 'inherit' }}
+                  <Link
+                    to={item.link}
+                    style={{ textDecoration: "none", color: "inherit" }}
                   >
                     <StyledListItem
                       button
                       onClick={item.onClick || undefined}
                       sx={{
-                        justifyContent: isCollapsed ? 'center' : 'flex-start',
+                        justifyContent: isCollapsed ? "center" : "flex-start",
                         paddingLeft: isCollapsed ? 0 : undefined,
                       }}
                     >
                       <ListItemIcon>
                         {React.cloneElement(item.icon, {
                           style: { color: item.color },
-                          fontSize: 'medium'
+                          fontSize: "medium",
                         })}
                       </ListItemIcon>
                       {!isCollapsed && (
@@ -404,14 +436,13 @@ const iconColors = {
                             primary={item.text}
                             primaryTypographyProps={{
                               sx: {
-                                fontSize: '0.95rem',
-                                fontWeight: 500
-                              }
+                                fontSize: "0.95rem",
+                                fontWeight: 500,
+                              },
                             }}
                           />
-                          {item.subItems && (
-                            item.open ? <ExpandLess /> : <ExpandMore />
-                          )}
+                          {item.subItems &&
+                            (item.open ? <ExpandLess /> : <ExpandMore />)}
                         </>
                       )}
                     </StyledListItem>
@@ -421,14 +452,14 @@ const iconColors = {
                     button
                     onClick={item.onClick || undefined}
                     sx={{
-                      justifyContent: isCollapsed ? 'center' : 'flex-start',
+                      justifyContent: isCollapsed ? "center" : "flex-start",
                       paddingLeft: isCollapsed ? 0 : undefined,
                     }}
                   >
                     <ListItemIcon>
                       {React.cloneElement(item.icon, {
                         style: { color: item.color },
-                        fontSize: 'medium'
+                        fontSize: "medium",
                       })}
                     </ListItemIcon>
                     {!isCollapsed && (
@@ -437,14 +468,13 @@ const iconColors = {
                           primary={item.text}
                           primaryTypographyProps={{
                             sx: {
-                              fontSize: '0.95rem',
-                              fontWeight: 500
-                            }
+                              fontSize: "0.95rem",
+                              fontWeight: 500,
+                            },
                           }}
                         />
-                        {item.subItems && (
-                          item.open ? <ExpandLess /> : <ExpandMore />
-                        )}
+                        {item.subItems &&
+                          (item.open ? <ExpandLess /> : <ExpandMore />)}
                       </>
                     )}
                   </StyledListItem>
@@ -454,10 +484,10 @@ const iconColors = {
                 <Collapse in={item.open} timeout="auto" unmountOnExit>
                   <List component="div" disablePadding>
                     {item.subItems.map((subItem, subIndex) => (
-                      <Link 
-                        key={subIndex} 
-                        to={subItem.link} 
-                        style={{ textDecoration: 'none', color: 'inherit' }}
+                      <Link
+                        key={subIndex}
+                        to={subItem.link}
+                        style={{ textDecoration: "none", color: "inherit" }}
                       >
                         <StyledListItem
                           button
@@ -468,15 +498,15 @@ const iconColors = {
                           <ListItemIcon>
                             {React.cloneElement(subItem.icon, {
                               style: { color: item.color },
-                              fontSize: 'small'
+                              fontSize: "small",
                             })}
                           </ListItemIcon>
                           <ListItemText
                             primary={subItem.text}
                             primaryTypographyProps={{
                               sx: {
-                                fontSize: '0.9rem'
-                              }
+                                fontSize: "0.9rem",
+                              },
                             }}
                           />
                         </StyledListItem>
@@ -493,25 +523,23 @@ const iconColors = {
   );
 };
 export default ModernSidebar;
-  
-
 
 // import {
-  // AssignmentOutlined as AttendanceIcon,
-  // ChevronLeft,
-  // ChevronRight,
-  // Schedule as ClassScheduleIcon,
-  // Dashboard as DashboardIcon,
-  // ExpandLess,
-  // ExpandMore,
-  // Receipt as InvoicesIcon,
-  // Group as KidsIcon,
-  // EventNote as LeavesIcon,
-  // Logout as LogoutIcon,
-  // Person as ProfileIcon,
-  // Assessment as ReportsIcon,
-  // Help as SupportIcon,
-  // Assignment as TaskIcon
+// AssignmentOutlined as AttendanceIcon,
+// ChevronLeft,
+// ChevronRight,
+// Schedule as ClassScheduleIcon,
+// Dashboard as DashboardIcon,
+// ExpandLess,
+// ExpandMore,
+// Receipt as InvoicesIcon,
+// Group as KidsIcon,
+// EventNote as LeavesIcon,
+// Logout as LogoutIcon,
+// Person as ProfileIcon,
+// Assessment as ReportsIcon,
+// Help as SupportIcon,
+// Assignment as TaskIcon
 // } from '@mui/icons-material';
 // import {
 //   Box,
@@ -529,7 +557,7 @@ export default ModernSidebar;
 // import { styled } from '@mui/material/styles';
 // import React, { useState } from 'react';
 // import { Link } from 'react-router-dom';
-import { User } from 'lucide-react';
+import { User } from "lucide-react";
 
 // const ModernSidebar = () => {
 //   const [openReports, setOpenReports] = useState(false);
@@ -697,7 +725,7 @@ import { User } from 'lucide-react';
 //       open: openReports,
 //       onClick: handleReportsClick,
 //     },
-    
+
 //     {
 //       icon: <TaskIcon />,
 //       text: 'Tasks',
@@ -728,7 +756,7 @@ import { User } from 'lucide-react';
 //       link: '/',
 //     },
 //   ];
-  
+
 //   return (
 //     <StyledDrawer variant="permanent">
 //       <Box sx={{
@@ -775,8 +803,8 @@ import { User } from 'lucide-react';
 //             <React.Fragment key={index}>
 //               <Tooltip title={item.text} placement="right">
 //                 {item.link ? (
-//                   <Link 
-//                     to={item.link} 
+//                   <Link
+//                     to={item.link}
 //                     style={{ textDecoration: 'none', color: 'inherit' }}
 //                   >
 //                     <StyledListItem
@@ -849,9 +877,9 @@ import { User } from 'lucide-react';
 //                 <Collapse in={item.open} timeout="auto" unmountOnExit>
 //                   <List component="div" disablePadding>
 //                     {item.subItems.map((subItem, subIndex) => (
-//                       <Link 
-//                         key={subIndex} 
-//                         to={subItem.link} 
+//                       <Link
+//                         key={subIndex}
+//                         to={subItem.link}
 //                         style={{ textDecoration: 'none', color: 'inherit' }}
 //                       >
 //                         <StyledListItem

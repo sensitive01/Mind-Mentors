@@ -1,4 +1,4 @@
-import TaskTable2 from "../../../department-components/centeradmin-components/dashboard/TaskTable2";
+import TaskAssignedByMeTable from "../../../department-components/common-components/task/TaskAssignedByMeTable";
 import Sidebar from "../../../department-components/centeradmin-components/layout/Sidebar";
 import Topbar from "./../../../component/parent-component/parent-dashboard/layout/Topbar";
 
@@ -17,7 +17,7 @@ const CenterAssigneTasksPage = () => {
         <div className="flex-1 overflow-hidden relative z-10">
           <div className="h-full w-full overflow-auto scrollbar-hide">
             <div className="min-w-full p-4">
-              <TaskTable2 />
+              <TaskAssignedByMeTable />
             </div>
           </div>
         </div>

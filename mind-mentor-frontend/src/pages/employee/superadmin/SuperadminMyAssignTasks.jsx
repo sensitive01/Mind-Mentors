@@ -1,4 +1,4 @@
-import TaskModule2 from "../../../department-components/superadmin/components/TaskModule2";
+import NewTaskForm from "../../../department-components/common-components/task/NewTaskForm";
 import Topbar from '../../../component/parent-component/parent-dashboard/layout/Topbar';
 import Sidebar from "../../../department-components/superadmin/Layout/Sidebar";
 
@@ -15,7 +15,7 @@ const MyTaskPage = () => {
         </div>
         <div className="flex-1 overflow-hidden relative z-10">
           <div className="h-full overflow-y-auto scrollbar-hide">
-            <TaskModule2 />
+            <NewTaskForm />
           </div>
         </div>
       </div>

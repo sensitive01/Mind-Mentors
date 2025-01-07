@@ -39,7 +39,7 @@ export const deleteEnquiry = async (id) => {
 // Create Leave
 export const createLeave = async (formData) => {
   const response = await operationDeptInstance.post("/leaves-form", formData);
-  return response.data;
+  return response;
 };
 
 
@@ -50,6 +50,12 @@ export const fetchMyLeaves = async (empId) => {
 
 
 
+export const fetchLeaveById = async (levId) => {
+  const response = await operationDeptInstance.get(`/get-leaves/${levId}`);
+  return response;
+};
+
+
 
 // Get All Leaves
 export const fetchAllLeaves = async (empEmail) => {
@@ -58,8 +64,9 @@ export const fetchAllLeaves = async (empEmail) => {
 };
 
 // Update Leave
-export const updateLeave = async (id, updatedData) => {
-  const response = await operationDeptInstance.put(`/leaves-form/${id}`, updatedData);
+export const updateLeave = async ( updatedData,id) => {
+  console.log(id, updatedData)
+  const response = await operationDeptInstance.put(`/leaves-form/${id}`, {updatedData});
   return response.data;
 };
 

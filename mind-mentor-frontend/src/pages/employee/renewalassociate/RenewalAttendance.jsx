@@ -1,4 +1,4 @@
-import AttendanceCalendar from "../../../department-components/renewalassociate/components/Attendance";
+import AttendanceCalendar from "../../../department-components/common-components/attandance/AttendanceDashboard";
 import Sidebar from "../../../department-components/renewalassociate/Layout/Sidebar";
 import Topbar from '../../../component/parent-component/parent-dashboard/layout/Topbar';
 

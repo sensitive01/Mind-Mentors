@@ -1,4 +1,4 @@
-import LeavesTable from "../../../department-components/marketing/components/LeavesTable";
+import LeavesTable from "../../../department-components/common-components/leaves/LeavesTable";
 import Topbar from '../../../component/parent-component/parent-dashboard/layout/Topbar';
 import Sidebar from "../../../department-components/marketing/Layout/Sidebar";
 

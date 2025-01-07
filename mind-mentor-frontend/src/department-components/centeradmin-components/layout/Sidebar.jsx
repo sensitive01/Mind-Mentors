@@ -148,13 +148,13 @@ const ModernSidebar = () => {
       icon: <AttendanceIcon />, 
       text: 'Attendance', 
       color: iconColors.attendance, 
-      path: '/centeradmin/attendance'
+      path: '/centeradmin/department/attendance'
     },
     { 
       icon: <LeavesIcon />, 
       text: 'Leaves', 
       color: iconColors.leaves, 
-      path: '/centeradmin/leaves'
+      path: '/centeradmin/department/leaves'
     },
     { 
       icon: <InvoicesIcon />, 
@@ -197,12 +197,12 @@ const ModernSidebar = () => {
         { 
           icon: <TaskIcon />, 
           text: 'My Tasks', 
-          path: '/centeradmin-tasks/tasks'
+          path: '/centeradmin/department/list-mytask'
         },
         { 
           icon: <TaskIcon />, 
           text: 'Tasks Assigned By Me', 
-          path: '/centeradmin-tasks/assignedtasks'
+          path: '/centeradmin/department/list-task-assigned-me'
         }
       ],
       open: openTasks,
@@ -212,7 +212,7 @@ const ModernSidebar = () => {
       icon: <ClassScheduleIcon />, 
       text: 'Class Schedules', 
       color: iconColors.classSchedules, 
-      path: '/centeradmin/schedule'
+      path: '/centeradmin/department/class-schedule-list'
     },
     { 
       icon: <TentTree />, 

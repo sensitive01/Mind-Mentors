@@ -143,8 +143,8 @@ const ModernSidebar = () => {
       text: 'Tasks',
       color: iconColors.tasks,
       subItems: [
-        { icon: <TaskIcon />, text: 'My Tasks', link: '/coachMyTasks' },
-        { icon: <TaskIcon />, text: 'Tasks Assigned By Me', link: '/coachAssignedTasks' },
+        { icon: <TaskIcon />, text: 'My Tasks', link: '/coach/department/list-mytask' },
+        { icon: <TaskIcon />, text: 'Tasks Assigned By Me', link: '/coach/department/list-task-assigned-me' },
       ],
       open: openTasks,
       onClick: handleTasksClick,
@@ -154,13 +154,13 @@ const ModernSidebar = () => {
       icon: <AttendanceIcon />,
       text: 'Attendance',
       color: iconColors.attendance,
-      link: '/coachAttendance',
+      link: '/coach/department/attendance',
     },
     {
       icon: <LeavesIcon />,
       text: 'Leaves',
       color: iconColors.leaves,
-      link: '/coachLeaves',
+      link: '/coach/department/leaves',
     },
     {
       icon: <InvoicesIcon />,

@@ -1,4 +1,5 @@
-import LeavesTable from "../../../department-components/operation-new/dashboard/LeavesTable";
+import LeavesTable from "../../../department-components/common-components/leaves/LeavesTable";
+
 import Sidebar from "../../../department-components/operation-new/layout/Sidebar";
 import Topbar from './../../../component/parent-component/parent-dashboard/layout/Topbar';
 

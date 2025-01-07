@@ -1,7 +1,7 @@
-import AttendanceCalendar from "../../../department-components/servicedelivery/components/Attendance";
+import AttendanceCalendar from "../../../department-components/common-components/attandance/AttendanceDashboard";
 
-import Sidebar from "../../../department-components/servicedelivery/Layout/Sidebar";
-import Topbar from './../../../component/parent-component/parent-dashboard/layout/Topbar';
+import Sidebar from "../../../department-components/renewalassociate/Layout/Sidebar";
+import Topbar from "../../../component/parent-component/parent-dashboard/layout/Topbar";
 
 const DashboardPage = () => {
   return (

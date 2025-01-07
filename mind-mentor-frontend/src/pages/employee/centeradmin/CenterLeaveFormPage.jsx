@@ -1,4 +1,4 @@
-import EmployeeLeaveForm from "../../../department-components/centeradmin-components/dashboard/EmployeeleaveForm";
+import EmployeeLeaveForm from "../../../department-components/common-components/leaves/EmployeeleaveForm";
 import Sidebar from "../../../department-components/centeradmin-components/layout/Sidebar";
 import Topbar from "./../../../component/parent-component/parent-dashboard/layout/Topbar";
 

@@ -1,6 +1,6 @@
-import LeaveForm from "../../../department-components/servicedelivery/components/EmployeeleaveForm";
+import LeaveForm from "../../../department-components/common-components/leaves/EmployeeleaveForm";
 import Sidebar from "../../../department-components/servicedelivery/Layout/Sidebar";
-import Topbar from './../../../component/parent-component/parent-dashboard/layout/Topbar';
+import Topbar from "./../../../component/parent-component/parent-dashboard/layout/Topbar";
 
 const ReferalPage = () => {
   return (

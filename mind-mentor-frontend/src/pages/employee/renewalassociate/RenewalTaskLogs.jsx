@@ -1,19 +1,24 @@
-import Logs from "../../../department-components/renewalassociate/components/logs";
+import TaskLogs from "../../../department-components/common-components/task/TaskLogs";
 import Sidebar from "../../../department-components/renewalassociate/Layout/Sidebar";
-import Topbar from '../../../component/parent-component/parent-dashboard/layout/Topbar';
-
+import Topbar from "../../../component/parent-component/parent-dashboard/layout/Topbar";
 
 const RenewalTaskLogs = () => {
   return (
-    <div className="flex min-h-screen bg-white">
-      <div className="fixed inset-y-0 left-0 z-50 w-64">
+    <div className="flex h-screen w-screen overflow-hidden">
+      <div className="z-30 flex-shrink-0">
         <Sidebar />
       </div>
-
-      {/* Main Content Area */}
-      <div className="flex-1 overflow-x-hidden">
-        <Topbar/>
-        <Logs />
+      <div className="flex-1 flex flex-col relative min-w-0">
+        <div className="sticky top-0 z-20">
+          <Topbar />
+        </div>
+        <div className="flex-1 overflow-hidden relative z-10">
+          <div className="h-full w-full overflow-auto scrollbar-hide">
+            <div className="min-w-full p-4">
+              <TaskLogs />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import LeavesTable from "../../../department-components/centeradmin-components/dashboard/LeavesTable";
+import LeavesTable from "../../../department-components/common-components/leaves/LeavesTable";
 import Sidebar from "../../../department-components/centeradmin-components/layout/Sidebar";
 import Topbar from "./../../../component/parent-component/parent-dashboard/layout/Topbar";
 

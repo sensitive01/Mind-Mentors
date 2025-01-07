@@ -1,4 +1,4 @@
-import TaskModule2 from "../../../department-components/centeradmin-components/dashboard/TaskModule2";
+import NewTaskForm from "../../../department-components/common-components/task/NewTaskForm";
 import Sidebar from "../../../department-components/centeradmin-components/layout/Sidebar";
 import Topbar from "./../../../component/parent-component/parent-dashboard/layout/Topbar";
 
@@ -17,7 +17,7 @@ const CenterTaskAssignByMePage = () => {
         </div>
         <div className="flex-1 overflow-hidden relative z-10">
           <div className="h-full overflow-y-auto scrollbar-hide">
-            <TaskModule2 />
+            <NewTaskForm />
           </div>
         </div>
       </div>

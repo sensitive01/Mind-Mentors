@@ -250,6 +250,10 @@ import RenewalHolidayPage from "./pages/employee/renewalassociate/RenewalHoliday
 import MarketingHolidayPage from "./pages/employee/marketing/MarketingHolidayPage";
 import ServiceDelivaryHolidayPage from "./pages/employee/servicedelivery/ServiceDelivaryHolidayPage";
 import ServiceCompleteEnquiryLogs from "./pages/employee/servicedelivery/ShowAllEnquiryLogs";
+import MarketingMyTaskPage from "./pages/employee/marketing/MarketingMyTaskPage";
+import MarketingAssignedTaskTable from "./pages/employee/marketing/MarketingAssignedTaskTable";
+import MarketingNewTaskForm from "./pages/employee/marketing/MarketingNewTaskForm";
+import MarketingTaskLogs from "./pages/employee/marketing/MarketingTaskLogs";
 
 function App() {
   return (
@@ -323,62 +327,75 @@ function App() {
 
 
           <Route path="/employee-login" element={<LoginPage />} />
-          <Route path="/employee-operation-dashboard"  element={<OperationDashboardPage />} />
-          <Route path="/employee-operation-enquiry-list" element={<ListingEnquiries />} />
-          <Route path="/showCompleteLogs/:id"  element={<ShowAllEnquiryLogs />}/>
-          <Route path="/employee-operation-enquiry-form" element={<SEnquiryFormPage />}/>
-          <Route path="/employee-operation/prospects"  element={<ProspectPage />} />
 
           
-          <Route path="/employee-operation/attendance" element={<EmpAttendance />}/>
+        
 
-          <Route path="/employee-operation-tasks/tasks"  element={<TasksPage />} />
-          <Route path="/employee-operation-tasks/assignedtasks" element={<AssigneTaskPage />} />
-          <Route path="/employee-operation-tasks/assigntask" element={<TaskAssignByMePage />} />
-          <Route path="/employee-operation/taskslogs/:id"  element={<TasksLogs />}/>
-          <Route path="/employee-operation/taskslogs/:id" element={<TasksLogs />}/>
-          <Route path="/employee-operation/schedule"  element={<ScheduleClass />}/>
-          <Route path="/employeeAssignDemoClass/:id"  element={<AssignDemoClassPage />} />
-          <Route path="/employee-operation/leaves" element={<LeavesPage />} />
-          <Route path="/employee-operation/leaves/add" element={<LeaveFormPage />} />
-          <Route path="/employee-operation/studentreport"  element={<StudentReport />}  />
-          <Route path="/employee-operation/coachfeedback"  element={<CoachFeedback />} />
-          <Route path="/employee-operation/invoice" element={<InvoicePage />} />
-          <Route path="/employee-operation/holidays"   element={<HolidayPage />}  />
-          <Route path="/employee-operation-tasks/supports" element={<SupportRequest />} />
-          <Route path="/employee-operation-tasks/support/add" element={<SupportPages />}  />
-          
+          {/* <Route path="/employee-operation/taskslogs/:id"  element={<TasksLogs />}/>
+          <Route path="/employee-operation/taskslogs/:id" element={<TasksLogs />}/> */}
 
+
+          <Route path="/operation/department/dashboard"  element={<OperationDashboardPage />} />
+          <Route path="/operation/department/enquiry-list" element={<ListingEnquiries />} />
+          <Route path="/operation/department/show-complete-enquiry-logs/:id"  element={<ShowAllEnquiryLogs />}/>
+          <Route path="/operation/department/enquiry-form" element={<SEnquiryFormPage />}/>
+          <Route path="/operation/department/prospects"  element={<ProspectPage />} />
+          <Route path="/operation/department/attendance" element={<EmpAttendance />}/>
+          <Route path="/operation/department/list-mytask"  element={<TasksPage />} />
+          <Route path="/operation/department/list-task-assigned-me" element={<AssigneTaskPage />} />
+          <Route path="/operation/department/assign-new-task" element={<TaskAssignByMePage />} />
+          <Route path="/operation/department/taskslogs/:id" element={<TasksLogs />}/>
+          <Route path="/operation/department/schedule-demo-class-list"  element={<ScheduleClass />}/>
+          <Route path="/operation/department/assign-demo-class/:id"  element={<AssignDemoClassPage />} />
+          <Route path="/operation/department/leaves" element={<LeavesPage />} />
+          <Route path="/operation/department/leaves/add" element={<LeaveFormPage />} />
+          <Route path="/operation/department/edit-leaves/:id" element={<LeaveFormPage />} />
+          <Route path="/operation/department/student-report"  element={<StudentReport />}  />
+          <Route path="/operation/department/coach-feedback"  element={<CoachFeedback />} />
+          <Route path="/operation/department/invoice" element={<InvoicePage />} />
+          <Route path="/operation/department/holidays"   element={<HolidayPage />}  />
+          <Route path="/operation/department/supports" element={<SupportRequest />} />
+          <Route path="/operation/department/support/add" element={<SupportPages />}  />
+
+
+
+
+
+          <Route path="/employee-operation/demoSheduleForm"   element={<DemoClassShedulePage />}  />
           <Route path="/employee-operation-tasks/supportTrack"  element={<MessageStusTrackPage />}  />
           <Route path="/employee-operation-tasks/add" element={<MyTaskPage />}  />
           <Route path="/employee-operation/referal" element={<ReferalPage />} />
           <Route path="/employee-operation/profile" element={<Profile />} />
-          <Route path="/employee-operation/demoSheduleForm"   element={<DemoClassShedulePage />}  />
 
 
 
           <Route path="/serviceProfile" element={<ServiceProfile />} />
-          <Route path="/serviceAttendance" element={<ServiceAttendance />} />
-          <Route path="/serviceLeaves" element={<ServiceLeaves />} />
-          <Route path="/serviceLeaves/add" element={<ServiceLeavesAdd />} />
+
+          <Route path="/service-delivery/department/dashboard" element={<ServiceDashboard />} />
+          <Route path="/service-delivery/department/leaves" element={<ServiceLeaves />} />
+          <Route path="/service-delivery/department/leaves/add" element={<ServiceLeavesAdd />} />
+          <Route path="/service-delivery/department/edit-leaves/:id" element={<ServiceLeavesAdd />} />
+          <Route path="/service-delivery/department/list-mytask" element={<ServiceMyTasks />} />
+          <Route path="/service-delivery/department/list-task-assigned-me"  element={<ServiceMyAssignTasksTable />} />
+          <Route path="/service-delivery/department/assign-new-task" element={<ServiceMyAssignTasks />}  />
+          <Route path="/service-delivery/department/taskslogs/:id"  element={<ServiceTaskLogs />}/>
+          <Route path="/service-delivery/department/attendance" element={<ServiceAttendance />} />
+          <Route path="/service-delivery/department/class-shedules/"  element={<ServiceScheduleClass />}/>
+
+
+
           <Route path="/serviceInvoice" element={<ServiceInvoice />} />
           <Route path="/serviceFeedback" element={<ServiceFeedback />} />
           <Route path="/serviceAttendanceReport" element={<ServiceAttendanceReport />} />
-          <Route path="/serviceMyTasks/assigntask" element={<ServiceMyAssignTasks />}  />
-          <Route path="/serviceMyTasks" element={<ServiceMyTasks />} />
-          <Route path="/serviceAssignedTasks/"  element={<ServiceMyAssignTasksTable />} />
-          <Route path="/serviceScheduleClass/"  element={<ServiceScheduleClass />}/>
           <Route path="/serviceSupport/add" element={<ServiceSupport />} />
           <Route path="/serviceSupport/" element={<ServiceSupportRequest />} />
           <Route path="/serviceMessageStatus/"  element={<ServiceMessageStusTrackPage />}/>
           <Route path="/servicekids" element={<ServiceKids />} />
           <Route path="/servicePrograms" element={<ServicePrograms />} />
-          <Route path="/serviceDashboard" element={<ServiceDashboard />} />
           <Route path="/serviceClassShedule"  element={<ServiceDelivaryClassShedulePage />} />
           <Route path="/coachAvailabilityForm"  element={<CoachAvailabilityFormPage />} />
           <Route path="/coachAvailabilityTable"  element={<CoachAvailabilityTablePage />}  />
           <Route path="/serviceAssignClassToKid/:id" element={<AssignClassToKid />}/>
-          <Route path="/service-delivary/taskslogs/:id"  element={<ServiceTaskLogs />}/>
           <Route path="/service-delivary/holidays"  element={<ServiceDelivaryHolidayPage />}/>
           <Route path="/service-delivary/completeEnquiryLogs/:id"  element={<ServiceCompleteEnquiryLogs />}/>
 
@@ -386,18 +403,32 @@ function App() {
 
           {/* <Route path="/serviceLogin" element={<ServiceLogin />} /> */}
 
-        <Route path="/renewalDashboard" element={<RenewalDashboard />} />
+        <Route path="/renewal/department/dashboard" element={<RenewalDashboard />} />
         <Route path="/renewalProfile" element={<RenewalProfile />} />
-        <Route path="/renewalAttendance" element={<RenewalAttendance />} />
-        <Route path="/renewalLeaves" element={<RenewalLeaves />} />
-        <Route path="/renewalLeaves/add" element={<RenewalLeavesAdd />} />
+
+
+
+        <Route path="/renewal/department/leaves" element={<RenewalLeaves />} />
+        <Route path="/renewal/department/leaves/add" element={<RenewalLeavesAdd />} />
+        <Route path="/renewal/department/edit-leaves/:id" element={<RenewalLeavesAdd />} />
+        <Route path="/renewal/department/list-mytask" element={<RenewalMyTasks />} />
+        <Route path="/renewal/department/list-task-assigned-me" element={<RenewalMyAssignTasksTable />} />
+        <Route path="/renewal/department/assign-new-task" element={<RenewalMyAssignTasks />} />
+        <Route path="/renewal/department/taskslogs/:id" element={<RenewalTaskLogs />} /> 
+        <Route path="/renewal/department/attendance" element={<RenewalAttendance />} />
+        <Route path="/renewal/department/schedule-class-list/" element={<RenewalScheduleClass />} />
+
+
+
+
+
+
+
+
+
         <Route path="/renewalInvoices" element={<RenewalInvoice />} />
         <Route path="/renewalFeedback" element={<RenewalFeedback />} />
         <Route path="/renewalAttendanceReport" element={<RenewalAttendanceReport />} />
-        <Route path="/renewalMyTasks/assigntask" element={<RenewalMyAssignTasks />} />
-        <Route path="/renewalMyTasks" element={<RenewalMyTasks />} />
-        <Route path="/renewalAssignedTasks/" element={<RenewalMyAssignTasksTable />} />
-        <Route path="/renewalScheduleClass/" element={<RenewalScheduleClass />} />
         <Route path="/renewalSupport/add" element={<RenewalSupport />} />
         <Route path="/renewalSupport/" element={<RenewalSupportRequest />} />
         <Route path="/renewalMessageStatus/" element={<RenewalMessageStusTrackPage />} />
@@ -405,7 +436,6 @@ function App() {
         <Route path="/renewalPrograms" element={<RenewalPrograms />} />
         <Route path="/renewalParents" element={<RenewalParents />} />
         <Route path="/renewalRenewals" element={<RenewalRenewal />} />
-        <Route path="/renewal-associate/taskslogs/:id" element={<RenewalTaskLogs />} /> 
         <Route path="/renewal-associate/holidays" element={<RenewalHolidayPage />} /> 
 
         {/* <Route path="/renewalLogin" element={<RenewalLogin />} /> */}
@@ -413,33 +443,55 @@ function App() {
 
         
 
-        <Route path="/coachDashboard" element={<CoachDashboard />} />
         <Route path="/coachProfile" element={<CoachProfile />} />
-        <Route path="/coachAttendance" element={<CoachAttendance />} />
-        <Route path="/coachLeaves" element={<CoachLeaves />} />
-        <Route path="/coachLeaves/add" element={<CoachLeavesAdd />} />
+
+
+        <Route path="/coach/department/dashboard" element={<CoachDashboard />} />
+        <Route path="/coach/department/leaves" element={<CoachLeaves />} />
+        <Route path="/coach/department/leaves/add" element={<CoachLeavesAdd />} />
+        <Route path="/coach/department/edit-leaves/:id" element={<CoachLeavesAdd />} />
+        <Route path="/coach/department/list-mytask" element={<CoachMyTasks />} />
+        <Route path="/coach/department/list-task-assigned-me" element={<CoachMyAssignTasksTable />} />
+        <Route path="/coach/department/assign-new-task" element={<CoachMyAssignTasks />} />
+        <Route path="/coach/department/taskslogs/:id" element={<CoachTaskLogs />} /> 
+        <Route path="/coach/department/attendance" element={<CoachAttendance />} />
+
+
+
+
+
+
+
+
         <Route path="/coachInvoices" element={<CoachInvoice />} />
         <Route path="/coachFeedback" element={<CoachFeedback />} />
         <Route path="/coachAttendanceReport" element={<CoachAttendanceReport />} />
-        <Route path="/coachMyTasks/assigntask" element={<CoachMyAssignTasks />} />
-        <Route path="/coachMyTasks" element={<CoachMyTasks />} />
-        <Route path="/coachAssignedTasks/" element={<CoachMyAssignTasksTable />} />
         <Route path="/coachScheduleClass/" element={<CoachScheduleClass />} />
         <Route path="/coachSupport/add" element={<CoachSupport />} />
         <Route path="/coachSupport/" element={<CoachSupportRequest />} />
         <Route path="/coachFeedaback/add" element={<CoachFeedbackAdd />} />
         <Route path="/coachAvailability" element={<CoachAvailabilityPage />} />
         <Route path="/coachAttandanceFeedback/:classId" element={<CoachAddAttandaceFeedBack />} />
-        <Route path="/coach/taskslogs/:id" element={<CoachTaskLogs />} /> 
         {/* <Route path="/coachAvailability" element={<CoachAvailabilityPage />} /> */}
         {/* <Route path="/coachLogin" element={<CoachLogin />} /> */}
 
           
-        <Route path="/marketingDashboard" element={<MarketingDashboard />} />
         <Route path="/marketingProfile" element={<MarketingProfile />} />
-        <Route path="/marketingAttendance" element={<MarketingAttendance />} />
-        <Route path="/marketingLeaves" element={<MarketingLeaves />} />
-        <Route path="/marketingLeaves/add" element={<MarketingLeavesAdd />} />
+
+
+
+        <Route path="/marketing/department/dashboard" element={<MarketingDashboard />} />
+        <Route path="/marketing/department/leaves" element={<MarketingLeaves />} />
+        <Route path="/marketing/department/leaves/add" element={<MarketingLeavesAdd />} />
+        <Route path="/marketing/department/edit-leaves/:id" element={<MarketingLeavesAdd />} />
+        <Route path="/marketing/department/list-mytask" element={<MarketingMyTaskPage />} />
+        <Route path="/marketing/department/list-task-assigned-me"  element={<MarketingAssignedTaskTable />} />
+        <Route path="/marketing/department/assign-new-task" element={<MarketingNewTaskForm />}  />
+        <Route path="/marketing/department/taskslogs/:id"  element={<MarketingTaskLogs />}/>
+        <Route path="/marketing/department/attendance" element={<MarketingAttendance />} />
+
+
+
         <Route path="/marketingEnquiries" element={<MarketingEnquiry />} />
         <Route path="/marketingFeedback" element={<MarketingFeedback />} />
         <Route path="/marketingAttendanceReport" element={<MarketingAttendanceReport />} />
@@ -459,23 +511,34 @@ function App() {
 
 
         <Route path="/centeradmin/profile" element={<CenterProfile/>} />
-        <Route path="/centeradmin-dashboard" element={<CenterOperationDashboardPage />} />
         <Route path="/centeradmin-enquiry-list" element={<CenterListingEnquiries/>} />
         <Route path="/centeradmin-enquiry-form" element={<CenterSEnquiryFormPage />} /> 
         <Route path="/centeradmin-kids" element={<CenterAdminKidsPage/>} />
-        <Route path="/centeradmin/leaves" element={<CenterLeavesPage/>} />
-        <Route path="/centeradmin/attendance" element={<CenterAdminAttendance/>} />
-        <Route path="/centeradmin/leaves/add" element={<CenterLeaveFormPage/>} />
+
+        <Route path="/centeradmin/department/dashboard" element={<CenterOperationDashboardPage />} />
+        <Route path="/centeradmin/department/leaves" element={<CenterLeavesPage/>} />
+        <Route path="/centeradmin/department/leaves/add" element={<CenterLeaveFormPage/>} />
+        <Route path="/centeradmin/department/edit-leaves/:id" element={<CenterLeaveFormPage/>} />
+        <Route path="/centeradmin/department/list-mytask" element={<CenterTasksPage/>} />
+        <Route path="/centeradmin/department/list-task-assigned-me" element={<CenterAssigneTasksPage/>} />
+        <Route path="/centeradmin/department/assign-new-task" element={<CenterTaskAssignByMePage/>} />
+        <Route path="/centeradmin/department/taskslogs/:id" element={<CenterAdminTaskLogs />} />
+        <Route path="/centeradmin/department/attendance" element={<CenterAdminAttendance />} />
+        <Route path="/centeradmin/department/class-schedule-list" element={<CenterScheduleClass/>} />
+
+
+
+
+
+
+
+
+   
         <Route path="/centeradmin/coachfeedback" element={<CenterCoachFeedback/>} />
+        <Route path="/showCompleteLogsCenterAdmin/:id" element={<CenterAdminEnquiryLogs/>} />
         <Route path="/centeradmin/studentreport" element={<CenterStudentReport/>} />
-        <Route path="/centeradmin-tasks/tasks" element={<CenterTasksPage/>} />
-        <Route path="/centeradmin-tasks/assignedtasks" element={<CenterAssigneTasksPage/>} />
-        <Route path="/centeradmin-tasks/assigntask" element={<CenterTaskAssignByMePage/>} />
-        <Route path="/centeradmin/schedule" element={<CenterScheduleClass/>} />
         <Route path="/centeradmin-tasks/supports" element={<CenterSupportRequest/>} />
         <Route path="/centeradmin/invoice" element={<CenterInvoicePage/>} />
-        <Route path="/centeradmin/taskslogs/:id" element={<CenterAdminTaskLogs />} />
-        <Route path="/showCompleteLogsCenterAdmin/:id" element={<CenterAdminEnquiryLogs/>} />
         <Route path="/centreAdminHoliday" element={<CenterAdminHolidayPage/>} />
 
 
@@ -490,13 +553,34 @@ function App() {
 
 
 
-        <Route path="/superadminDashboard" element={<SuperadminDashboard />} />
         <Route path="/superadminEnquiries" element={<SuperadminEnquiries />} />
         <Route path="/superadminKids" element={<SuperadminKids />} />
         <Route path="/superadminParents" element={<SuperadminParents />} />
-        <Route path="/superadminMyTasks" element={<SuperadminMyTasks />} />
-        <Route path="/superadminMyTasks/assigntask" element={<SuperadminMyAssignTasks />} />
-        <Route path="/superadminAssignedTasks/" element={<SuperadminMyAssignTasksTable />} />
+
+
+
+        <Route path="/super-admin/department/dashboard" element={<SuperadminDashboard />} />
+        <Route path="/super-admin/department/list-mytask" element={<SuperadminMyTasks />} />
+        <Route path="/super-admin/department/list-task-assigned-me" element={<SuperadminMyAssignTasksTable />} />
+        <Route path="/super-admin/department/assign-new-task" element={<SuperadminMyAssignTasks />} />
+        <Route path="/super-admin/department/taskslogs/:id" element={<SuperAdminTaskAllLogs />} /> 
+        <Route path="/super-admin/department/leaves" element={<SuperadminLeaves />} />
+        <Route path="/super-admin/department/leaves/add" element={<SuperadminLeavesAdd />} />
+        <Route path="/super-admin/department/edit-leaves/:id" element={<SuperadminLeavesAdd />} />
+        <Route path="/super-admin/department/attendance" element={<SuperadminAttendance />} />
+        <Route path="/superadminScheduleClass/" element={<SuperadminScheduleClass />} />
+
+
+
+
+
+      
+
+
+
+
+
+        
         <Route path="/superadminRenewals" element={<SuperadminRenewal />} />
         <Route path="/superadminInvoices" element={<SuperadminInvoice />} />
         <Route path="/chessKids/" element={< ChessKid />} />
@@ -515,7 +599,6 @@ function App() {
         <Route path="/users/add" element={< UserForm />} />
         <Route path="/tournaments/" element={< TournamnetsTable />} />
         <Route path="/tournaments/add" element={< TournamentsForm />} />
-        <Route path="/superadminScheduleClass/" element={<SuperadminScheduleClass />} />
         <Route path="/participents/" element={< Participents />} />
         <Route path="/holiday/" element={< HolidayTable />} />
         <Route path="/holiday/add" element={<HolidayForm />} />
@@ -525,8 +608,9 @@ function App() {
 
         
         <Route path="/superadminProfile" element={<SuperadminProfile />} />
-        <Route path="/superadminLeaves" element={<SuperadminLeaves />} />
-        <Route path="/superadminLeaves/add" element={<SuperadminLeavesAdd />} />
+
+
+
         <Route path="/superadminSupport/add" element={<SuperadminSupport />} />
         <Route path="/superadminMessageStatus/" element={<SuperadminMessageStusTrackPage />} />
         {/* <Route path="/superadminLogin" element={<SuperadminLogin />} /> */}
@@ -535,7 +619,6 @@ function App() {
         <Route path="/expenses/add" element={< ExpenseForm />} />
         <Route path="/documents/add" element={< DocumentsForm />} />
         <Route path="/showCompleteLogsAdmin/:id" element={<SuperAdminEnquiryLogs/>} />
-        <Route path="/superadmin/taskslogs/:id" element={<SuperAdminTaskAllLogs />} /> 
         <Route path="/superadminReferrals" element={<SuperadminReferral />} /> 
         </Routes>
       </Router>

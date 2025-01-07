@@ -134,7 +134,7 @@ const columns = (
             size="small"
             onClick={() => {
               setLogDialog({ open: true, rowData: params.row });
-              navigate(`/employee-operation/taskslogs/${params.row._id}`); // Pass the ID dynamically
+              navigate(`/operation/department/taskslogs/${params.row._id}`); // Pass the ID dynamically
             }}
             sx={{
               color: "#000",

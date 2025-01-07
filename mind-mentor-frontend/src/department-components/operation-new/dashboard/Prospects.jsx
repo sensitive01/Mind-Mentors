@@ -30,6 +30,7 @@ import {
   updateEnquiryStatus,
   addNotes,
   fetchProspectsEnquiries,
+  moveToProspects,
 } from "../../../api/service/employee/EmployeeService";
 
 const theme = createTheme({
@@ -337,7 +338,7 @@ const Enquiries = () => {
 
   const handleShowLogs = (id) => {
     console.log("Handle logs ", id);
-    navigate(`/showCompleteLogs/${id}`);
+    navigate(`/operation/department/show-complete-enquiry-logs/${id}`);
   };
 
   return (

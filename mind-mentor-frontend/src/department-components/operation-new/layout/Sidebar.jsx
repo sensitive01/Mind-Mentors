@@ -139,15 +139,15 @@ const ModernSidebar = () => {
       icon: <DashboardOutlined />,
       text: "Dashboard",
       color: iconColors.dashboard,
-      link: "/employee-operation-dashboard",
+      link: "/operation/department/dashboard",
     },
     {
       icon: <BusinessCenter />,
       text: "Lead Management",
       color: iconColors.leads,
       subItems: [
-        { text: "Enquiries", link: "/employee-operation-enquiry-list" },
-        { text: "Prospects", link: "/employee-operation/prospects" },
+        { text: "Enquiries", link: "/operation/department/enquiry-list" },
+        { text: "Prospects", link: "/operation/department/prospects" },
       ],
       open: openLeadManagement,
       onClick: () => setOpenLeadManagement(!openLeadManagement),
@@ -156,17 +156,17 @@ const ModernSidebar = () => {
       icon: <AssignmentOutlined />,
       text: "Attendance",
       color: iconColors.attendance,
-      link: "/employee-operation/attendance",
+      link: "/operation/department/attendance",
     },
     {
       icon: <AssignmentOutlined />,
       text: "Tasks",
       color: iconColors.tasks,
       subItems: [
-        { text: "My Tasks", link: "/employee-operation-tasks/tasks" },
+        { text: "My Tasks", link: "/operation/department/list-mytask" },
         {
           text: "Task Assigned By Me",
-          link: "/employee-operation-tasks/assignedtasks",
+          link: "/operation/department/list-task-assigned-me",
         },
       ],
       open: openTasks,
@@ -176,13 +176,13 @@ const ModernSidebar = () => {
       icon: <CalendarToday />,
       text: "Demo Class Schedule",
       color: iconColors.schedule,
-      link: "/employee-operation/schedule",
+      link: "/operation/department/schedule-demo-class-list",
     },
     {
       icon: <EventNote />,
       text: "Leaves",
       color: iconColors.leaves,
-      link: "/employee-operation/leaves",
+      link: "/operation/department/leaves",
     },
     {
       icon: <Assessment />,
@@ -191,9 +191,9 @@ const ModernSidebar = () => {
       subItems: [
         {
           text: "Student Attendance",
-          link: "/employee-operation/studentreport",
+          link: "/operation/department/student-report",
         },
-        { text: "Coach Feedback", link: "/employee-operation/coachfeedback" },
+        { text: "Coach Feedback", link: "/operation/department/coach-feedback" },
       ],
       open: openReports,
       onClick: () => setOpenReports(!openReports),
@@ -202,20 +202,20 @@ const ModernSidebar = () => {
       icon: <Receipt />,
       text: "Invoices",
       color: iconColors.invoices,
-      link: "/employee-operation/invoice",
+      link: "/operation/department/invoice",
     },
     {
       icon: <TentTree />,
 
       text: "Holidays",
       color: iconColors.invoices,
-      link: "/employee-operation/holidays",
+      link: "/operation/department/holidays",
     },
     {
       icon: <HelpOutline />,
       text: "Support",
       color: iconColors.support,
-      link: "/employee-operation-tasks/supports",
+      link: "/operation/department/supports",
     },
   ];
 

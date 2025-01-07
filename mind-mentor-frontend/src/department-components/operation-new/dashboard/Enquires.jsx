@@ -344,7 +344,7 @@ const Enquiries = () => {
 
   const handleShowLogs = (id) => {
     console.log("Handle logs ", id);
-    navigate(`/showCompleteLogs/${id}`);
+    navigate(`/operation/department/show-complete-enquiry-logs/${id}`);
   };
 
   return (
@@ -379,7 +379,7 @@ const Enquiries = () => {
                 variant="contained"
                 color="primary"
                 component={Link}
-                to="/employee-operation-enquiry-form"
+                to="/operation/department/enquiry-form"
               >
                 + New Enquiry Form
               </Button>

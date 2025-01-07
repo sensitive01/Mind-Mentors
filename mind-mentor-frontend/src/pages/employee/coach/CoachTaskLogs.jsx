@@ -1,6 +1,5 @@
-// import Logs from "../../department-components/coach/components/logs";
 
-import Logs from "../../../department-components/coach/components/logs";
+import TaskLogs from "../../../department-components/common-components/task/TaskLogs";
 
 
 import Sidebar from "../../../department-components/coach/Layout/Sidebar";
@@ -18,7 +17,7 @@ const CoachTaskLogs = () => {
         <div className="flex-1 overflow-hidden relative z-10">
           <div className="h-full w-full overflow-auto scrollbar-hide">
             <div className="min-w-full p-4">
-              <Logs />
+              <TaskLogs />
             </div>
           </div>
         </div>

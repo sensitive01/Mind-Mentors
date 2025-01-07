@@ -1,4 +1,4 @@
-import AttendanceCalendar from "../../../department-components/marketing/components/Attendance";
+import AttendanceCalendar from "../../../department-components/common-components/attandance/AttendanceDashboard";
 
 import Topbar from '../../../component/parent-component/parent-dashboard/layout/Topbar';
 import Sidebar from "../../../department-components/marketing/Layout/Sidebar";

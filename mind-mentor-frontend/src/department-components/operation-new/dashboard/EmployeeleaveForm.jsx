@@ -120,7 +120,8 @@ const EmployeeLeaveForm = () => {
                 fullWidth
               />
               <Grid item xs={12} sm={4}>
-                <FileUpload
+                <TextField
+                  type="file"
                   fieldName="Proof of Leave"
                   name="proof"
                   onFileUpload={(url) => {

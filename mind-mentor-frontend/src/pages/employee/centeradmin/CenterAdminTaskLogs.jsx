@@ -1,4 +1,4 @@
-import Logs from "../../../department-components/centeradmin-components/dashboard/logs";
+import TaskLogs from "../../../department-components/common-components/task/TaskLogs";
 import Sidebar from "../../../department-components/centeradmin-components/layout/Sidebar";
 import Topbar from "./../../../component/parent-component/parent-dashboard/layout/Topbar";
 
@@ -15,7 +15,7 @@ const CenterAdminTaskLogs = () => {
         <div className="flex-1 overflow-hidden relative z-10">
           <div className="h-full w-full overflow-auto scrollbar-hide">
             <div className="min-w-full p-4">
-              <Logs />
+              <TaskLogs />
             </div>
           </div>
         </div>

@@ -45,30 +45,34 @@ const KidsLoginPage = () => {
       if (response.status === 200) {
         toast.success(response?.data?.message || "Login successful!");
         localStorage.setItem("empId", response?.data?.operationEmail?._id);
+        localStorage.setItem(
+          "department",
+          response?.data?.operationEmail?.department
+        );
 
         const department = response?.data?.operationEmail?.department;
 
         switch (department) {
           case "operation":
-            navigate("/employee-operation-dashboard");
+            navigate("/operation/department/dashboard");
             break;
           case "marketing":
-            navigate("/marketingDashboard");
+            navigate("/marketing/department/dashboard");
             break;
           case "centeradmin":
-            navigate("/centeradmin-dashboard");
+            navigate("/centeradmin/department/dashboard");
             break;
           case "renewal":
-            navigate("/renewalDashboard");
+            navigate("/renewal/department/dashboard");
             break;
-          case "service delivery":
-            navigate("/serviceDashboard");
+          case "service-delivery":
+            navigate("/service-delivery/department/dashboard");
             break;
-          case "super admin":
-            navigate("/superadminDashboard");
+          case "super-admin":
+            navigate("/super-admin/department/dashboard");
             break;
           case "coach":
-            navigate("/coachDashboard");
+            navigate("/coach/department/dashboard");
             break;
           default:
             navigate("/");

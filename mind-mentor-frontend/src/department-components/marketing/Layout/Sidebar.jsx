@@ -15,8 +15,8 @@ import {
   School as ProgramsIcon,
   Assessment as ReportsIcon,
   Help as SupportIcon,
-  Assignment as TaskIcon
-} from '@mui/icons-material';
+  Assignment as TaskIcon,
+} from "@mui/icons-material";
 import {
   Box,
   Collapse,
@@ -28,12 +28,12 @@ import {
   ListItemIcon,
   ListItemText,
   Tooltip,
-  Typography
-} from '@mui/material';
-import { styled } from '@mui/material/styles';
-import { TentTree } from 'lucide-react';
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+  Typography,
+} from "@mui/material";
+import { styled } from "@mui/material/styles";
+import { TentTree } from "lucide-react";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 const ModernSidebar = () => {
   const [openReports, setOpenReports] = useState(false);
@@ -43,85 +43,94 @@ const ModernSidebar = () => {
 
   // Vibrant color palette for icons
   const iconColors = {
-    profile: '#FF6B6B',
-    dashboard: '#4ECDC4',
-    kids: '#45B7D1',
-    attendance: '#FDCB6E',
-    leaves: '#6C5CE7',
-    invoices: '#FF8A5B',
-    nearbyCenter: '#2ECC71',
-    reports: '#9B59B6',
-    tasks: '#3498DB',
-    classSchedules: '#E67E22',
-    programs: '#1ABC9C',
-    support: '#E74C3C',
-    logout: '#95A5A6'
+    profile: "#FF6B6B",
+    dashboard: "#4ECDC4",
+    kids: "#45B7D1",
+    attendance: "#FDCB6E",
+    leaves: "#6C5CE7",
+    invoices: "#FF8A5B",
+    nearbyCenter: "#2ECC71",
+    reports: "#9B59B6",
+    tasks: "#3498DB",
+    classSchedules: "#E67E22",
+    programs: "#1ABC9C",
+    support: "#E74C3C",
+    logout: "#95A5A6",
   };
   // Function to lighten colors
   const lightenColor = (color, amount = 0.5) => {
-    const hex = color.replace('#', '');
+    const hex = color.replace("#", "");
     const num = parseInt(hex, 16);
-    const r = Math.min(255, Math.floor((num >> 16) + (255 - (num >> 16)) * amount));
-    const g = Math.min(255, Math.floor(((num >> 8) & 0x00FF) + (255 - ((num >> 8) & 0x00FF)) * amount));
-    const b = Math.min(255, Math.floor((num & 0x0000FF) + (255 - (num & 0x0000FF)) * amount));
-    return `#${(r << 16 | g << 8 | b).toString(16).padStart(6, '0')}`;
+    const r = Math.min(
+      255,
+      Math.floor((num >> 16) + (255 - (num >> 16)) * amount)
+    );
+    const g = Math.min(
+      255,
+      Math.floor(((num >> 8) & 0x00ff) + (255 - ((num >> 8) & 0x00ff)) * amount)
+    );
+    const b = Math.min(
+      255,
+      Math.floor((num & 0x0000ff) + (255 - (num & 0x0000ff)) * amount)
+    );
+    return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
   };
   // Styled components for enhanced interactivity
   const StyledListItem = styled(ListItem)(({ theme }) => ({
     borderRadius: 8,
-    margin: '2px 0',
-    padding: '8px 16px',
-    display: 'flex',
-    alignItems: 'center',
-    transition: 'all 0.3s ease',
-    position: 'relative',
-    overflow: 'hidden',
+    margin: "2px 0",
+    padding: "8px 16px",
+    display: "flex",
+    alignItems: "center",
+    transition: "all 0.3s ease",
+    position: "relative",
+    overflow: "hidden",
     gap: 8,
-    '&::before': {
+    "&::before": {
       content: '""',
-      position: 'absolute',
+      position: "absolute",
       top: 0,
       left: 0,
       width: 0,
-      height: '100%',
-      backgroundColor: '#642b8f',
-      transition: 'width 0.3s ease',
-      zIndex: 0
+      height: "100%",
+      backgroundColor: "#642b8f",
+      transition: "width 0.3s ease",
+      zIndex: 0,
     },
-    '&:hover': {
-      '&::before': {
-        width: '100%'
+    "&:hover": {
+      "&::before": {
+        width: "100%",
       },
-      '& .MuiListItemIcon-root, & .MuiListItemText-primary': {
-        color: 'white',
-        zIndex: 1
+      "& .MuiListItemIcon-root, & .MuiListItemText-primary": {
+        color: "white",
+        zIndex: 1,
       },
-      '& .MuiListItemIcon-root svg': {
-        filter: 'brightness(200%)' // Alternative way to lighten icons
+      "& .MuiListItemIcon-root svg": {
+        filter: "brightness(200%)", // Alternative way to lighten icons
       },
-      boxShadow: theme.shadows[2]
+      boxShadow: theme.shadows[2],
     },
-    '& .MuiListItemIcon-root, & .MuiListItemText-primary': {
-      position: 'relative',
+    "& .MuiListItemIcon-root, & .MuiListItemText-primary": {
+      position: "relative",
       zIndex: 1,
-      transition: 'color 0.3s ease'
+      transition: "color 0.3s ease",
     },
-    '& .MuiListItemIcon-root': {
+    "& .MuiListItemIcon-root": {
       marginRight: 8,
-      minWidth: 'auto'
-    }
+      minWidth: "auto",
+    },
   }));
   const StyledDrawer = styled(Drawer)(() => ({
     width: isCollapsed ? 80 : 280,
     flexShrink: 0,
-    '& .MuiDrawer-paper': {
+    "& .MuiDrawer-paper": {
       width: isCollapsed ? 80 : 280,
-      boxSizing: 'border-box',
-      backgroundColor: 'white',
-      borderRight: 'none',
-      transition: 'width 0.3s ease',
-      overflow: 'hidden'
-    }
+      boxSizing: "border-box",
+      backgroundColor: "white",
+      borderRight: "none",
+      transition: "width 0.3s ease",
+      overflow: "hidden",
+    },
   }));
   const handleReportsClick = () => setOpenReports(!openReports);
   const handleTasksClick = () => setOpenTasks(!openTasks);
@@ -129,81 +138,107 @@ const ModernSidebar = () => {
   const handleCRMClick = () => setOpenCRMS(!openCRM);
 
   const menuItems = [
-    
     {
       icon: <DashboardIcon />,
-      text: 'Dashboard',
+      text: "Dashboard",
       color: iconColors.dashboard,
-      link: '/marketingDashboard',
+      link: "/marketingDashboard",
     },
     {
       icon: <InvoicesIcon />,
-      text: 'Enquiries',
+      text: "Enquiries",
       color: iconColors.invoices,
-      link: '/marketingEnquiries',
-    },   
+      link: "/marketingEnquiries",
+    },
     {
       icon: <ClassScheduleIcon />,
-      text: 'Marketing Tools',
+      text: "Marketing Tools",
       color: iconColors.classSchedules,
-      link: '#',
+      link: "#",
     },
-{
+    {
       icon: <AttendanceIcon />,
-      text: 'Attendance',
+      text: "Attendance",
       color: iconColors.attendance,
-      link: '/marketingAttendance',
-    },
-    {
-      icon: <LeavesIcon />,
-      text: 'Leaves',
-      color: iconColors.leaves,
-      link: '/marketingLeaves',
-    },
-    {
-      icon: <TentTree />,
-      text: 'Holidays',
-      color: iconColors.renewals,
-      link: '/marketing-associate/holidays',
-    },
- 
-    {
-      icon: <SupportIcon />,
-      text: 'Support',
-      color: iconColors.support,
-      link: '/marketingSupport',
+      link: "/marketing/department/attendance",
     },
     {
       icon: <ReportsIcon />,
-      text: 'Reports',
+      text: "Tasks",
       color: iconColors.reports,
       subItems: [
-        { icon: <ReportsIcon />, text: 'Students Feedback', link: '/marketingFeedback' },
-        { icon: <ReportsIcon />, text: 'Student Attendance Report', link: '/marketingAttendanceReport' },
+        {
+          icon: <ReportsIcon />,
+          text: "My Task",
+          link: "/marketing/department/list-mytask",
+        },
+        {
+          icon: <ReportsIcon />,
+          text: "Task Assigned By me",
+          link: "/marketing/department/list-task-assigned-me",
+        },
       ],
       open: openReports,
       onClick: handleReportsClick,
-    },    
-    
+    },
+    {
+      icon: <LeavesIcon />,
+      text: "Leaves",
+      color: iconColors.leaves,
+      link: "/marketing/department/leaves",
+    },
+    {
+      icon: <TentTree />,
+      text: "Holidays",
+      color: iconColors.renewals,
+      link: "/marketing-associate/holidays",
+    },
 
-    
+    {
+      icon: <SupportIcon />,
+      text: "Support",
+      color: iconColors.support,
+      link: "/marketingSupport",
+    },
+    {
+      icon: <ReportsIcon />,
+      text: "Reports",
+      color: iconColors.reports,
+      subItems: [
+        {
+          icon: <ReportsIcon />,
+          text: "Students Feedback",
+          link: "/marketingFeedback",
+        },
+        {
+          icon: <ReportsIcon />,
+          text: "Student Attendance Report",
+          link: "/marketingAttendanceReport",
+        },
+      ],
+      open: openReports,
+      onClick: handleReportsClick,
+    },
+
     {
       icon: <LogoutIcon />,
-      text: 'Logout',
+      text: "Logout",
       color: iconColors.logout,
-      link: '/',
+      link: "/",
     },
   ];
-  
+
   return (
     <StyledDrawer variant="permanent">
-      <Box sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        py: 2,
-        px: 2
-      }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          py: 2,
+          px: 2,
+        }}
+      >
         {!isCollapsed && (
           <Box display="flex" flexDirection="column" alignItems="center" mt={2}>
             {/* Profile Icon */}
@@ -211,21 +246,21 @@ const ModernSidebar = () => {
               sx={{
                 width: 60,
                 height: 60,
-                backgroundColor: iconColors.profile || 'primary.main',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                backgroundColor: iconColors.profile || "primary.main",
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
                 mb: 1,
               }}
             >
-              <ProfileIcon sx={{ color: 'white', fontSize: 30 }} />
+              <ProfileIcon sx={{ color: "white", fontSize: 30 }} />
             </Box>
             {/* Name and Role */}
             <Typography variant="body2" color="#642b8f" fontWeight="bold">
               marketing Delivery Manager
             </Typography>
-            <Divider/>
+            <Divider />
             {/* <Typography variant="body2" color="text.secondary">
               mindmentorz
             </Typography> */}
@@ -235,28 +270,28 @@ const ModernSidebar = () => {
           {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
         </IconButton>
       </Box>
-      <Box sx={{ overflow: 'auto' }}>
+      <Box sx={{ overflow: "auto" }}>
         <List disablePadding>
           {menuItems.map((item, index) => (
             <React.Fragment key={index}>
               <Tooltip title={item.text} placement="right">
                 {item.link ? (
-                  <Link 
-                    to={item.link} 
-                    style={{ textDecoration: 'none', color: 'inherit' }}
+                  <Link
+                    to={item.link}
+                    style={{ textDecoration: "none", color: "inherit" }}
                   >
                     <StyledListItem
                       button
                       onClick={item.onClick || undefined}
                       sx={{
-                        justifyContent: isCollapsed ? 'center' : 'flex-start',
+                        justifyContent: isCollapsed ? "center" : "flex-start",
                         paddingLeft: isCollapsed ? 0 : undefined,
                       }}
                     >
                       <ListItemIcon>
                         {React.cloneElement(item.icon, {
                           style: { color: item.color },
-                          fontSize: 'medium'
+                          fontSize: "medium",
                         })}
                       </ListItemIcon>
                       {!isCollapsed && (
@@ -265,14 +300,13 @@ const ModernSidebar = () => {
                             primary={item.text}
                             primaryTypographyProps={{
                               sx: {
-                                fontSize: '0.95rem',
-                                fontWeight: 500
-                              }
+                                fontSize: "0.95rem",
+                                fontWeight: 500,
+                              },
                             }}
                           />
-                          {item.subItems && (
-                            item.open ? <ExpandLess /> : <ExpandMore />
-                          )}
+                          {item.subItems &&
+                            (item.open ? <ExpandLess /> : <ExpandMore />)}
                         </>
                       )}
                     </StyledListItem>
@@ -282,14 +316,14 @@ const ModernSidebar = () => {
                     button
                     onClick={item.onClick || undefined}
                     sx={{
-                      justifyContent: isCollapsed ? 'center' : 'flex-start',
+                      justifyContent: isCollapsed ? "center" : "flex-start",
                       paddingLeft: isCollapsed ? 0 : undefined,
                     }}
                   >
                     <ListItemIcon>
                       {React.cloneElement(item.icon, {
                         style: { color: item.color },
-                        fontSize: 'medium'
+                        fontSize: "medium",
                       })}
                     </ListItemIcon>
                     {!isCollapsed && (
@@ -298,14 +332,13 @@ const ModernSidebar = () => {
                           primary={item.text}
                           primaryTypographyProps={{
                             sx: {
-                              fontSize: '0.95rem',
-                              fontWeight: 500
-                            }
+                              fontSize: "0.95rem",
+                              fontWeight: 500,
+                            },
                           }}
                         />
-                        {item.subItems && (
-                          item.open ? <ExpandLess /> : <ExpandMore />
-                        )}
+                        {item.subItems &&
+                          (item.open ? <ExpandLess /> : <ExpandMore />)}
                       </>
                     )}
                   </StyledListItem>
@@ -315,10 +348,10 @@ const ModernSidebar = () => {
                 <Collapse in={item.open} timeout="auto" unmountOnExit>
                   <List component="div" disablePadding>
                     {item.subItems.map((subItem, subIndex) => (
-                      <Link 
-                        key={subIndex} 
-                        to={subItem.link} 
-                        style={{ textDecoration: 'none', color: 'inherit' }}
+                      <Link
+                        key={subIndex}
+                        to={subItem.link}
+                        style={{ textDecoration: "none", color: "inherit" }}
                       >
                         <StyledListItem
                           button
@@ -329,15 +362,15 @@ const ModernSidebar = () => {
                           <ListItemIcon>
                             {React.cloneElement(subItem.icon, {
                               style: { color: item.color },
-                              fontSize: 'small'
+                              fontSize: "small",
                             })}
                           </ListItemIcon>
                           <ListItemText
                             primary={subItem.text}
                             primaryTypographyProps={{
                               sx: {
-                                fontSize: '0.9rem'
-                              }
+                                fontSize: "0.9rem",
+                              },
                             }}
                           />
                         </StyledListItem>

@@ -22,6 +22,7 @@ import {
   EventSeat as LevelIcon,
   CalendarToday as DayIcon,
   PersonAdd as AddKidIcon,
+  EventBusy as NoScheduleIcon,
 } from "@mui/icons-material";
 import { Link, useNavigate } from "react-router-dom";
 import { getDemoSheduleClass } from "../../../api/service/employee/EmployeeService";
@@ -34,6 +35,54 @@ import {
   ModalContent,
   theme,
 } from "../../coach/Layout/customStyle";
+
+const NoScheduleCard = ({ day }) => (
+  <ClassCard
+    elevation={2}
+    sx={{
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 3,
+      backgroundColor: "rgba(100, 43, 143, 0.05)",
+      border: "2px dashed rgba(100, 43, 143, 0.2)",
+      opacity: 1,
+      transform: "translateY(0)",
+      mb: 2,
+      minHeight: "150px",
+    }}
+  >
+    <NoScheduleIcon
+      sx={{
+        fontSize: 40,
+        color: customColors.primary,
+        opacity: 0.5,
+        mb: 2,
+      }}
+    />
+    <Typography
+      variant="body1"
+      sx={{
+        color: customColors.primary,
+        textAlign: "center",
+        fontWeight: 500,
+      }}
+    >
+      No classes scheduled for {day}
+    </Typography>
+    <Typography
+      variant="body2"
+      sx={{
+        color: customColors.secondary,
+        textAlign: "center",
+        mt: 1,
+      }}
+    >
+      Click "Create Schedules" to add a class
+    </Typography>
+  </ClassCard>
+);
 
 const ScheduleKanban = () => {
   const navigate = useNavigate();
@@ -139,9 +188,8 @@ const ScheduleKanban = () => {
               gutterBottom
               sx={{ color: "text.primary", fontWeight: 600, mb: 3 }}
             >
-             Demo Class Schedules
+              Demo Class Schedules
             </Typography>
-            
           </Box>
 
           <Box
@@ -186,18 +234,7 @@ const ScheduleKanban = () => {
                 <CardContent>
                   {classes.length === 0 ||
                   classes[0].subject === "No class scheduled" ? (
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        height: "100px",
-                        color: customColors.primary,
-                        fontStyle: "italic",
-                      }}
-                    >
-                      <Typography>No classes scheduled</Typography>
-                    </Box>
+                    <NoScheduleCard day={day} />
                   ) : (
                     classes.map((classItem, index) => (
                       <ClassCard
@@ -278,7 +315,7 @@ const ScheduleKanban = () => {
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   navigate(
-                                    `/employeeAssignDemoClass/${classItem.id}`
+                                    `/operation/department/assign-demo-class/${classItem.id}`
                                   );
                                 }}
                                 sx={{
@@ -453,7 +490,7 @@ const ScheduleKanban = () => {
                           color="primary"
                           onClick={() => {
                             navigate(
-                              `/employeeAssignDemoClass/${selectedClass.id}`
+                              `/operation/department/assign-demo-class/${selectedClass.id}`
                             );
                           }}
                           disabled={selectedClass.status !== "Scheduled"} // Disable button based on condition

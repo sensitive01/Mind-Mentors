@@ -1,5 +1,4 @@
-import { useState } from "react";
-import EmployeeLeaveForm from "../../../department-components/operation-new/dashboard/EmployeeleaveForm"
+import EmployeeLeaveForm from "../../../department-components/common-components/leaves/EmployeeleaveForm"
 import Sidebar from "../../../department-components/operation-new/layout/Sidebar";
 import Topbar from './../../../component/parent-component/parent-dashboard/layout/Topbar';
 

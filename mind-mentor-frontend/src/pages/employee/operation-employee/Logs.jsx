@@ -1,4 +1,4 @@
-import Logs from "../../../department-components/operation-new/dashboard/logs";
+import Logs from "../../../department-components/common-components/task/TaskLogs";
 import Sidebar from "../../../department-components/operation-new/layout/Sidebar";
 import Topbar from './../../../component/parent-component/parent-dashboard/layout/Topbar';
 

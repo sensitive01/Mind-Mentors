@@ -84,7 +84,7 @@ const TaskModule = () => {
               Please fill in the required information below
             </p>
           </div>
-          <Button variant="contained" color="#642b8f" component={Link} to="#">
+          <Button variant="contained" color="#642b8f" component={Link} to="/operation/department/supports">
             View Support
           </Button>
         </div>
