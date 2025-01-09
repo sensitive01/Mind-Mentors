@@ -213,6 +213,12 @@ const ModernSidebar = () => {
     },
     {
       icon: <HelpOutline />,
+      text: "Walk Through",
+      color: iconColors.support,
+      link: "/operation/department/walk-through",
+    },
+    {
+      icon: <HelpOutline />,
       text: "Support",
       color: iconColors.support,
       link: "/operation/department/supports",

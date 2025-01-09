@@ -1,5 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { Calendar, Edit3, Pause, Play, Plus, Trash2, X } from "lucide-react";
+import {
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  Edit3,
+  Pause,
+  Play,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react";
 import { useParams } from "react-router-dom";
 import {
   addKidAvailabilities,
@@ -16,11 +26,19 @@ const KidsAvailability = () => {
     useState(false);
   const [selectedAvailability, setSelectedAvailability] = useState(null);
   const [availabilities, setAvailabilities] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(2);
   const [newAvailability, setNewAvailability] = useState({
     day: "Monday",
     availableFrom: "",
     availableTo: "",
   });
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = availabilities.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(availabilities.length / itemsPerPage);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   const days = [
     "Monday",
@@ -80,7 +98,7 @@ const KidsAvailability = () => {
             avail._id === selectedAvailability._id ? updatedAvailability : avail
           )
         );
-        toast.success(response.data.message)
+        toast.success(response.data.message);
       } else {
         const newEntry = {
           ...newAvailability,
@@ -89,9 +107,8 @@ const KidsAvailability = () => {
 
         const response = await addKidAvailabilities(kidId, newEntry);
 
-        setAvailabilities([...availabilities, response.data]);
-        toast.success(response.data.message)
-
+        setAvailabilities([...availabilities, response.data.newAvailability]);
+        toast.success(response.data.message);
       }
 
       setNewAvailability({ day: "Monday", availableFrom: "", availableTo: "" });
@@ -107,19 +124,18 @@ const KidsAvailability = () => {
     try {
       const newStatus = availability.status === "Active" ? "Paused" : "Active";
 
-      
       // Update local state
       setAvailabilities(
         availabilities.map((avail) =>
           avail._id === availability._id
-        ? { ...avail, status: newStatus }
-        : avail
-      )
-    );
-    const response = await pauseKidAvailability(availability._id, newStatus);
-    if(response.status===200){
-      toast.success(response.data.message)
-    }
+            ? { ...avail, status: newStatus }
+            : avail
+        )
+      );
+      const response = await pauseKidAvailability(availability._id, newStatus);
+      if (response.status === 200) {
+        toast.success(response.data.message);
+      }
     } catch (error) {
       console.error("Error toggling availability status:", error);
       alert("Failed to update availability status. Please try again.");
@@ -178,6 +194,9 @@ const KidsAvailability = () => {
           <table className="w-full">
             <thead className="bg-gray-100 border-b">
               <tr>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  Sl No
+                </th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Day
                 </th>
@@ -193,11 +212,16 @@ const KidsAvailability = () => {
               </tr>
             </thead>
             <tbody>
-              {availabilities.map((avail) => (
+              {currentItems.map((avail,index) => (
                 <tr
                   key={avail.id}
                   className="border-b hover:bg-gray-50 transition-colors"
                 >
+                     <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">
+                      {index+1}
+                    </div>
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
                       {avail.day}
@@ -256,6 +280,44 @@ const KidsAvailability = () => {
               ))}
             </tbody>
           </table>
+          <div className="px-6 py-4 flex items-center justify-between border-t">
+            <div className="flex items-center">
+              <span className="text-sm text-gray-700">
+                Showing {indexOfFirstItem + 1} to{" "}
+                {Math.min(indexOfLastItem, availabilities.length)} of{" "}
+                {availabilities.length} entries
+              </span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => paginate(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              {[...Array(totalPages)].map((_, index) => (
+                <button
+                  key={index + 1}
+                  onClick={() => paginate(index + 1)}
+                  className={`px-3 py-1 rounded-lg ${
+                    currentPage === index + 1
+                      ? "bg-primary text-white"
+                      : "hover:bg-gray-100"
+                  }`}
+                >
+                  {index + 1}
+                </button>
+              ))}
+              <button
+                onClick={() => paginate(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Add/Edit Availability Modal */}

@@ -106,8 +106,9 @@ const CoachAvailabilityTable = () => {
       const response = await getCoachAvailabilityData();
       console.log("Coach Availability Data", response);
 
-      const formattedData = response.data.availableDays.map((availability) => ({
+      const formattedData = response.data.availableDays.map((availability,index) => ({
         id: availability._id,
+        slNo:index+1,
         coachId:availability.coachId,
         coachName: availability.coachName,
         program: availability.program,
@@ -173,6 +174,12 @@ const CoachAvailabilityTable = () => {
   };
 
   const columns = [
+    {
+      field: "slNo",
+      headerName: "Sl No",
+      width: 100,
+      renderCell: (params) => params.value,
+    },
     { field: "coachName", headerName: "Coach Name", width: 250 },
     { field: "program", headerName: "Program", width: 200 },
     { field: "day", headerName: "Day", width: 200 },

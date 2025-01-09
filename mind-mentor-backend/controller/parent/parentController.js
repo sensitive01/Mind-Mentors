@@ -868,10 +868,10 @@ const getKidDemoClassDetails = async (req, res) => {
 
 const saveKidAvailability = async (req, res) => {
   try {
+    console.log("Welcome to add availability",req.body)
     const { kidId } = req.params;
     const { day, availableFrom, availableTo, status } = req.body.data;
 
-    console.log("Welcome to save kid availability", req.body, kidId);
 
     if (!kidId) {
       return res.status(404).json({ message: "Kid not found" });

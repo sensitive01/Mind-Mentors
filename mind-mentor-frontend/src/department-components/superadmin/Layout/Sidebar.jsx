@@ -181,7 +181,7 @@ const ModernSidebar = () => {
       icon: <DashboardIcon />,
       text: "Dashboard",
       color: iconColors.dashboard,
-      link: "/superadminDashboard",
+      link: "/super-admin/department/dashboard",
     },
     {
       icon: <EnquiriesIcon />,

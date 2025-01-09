@@ -254,6 +254,7 @@ import MarketingMyTaskPage from "./pages/employee/marketing/MarketingMyTaskPage"
 import MarketingAssignedTaskTable from "./pages/employee/marketing/MarketingAssignedTaskTable";
 import MarketingNewTaskForm from "./pages/employee/marketing/MarketingNewTaskForm";
 import MarketingTaskLogs from "./pages/employee/marketing/MarketingTaskLogs";
+import EnrollmentWalkThrougPage from "./pages/employee/operation-employee/EnrollmentWalkThrougPage";
 
 function App() {
   return (
@@ -356,6 +357,8 @@ function App() {
           <Route path="/operation/department/holidays"   element={<HolidayPage />}  />
           <Route path="/operation/department/supports" element={<SupportRequest />} />
           <Route path="/operation/department/support/add" element={<SupportPages />}  />
+          <Route path="/operation/department/walk-through" element={<EnrollmentWalkThrougPage />}  />
+
 
 
 
@@ -381,6 +384,9 @@ function App() {
           <Route path="/service-delivery/department/taskslogs/:id"  element={<ServiceTaskLogs />}/>
           <Route path="/service-delivery/department/attendance" element={<ServiceAttendance />} />
           <Route path="/service-delivery/department/class-shedules/"  element={<ServiceScheduleClass />}/>
+          <Route path="/service-delivery/department/assign-class-students"  element={<ServiceDelivaryClassShedulePage />} />
+          <Route path="/service-delivery/department/serviceAssignClassToKid/:id" element={<AssignClassToKid />}/>
+          <Route path="/service-delivery/department/coachAvailabilityTable"  element={<CoachAvailabilityTablePage />}  />
 
 
 
@@ -392,10 +398,7 @@ function App() {
           <Route path="/serviceMessageStatus/"  element={<ServiceMessageStusTrackPage />}/>
           <Route path="/servicekids" element={<ServiceKids />} />
           <Route path="/servicePrograms" element={<ServicePrograms />} />
-          <Route path="/serviceClassShedule"  element={<ServiceDelivaryClassShedulePage />} />
           <Route path="/coachAvailabilityForm"  element={<CoachAvailabilityFormPage />} />
-          <Route path="/coachAvailabilityTable"  element={<CoachAvailabilityTablePage />}  />
-          <Route path="/serviceAssignClassToKid/:id" element={<AssignClassToKid />}/>
           <Route path="/service-delivary/holidays"  element={<ServiceDelivaryHolidayPage />}/>
           <Route path="/service-delivary/completeEnquiryLogs/:id"  element={<ServiceCompleteEnquiryLogs />}/>
 

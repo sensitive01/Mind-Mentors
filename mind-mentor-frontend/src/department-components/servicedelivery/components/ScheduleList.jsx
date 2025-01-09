@@ -183,7 +183,7 @@ const ScheduleKanban = () => {
   const handleAddKids = (e, classInfo) => {
     e.stopPropagation();
     console.log("Add kids for class:", classInfo);
-    navigate(`/serviceAssignClassToKid/${classInfo.id}`);
+    navigate(`/service-delivery/department/serviceAssignClassToKid/${classInfo.id}`);
   };
 
   return (
@@ -211,7 +211,7 @@ const ScheduleKanban = () => {
           <Button
             variant="contained"
             component={Link}
-            to="/serviceClassShedule"
+            to="/service-delivery/department/assign-class-students"
             color="primary"
           >
             + Create Schedules
@@ -530,7 +530,7 @@ const ScheduleKanban = () => {
                         color="primary"
                         onClick={() => {
                           navigate(
-                            `/employeeAssignDemoClass/${selectedClass.id}`
+                            `/service-delivery/department/serviceAssignClassToKid/${selectedClass.id}`
                           );
                         }}
                         disabled={selectedClass.status !== "Scheduled"} // Disable button based on condition

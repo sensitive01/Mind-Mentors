@@ -145,8 +145,9 @@ const TaskAssignedByMeTable = () => {
       try {
         const response = await fetchTaskAmAssignedToOthers(empId);
         console.log("My task", response);
-        const formattedData = response.map((task) => ({
+        const formattedData = response.map((task,index) => ({
           ...task, 
+          slNo:index+1,
           id: task._id, 
           taskTime: task.taskTime, 
           createdAt: task.createdAt, 

@@ -25,7 +25,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import columns from "./TaskColumn";
-import { addNotesToTasks, fetchAllTasks, updateTaskStatus } from "../../../api/service/employee/EmployeeService";
+import { addNotesToTasks, fetchMyPendingTask, updateTaskStatus } from "../../../api/service/employee/EmployeeService";
 
 const theme = createTheme({
   palette: {
@@ -143,12 +143,13 @@ const MyTaskTable = () => {
     const fetchTask = async () => {
       try {
      
-        const response = await fetchAllTasks();
+        const response = await fetchMyPendingTask(empId);
         console.log(response);
 
        
-        const formattedData = response.map((task) => ({
+        const formattedData = response.map((task,index) => ({
           ...task, 
+          slNo:index+1,
           id: task._id,
           taskTime: task.taskTime, 
           createdAt: task.createdAt,

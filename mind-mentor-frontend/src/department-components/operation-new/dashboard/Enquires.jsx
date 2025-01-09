@@ -211,8 +211,14 @@ const Enquiries = () => {
     const loadLeaves = async () => {
       try {
         const data = await fetchAllEnquiries();
-        console.log(data);
-        setRows(data);
+
+        // Add serial numbers to rows
+        const rowsWithSlNo = data.map((item, index) => ({
+          ...item,
+          slNo: index + 1, // Serial number starts at 1
+        }));
+
+        setRows(rowsWithSlNo);
       } catch (err) {
         console.log("Failed to fetch Enquiries. Please try again later.", err);
       } finally {
@@ -392,12 +398,12 @@ const Enquiries = () => {
                 setViewDialog,
                 enquiryStatus,
                 handleMoveProspects,
-                handleShowLogs
+                handleShowLogs,
+             
               )}
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel}
               pageSizeOptions={[5, 10, 25]}
-             
               disableRowSelectionOnClick
               editMode="row"
               getRowId={(row) => row._id}

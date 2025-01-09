@@ -146,7 +146,7 @@ const CoachAvailabilityForm = () => {
 
       if (response.status === 200) {
         toast.success(response.data.message);
-        navigate("/coachAvailabilityTable");
+        navigate("/service-delivery/department/coachAvailabilityTable");
       }
     } catch (error) {
       console.error("Submission error:", error);

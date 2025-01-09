@@ -150,7 +150,9 @@ const columns = (
             padding: "4px 12px",
             borderRadius: "20px",
             transition: "all 0.3s ease",
+            
           }}
+          
         >
           {params.value}
           <Switch
@@ -158,6 +160,7 @@ const columns = (
             checked={params.value === "warm"}
             onChange={() => handleStatusToggle(params.row._id)}
             onClick={(e) => e.stopPropagation()}
+            className="status-update-btn"
             sx={{
               "& .MuiSwitch-switchBase.Mui-checked": {
                 color: "#642b8f",

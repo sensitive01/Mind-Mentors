@@ -27,11 +27,14 @@ import { Link, useNavigate } from "react-router-dom";
 import columns from "./Columns";
 
 import {
+  fetchAllEnquiries,
+  moveToProspects,
   updateEnquiryStatus,
   addNotes,
-  fetchProspectsEnquiries,
-  moveToProspects,
 } from "../../../api/service/employee/EmployeeService";
+import toast from "react-hot-toast";
+import { ToastContainer } from "react-toastify";
+import WalkthroughGuide from "../walkThrough/EnrollMentWalkThrough";
 
 const theme = createTheme({
   palette: {
@@ -202,13 +205,14 @@ const DetailView = ({ data }) => (
 const Enquiries = () => {
   const navigate = useNavigate();
   const empId = localStorage.getItem("empId");
+  const department = localStorage.getItem("department")
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadLeaves = async () => {
       try {
-        const data = await fetchProspectsEnquiries();
+        const data = await fetchAllEnquiries();
 
         // Add serial numbers to rows
         const rowsWithSlNo = data.map((item, index) => ({
@@ -226,7 +230,6 @@ const Enquiries = () => {
 
     loadLeaves();
   }, []);
-
   const [noteDialog, enquiryStatus] = useState({
     open: false,
     rowData: null,
@@ -271,8 +274,10 @@ const Enquiries = () => {
     }
   };
   const handleNoteSave = async () => {
+    console.log("noteDialog.rowData", noteDialog.rowData);
     if (noteDialog.rowData) {
       const updatedNotes = noteDialog.noteText;
+      console.log("updated notes", updatedNotes);
       const id = noteDialog.rowData._id;
       let updatedEnquiryStatus = noteDialog.enquiryStatus;
       let updatedDisposition = noteDialog.disposition;
@@ -309,6 +314,7 @@ const Enquiries = () => {
       );
 
       try {
+        console.log("--->", updatedNotes);
         await addNotes(id, empId, {
           notes: updatedNotes,
           enquiryStatus: updatedEnquiryStatus,
@@ -341,15 +347,17 @@ const Enquiries = () => {
     console.log(id);
     const respose = await moveToProspects(id, empId);
     console.log(respose);
+    toast.success("Enquiry move to prospects");
   };
 
   const handleShowLogs = (id) => {
     console.log("Handle logs ", id);
-    navigate(`/operation/department/show-complete-enquiry-logs/${id}`);
+    navigate(`/${department}/department/show-complete-enquiry-logs/${id}`);
   };
 
   return (
     <ThemeProvider theme={theme}>
+      <WalkthroughGuide/>
       <Fade in={true}>
         <Box sx={{ width: "100%", height: "100%", p: 3, ml: "auto" }}>
           <Paper
@@ -373,16 +381,17 @@ const Enquiries = () => {
                 gutterBottom
                 sx={{ color: "text.primary", fontWeight: 600, mb: 3 }}
               >
-                Prospect Data
+                Enquiries
               </Typography>
-              {/* <Button
+              <Button
+              // className="add-enquiry-btn"
                 variant="contained"
                 color="primary"
                 component={Link}
-                to="/employee-operation-enquiry-form"
+                to={`/${department}/department/enquiry-form`}
               >
                 + New Enquiry Form
-              </Button> */}
+              </Button>
             </Box>
             <DataGrid
               rows={rows}
@@ -392,7 +401,8 @@ const Enquiries = () => {
                 setViewDialog,
                 enquiryStatus,
                 handleMoveProspects,
-                handleShowLogs
+                handleShowLogs,
+             
               )}
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel}
@@ -577,7 +587,7 @@ const Enquiries = () => {
                   sx={{
                     bgcolor: "primary.main",
                     "&:hover": {
-                      bgcolor: "primary.dark",
+                      bgcolor: "primary",
                     },
                   }}
                 >
@@ -608,6 +618,15 @@ const Enquiries = () => {
           </Paper>
         </Box>
       </Fade>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        closeOnClick
+        pauseOnHover
+        draggable
+        pauseOnFocusLoss
+      />
     </ThemeProvider>
   );
 };

@@ -1,4 +1,4 @@
-import HolidayForm from "../../../department-components/superadmin/components/HolidayForm";
+import HolidayForm from "../../../department-components/common-components/holiday/EmployeeHolidayForm";
 
 import Topbar from '../../../component/parent-component/parent-dashboard/layout/Topbar';
 import Sidebar from "../../../department-components/superadmin/Layout/Sidebar";

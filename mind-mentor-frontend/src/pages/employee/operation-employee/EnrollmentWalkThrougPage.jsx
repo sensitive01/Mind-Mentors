@@ -1,8 +1,8 @@
-import Enquires from "../../../department-components/common-components/enquiries/Enquires";
+import { useState } from "react";
+import AssignDemoClass from "../../../department-components/common-components/walkThrough/WalkThroughComponent";
 import Sidebar from "../../../department-components/operation-new/layout/Sidebar";
-import Topbar from "./../../../component/parent-component/parent-dashboard/layout/Topbar";
-
-const ListingEnquiries = () => {
+import Topbar from "../../../component/parent-component/parent-dashboard/layout/Topbar";
+const EnrollmentWalkThrougPage = () => {
   return (
     <div className="flex h-screen w-screen overflow-hidden">
       <div className="z-30 flex-shrink-0">
@@ -15,7 +15,7 @@ const ListingEnquiries = () => {
         <div className="flex-1 overflow-hidden relative z-10">
           <div className="h-full w-full overflow-auto scrollbar-hide">
             <div className="min-w-full p-4">
-              <Enquires />
+              <AssignDemoClass />
             </div>
           </div>
         </div>
@@ -24,4 +24,4 @@ const ListingEnquiries = () => {
   );
 };
 
-export default ListingEnquiries;
+export default EnrollmentWalkThrougPage;

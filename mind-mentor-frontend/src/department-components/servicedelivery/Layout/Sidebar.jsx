@@ -128,7 +128,7 @@ const ModernSidebar = () => {
       icon: <CoachTime />,
       text: 'Coach Availability',
       color: iconColors.coach,
-      link: '/coachAvailabilityTable',
+      link: '/service-delivery/department/coachAvailabilityTable',
     },
     {
       icon: <ClassScheduleIcon />,

@@ -14,7 +14,6 @@ import {
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 
-
 const columns = (
   theme,
   handleStatusToggle,
@@ -23,6 +22,12 @@ const columns = (
   setLogDialog,
   navigate
 ) => [
+  {
+    field: "slNo",
+    headerName: "Sl No",
+    width: 100,
+    renderCell: (params) => params.value,
+  },
   {
     field: "createdAt",
     headerName: "Created At",
@@ -99,7 +104,7 @@ const columns = (
   {
     field: "actions",
     headerName: "Actions",
-    width: 200, 
+    width: 200,
     renderCell: (params) => (
       <Box sx={{ display: "flex", gap: 1 }}>
         <Grow in={true}>
@@ -135,8 +140,8 @@ const columns = (
             size="small"
             onClick={() => {
               setLogDialog({ open: true, rowData: params.row });
-              const department = localStorage.getItem("department")
-              navigate(`/${department}/department/taskslogs/${params.row._id}`); 
+              const department = localStorage.getItem("department");
+              navigate(`/${department}/department/taskslogs/${params.row._id}`);
             }}
             sx={{
               color: "#000",

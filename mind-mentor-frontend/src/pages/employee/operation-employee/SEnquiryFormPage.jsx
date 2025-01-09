@@ -1,4 +1,4 @@
-import NewEnquiryForm from "../../../department-components/operation-new/dashboard/NewEnquiryForm";
+import NewEnquiryForm from "../../../department-components/common-components/enquiries/NewEnquiryForm";
 import Sidebar from "../../../department-components/operation-new/layout/Sidebar";
 import Topbar from "./../../../component/parent-component/parent-dashboard/layout/Topbar";
 const SEnquiryFormPage = () => {
