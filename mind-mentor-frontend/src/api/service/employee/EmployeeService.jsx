@@ -95,7 +95,7 @@ export const scheduleDemo = async (id, scheduleData) => {
 // Add Notes
 export const addNotes = async (id,empId, notes) => {
   const response = await operationDeptInstance.put(`/add-notes/${id}`, { notes,empId });
-  return response.data;
+  return response;
 };
 
 // Refer to Friend

@@ -2,22 +2,48 @@ import React, { useEffect, useState } from "react";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import {
   Box,
+  Button,
   createTheme,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
   Fade,
+  FormControl,
+  InputLabel,
+  MenuItem,
   Paper,
+  Select,
+  TextField,
   ThemeProvider,
   Typography,
 } from "@mui/material";
 import { useParams } from "react-router-dom";
 import { alpha } from "@mui/material/styles";
+import { useNavigate } from "react-router-dom";
 
-import { fetchAllLogs } from "../../../api/service/employee/EmployeeService";
+
+import {
+  fetchAllLogs,
+  addNotes,
+} from "../../../api/service/employee/EmployeeService";
 
 const CompleteEnquiryLogs = () => {
+  const empId = localStorage.getItem("empId");
+  const navigate =useNavigate()
+
   const { id } = useParams();
   const [logs, setLogs] = useState([]);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [noteDialog, setNoteDialog] = useState({
+    open: false,
+    rowData: null,
+    noteText: "",
+    enquiryStatus: "",
+    disposition: "",
+  });
 
   useEffect(() => {
     const fetchLogs = async () => {
@@ -25,18 +51,16 @@ const CompleteEnquiryLogs = () => {
       try {
         const response = await fetchAllLogs(id);
         if (response.status === 200 && Array.isArray(response.data)) {
-          // Sort logs by createdAt in descending order
           const sortedLogs = response.data.sort((a, b) => {
-            const dateA = new Date(a.createdAt.split('-').reverse().join('-'));
-            const dateB = new Date(b.createdAt.split('-').reverse().join('-'));
+            const dateA = new Date(a.createdAt.split("-").reverse().join("-"));
+            const dateB = new Date(b.createdAt.split("-").reverse().join("-"));
             return dateB - dateA;
           });
 
-          // Create rows with properly formatted data
           const logData = sortedLogs.map((log, index) => ({
             id: index + 1,
-            createdAt: formatDate(log.createdAt), // Format the date
-            action: log.action.trim(), // Trim any extra spaces
+            createdAt: formatDate(log.createdAt),
+            action: log.action.trim(),
           }));
 
           setLogs(logData);
@@ -54,10 +78,55 @@ const CompleteEnquiryLogs = () => {
     fetchLogs();
   }, [id]);
 
-  // Function to format date from "DD-MM-YY" to a more readable format
   const formatDate = (dateStr) => {
-    const [day, month, year] = dateStr.split('-');
+    const [day, month, year] = dateStr.split("-");
     return `${day}/${month}/20${year}`;
+  };
+
+  const handleOpenNoteDialog = () => {
+    setNoteDialog({
+      open: true,
+      rowData: null,
+      noteText: "",
+      enquiryStatus: "",
+      disposition: "",
+    });
+  };
+
+  const handleCloseNoteDialog = () => {
+    setNoteDialog({
+      open: false,
+      rowData: null,
+      noteText: "",
+      enquiryStatus: "",
+      disposition: "",
+    });
+  };
+
+  const handleNoteSave = async () => {
+    try {
+      // Add your save logic here
+      console.log("Note Data:", {
+        noteText: noteDialog.noteText,
+        enquiryStatus: noteDialog.enquiryStatus,
+        disposition: noteDialog.disposition,
+      });
+
+      const response = await addNotes(id, empId, {
+        notes: noteDialog.noteText,
+        enquiryStatus: noteDialog.enquiryStatus,
+        disposition: noteDialog.disposition,
+      });
+      if(response.status){
+        navigate("/operation/department/enquiry-list")
+      }
+
+      console.log("Response", response);
+
+      handleCloseNoteDialog();
+    } catch (error) {
+      console.error("Error saving note:", error);
+    }
   };
 
   const columns = [
@@ -104,16 +173,6 @@ const CompleteEnquiryLogs = () => {
         main: "#EC4899",
         light: "#F472B6",
         dark: "#DB2777",
-      },
-      warm: {
-        main: "#F59E0B",
-        light: "#FCD34D",
-        dark: "#D97706",
-      },
-      cold: {
-        main: "#3B82F6",
-        light: "#60A5FA",
-        dark: "#2563EB",
       },
       background: {
         default: "#F1F5F9",
@@ -177,11 +236,25 @@ const CompleteEnquiryLogs = () => {
             >
               <Typography
                 variant="h5"
-                gutterBottom
-                sx={{ color: "text.primary", fontWeight: 600, mb: 3 }}
+                sx={{ color: "text.primary", fontWeight: 600 }}
               >
                 Enquiry Logs ({rows.length} entries)
               </Typography>
+              <Button
+                variant="contained"
+                onClick={handleOpenNoteDialog}
+                sx={{
+                  bgcolor: "primary.main",
+                  color: "white",
+                  "&:hover": {
+                    bgcolor: "primary.dark",
+                  },
+                  px: 3,
+                  py: 1,
+                }}
+              >
+                Add Note
+              </Button>
             </Box>
             <Box sx={{ height: 500, width: "100%" }}>
               <DataGrid
@@ -244,20 +317,107 @@ const CompleteEnquiryLogs = () => {
                     color: "white",
                     fontWeight: 600,
                   },
-                  "& .MuiDataGrid-footerContainer": {
-                    display: "flex",
-                    justifyContent: "flex-end",
-                  },
-                  "& .MuiCheckbox-root.Mui-checked": {
-                    color: "#FFFFFF",
-                  },
-                  "& .MuiDataGrid-columnHeader .MuiCheckbox-root": {
-                    color: "#FFFFFF",
-                  },
                 }}
               />
             </Box>
           </Paper>
+
+          {/* Add Note Dialog */}
+          <Dialog
+            open={noteDialog.open}
+            onClose={handleCloseNoteDialog}
+            maxWidth="sm"
+            fullWidth
+          >
+            <DialogTitle
+              sx={{
+                color: "#ffffff",
+                fontWeight: 600,
+                background: "linear-gradient(to right, #642b8f, #aa88be)",
+              }}
+            >
+              Add Note
+            </DialogTitle>
+            <Divider />
+            <DialogContent>
+              <FormControl fullWidth sx={{ mt: 2 }}>
+                <InputLabel>Enquiry Stage</InputLabel>
+                <Select
+                  value={noteDialog.enquiryStatus}
+                  onChange={(e) =>
+                    setNoteDialog((prev) => ({
+                      ...prev,
+                      enquiryStatus: e.target.value,
+                    }))
+                  }
+                  label="Enquiry Stage"
+                >
+                  <MenuItem value="Pending">Pending</MenuItem>
+                  <MenuItem value="Qualified Lead">Qualified Lead</MenuItem>
+                  <MenuItem value="Unqualified Lead">Unqualified Lead</MenuItem>
+                </Select>
+              </FormControl>
+
+              <FormControl fullWidth sx={{ mt: 2 }}>
+                <InputLabel>Disposition</InputLabel>
+                <Select
+                  value={noteDialog.disposition}
+                  onChange={(e) =>
+                    setNoteDialog((prev) => ({
+                      ...prev,
+                      disposition: e.target.value,
+                    }))
+                  }
+                  label="Disposition"
+                >
+                  <MenuItem value="RnR">RnR</MenuItem>
+                  <MenuItem value="Call Back">Call Back</MenuItem>
+                  <MenuItem value="None">None</MenuItem>
+                </Select>
+              </FormControl>
+
+              <TextField
+                label="Note"
+                value={noteDialog.noteText}
+                onChange={(e) =>
+                  setNoteDialog((prev) => ({
+                    ...prev,
+                    noteText: e.target.value,
+                  }))
+                }
+                multiline
+                rows={4}
+                fullWidth
+                sx={{ mt: 2 }}
+              />
+            </DialogContent>
+            <Divider sx={{ borderColor: "#aa88be" }} />
+            <DialogActions sx={{ p: 2.5 }}>
+              <Button
+                onClick={handleNoteSave}
+                variant="contained"
+                sx={{
+                  bgcolor: "primary.main",
+                  color: "white",
+                  "&:hover": {
+                    bgcolor: "primary.dark",
+                  },
+                }}
+              >
+                Save Note
+              </Button>
+              <Button
+                onClick={handleCloseNoteDialog}
+                variant="outlined"
+                sx={{
+                  color: "text.primary",
+                  borderColor: "divider",
+                }}
+              >
+                Cancel
+              </Button>
+            </DialogActions>
+          </Dialog>
         </Box>
       </Fade>
     </ThemeProvider>

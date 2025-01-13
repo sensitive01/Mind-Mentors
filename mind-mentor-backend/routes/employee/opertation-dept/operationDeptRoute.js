@@ -35,6 +35,8 @@ operationRoute.post("/save-demo-class/:empId", operationController.saveDemoClass
 
 
 
+operationRoute.put("/enquiry-form/:enqId/step/:step", operationController.updateEnquiryDetails);
+
 operationRoute.put("/move-to-prospects/:id", operationController.updateProspectData);
 operationRoute.put("/enquiry-form/:id", operationController.updateEnquiry)
 operationRoute.put("/prospect-status/:id",operationController.updateProspectStatus);

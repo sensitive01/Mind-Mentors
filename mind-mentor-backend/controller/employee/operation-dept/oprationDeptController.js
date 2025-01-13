@@ -80,7 +80,6 @@ const operationEmailVerification = async (req, res) => {
     const { email } = req.body;
     console.log(email);
 
-
     const operationEmail = await Employee.findOne({ email: email });
     console.log("operationEmail", operationEmail);
 
@@ -184,7 +183,7 @@ const enquiryFormData = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Enquiry form submitted successfully",
-      data: newEntry,
+      id: newEntry._id,
     });
   } catch (error) {
     console.error("Error submitting enquiry form", error);
@@ -194,6 +193,41 @@ const enquiryFormData = async (req, res) => {
     });
   }
 };
+
+
+const updateEnquiryDetails = async (req, res) => {
+  try {
+    const { enqId, step } = req.params;
+    console.log(enqId, step);
+    console.log("req.body", req.body);
+
+    const updateData = await OperationDept.findOneAndUpdate(
+      { _id: enqId },
+      { $set: req.body },
+      { new: true }
+    );
+
+    if (updateData) {
+      res.status(200).json({
+        message: "Enquiry updated successfully",
+        updateData,
+      });
+    } else {
+      res.status(404).json({ message: "Enquiry not found" });
+    }
+  } catch (err) {
+    console.log("Error in updating the enquiry data", err);
+    res.status(500).json({ message: "Internal server error", error: err });
+  }
+};
+
+
+
+
+
+
+
+
 const updateProspectData = async (req, res) => {
   try {
     console.log("..........................................");
@@ -362,22 +396,121 @@ const updateProspectData = async (req, res) => {
 const getAllEnquiries = async (req, res) => {
   try {
     const enquiries = await OperationDept.find({ enquiryField: "enquiryList" });
-    console.log(enquiries);
-    res.status(200).json(enquiries);
+
+    const customizedEnquiries = await Promise.all(
+      enquiries.map(async (enquiry) => {
+        const parentName = `${enquiry.parentFirstName || ""} ${
+          enquiry.parentLastName || ""
+        }`.trim();
+        const kidName = `${enquiry.kidFirstName || ""} ${
+          enquiry.kidLastName || ""
+        }`.trim();
+
+        let latestAction = null;
+        if (enquiry.logs) {
+          const lastLog = await enquiryLogs
+            .findOne({ _id: enquiry.logs })
+            .sort({ createdAt: -1 })
+            .limit(1);
+          const sortedLogs = lastLog.logs.sort(
+            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+          );
+          latestAction = sortedLogs[0].action;
+        }
+
+        const formatDate = (date) => {
+          if (!date) return null;
+          const d = new Date(date);
+          const day = String(d.getDate()).padStart(2, "0");
+          const month = String(d.getMonth() + 1).padStart(2, "0");
+          const year = d.getFullYear();
+          return `${day}-${month}-${year}`;
+        };
+
+        const createdAt = formatDate(enquiry.createdAt);
+        const updatedAt = formatDate(enquiry.updatedAt);
+
+        return {
+          ...enquiry.toObject(),
+          parentName,
+          kidName,
+          latestAction,
+          createdAt,
+          updatedAt,
+        };
+      })
+    );
+
+    res.status(200).json(customizedEnquiries);
   } catch (error) {
+    console.log("Error", error);
     res.status(500).json({ message: "Error fetching data" });
   }
 };
 
+
+
+
 const getProspectsData = async (req, res) => {
   try {
     const enquiries = await OperationDept.find({ enquiryField: "prospects" });
-    console.log(enquiries);
-    res.status(200).json(enquiries);
+
+    const customizedEnquiries = await Promise.all(
+      enquiries.map(async (enquiry) => {
+        const parentName = `${enquiry.parentFirstName || ""} ${
+          enquiry.parentLastName || ""
+        }`.trim();
+        const kidName = `${enquiry.kidFirstName || ""} ${
+          enquiry.kidLastName || ""
+        }`.trim();
+
+        let latestAction = null;
+        if (enquiry.logs) {
+          const lastLog = await enquiryLogs
+            .findOne({ _id: enquiry.logs })
+            .sort({ createdAt: -1 })
+            .limit(1);
+          const sortedLogs = lastLog.logs.sort(
+            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+          );
+          latestAction = sortedLogs[0].action;
+        }
+
+        const formatDate = (date) => {
+          if (!date) return null;
+          const d = new Date(date);
+          const day = String(d.getDate()).padStart(2, "0");
+          const month = String(d.getMonth() + 1).padStart(2, "0");
+          const year = d.getFullYear();
+          return `${day}-${month}-${year}`;
+        };
+
+        const createdAt = formatDate(enquiry.createdAt);
+        const updatedAt = formatDate(enquiry.updatedAt);
+
+        return {
+          ...enquiry.toObject(),
+          parentName,
+          kidName,
+          latestAction,
+          createdAt,
+          updatedAt,
+        };
+      })
+    );
+
+    res.status(200).json(customizedEnquiries);
   } catch (error) {
+    console.log("Error", error);
     res.status(500).json({ message: "Error fetching data" });
   }
 };
+
+
+
+
+
+
 
 // Update Enquiry
 const updateEnquiry = async (req, res) => {
@@ -412,7 +545,7 @@ const deleteEnquiry = async (req, res) => {
 // Update Enquiry Status (Cold/Warm)
 const updateEnquiryStatus = async (req, res) => {
   try {
-    console.log("Status update", req.body);
+    console.log("Status update", req.body,req.params);
 
     const { id } = req.params;
     const { enquiryStatus, empId } = req.body;
@@ -972,28 +1105,30 @@ const getMyIndividualLeave = async (req, res) => {
     }
 
     console.log(leavesData);
-    return res.status(200).json({ success: true,  leavesData });
+    return res.status(200).json({ success: true, leavesData });
   } catch (err) {
     console.error("Error in getting the leave", err);
-    return res
-      .status(500)
-      .json({
-        success: false,
-        message: "Internal Server Error",
-        error: err.message,
-      });
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: err.message,
+    });
   }
 };
 
 const updateLeave = async (req, res) => {
   try {
-    console.log("Welcome to update leaves",req.params)
+    console.log("Welcome to update leaves", req.params);
     const { id } = req.params;
-    console.log(id, req.body)
-    const updatedLeave = await leaves.findByIdAndUpdate(id, req.body.updatedData, {
-      new: true,
-    });
-    console.log("updatedLeave",updatedLeave)
+    console.log(id, req.body);
+    const updatedLeave = await leaves.findByIdAndUpdate(
+      id,
+      req.body.updatedData,
+      {
+        new: true,
+      }
+    );
+    console.log("updatedLeave", updatedLeave);
     if (!updatedLeave) {
       return res.status(404).json({ message: "Leave not found" });
     }
@@ -2203,4 +2338,5 @@ module.exports = {
   getMyLeaveData,
   getDropDownData,
   getMyIndividualLeave,
+  updateEnquiryDetails
 };

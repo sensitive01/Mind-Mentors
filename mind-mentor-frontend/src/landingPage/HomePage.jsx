@@ -182,14 +182,14 @@ const LoginPage = () => {
       path: "/kids/login",
       delay: "delay-100",
     },
-    {
-      title: "Employee Login",
-      icon: Briefcase,
-      description: "Access administrative tools and resources",
-      color: "from-primary/60 to-primary/80",
-      path: "/employee-login",
-      delay: "delay-200",
-    },
+    // {
+    //   title: "Employee Login",
+    //   icon: Briefcase,
+    //   description: "Access administrative tools and resources",
+    //   color: "from-primary/60 to-primary/80",
+    //   path: "/employee-login",
+    //   delay: "delay-200",
+    // },
   ];
 
   const handleNavigation = (path) => {
@@ -210,7 +210,7 @@ const LoginPage = () => {
         </div>
 
         {/* Login Options */}
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 gap-6">
           {userTypes.map((type) => (
             <div
               key={type.title}
@@ -234,11 +234,11 @@ const LoginPage = () => {
                 <div
                   className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 
                   group-hover:bg-white/10 transform group-hover:scale-110 transition-transform duration-300
-                  animate-bounce"
+                  animate-bounce mt-5"
                 >
                   <type.icon
                     className="w-8 h-8 text-primary group-hover:text-white 
-                    transition-colors duration-300"
+                    transition-colors duration-300 "
                   />
                 </div>
 
@@ -261,13 +261,15 @@ const LoginPage = () => {
                     e.stopPropagation();
                     handleNavigation(type.path);
                   }}
-                  className="mt-auto w-full py-3 px-4 bg-white text-primary font-medium rounded-xl shadow-sm 
+                  className="mt-auto w-full  py-3 px-4 bg-white text-primary font-medium rounded-xl shadow-sm 
                   group-hover:bg-primary/10 group-hover:text-white transition-all duration-300 
-                  border-2 border-transparent group-hover:border-white/30
+                  border-2  group-hover:border-white/30
                   transform hover:scale-105 active:scale-95"
                 >
-                  Continue
+                  Login
                 </button>
+
+                <h1  className="mt-8" >New to Mind Mentorz ? Register here</h1>
               </div>
             </div>
           ))}

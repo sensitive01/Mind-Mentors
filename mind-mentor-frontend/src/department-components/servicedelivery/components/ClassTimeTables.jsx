@@ -243,7 +243,7 @@ const ClassScheduleForm = () => {
       if (response.status === 201) {
         toast.success(response.data.message);
         setTimeout(() => {
-          navigate("/serviceScheduleClass");
+          navigate("/service-delivery/department/class-shedules");
         }, 1500);
       }
     } catch (error) {

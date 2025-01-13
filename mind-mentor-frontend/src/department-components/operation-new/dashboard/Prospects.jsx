@@ -209,6 +209,7 @@ const Enquiries = () => {
     const loadLeaves = async () => {
       try {
         const data = await fetchProspectsEnquiries();
+        console.log(data)
 
         // Add serial numbers to rows
         const rowsWithSlNo = data.map((item, index) => ({

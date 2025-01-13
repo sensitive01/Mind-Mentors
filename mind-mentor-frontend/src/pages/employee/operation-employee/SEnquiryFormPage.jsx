@@ -1,4 +1,5 @@
-import NewEnquiryForm from "../../../department-components/common-components/enquiries/NewEnquiryForm";
+// import NewEnquiryForm from "../../../department-components/common-components/enquiries/NewEnquiryForm";
+import NewEnquiryFormStep from "../../../department-components/common-components/enquiries/NewEnquiryFormStep";
 import Sidebar from "../../../department-components/operation-new/layout/Sidebar";
 import Topbar from "./../../../component/parent-component/parent-dashboard/layout/Topbar";
 const SEnquiryFormPage = () => {
@@ -13,7 +14,7 @@ const SEnquiryFormPage = () => {
         </div>
         <div className="flex-1 overflow-hidden relative z-10">
           <div className="h-full overflow-y-auto scrollbar-hide">
-            <NewEnquiryForm />
+            <NewEnquiryFormStep />
           </div>
         </div>
       </div>
