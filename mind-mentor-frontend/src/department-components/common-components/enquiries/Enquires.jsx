@@ -205,7 +205,7 @@ const DetailView = ({ data }) => (
 const Enquiries = () => {
   const navigate = useNavigate();
   const empId = localStorage.getItem("empId");
-  const department = localStorage.getItem("department")
+  const department = localStorage.getItem("department");
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -213,7 +213,7 @@ const Enquiries = () => {
     const loadLeaves = async () => {
       try {
         const data = await fetchAllEnquiries();
-        console.log(data)
+        console.log(data);
 
         // Add serial numbers to rows
         const rowsWithSlNo = data.map((item, index) => ({
@@ -358,7 +358,7 @@ const Enquiries = () => {
 
   return (
     <ThemeProvider theme={theme}>
-      <WalkthroughGuide/>
+      <WalkthroughGuide />
       <Fade in={true}>
         <Box sx={{ width: "100%", height: "100%", p: 3, ml: "auto" }}>
           <Paper
@@ -385,7 +385,7 @@ const Enquiries = () => {
                 Enquiries
               </Typography>
               <Button
-              // className="add-enquiry-btn"
+                // className="add-enquiry-btn"
                 variant="contained"
                 color="primary"
                 component={Link}
@@ -402,8 +402,7 @@ const Enquiries = () => {
                 setViewDialog,
                 enquiryStatus,
                 handleMoveProspects,
-                handleShowLogs,
-             
+                handleShowLogs
               )}
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel}
@@ -428,29 +427,71 @@ const Enquiries = () => {
               }}
               sx={{
                 height: 500,
+                border: "none",
                 "& .MuiDataGrid-cell:focus": {
                   outline: "none",
                 },
-                "& .MuiDataGrid-row:hover": {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.04),
+                // Enhanced row hover effects
+                "& .MuiDataGrid-row": {
+                  transition: "all 0.2s ease-in-out",
+                  cursor: "pointer",
+                  "&:hover": {
+                    backgroundColor: alpha("#642b8f", 0.08),
+                    transform: "translateY(-1px)",
+                    boxShadow: "0 4px 8px rgba(100, 43, 143, 0.1)",
+                  },
                 },
+                // Enhanced cell hover effects
+                "& .MuiDataGrid-cell": {
+                  transition: "background-color 0.2s ease",
+                  "&:hover": {
+                    backgroundColor: alpha("#642b8f", 0.12),
+                  },
+                },
+                // Header styling
                 "& .MuiDataGrid-columnHeader": {
                   backgroundColor: "#642b8f",
                   color: "white",
                   fontWeight: 600,
+                  "&:hover": {
+                    backgroundColor: "#7b3ca8", // Slightly lighter shade for hover
+                  },
                 },
+                // Selected row styling
+                "& .MuiDataGrid-row.Mui-selected": {
+                  backgroundColor: alpha("#642b8f", 0.15),
+                  "&:hover": {
+                    backgroundColor: alpha("#642b8f", 0.2),
+                  },
+                },
+                // Footer styling
                 "& .MuiDataGrid-footerContainer": {
                   display: "flex",
                   justifyContent: "flex-end",
+                  borderTop: "1px solid rgba(100, 43, 143, 0.1)",
                 },
-                "& .MuiDataGrid-root": {
-                  overflow: "hidden",
+                // Column separator styling
+                "& .MuiDataGrid-columnSeparator": {
+                  color: alpha("#642b8f", 0.2),
                 },
+                // Checkbox styling
                 "& .MuiCheckbox-root.Mui-checked": {
-                  color: "#FFFFFF",
+                  color: "#642b8f",
                 },
                 "& .MuiDataGrid-columnHeader .MuiCheckbox-root": {
                   color: "#FFFFFF",
+                },
+                // Cell border styling
+                "& .MuiDataGrid-cell": {
+                  borderBottom: "1px solid rgba(100, 43, 143, 0.1)",
+                },
+                // Additional responsive hover effects
+                "@media (hover: hover)": {
+                  "& .MuiDataGrid-row:hover": {
+                    backgroundColor: alpha("#642b8f", 0.08),
+                    transform: "translateY(-1px)",
+                    boxShadow: "0 4px 8px rgba(100, 43, 143, 0.1)",
+                  },
                 },
               }}
             />
