@@ -55,33 +55,139 @@ const columns = (
     editable: true,
   },
   {
-    field: "latestAction",
-    headerName: "Last Action",
-    width: 150,
-    renderCell: (params) => (
-      <Tooltip title="View Logs" arrow>
-        <IconButton
-          size="small"
-          onClick={() => handleShowLogs(params.row._id)}
-          sx={{
-            bgcolor: alpha(theme.palette.primary.main, 0.1),
-            color: theme.palette.primary.main,
-            "&:hover": {
-              bgcolor: alpha(theme.palette.primary.main, 0.2),
-            },
-            padding: "4px 8px",
-            borderRadius: "4px",
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <HistoryIcon size={16} />
-            <Typography variant="caption">
-              {params.value || "No actions"}
-            </Typography>
+    field: "disposition",
+    headerName: "Status",
+    width: 210,
+    renderCell: (params) => {
+      // Get the latest status or default value
+      const lastStatus = params.row.latestAction || "No Status";
+      return (
+        <Tooltip title={lastStatus} arrow >
+          <Box
+            onClick={() => handleShowLogs(params.row._id)}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-start",
+              gap: 1,
+              bgcolor: alpha(theme.palette.primary.main, 0.04),
+              color: theme.palette.primary.main,
+              padding: "6px 12px",
+              borderRadius: "8px",
+              cursor: "pointer",
+              width: "95%",
+              border: "2px solid",
+              borderColor: alpha(theme.palette.primary.main, 0.5),
+              transition: "all 0.2s ease-in-out",
+              position: "relative",
+              overflow: "hidden",
+              marginTop:"2px",
+
+              // Hover effects
+              "&:hover": {
+                bgcolor: alpha(theme.palette.primary.main, 0.08),
+                borderColor: alpha(theme.palette.primary.main, 0.3),
+                transform: "translateY(-1px)",
+                boxShadow: `0 4px 8px ${alpha(
+                  theme.palette.primary.main,
+                  0.15
+                )}`,
+
+                // Icon rotation on hover
+                "& .history-icon": {
+                  transform: "rotate(-20deg)",
+                },
+
+                // Badge glow effect
+                "& .status-badge": {
+                  bgcolor: alpha(theme.palette.primary.main, 0.15),
+                },
+              },
+
+              // Active state
+              "&:active": {
+                transform: "translateY(0)",
+                boxShadow: "none",
+              },
+            }}
+          >
+            {/* Status Icon */}
+            <Box
+              className="status-badge"
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                bgcolor: alpha(theme.palette.primary.main, 0.1),
+                borderRadius: "6px",
+                padding: "4px",
+                transition: "all 0.2s ease",
+              }}
+            >
+              <HistoryIcon
+                size={16}
+                className="history-icon"
+                style={{
+                  transition: "transform 0.2s ease",
+                }}
+              />
+            </Box>
+
+            {/* Status Text */}
+            <Box sx={{ flex: 1 }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  fontWeight: 500,
+                  fontSize: "0.75rem",
+                  color: "primary",
+                  textTransform: "capitalize",
+                  display: "block",
+                  lineHeight: 1.2,
+                }}
+              >
+                {lastStatus}
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{
+                  fontSize: "0.65rem",
+                  color: theme.palette.text.secondary,
+                  display: "block",
+                  lineHeight: 1.2,
+                }}
+              >
+                Click to view history
+              </Typography>
+            </Box>
+
+            {/* Subtle Arrow Indicator */}
+            <Box
+              sx={{
+                opacity: 0.5,
+                transition: "transform 0.2s ease",
+                transform: "translateX(-4px)",
+                ".MuiBox-root:hover &": {
+                  transform: "translateX(0)",
+                  opacity: 0.8,
+                },
+              }}
+            >
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </Box>
           </Box>
-        </IconButton>
-      </Tooltip>
-    ),
+        </Tooltip>
+      );
+    },
   },
 
   {
@@ -128,7 +234,7 @@ const columns = (
     field: "createdAt",
     headerName: "Created At",
     width: 200,
-    valueFormatter: (params) =>params.value,
+    valueFormatter: (params) => params.value,
   },
   {
     field: "kidsAge",
@@ -200,7 +306,6 @@ const columns = (
     width: 150,
     editable: true,
   },
-
 
   {
     field: "moveToProspect",

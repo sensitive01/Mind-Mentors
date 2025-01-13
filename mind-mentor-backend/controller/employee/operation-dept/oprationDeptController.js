@@ -410,12 +410,12 @@ const getAllEnquiries = async (req, res) => {
         if (enquiry.logs) {
           const lastLog = await enquiryLogs
             .findOne({ _id: enquiry.logs })
-            .sort({ createdAt: -1 })
-            .limit(1);
+         
           const sortedLogs = lastLog.logs.sort(
             (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
           );
           latestAction = sortedLogs[0].action;
+          console.log("lastLog",lastLog)
         }
 
         const formatDate = (date) => {
@@ -773,13 +773,14 @@ const addNotes = async (req, res) => {
     // Prepare logs for changes
     const logs = [];
     const actionDescription = []; // For a summary of changes
+    const oldNote = currentEntry.notes||"Empty Note"
 
-    if (notesToSave !== currentEntry.notes) {
+    if (notesToSave !== currentEntry.notes ||notesToSave!=="") {
       logs.push({
         employeeId: empId,
         employeeName: empData.firstName,
         comment: `Updated notes from "${currentEntry.notes}" to "${notesToSave}"`,
-        action: ` ${empData.firstName} in ${empData.department} department updated notes from "${currentEntry.notes}" to "${notesToSave}"`,
+        action: ` ${empData.firstName} in ${empData.department} department updated notes from "${oldNote}" to "${notesToSave}"`,
         createdAt: new Date(),
       });
       actionDescription.push("Notes Updated");

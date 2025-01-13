@@ -57,9 +57,9 @@ const columns = (
   {
     field: "latestAction",
     headerName: "Last Action",
-    width: 150,
+    width: 210,
     renderCell: (params) => (
-      <Tooltip title="View Logs" arrow>
+      <Tooltip title={params.value || "No actions"} arrow>
         <IconButton
           size="small"
           onClick={() => handleShowLogs(params.row._id)}
