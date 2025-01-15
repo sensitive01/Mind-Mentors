@@ -255,6 +255,7 @@ import MarketingAssignedTaskTable from "./pages/employee/marketing/MarketingAssi
 import MarketingNewTaskForm from "./pages/employee/marketing/MarketingNewTaskForm";
 import MarketingTaskLogs from "./pages/employee/marketing/MarketingTaskLogs";
 import EnrollmentWalkThrougPage from "./pages/employee/operation-employee/EnrollmentWalkThrougPage";
+import ShowAllStatusLogs from "./pages/employee/operation-employee/ShowAllStatusLogs";
 
 function App() {
   return (
@@ -339,6 +340,8 @@ function App() {
           <Route path="/operation/department/dashboard"  element={<OperationDashboardPage />} />
           <Route path="/operation/department/enquiry-list" element={<ListingEnquiries />} />
           <Route path="/operation/department/show-complete-enquiry-logs/:id"  element={<ShowAllEnquiryLogs />}/>
+          <Route path="/operation/department/show-complete-status-logs/:id"  element={<ShowAllStatusLogs />}/>
+
           <Route path="/operation/department/enquiry-form" element={<SEnquiryFormPage />}/>
           <Route path="/operation/department/prospects"  element={<ProspectPage />} />
           <Route path="/operation/department/attendance" element={<EmpAttendance />}/>

@@ -14,6 +14,7 @@ const moment = require("moment");
 const ClassSchedule = require("../../../model/classSheduleModel");
 const ConductedClass = require("../../../model/conductedClassSchema");
 const ActivityLog = require("../../../model/taskLogModel");
+const NotesSection = require("../../../model/enquiryNoteSection");
 
 // Email Verification
 
@@ -194,7 +195,6 @@ const enquiryFormData = async (req, res) => {
   }
 };
 
-
 const updateEnquiryDetails = async (req, res) => {
   try {
     const { enqId, step } = req.params;
@@ -220,13 +220,6 @@ const updateEnquiryDetails = async (req, res) => {
     res.status(500).json({ message: "Internal server error", error: err });
   }
 };
-
-
-
-
-
-
-
 
 const updateProspectData = async (req, res) => {
   try {
@@ -393,6 +386,76 @@ const updateProspectData = async (req, res) => {
 };
 
 // Get All Enquiries
+// const getAllEnquiries = async (req, res) => {
+//   try {
+//     const enquiries = await OperationDept.find({ enquiryField: "enquiryList" });
+
+//     const customizedEnquiries = await Promise.all(
+//       enquiries.map(async (enquiry) => {
+//         const parentName = `${enquiry.parentFirstName || ""} ${
+//           enquiry.parentLastName || ""
+//         }`.trim();
+//         const kidName = `${enquiry.kidFirstName || ""} ${
+//           enquiry.kidLastName || ""
+//         }`.trim();
+
+//         let latestAction = null;
+//         if (enquiry.logs) {
+//           const lastLog = await enquiryLogs.findOne({ _id: enquiry.logs });
+
+//           const sortedLogs = lastLog.logs.sort(
+//             (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+//           );
+//           latestAction = sortedLogs[0].action;
+//         }
+
+//         let lastNoteAction = await NotesSection.findOne(
+//           { enqId: enquiry._id },
+//           { "notes.disposition": 1 }
+//         );
+//         console.log(".........................................")
+//         console.log("lastNoteAction==>", lastNoteAction);
+//         console.log(".........................................")
+
+//         if (lastNoteAction) {
+//           const sortedLogs = lastNoteAction.notes.sort(
+//             (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+//           );
+//           lastNoteAction = sortedLogs[sortedLogs.length-1];
+//         }
+//         console.log("lastNoteAction",lastNoteAction)
+
+//         const formatDate = (date) => {
+//           if (!date) return null;
+//           const d = new Date(date);
+//           const day = String(d.getDate()).padStart(2, "0");
+//           const month = String(d.getMonth() + 1).padStart(2, "0");
+//           const year = d.getFullYear();
+//           return `${day}-${month}-${year}`;
+//         };
+
+//         const createdAt = formatDate(enquiry.createdAt);
+//         const updatedAt = formatDate(enquiry.updatedAt);
+
+//         return {
+//           ...enquiry.toObject(),
+//           parentName,
+//           kidName,
+//           latestAction,
+
+//           createdAt,
+//           updatedAt,
+//         };
+//       })
+//     );
+
+//     res.status(200).json(customizedEnquiries);
+//   } catch (error) {
+//     console.log("Error", error);
+//     res.status(500).json({ message: "Error fetching data" });
+//   }
+// };
+
 const getAllEnquiries = async (req, res) => {
   try {
     const enquiries = await OperationDept.find({ enquiryField: "enquiryList" });
@@ -408,14 +471,23 @@ const getAllEnquiries = async (req, res) => {
 
         let latestAction = null;
         if (enquiry.logs) {
-          const lastLog = await enquiryLogs
-            .findOne({ _id: enquiry.logs })
-         
-          const sortedLogs = lastLog.logs.sort(
-            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-          );
-          latestAction = sortedLogs[0].action;
-          console.log("lastLog",lastLog)
+          const lastLog = await enquiryLogs.findOne({ _id: enquiry.logs });
+          if (lastLog?.logs?.length) {
+            const sortedLogs = lastLog.logs.sort(
+              (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+            );
+            latestAction = sortedLogs[0]?.action || null;
+          }
+        }
+
+        let lastNoteAction = null;
+        const noteSection = await NotesSection.findOne(
+          { enqId: enquiry._id },
+          { notes: 1 }
+        );
+        if (noteSection?.notes?.length) {
+          // Assuming notes are in chronological order
+          lastNoteAction = noteSection.notes[noteSection.notes.length - 1];
         }
 
         const formatDate = (date) => {
@@ -435,6 +507,7 @@ const getAllEnquiries = async (req, res) => {
           parentName,
           kidName,
           latestAction,
+          lastNoteAction: lastNoteAction?.disposition || "None",
           createdAt,
           updatedAt,
         };
@@ -447,9 +520,6 @@ const getAllEnquiries = async (req, res) => {
     res.status(500).json({ message: "Error fetching data" });
   }
 };
-
-
-
 
 const getProspectsData = async (req, res) => {
   try {
@@ -476,6 +546,15 @@ const getProspectsData = async (req, res) => {
           latestAction = sortedLogs[0].action;
         }
 
+        let lastNoteAction = null;
+        const noteSection = await NotesSection.findOne(
+          { enqId: enquiry._id },
+          { notes: 1 }
+        );
+        if (noteSection?.notes?.length) {
+          lastNoteAction = noteSection.notes[noteSection.notes.length - 1];
+        }
+
         const formatDate = (date) => {
           if (!date) return null;
           const d = new Date(date);
@@ -493,6 +572,8 @@ const getProspectsData = async (req, res) => {
           parentName,
           kidName,
           latestAction,
+          lastNoteAction: lastNoteAction?.disposition || "None",
+
           createdAt,
           updatedAt,
         };
@@ -505,12 +586,6 @@ const getProspectsData = async (req, res) => {
     res.status(500).json({ message: "Error fetching data" });
   }
 };
-
-
-
-
-
-
 
 // Update Enquiry
 const updateEnquiry = async (req, res) => {
@@ -545,7 +620,7 @@ const deleteEnquiry = async (req, res) => {
 // Update Enquiry Status (Cold/Warm)
 const updateEnquiryStatus = async (req, res) => {
   try {
-    console.log("Status update", req.body,req.params);
+    console.log("Status update", req.body, req.params);
 
     const { id } = req.params;
     const { enquiryStatus, empId } = req.body;
@@ -724,12 +799,177 @@ const scheduleDemo = async (req, res) => {
 };
 
 // Add Notes
+// const addNotes = async (req, res) => {
+//   try {
+//     console.log("Add notes", req.body);
+//     const { id } = req.params; // Enquiry ID
+//     const { notes, empId } = req.body;
+//     const { enquiryStatus, disposition,notes } = notes;
+
+//     // Fetch employee details
+//     const empData = await Employee.findOne(
+//       { _id: empId },
+//       { firstName: 1, department: 1 }
+//     );
+//     if (!empData) {
+//       return res.status(404).json({ message: "Employee not found" });
+//     }
+
+//     console.log("Employee Data", empData);
+
+//     // Ensure that notes is a string
+//     // let notesToSave = notes;
+//     // if (typeof notes === "object") {
+//     //   notesToSave = notes.notes || "";
+//     // }
+//     const formattedDateTime = new Intl.DateTimeFormat("en-US", {
+//       dateStyle: "medium",
+//       timeStyle: "short",
+//     }).format(new Date());
+
+//     // Validate enquiryStatus and disposition
+//     const validEnquiryStatus = [
+//       "Pending",
+//       "Qualified Lead",
+//       "Unqualified Lead",
+//     ];
+//     const validDisposition = ["RnR", "Call Back", "None"];
+
+//     // if (enquiryStatus && !validEnquiryStatus.includes(enquiryStatus)) {
+//     //   return res.status(400).json({ message: "Invalid enquiryStatus value" });
+//     // }
+
+//     // if (disposition && !validDisposition.includes(disposition)) {
+//     //   return res.status(400).json({ message: "Invalid disposition value" });
+//     // }
+
+//     // Fetch the current entry to compare changes
+//     const currentEntry = await OperationDept.findById(id);
+//     console.log("currentEntry",currentEntry)
+//     if (!currentEntry) {
+//       return res.status(404).json({ message: "Enquiry not found" });
+//     }
+
+//     // Prepare logs for changes
+//     const logs = [];
+//     const actionDescription = []; // For a summary of changes
+//     const oldNote = currentEntry.notes || "Empty Note";
+//     console.log("Old note", oldNote);
+
+//     if (
+//       notesToSave !== currentEntry.notes ||
+//       oldNote !== "Empty Note" ||
+//       oldNote !== ""
+//     ) {
+//       logs.push({
+//         employeeId: empId,
+//         employeeName: empData.firstName,
+//         comment: `Updated notes from "${currentEntry.notes}" to "${notesToSave}"`,
+//         action: ` ${empData.firstName} in ${empData.department} department updated notes from "${oldNote}" to "${notesToSave}"  on ${formattedDateTime}`,
+//         createdAt: new Date(),
+//       });
+//       actionDescription.push("Notes Updated");
+//     }
+
+//     if (
+//       (enquiryStatus && enquiryStatus !== currentEntry.enquiryStatus) ||
+//       currentEntry.enquiryStatus !== ""
+//     ) {
+//       logs.push({
+//         employeeId: empId,
+//         employeeName: empData.firstName,
+//         comment: `Changed enquiryStatus from "${currentEntry.enquiryStatus}" to "${enquiryStatus}"`,
+//         action: ` ${empData.firstName} in ${empData.department} department updated enquiry status from "${currentEntry.enquiryStatus}" to "${enquiryStatus}"  on ${formattedDateTime}`,
+//         createdAt: new Date(),
+//       });
+//       actionDescription.push("Enquiry Status Updated");
+//     }
+
+//     if (disposition && disposition !== currentEntry.disposition||currentEntry.disposition!=="") {
+//       logs.push({
+//         employeeId: empId,
+//         employeeName: empData.firstName,
+//         comment: `Changed disposition from "${currentEntry.disposition}" to "${disposition}"`,
+//         action: `${empData.firstName} in ${empData.department} department Updated disposition from "${currentEntry.disposition}" to "${disposition}" on ${formattedDateTime} `,
+//         createdAt: new Date(),
+//       });
+//       actionDescription.push("Disposition Updated");
+//     }
+
+//     // Update the OperationDept entry
+//     const updatedEntry = await OperationDept.findByIdAndUpdate(
+//       id,
+//       {
+//         notes: notesToSave,
+//         enquiryStatus: enquiryStatus || currentEntry.enquiryStatus,
+//         disposition: disposition,
+//       },
+//       { new: true }
+//     );
+
+//     const noteToAdd = {
+//       enquiryStatus:
+//         ` ${empData.firstName} in ${empData.department} department updated enquiry status from "${currentEntry.enquiryStatus}" to "${enquiryStatus}"` ||
+//         currentEntry.enquiryStatus,
+//       disposition:
+//         `${empData.firstName} in ${empData.department} department Updated disposition from "${currentEntry.disposition}" to "${disposition}"` ||
+//         currentEntry.disposition,
+//       note:
+//         `${empData.firstName} in ${empData.department} department updated notes from "${oldNote}" to "${notesToSave}"` ||
+//         currentEntry.notes,
+//     };
+
+//     let notesSection = await NotesSection.findOne({ enqId: id });
+
+//     if (!notesSection) {
+//       notesSection = new NotesSection({
+//         enqId: id,
+//         notes: [noteToAdd],
+//       });
+//     } else {
+//       notesSection.notes.push(noteToAdd);
+//     }
+
+//     await notesSection.save();
+
+//     if (!updatedEntry) {
+//       return res.status(404).json({ message: "Enquiry not found" });
+//     }
+
+//     // Update logs in the Log model
+//     const logId = currentEntry.logs; // Assuming logs field contains the Log document ID
+//     const logUpdate = await enquiryLogs.findByIdAndUpdate(
+//       logId,
+//       { $push: { logs: { $each: logs } } }, // Append the prepared logs
+//       { new: true }
+//     );
+
+//     if (!logUpdate) {
+//       return res.status(404).json({ message: "Log document not found" });
+//     }
+
+//     // Respond with success
+//     res.status(200).json({
+//       success: true,
+//       message: `Enquiry updated successfully. Actions performed: ${actionDescription.join(
+//         ", "
+//       )}`,
+//       data: updatedEntry,
+//     });
+//   } catch (error) {
+//     console.error("Error adding notes:", error);
+//     res
+//       .status(500)
+//       .json({ message: "Error adding notes", error: error.message });
+//   }
+// };
+
 const addNotes = async (req, res) => {
   try {
     console.log("Add notes", req.body);
     const { id } = req.params; // Enquiry ID
     const { notes, empId } = req.body;
-    const { enquiryStatus, disposition } = notes;
+    const { enquiryStatus, disposition, notes: notesToSave } = notes;
 
     // Fetch employee details
     const empData = await Employee.findOne(
@@ -742,67 +982,58 @@ const addNotes = async (req, res) => {
 
     console.log("Employee Data", empData);
 
-    // Ensure that notes is a string
-    let notesToSave = notes;
-    if (typeof notes === "object") {
-      notesToSave = notes.notes || "";
-    }
-
-    // Validate enquiryStatus and disposition
-    const validEnquiryStatus = [
-      "Pending",
-      "Qualified Lead",
-      "Unqualified Lead",
-    ];
-    const validDisposition = ["RnR", "Call Back", "None"];
-
-    if (enquiryStatus && !validEnquiryStatus.includes(enquiryStatus)) {
-      return res.status(400).json({ message: "Invalid enquiryStatus value" });
-    }
-
-    if (disposition && !validDisposition.includes(disposition)) {
-      return res.status(400).json({ message: "Invalid disposition value" });
-    }
+    const formattedDateTime = new Intl.DateTimeFormat("en-US", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(new Date());
 
     // Fetch the current entry to compare changes
     const currentEntry = await OperationDept.findById(id);
+    console.log("currentEntry", currentEntry);
     if (!currentEntry) {
       return res.status(404).json({ message: "Enquiry not found" });
     }
 
     // Prepare logs for changes
     const logs = [];
-    const actionDescription = []; // For a summary of changes
-    const oldNote = currentEntry.notes||"Empty Note"
+    const actionDescription = [];
+    const oldNote = currentEntry.notes || "Empty Note";
 
-    if (notesToSave !== currentEntry.notes ||notesToSave!=="") {
+    // Determine the values to save, falling back to old values if new ones are empty
+    const updatedNotes = notesToSave !== "" ? notesToSave : currentEntry.notes;
+    const updatedEnquiryStatus =
+      enquiryStatus !== "" ? enquiryStatus : currentEntry.enquiryStatus;
+    const updatedDisposition =
+      disposition !== "" ? disposition : currentEntry.disposition;
+
+    if (updatedNotes !== currentEntry.notes) {
       logs.push({
         employeeId: empId,
         employeeName: empData.firstName,
-        comment: `Updated notes from "${currentEntry.notes}" to "${notesToSave}"`,
-        action: ` ${empData.firstName} in ${empData.department} department updated notes from "${oldNote}" to "${notesToSave}"`,
+        comment: `Updated notes from "${currentEntry.notes}" to "${updatedNotes}"`,
+        action: `${empData.firstName} in ${empData.department} department updated notes from "${oldNote}" to "${updatedNotes}" on ${formattedDateTime}`,
         createdAt: new Date(),
       });
       actionDescription.push("Notes Updated");
     }
 
-    if (enquiryStatus && enquiryStatus !== currentEntry.enquiryStatus) {
+    if (updatedEnquiryStatus !== currentEntry.enquiryStatus) {
       logs.push({
         employeeId: empId,
         employeeName: empData.firstName,
-        comment: `Changed enquiryStatus from "${currentEntry.enquiryStatus}" to "${enquiryStatus}"`,
-        action: ` ${empData.firstName} in ${empData.department} department updated enquiry status from "${currentEntry.enquiryStatus}" to "${enquiryStatus}" `,
+        comment: `Changed enquiryStatus from "${currentEntry.enquiryStatus}" to "${updatedEnquiryStatus}"`,
+        action: `${empData.firstName} in ${empData.department} department updated enquiry status from "${currentEntry.enquiryStatus}" to "${updatedEnquiryStatus}" on ${formattedDateTime}`,
         createdAt: new Date(),
       });
       actionDescription.push("Enquiry Status Updated");
     }
 
-    if (disposition && disposition !== currentEntry.disposition) {
+    if (updatedDisposition !== currentEntry.disposition) {
       logs.push({
         employeeId: empId,
         employeeName: empData.firstName,
-        comment: `Changed disposition from "${currentEntry.disposition}" to "${disposition}"`,
-        action: `${empData.firstName} in ${empData.department} department Updated disposition from "${currentEntry.disposition}" to "${disposition}" `,
+        comment: `Changed disposition from "${currentEntry.disposition}" to "${updatedDisposition}"`,
+        action: `${empData.firstName} in ${empData.department} department updated disposition from "${currentEntry.disposition}" to "${updatedDisposition}" on ${formattedDateTime}`,
         createdAt: new Date(),
       });
       actionDescription.push("Disposition Updated");
@@ -812,22 +1043,47 @@ const addNotes = async (req, res) => {
     const updatedEntry = await OperationDept.findByIdAndUpdate(
       id,
       {
-        notes: notesToSave,
-        enquiryStatus: enquiryStatus || currentEntry.enquiryStatus,
-        disposition: disposition || currentEntry.disposition,
+        notes: updatedNotes,
+        enquiryStatus: updatedEnquiryStatus,
+        disposition: updatedDisposition,
       },
       { new: true }
     );
+
+    const noteToAdd = {
+      enquiryStatus:
+        `${empData.firstName} in ${empData.department} department updated enquiry status from "${currentEntry.enquiryStatus}" to "${updatedEnquiryStatus}"` ||
+        currentEntry.enquiryStatus,
+      disposition:
+        `${empData.firstName} in ${empData.department} department updated disposition from "${currentEntry.disposition}" to "${updatedDisposition}"` ||
+        currentEntry.disposition,
+      note:
+        `${empData.firstName} in ${empData.department} department updated notes from "${oldNote}" to "${updatedNotes}"` ||
+        currentEntry.notes,
+    };
+
+    let notesSection = await NotesSection.findOne({ enqId: id });
+
+    if (!notesSection) {
+      notesSection = new NotesSection({
+        enqId: id,
+        notes: [noteToAdd],
+      });
+    } else {
+      notesSection.notes.push(noteToAdd);
+    }
+
+    await notesSection.save();
 
     if (!updatedEntry) {
       return res.status(404).json({ message: "Enquiry not found" });
     }
 
     // Update logs in the Log model
-    const logId = currentEntry.logs; // Assuming logs field contains the Log document ID
+    const logId = currentEntry.logs;
     const logUpdate = await enquiryLogs.findByIdAndUpdate(
       logId,
-      { $push: { logs: { $each: logs } } }, // Append the prepared logs
+      { $push: { logs: { $each: logs } } },
       { new: true }
     );
 
@@ -2293,7 +2549,35 @@ const getDropDownData = async (req, res) => {
   }
 };
 
+const fetchAllStatusLogs = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const notesData = await NotesSection.findOne({ enqId: id });
+
+    if (!notesData) {
+      return res.status(404).json({
+        success: false,
+        message: `No notes found for enquiry ID: ${id}`,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Notes retrieved successfully",
+      data: notesData,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching notes",
+      error: err.message,
+    });
+  }
+};
+
 module.exports = {
+  fetchAllStatusLogs,
+
   operationEmailVerification,
   operationPasswordVerification,
   enquiryFormData,
@@ -2339,5 +2623,5 @@ module.exports = {
   getMyLeaveData,
   getDropDownData,
   getMyIndividualLeave,
-  updateEnquiryDetails
+  updateEnquiryDetails,
 };

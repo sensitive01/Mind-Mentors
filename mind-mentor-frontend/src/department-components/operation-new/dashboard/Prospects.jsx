@@ -202,6 +202,8 @@ const DetailView = ({ data }) => (
 const Enquiries = () => {
   const navigate = useNavigate();
   const empId = localStorage.getItem("empId");
+  const department = localStorage.getItem("department");
+
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -349,6 +351,11 @@ const Enquiries = () => {
     navigate(`/operation/department/show-complete-enquiry-logs/${id}`);
   };
 
+  const handleShowStatus = (id) => {
+    console.log("Handle logs ", id);
+    navigate(`/${department}/department/show-complete-status-logs/${id}`);
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <Fade in={true}>
@@ -376,14 +383,7 @@ const Enquiries = () => {
               >
                 Prospect Data
               </Typography>
-              {/* <Button
-                variant="contained"
-                color="primary"
-                component={Link}
-                to="/employee-operation-enquiry-form"
-              >
-                + New Enquiry Form
-              </Button> */}
+             
             </Box>
             <DataGrid
               rows={rows}
@@ -393,7 +393,8 @@ const Enquiries = () => {
                 setViewDialog,
                 enquiryStatus,
                 handleMoveProspects,
-                handleShowLogs
+                handleShowLogs,
+                handleShowStatus
               )}
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel}
@@ -435,6 +436,8 @@ const Enquiries = () => {
                 // Enhanced cell hover effects
                 "& .MuiDataGrid-cell": {
                   transition: "background-color 0.2s ease",
+                  borderBottom: "1px solid rgba(100, 43, 143, 0.1)",
+
                   "&:hover": {
                     backgroundColor: alpha("#642b8f", 0.12),
                   },
@@ -473,9 +476,9 @@ const Enquiries = () => {
                   color: "#FFFFFF",
                 },
                 // Cell border styling
-                "& .MuiDataGrid-cell": {
-                  borderBottom: "1px solid rgba(100, 43, 143, 0.1)",
-                },
+                // "& .MuiDataGrid-cell": {
+                //   borderBottom: "1px solid rgba(100, 43, 143, 0.1)",
+                // },
                 // Additional responsive hover effects
                 "@media (hover: hover)": {
                   "& .MuiDataGrid-row:hover": {

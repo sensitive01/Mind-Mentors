@@ -21,6 +21,9 @@ operationRoute.get("/get-leaves/:levId", operationController.getMyIndividualLeav
 
 operationRoute.get("/get-dropdown-data", operationController.getDropDownData);
 
+operationRoute.get("/fetch-all-status-logs/:id", operationController.fetchAllStatusLogs);
+
+
 
 
 

@@ -278,6 +278,15 @@ export const fetchAllLogs = async (id) => {
   return response;
 };
 
+
+export const fetchAllStatusLogs = async (id) => {
+  const response = await operationDeptInstance.get(`/fetch-all-status-logs/${id}`);
+  return response;
+};
+
+
+
+
 export const getDemoClassandStudentData = async (classId) => {
   const response = await operationDeptInstance.get(`/get-demo-class-student-data/${classId}`);
   return response;
