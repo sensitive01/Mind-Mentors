@@ -304,6 +304,12 @@ export const getDemoClassandStudentData = async (enqId,classId) => {
 };
 
 
+export const getDemoClassandStudentDataGroup = async (classId) => {
+  const response = await operationDeptInstance.get(`/get-demo-class-student-data/${classId}`);
+  return response;
+};
+
+
 
 export const saveDemoClassDetails = async (classId,students,empId) => {
   const response = await operationDeptInstance.post(`/save-demo-class/${empId}`,{classId,students});

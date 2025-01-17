@@ -11,7 +11,7 @@ import {
   CheckCircle,
   GraduationCap
 } from "lucide-react";
-import { getDemoClassandStudentData, saveDemoClassDetails } from "../../../api/service/employee/EmployeeService";
+import { getDemoClassandStudentDataGroup, saveDemoClassDetails } from "../../../api/service/employee/EmployeeService";
 import { toast } from "react-toastify";
 
 const AssignDemoClass = () => {
@@ -25,7 +25,7 @@ const AssignDemoClass = () => {
   useEffect(() => {
     const fetchRequiredClassStudentData = async () => {
       try {
-        const response = await getDemoClassandStudentData(id);
+        const response = await getDemoClassandStudentDataGroup(id);
         setClassData(response?.data?.classData);
         setStudents(response?.data?.kidsData);
       } catch (error) {

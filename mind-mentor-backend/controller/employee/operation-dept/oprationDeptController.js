@@ -2379,6 +2379,47 @@ const getDemoClassAndStudentsData = async (req, res) => {
   }
 };
 
+const getDemoClassAndStudentsDataGroup = async (req, res) => {
+  try {
+    console.log(
+      "Welcome to getting the demo class and student data",
+      req.params
+    );
+    const { classId} = req.params;
+
+    // Find the class data by ID
+    const classData = await ClassSchedule.find({ _id: classId });
+
+    if (!classData) {
+      return res.status(404).json({ message: "Class not found" });
+    }
+
+    // Find kids data matching the program and level in arrays
+    const kidsData = await OperationDept.find(
+      {
+       
+        enquiryField: "prospects",
+        "scheduleDemo.status": "Pending",
+        programs: {
+          $elemMatch: {
+            program: classData[0].program,
+            level: classData[0].level,
+          },
+        },
+      },
+      { kidFirstName: 1, kidId: 1 } // Project only the required fields
+    );
+
+    console.log("Class Data", classData);
+    console.log("Kids Data", kidsData);
+
+    res.status(200).json({ classData, kidsData });
+  } catch (err) {
+    console.error("Error in getting the demo class and student data", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 const saveDemoClassData = async (req, res) => {
   try {
     console.log("Welcome to save the demo class", req.body, req.params);
@@ -2742,5 +2783,6 @@ module.exports = {
   getDropDownData,
   getMyIndividualLeave,
   updateEnquiryDetails,
-  moveBackToEnquiry
+  moveBackToEnquiry,
+  getDemoClassAndStudentsDataGroup
 };
