@@ -12,14 +12,10 @@ import {
   Grid,
   Paper,
   Slide,
-  TextField,
   ThemeProvider,
   Typography,
 } from "@mui/material";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
-import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
+
 import { alpha } from "@mui/material/styles";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { useEffect, useState } from "react";
@@ -30,11 +26,11 @@ import {
   fetchAllEnquiries,
   moveToProspects,
   updateEnquiryStatus,
-  addNotes,
 } from "../../../api/service/employee/EmployeeService";
 import toast from "react-hot-toast";
 import { ToastContainer } from "react-toastify";
 import WalkthroughGuide from "../walkThrough/EnrollMentWalkThrough";
+import DetailView from "./detailed-view/DetailView";
 
 const theme = createTheme({
   palette: {
@@ -98,110 +94,6 @@ const theme = createTheme({
   },
 });
 
-const DetailView = ({ data }) => (
-  <Grid container spacing={3} sx={{ p: 2 }}>
-    {Object.entries(data).map(([key, value]) => {
-      if (key !== "id") {
-        const formattedKey = key.replace(/([A-Z])/g, " $1").toUpperCase();
-
-        if (key === "scheduleDemo") {
-          return (
-            <Grid item xs={12} sm={6} md={4} key={key}>
-              <Box
-                sx={{
-                  p: 2,
-                  borderRadius: 2,
-                  bgcolor: alpha(theme.palette.primary.main, 0.04),
-                  height: "100%",
-                }}
-              >
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{ mb: 1, display: "block" }}
-                >
-                  SCHEDULED DEMO
-                </Typography>
-                <Typography variant="body1" color="text.primary">
-                  {value?.status || "N/A"}{" "}
-                </Typography>
-              </Box>
-            </Grid>
-          );
-        }
-
-        if (key === "logs" && Array.isArray(value)) {
-          return (
-            <Grid item xs={12} sm={6} md={4} key={key}>
-              <Box
-                sx={{
-                  p: 2,
-                  borderRadius: 2,
-                  bgcolor: alpha(theme.palette.primary.main, 0.04),
-                  height: "100%",
-                }}
-              >
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{ mb: 1, display: "block" }}
-                >
-                  LOGS
-                </Typography>
-                <Typography variant="body1" color="text.primary">
-                  {value.length > 0
-                    ? value.map((log, index) => (
-                        <div key={log._id}>
-                          <strong>
-                            {index + 1}. {log.action}
-                          </strong>{" "}
-                          <Typography variant="caption" color="text.secondary">
-                            {new Date(log.createdAt).toLocaleString()}
-                          </Typography>
-                        </div>
-                      ))
-                    : "No logs available"}
-                </Typography>
-              </Box>
-            </Grid>
-          );
-        }
-
-        return (
-          <Grid item xs={12} sm={6} md={4} key={key}>
-            <Box
-              sx={{
-                p: 2,
-                borderRadius: 2,
-                bgcolor: alpha(theme.palette.primary.main, 0.04),
-                height: "100%",
-              }}
-            >
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ mb: 1, display: "block" }}
-              >
-                {formattedKey}
-              </Typography>
-              <Typography variant="body1" color="text.primary">
-                {Array.isArray(value)
-                  ? value
-                      .map((prog) => `${prog.program} (${prog.level})`)
-                      .join(", ")
-                  : value && typeof value === "object" && value !== null
-                  ? "N/A"
-                  : value || "N/A"}{" "}
-              </Typography>
-            </Box>
-          </Grid>
-        );
-      }
-      return null;
-    })}
-  </Grid>
-);
-
 const Enquiries = () => {
   const navigate = useNavigate();
   const empId = localStorage.getItem("empId");
@@ -215,7 +107,6 @@ const Enquiries = () => {
         const data = await fetchAllEnquiries();
         console.log(data);
 
-        // Add serial numbers to rows
         const rowsWithSlNo = data.map((item, index) => ({
           ...item,
           slNo: index + 1, // Serial number starts at 1
@@ -274,61 +165,8 @@ const Enquiries = () => {
       console.error("Error updating enquiry status:", error);
     }
   };
-  const handleNoteSave = async () => {
-    console.log("noteDialog.rowData", noteDialog.rowData);
-    if (noteDialog.rowData) {
-      const updatedNotes = noteDialog.noteText;
-      console.log("updated notes", updatedNotes);
-      const id = noteDialog.rowData._id;
-      let updatedEnquiryStatus = noteDialog.enquiryStatus;
-      let updatedDisposition = noteDialog.disposition;
 
-      console.log("Updated Notes:", updatedNotes);
-      console.log("Updated Enquiry Status:", updatedEnquiryStatus);
-      console.log("Updated Disposition:", updatedDisposition);
 
-      const validEnquiryStatus = [
-        "Pending",
-        "Qualified Lead",
-        "Unqualified Lead",
-      ];
-      const validDisposition = ["RnR", "Call Back", "None"];
-
-      if (!validEnquiryStatus.includes(updatedEnquiryStatus)) {
-        updatedEnquiryStatus = "Pending";
-      }
-      if (!validDisposition.includes(updatedDisposition)) {
-        updatedDisposition = "None";
-      }
-
-      setRows((prevRows) =>
-        prevRows.map((row) =>
-          row._id === id
-            ? {
-                ...row,
-                notes: updatedNotes,
-                enquiryStatus: updatedEnquiryStatus,
-                disposition: updatedDisposition,
-              }
-            : row
-        )
-      );
-
-      try {
-        console.log("--->", updatedNotes);
-        await addNotes(id, empId, {
-          notes: updatedNotes,
-          enquiryStatus: updatedEnquiryStatus,
-          disposition: updatedDisposition,
-        });
-        console.log("Notes saved successfully");
-      } catch (error) {
-        console.error("Error saving notes:", error);
-      }
-
-      console.log("setting rows", rows);
-    }
-  };
 
   const handleRowEditStop = (params, event) => {
     event.defaultMuiPrevented = true;
@@ -360,8 +198,6 @@ const Enquiries = () => {
     console.log("Handle logs ", id);
     navigate(`/${department}/department/show-complete-status-logs/${id}`);
   };
-
-  
 
   return (
     <ThemeProvider theme={theme}>
@@ -416,12 +252,10 @@ const Enquiries = () => {
               onPaginationModelChange={setPaginationModel}
               pageSizeOptions={[5, 10, 25]}
               disableRowSelectionOnClick
-              editMode="row"
+              // editMode="row"
               getRowId={(row) => row._id}
-              onRowDoubleClick={(params) => {
+              onRowClick={(params) => {
                 setViewDialog({ open: true, rowData: params.row });
-
-                params.row.isEditable = true;
               }}
               onRowEditStop={handleRowEditStop}
               processRowUpdate={handleProcessRowUpdate}
@@ -525,7 +359,7 @@ const Enquiries = () => {
               </DialogTitle>
               <Divider />
               <DialogContent>
-                <DetailView data={viewDialog.rowData || {}} />
+                <DetailView data={viewDialog.rowData || {}}  />
               </DialogContent>
               <Divider sx={{ borderColor: "#aa88be" }} />
               <DialogActions sx={{ p: 2.5 }}>
@@ -542,131 +376,7 @@ const Enquiries = () => {
                 </Button>
               </DialogActions>
             </Dialog>
-            {/* Notes Dialog */}
-            <Dialog
-              open={noteDialog.open}
-              onClose={() =>
-                enquiryStatus({
-                  open: false,
-                  rowData: null,
-                  noteText: "",
-                  enquiryStatus: "",
-                  disposition: "",
-                })
-              }
-              maxWidth="sm"
-              fullWidth
-              TransitionComponent={Slide}
-              TransitionProps={{ direction: "up" }}
-              BackdropProps={{
-                sx: {
-                  backgroundColor: "rgba(0, 0, 0, 0.5)",
-                  backdropFilter: "blur(4px)",
-                },
-              }}
-            >
-              <DialogTitle
-                sx={{
-                  color: "#ffffff",
-                  fontWeight: 600,
-                  background: "linear-gradient(to right, #642b8f, #aa88be)",
-                }}
-              >
-                Add Note
-              </DialogTitle>
-              <Divider />
-              <DialogContent>
-                {/* Enquiry Stage Select Box */}
-                <FormControl fullWidth sx={{ mt: 2 }}>
-                  <InputLabel>Enquiry Stage</InputLabel>
-                  <Select
-                    value={noteDialog.enquiryStatus}
-                    onChange={(e) =>
-                      enquiryStatus((prev) => ({
-                        ...prev,
-                        enquiryStatus: e.target.value,
-                      }))
-                    }
-                    label="Enquiry Stage"
-                  >
-                    <MenuItem value="Pending">Pending</MenuItem>
-                    <MenuItem value="Qualified Lead">Qualified Lead</MenuItem>
-                    <MenuItem value="Unqualified Lead">
-                      Unqualified Lead
-                    </MenuItem>
-                  </Select>
-                </FormControl>
-
-                <FormControl fullWidth sx={{ mt: 2 }}>
-                  <InputLabel>Disposition</InputLabel>
-                  <Select
-                    value={noteDialog.disposition}
-                    onChange={(e) =>
-                      enquiryStatus((prev) => ({
-                        ...prev,
-                        disposition: e.target.value,
-                      }))
-                    }
-                    label="Disposition"
-                  >
-                    <MenuItem value="RnR">RnR</MenuItem>
-                    <MenuItem value="Call Back">Call Back</MenuItem>
-                    <MenuItem value="None">None</MenuItem>
-                  </Select>
-                </FormControl>
-
-                <TextField
-                  label="Note"
-                  value={noteDialog.noteText}
-                  onChange={(e) =>
-                    enquiryStatus((prev) => ({
-                      ...prev,
-                      noteText: e.target.value,
-                    }))
-                  }
-                  multiline
-                  rows={4}
-                  fullWidth
-                  sx={{ mt: 1 }}
-                />
-              </DialogContent>
-              <Divider sx={{ borderColor: "#aa88be" }} />
-              <DialogActions sx={{ p: 2.5 }}>
-                <Button
-                  onClick={handleNoteSave}
-                  variant="contained"
-                  className="px-8 py-3 bg-[#642b8f] text-white rounded-lg font-medium hover:bg-[#aa88be] transition-colors shadow-lg hover:shadow-xl"
-                  sx={{
-                    bgcolor: "primary.main",
-                    "&:hover": {
-                      bgcolor: "primary",
-                    },
-                  }}
-                >
-                  Save Note
-                </Button>
-                <Button
-                  className="px-8 py-3 bg-white border-2 border-[#642b8f] text-[#642b8f] rounded-lg font-medium hover:bg-[#efe8f0] transition-colors"
-                  onClick={() =>
-                    enquiryStatus({
-                      open: false,
-                      rowData: null,
-                      noteText: "",
-                      enquiryStatus: "",
-                      disposition: "",
-                    })
-                  }
-                  variant="outlined"
-                  sx={{
-                    color: "text.primary",
-                    borderColor: "divider",
-                  }}
-                  type="reset"
-                >
-                  Cancel
-                </Button>
-              </DialogActions>
-            </Dialog>
+           
           </Paper>
         </Box>
       </Fade>

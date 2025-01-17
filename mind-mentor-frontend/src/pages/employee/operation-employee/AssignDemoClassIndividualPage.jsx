@@ -1,8 +1,7 @@
-import { useState } from "react";
-import AssignDemoClass from "../../../department-components/common-components/demo-class-part/AssignDemoClass";
+import AssignDemoClass from "../../../department-components/common-components/prospects/AssignIndividualDemoClass";
 import Sidebar from "../../../department-components/operation-new/layout/Sidebar";
-import Topbar from "./../../../component/parent-component/parent-dashboard/layout/Topbar";
-const MyTaskPage = () => {
+import Topbar from "../../../component/parent-component/parent-dashboard/layout/Topbar";
+const AssignDemoClassIndividualPage = () => {
   return (
     <div className="flex h-screen w-screen overflow-hidden">
       <div className="z-30 flex-shrink-0">
@@ -24,4 +23,4 @@ const MyTaskPage = () => {
   );
 };
 
-export default MyTaskPage;
+export default AssignDemoClassIndividualPage;

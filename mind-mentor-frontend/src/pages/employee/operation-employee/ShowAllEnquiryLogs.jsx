@@ -1,7 +1,6 @@
-
-import CompleteEnquiryLogs from "../../../department-components/operation-new/dashboard/CompleteEnquiryLogs";
+import CompleteEnquiryLogs from "../../../department-components/common-components/enquiries/CompleteEnquiryLogs";
 import Sidebar from "../../../department-components/operation-new/layout/Sidebar";
-import Topbar from './../../../component/parent-component/parent-dashboard/layout/Topbar';
+import Topbar from "./../../../component/parent-component/parent-dashboard/layout/Topbar";
 
 const ShowAllEnquiryLogs = () => {
   return (

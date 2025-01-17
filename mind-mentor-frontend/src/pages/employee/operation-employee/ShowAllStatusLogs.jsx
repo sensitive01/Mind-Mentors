@@ -1,7 +1,7 @@
 
 import Sidebar from "../../../department-components/operation-new/layout/Sidebar";
 import Topbar from '../../../component/parent-component/parent-dashboard/layout/Topbar';
-import CompleteStatusLogs from "../../../department-components/operation-new/dashboard/CompleteStatusLogs";
+import CompleteStatusLogs from "../../../department-components/common-components/enquiries/CompleteStatusLogs";
 
 const ShowAllStatusLogs = () => {
   return (

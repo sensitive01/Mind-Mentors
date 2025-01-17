@@ -1,5 +1,4 @@
-import { useState } from "react";
-import Invoices from "../../../department-components/operation-new/dashboard/Invoices";
+import Invoices from "../../../department-components/common-components/payment-invoice/Invoices";
 import Sidebar from "../../../department-components/operation-new/layout/Sidebar";
 import Topbar from './../../../component/parent-component/parent-dashboard/layout/Topbar';
 

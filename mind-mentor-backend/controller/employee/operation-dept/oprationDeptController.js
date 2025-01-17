@@ -385,6 +385,104 @@ const updateProspectData = async (req, res) => {
   }
 };
 
+
+const moveBackToEnquiry = async (req, res) => {
+  try {
+    console.log("..........................................");
+    console.log("move back to enquiry",req.params,req.body);
+    const formattedDateTime = new Intl.DateTimeFormat("en-US", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(new Date());
+
+    const { id } = req.params;
+    const { empId } = req.body;
+
+    const empData = await Employee.findOne(
+      { _id: empId },
+      { firstName: 1, department: 1 }
+    );
+    if (!empData) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+    console.log("Employee Data", empData);
+
+    const enquiryData = await OperationDept.findOne({ _id: id });
+    if (!enquiryData) {
+      return res.status(404).json({ message: "Enquiry data not found" });
+    }
+    console.log("Enquiry Data", enquiryData);
+
+    // 4. Update the Log in the Log Database
+    if (enquiryData.logs) {
+      console.log("insode the logs");
+      const logUpdate = {
+        employeeId: empId,
+        employeeName: empData.firstName,
+        action: `Enuiry data is moved to prospects by ${empData.firstName} in ${empData.department} department on ${formattedDateTime}`,
+
+        updatedAt: new Date(),
+      };
+
+      const newLogs = await enquiryLogs.findByIdAndUpdate(
+        { _id: enquiryData.logs },
+        {
+          $push: { logs: logUpdate },
+        },
+        { new: true }
+      );
+
+      console.log("new log updated", newLogs);
+    }
+
+    // 5. Create Log Entries for the Action
+    const logs = [
+      {
+        employeeId: empId,
+        employeeName: empData.firstName,
+
+        action: `Enquiry moved to prospects by ${
+          empData.name
+        } on ${new Date().toLocaleString()}`,
+        createdAt: new Date(),
+      },
+    ];
+
+   
+
+    
+
+    // 6. Update the OperationDept Entry
+    const updatedEntry = await OperationDept.findByIdAndUpdate(
+      { _id: id },
+      {
+        $set: { enquiryField: "enquiryList" },
+      },
+      { new: true }
+    );
+
+    if (!updatedEntry) {
+      return res.status(404).json({ message: "Prospect data not found" });
+    }
+
+    console.log("updatedEntry", updatedEntry);
+
+    // Return Success Response
+    res.status(200).json({
+      success: true,
+      message: "Prospect data  successfully and moved to enquiry ",
+      data: updatedEntry,
+ 
+    });
+  } catch (error) {
+    console.error("Error updating prospect data", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update prospect data. Please try again later.",
+    });
+  }
+};
+
 // Get All Enquiries
 // const getAllEnquiries = async (req, res) => {
 //   try {
@@ -590,15 +688,34 @@ const getProspectsData = async (req, res) => {
 // Update Enquiry
 const updateEnquiry = async (req, res) => {
   try {
+    console.log("Welcome to update enquiry", req.params, req.body);
     const { id } = req.params;
+
+   
+    if (req.body.parentName) {
+      const parentNameParts = req.body.parentName.trim().split(" ");
+      req.body.parentFirstName = parentNameParts[0] || "";
+      req.body.parentLastName = parentNameParts.slice(1).join(" ") || "";
+    }
+
+  
+    if (req.body.kidName) {
+      const kidNameParts = req.body.kidName.trim().split(" ");
+      req.body.kidFirstName = kidNameParts[0] || "";
+      req.body.kidLastName = kidNameParts.slice(1).join(" ") || "";
+    }
+
     const updatedEntry = await OperationDept.findByIdAndUpdate(id, req.body, {
       new: true,
     });
+
     if (!updatedEntry) {
       return res.status(404).json({ message: "Enquiry not found" });
     }
+
     res.status(200).json(updatedEntry);
   } catch (error) {
+    console.error("Error updating data:", error);
     res.status(500).json({ message: "Error updating data" });
   }
 };
@@ -2227,7 +2344,7 @@ const getDemoClassAndStudentsData = async (req, res) => {
       "Welcome to getting the demo class and student data",
       req.params
     );
-    const { classId } = req.params;
+    const { enqId ,classId} = req.params;
 
     // Find the class data by ID
     const classData = await ClassSchedule.find({ _id: classId });
@@ -2239,6 +2356,7 @@ const getDemoClassAndStudentsData = async (req, res) => {
     // Find kids data matching the program and level in arrays
     const kidsData = await OperationDept.find(
       {
+        _id:enqId,
         enquiryField: "prospects",
         "scheduleDemo.status": "Pending",
         programs: {
@@ -2624,4 +2742,5 @@ module.exports = {
   getDropDownData,
   getMyIndividualLeave,
   updateEnquiryDetails,
+  moveBackToEnquiry
 };

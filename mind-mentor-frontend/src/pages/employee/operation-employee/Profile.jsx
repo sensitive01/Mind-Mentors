@@ -1,19 +1,24 @@
-import { Divider } from "@mui/material";
-import Profiles from "../../../department-components/operation-new/dashboard/Profile";
+import Profiles from "../../../department-components/common-components/profile/EnrollementProfile";
 import Sidebar from "../../../department-components/operation-new/layout/Sidebar";
 import Topbar from './../../../component/parent-component/parent-dashboard/layout/Topbar';
 
 const Profile = () => {
   return (
-    <div className="flex min-h-screen bg-white">
-      <div className="fixed inset-y-0 left-0 z-50 w-64">
-        <Sidebar />
+    <div className="flex h-screen w-screen overflow-hidden">
+    <div className="z-30">
+      <Sidebar />
+    </div>
+    <div className="flex-1 flex flex-col relative">
+      <div className="sticky top-0 z-20">
+        <Topbar />
       </div>
-      <div className="ml-64 flex-1"> {/* Adjusted margin-left to match sidebar width */}
-        <Topbar/>
-\        <Profiles />
+      <div className="flex-1 overflow-hidden relative z-10">
+        <div className="h-full overflow-y-auto scrollbar-hide">
+          <Profiles />
+        </div>
       </div>
     </div>
+  </div>
   );
 };
 

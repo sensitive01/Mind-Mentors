@@ -9,7 +9,7 @@ import {
   DialogTitle,
   Divider,
   Fade,
-  Grid,
+
   Paper,
   Slide,
   TextField,
@@ -27,13 +27,12 @@ import { Link, useNavigate } from "react-router-dom";
 import columns from "./Columns";
 
 import {
-  fetchAllEnquiries,
-  moveToProspects,
   updateEnquiryStatus,
   addNotes,
+  fetchProspectsEnquiries,
+  handleMoveToEnquiry,
 } from "../../../api/service/employee/EmployeeService";
-import toast from "react-hot-toast";
-import { ToastContainer } from "react-toastify";
+import DetailView from "./detailed-view/DetailView";
 
 const theme = createTheme({
   palette: {
@@ -97,120 +96,19 @@ const theme = createTheme({
   },
 });
 
-const DetailView = ({ data }) => (
-  <Grid container spacing={3} sx={{ p: 2 }}>
-    {Object.entries(data).map(([key, value]) => {
-      if (key !== "id") {
-        const formattedKey = key.replace(/([A-Z])/g, " $1").toUpperCase();
-
-        if (key === "scheduleDemo") {
-          return (
-            <Grid item xs={12} sm={6} md={4} key={key}>
-              <Box
-                sx={{
-                  p: 2,
-                  borderRadius: 2,
-                  bgcolor: alpha(theme.palette.primary.main, 0.04),
-                  height: "100%",
-                }}
-              >
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{ mb: 1, display: "block" }}
-                >
-                  SCHEDULED DEMO
-                </Typography>
-                <Typography variant="body1" color="text.primary">
-                  {value?.status || "N/A"}{" "}
-                </Typography>
-              </Box>
-            </Grid>
-          );
-        }
-
-        if (key === "logs" && Array.isArray(value)) {
-          return (
-            <Grid item xs={12} sm={6} md={4} key={key}>
-              <Box
-                sx={{
-                  p: 2,
-                  borderRadius: 2,
-                  bgcolor: alpha(theme.palette.primary.main, 0.04),
-                  height: "100%",
-                }}
-              >
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{ mb: 1, display: "block" }}
-                >
-                  LOGS
-                </Typography>
-                <Typography variant="body1" color="text.primary">
-                  {value.length > 0
-                    ? value.map((log, index) => (
-                        <div key={log._id}>
-                          <strong>
-                            {index + 1}. {log.action}
-                          </strong>{" "}
-                          <Typography variant="caption" color="text.secondary">
-                            {new Date(log.createdAt).toLocaleString()}
-                          </Typography>
-                        </div>
-                      ))
-                    : "No logs available"}
-                </Typography>
-              </Box>
-            </Grid>
-          );
-        }
-
-        return (
-          <Grid item xs={12} sm={6} md={4} key={key}>
-            <Box
-              sx={{
-                p: 2,
-                borderRadius: 2,
-                bgcolor: alpha(theme.palette.primary.main, 0.04),
-                height: "100%",
-              }}
-            >
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ mb: 1, display: "block" }}
-              >
-                {formattedKey}
-              </Typography>
-              <Typography variant="body1" color="text.primary">
-                {Array.isArray(value)
-                  ? value
-                      .map((prog) => `${prog.program} (${prog.level})`)
-                      .join(", ")
-                  : value && typeof value === "object" && value !== null
-                  ? "N/A"
-                  : value || "N/A"}{" "}
-              </Typography>
-            </Box>
-          </Grid>
-        );
-      }
-      return null;
-    })}
-  </Grid>
-);
-
-const Enquiries = () => {
+const Prospects = () => {
   const navigate = useNavigate();
   const empId = localStorage.getItem("empId");
+  const department = localStorage.getItem("department");
+
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadLeaves = async () => {
       try {
-        const data = await fetchAllEnquiries();
+        const data = await fetchProspectsEnquiries();
+        console.log(data);
 
         // Add serial numbers to rows
         const rowsWithSlNo = data.map((item, index) => ({
@@ -228,6 +126,7 @@ const Enquiries = () => {
 
     loadLeaves();
   }, []);
+
   const [noteDialog, enquiryStatus] = useState({
     open: false,
     rowData: null,
@@ -272,10 +171,8 @@ const Enquiries = () => {
     }
   };
   const handleNoteSave = async () => {
-    console.log("noteDialog.rowData", noteDialog.rowData);
     if (noteDialog.rowData) {
       const updatedNotes = noteDialog.noteText;
-      console.log("updated notes", updatedNotes);
       const id = noteDialog.rowData._id;
       let updatedEnquiryStatus = noteDialog.enquiryStatus;
       let updatedDisposition = noteDialog.disposition;
@@ -312,7 +209,6 @@ const Enquiries = () => {
       );
 
       try {
-        console.log("--->", updatedNotes);
         await addNotes(id, empId, {
           notes: updatedNotes,
           enquiryStatus: updatedEnquiryStatus,
@@ -341,16 +237,20 @@ const Enquiries = () => {
     console.error("Row update error:", error);
   };
 
-  const handleMoveProspects = async (id) => {
-    console.log(id);
-    const respose = await moveToProspects(id, empId);
+  const handleMoveBackToEnquiry = async (id) => {
+    console.log("new fundtion call");
+    const respose = await handleMoveToEnquiry(id, empId);
     console.log(respose);
-    toast.success("Enquiry move to prospects");
   };
 
   const handleShowLogs = (id) => {
     console.log("Handle logs ", id);
     navigate(`/operation/department/show-complete-enquiry-logs/${id}`);
+  };
+
+  const handleShowStatus = (id) => {
+    console.log("Handle logs ", id);
+    navigate(`/${department}/department/show-complete-status-logs/${id}`);
   };
 
   return (
@@ -378,17 +278,8 @@ const Enquiries = () => {
                 gutterBottom
                 sx={{ color: "text.primary", fontWeight: 600, mb: 3 }}
               >
-                Enquiries
+                Prospect Data
               </Typography>
-              <Button
-                data-tour="status-button"
-                variant="contained"
-                color="primary"
-                component={Link}
-                to="/operation/department/enquiry-form"
-              >
-                + New Enquiry Form
-              </Button>
             </Box>
             <DataGrid
               rows={rows}
@@ -397,20 +288,18 @@ const Enquiries = () => {
                 handleStatusToggle,
                 setViewDialog,
                 enquiryStatus,
-                handleMoveProspects,
+                handleMoveBackToEnquiry,
                 handleShowLogs,
-             
+                handleShowStatus
               )}
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel}
               pageSizeOptions={[5, 10, 25]}
               disableRowSelectionOnClick
-              editMode="row"
+              // editMode="row"
               getRowId={(row) => row._id}
-              onRowDoubleClick={(params) => {
+              onRowClick={(params) => {
                 setViewDialog({ open: true, rowData: params.row });
-
-                params.row.isEditable = true;
               }}
               onRowEditStop={handleRowEditStop}
               processRowUpdate={handleProcessRowUpdate}
@@ -424,29 +313,69 @@ const Enquiries = () => {
               }}
               sx={{
                 height: 500,
+                border: "none",
                 "& .MuiDataGrid-cell:focus": {
                   outline: "none",
                 },
-                "& .MuiDataGrid-row:hover": {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.04),
+                // Enhanced row hover effects
+                "& .MuiDataGrid-row": {
+                  transition: "all 0.2s ease-in-out",
+                  cursor: "pointer",
+                  "&:hover": {
+                    backgroundColor: alpha("#642b8f", 0.08),
+                    transform: "translateY(-1px)",
+                    boxShadow: "0 4px 8px rgba(100, 43, 143, 0.1)",
+                  },
                 },
+                // Enhanced cell hover effects
+                "& .MuiDataGrid-cell": {
+                  transition: "background-color 0.2s ease",
+                  borderBottom: "1px solid rgba(100, 43, 143, 0.1)",
+
+                  "&:hover": {
+                    backgroundColor: alpha("#642b8f", 0.12),
+                  },
+                },
+                // Header styling
                 "& .MuiDataGrid-columnHeader": {
                   backgroundColor: "#642b8f",
                   color: "white",
                   fontWeight: 600,
+                  "&:hover": {
+                    backgroundColor: "#7b3ca8", // Slightly lighter shade for hover
+                  },
                 },
+                // Selected row styling
+                "& .MuiDataGrid-row.Mui-selected": {
+                  backgroundColor: alpha("#642b8f", 0.15),
+                  "&:hover": {
+                    backgroundColor: alpha("#642b8f", 0.2),
+                  },
+                },
+                // Footer styling
                 "& .MuiDataGrid-footerContainer": {
                   display: "flex",
                   justifyContent: "flex-end",
+                  borderTop: "1px solid rgba(100, 43, 143, 0.1)",
                 },
-                "& .MuiDataGrid-root": {
-                  overflow: "hidden",
+                // Column separator styling
+                "& .MuiDataGrid-columnSeparator": {
+                  color: alpha("#642b8f", 0.2),
                 },
+                // Checkbox styling
                 "& .MuiCheckbox-root.Mui-checked": {
-                  color: "#FFFFFF",
+                  color: "#642b8f",
                 },
                 "& .MuiDataGrid-columnHeader .MuiCheckbox-root": {
                   color: "#FFFFFF",
+                },
+
+                "@media (hover: hover)": {
+                  "& .MuiDataGrid-row:hover": {
+                    backgroundColor: alpha("#642b8f", 0.08),
+                    transform: "translateY(-1px)",
+                    boxShadow: "0 4px 8px rgba(100, 43, 143, 0.1)",
+                  },
                 },
               }}
             />
@@ -584,7 +513,7 @@ const Enquiries = () => {
                   sx={{
                     bgcolor: "primary.main",
                     "&:hover": {
-                      bgcolor: "primary",
+                      bgcolor: "primary.dark",
                     },
                   }}
                 >
@@ -615,16 +544,7 @@ const Enquiries = () => {
           </Paper>
         </Box>
       </Fade>
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        closeOnClick
-        pauseOnHover
-        draggable
-        pauseOnFocusLoss
-      />
     </ThemeProvider>
   );
 };
-export default Enquiries;
+export default Prospects;

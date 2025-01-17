@@ -46,10 +46,10 @@ import SEnquiryFormPage from "./pages/employee/operation-employee/SEnquiryFormPa
 
 import ListingEnquiries from "./pages/employee/operation-employee/ListingEnquiries";
 import ProspectPage from "./pages/employee/operation-employee/ProspectPage";
-import ReferalPage from "./pages/employee/operation-employee/ReferalPage";
+// import ReferalPage from "./pages/employee/operation-employee/ReferalPage";
 
 import SupportPages from "./pages/employee/operation-employee/SupportPage";
-import MessageStusTrackPage from "./pages/employee/operation-employee/MessageStusTrackPage";
+// import MessageStusTrackPage from "./pages/employee/operation-employee/MessageStusTrackPage";
 import SupportRequest from "./pages/employee/operation-employee/SupportRequest";
 import ScheduleClass from "./pages/employee/operation-employee/ScheduleClass";
 import LeavesPage from "./pages/employee/operation-employee/LeavesPage";
@@ -62,12 +62,12 @@ import CoachFeedback from "./pages/employee/operation-employee/CoachFeedback";
 import LeaveFormPage from "./pages/employee/operation-employee/LeaveFormPage";
 
 import TasksLogs from "./pages/employee/operation-employee/Logs";
-import MyTaskPage from "./pages/employee/operation-employee/MyTaskPage";
+// import MyTaskPage from "./pages/employee/operation-employee/MyTaskPage";
 import TaskAssignByMePage from "./pages/employee/operation-employee/TaskAssignByMePage";
 import TasksPage from "./pages/employee/operation-employee/TasksPage";
 import AssigneTaskPage from "./pages/employee/operation-employee/AssigneTasksPage";
 import ShowAllEnquiryLogs from "./pages/employee/operation-employee/ShowAllEnquiryLogs";
-import DemoClassShedulePage from "./pages/employee/operation-employee/DemoClassShedulePage";
+// import DemoClassShedulePage from "./pages/employee/operation-employee/DemoClassShedulePage";
 import AssignDemoClassPage from "./pages/employee/operation-employee/AssignDemoClassPage";
 
 import HolidayPage from "./pages/employee/operation-employee/HolidayPage";
@@ -149,7 +149,7 @@ import RenewalMyTasks from "./pages/employee/renewalassociate/RenewalMyTasks";
 import RenewalParents from './pages/employee/renewalassociate/RenewalParents';
 import RenewalProfile from "./pages/employee/renewalassociate/RenewalProfile";
 import RenewalPrograms from "./pages/employee/renewalassociate/RenewalPrograms";
-import RenewalReferal from "./pages/employee/renewalassociate/RenewalReferal";
+// import RenewalReferal from "./pages/employee/renewalassociate/RenewalReferal";
 import RenewalRenewal from './pages/employee/renewalassociate/RenewalRenewal';
 import RenewalScheduleClass from "./pages/employee/renewalassociate/RenewalScheduleClass";
 import RenewalSupport from "./pages/employee/renewalassociate/RenewalSupport";
@@ -256,6 +256,8 @@ import MarketingNewTaskForm from "./pages/employee/marketing/MarketingNewTaskFor
 import MarketingTaskLogs from "./pages/employee/marketing/MarketingTaskLogs";
 import EnrollmentWalkThrougPage from "./pages/employee/operation-employee/EnrollmentWalkThrougPage";
 import ShowAllStatusLogs from "./pages/employee/operation-employee/ShowAllStatusLogs";
+import DemoClassListIndividualPage from "./pages/employee/operation-employee/DemoClassListIndividualPage";
+import AssignDemoClassIndividualPage from "./pages/employee/operation-employee/AssignDemoClassIndividualPage";
 
 function App() {
   return (
@@ -333,45 +335,53 @@ function App() {
           
         
 
-          {/* <Route path="/employee-operation/taskslogs/:id"  element={<TasksLogs />}/>
-          <Route path="/employee-operation/taskslogs/:id" element={<TasksLogs />}/> */}
+       
 
 
           <Route path="/operation/department/dashboard"  element={<OperationDashboardPage />} />
           <Route path="/operation/department/enquiry-list" element={<ListingEnquiries />} />
           <Route path="/operation/department/show-complete-enquiry-logs/:id"  element={<ShowAllEnquiryLogs />}/>
           <Route path="/operation/department/show-complete-status-logs/:id"  element={<ShowAllStatusLogs />}/>
-
           <Route path="/operation/department/enquiry-form" element={<SEnquiryFormPage />}/>
           <Route path="/operation/department/prospects"  element={<ProspectPage />} />
+          <Route path="/operation/department/schedule-demo-class-list-individually/:enqId"  element={< DemoClassListIndividualPage />}/>
+          <Route path="/operation/department/assign-demo-class-individually/:enqId/:classId"  element={<AssignDemoClassIndividualPage />} />
+
+
+
+         
           <Route path="/operation/department/attendance" element={<EmpAttendance />}/>
           <Route path="/operation/department/list-mytask"  element={<TasksPage />} />
           <Route path="/operation/department/list-task-assigned-me" element={<AssigneTaskPage />} />
           <Route path="/operation/department/assign-new-task" element={<TaskAssignByMePage />} />
           <Route path="/operation/department/taskslogs/:id" element={<TasksLogs />}/>
-          <Route path="/operation/department/schedule-demo-class-list"  element={<ScheduleClass />}/>
-          <Route path="/operation/department/assign-demo-class/:id"  element={<AssignDemoClassPage />} />
           <Route path="/operation/department/leaves" element={<LeavesPage />} />
           <Route path="/operation/department/leaves/add" element={<LeaveFormPage />} />
           <Route path="/operation/department/edit-leaves/:id" element={<LeaveFormPage />} />
-          <Route path="/operation/department/student-report"  element={<StudentReport />}  />
-          <Route path="/operation/department/coach-feedback"  element={<CoachFeedback />} />
-          <Route path="/operation/department/invoice" element={<InvoicePage />} />
           <Route path="/operation/department/holidays"   element={<HolidayPage />}  />
           <Route path="/operation/department/supports" element={<SupportRequest />} />
           <Route path="/operation/department/support/add" element={<SupportPages />}  />
+          <Route path="/operation/department/schedule-demo-class-list"  element={<ScheduleClass />}/>
+          <Route path="/operation/department/assign-demo-class/:id"  element={<AssignDemoClassPage />} />
+          <Route path="/operation/department/student-report"  element={<StudentReport />}  />
+          <Route path="/operation/department/coach-feedback"  element={<CoachFeedback />} />
+          <Route path="/operation/department/invoice" element={<InvoicePage />} />
           <Route path="/operation/department/walk-through" element={<EnrollmentWalkThrougPage />}  />
+          <Route path="/operation/department/enrollment-profile" element={<Profile />} />
 
 
 
 
 
 
-          <Route path="/employee-operation/demoSheduleForm"   element={<DemoClassShedulePage />}  />
-          <Route path="/employee-operation-tasks/supportTrack"  element={<MessageStusTrackPage />}  />
-          <Route path="/employee-operation-tasks/add" element={<MyTaskPage />}  />
-          <Route path="/employee-operation/referal" element={<ReferalPage />} />
-          <Route path="/employee-operation/profile" element={<Profile />} />
+
+
+
+
+          {/* <Route path="/employee-operation/demoSheduleForm"   element={<DemoClassShedulePage />}  /> */}
+          {/* <Route path="/employee-operation-tasks/supportTrack"  element={<MessageStusTrackPage />}  /> */}
+          {/* <Route path="/operation/department/add-admin-support" element={<MyTaskPage />}  /> */}
+          {/* <Route path="/employee-operation/referal" element={<ReferalPage />} /> */}
 
 
 

@@ -1,4 +1,4 @@
-import Feedback from "../../../department-components/operation-new/dashboard/Feedback";
+import Feedback from "../../../department-components/common-components/reports/CoachFeedback";
 import Sidebar from "../../../department-components/operation-new/layout/Sidebar";
 import Topbar from './../../../component/parent-component/parent-dashboard/layout/Topbar';
 

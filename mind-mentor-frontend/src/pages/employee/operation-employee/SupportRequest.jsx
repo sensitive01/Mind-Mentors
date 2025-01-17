@@ -1,5 +1,4 @@
-import { useState } from "react";
-import SupportTable from "../../../department-components/operation-new/dashboard/SupportTable";
+import SupportTable from "../../../department-components/common-components/support/SupportTable";
 import Sidebar from "../../../department-components/operation-new/layout/Sidebar";
 import Topbar from './../../../component/parent-component/parent-dashboard/layout/Topbar';
 

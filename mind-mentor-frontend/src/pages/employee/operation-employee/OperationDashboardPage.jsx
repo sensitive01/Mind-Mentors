@@ -1,4 +1,4 @@
-import Dashboard from "../../../department-components/operation-new/dashboard/Dashboard";
+import Dashboard from "../../../department-components/common-components/dashboard/Dashboard";
 import Sidebar from "../../../department-components/operation-new/layout/Sidebar";
 import Topbar from "./../../../component/parent-component/parent-dashboard/layout/Topbar";
 

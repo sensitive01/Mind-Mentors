@@ -1,15 +1,16 @@
 // columns.js
 import { alpha } from "@mui/material/styles";
 import {
-  Zoom,
+ 
   Fade,
-  Grow,
+ 
   Box,
   Chip,
   Switch,
   IconButton,
   Tooltip,
   Typography,
+ 
 } from "@mui/material";
 
 import { HistoryIcon } from "lucide-react";
@@ -248,6 +249,65 @@ const columns = (
       );
     },
   },
+  {
+    field: "enquiryType",
+    headerName: "Type",
+    width: 150,
+    renderCell: (params) => (
+      <Fade in={true}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            color: params.value === "warm" ? "#F59E0B" : "#642b8f",
+            padding: "4px 12px",
+            borderRadius: "20px",
+            transition: "all 0.3s ease",
+          }}
+        >
+          {params.value}
+          <Switch
+            size="small"
+            checked={params.value === "warm"}
+            onChange={() => handleStatusToggle(params.row._id)}
+            onClick={(e) => e.stopPropagation()}
+            className="status-update-btn"
+            sx={{
+              "& .MuiSwitch-switchBase.Mui-checked": {
+                color: "#642b8f",
+                "&:hover": {
+                  // backgroundColor: alpha(theme.palette.warm.main, 0.1),
+                },
+              },
+              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                // backgroundColor: theme.palette.warm.main,
+              },
+            }}
+          />
+        </Box>
+      </Fade>
+    ),
+  },
+  {
+    field: "moveToProspect",
+    headerName: "Move to Enquiry",
+    width: 150,
+    renderCell: (params) => (
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          handleMoveProspects(params.row._id);
+        }}
+        className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md 
+                   transition-all duration-300 ease-in-out
+                   border-2 border-transparent
+                   hover:border-primary hover:border-2 hover:bg-white hover:text-primary"
+      >
+        {"Move to Enquiry"}
+      </button>
+    ),
+  },
 
   {
     field: "disposition",
@@ -255,9 +315,8 @@ const columns = (
     width: 210,
     renderCell: (params) => {
       // Get the latest status or default value
-      const lastStatus = params.row.latestAction || "No Status";
       return (
-        <Tooltip title={lastStatus} arrow>
+        <Tooltip title={"Logs"} arrow>
           <Box
             onClick={() => handleShowLogs(params.row._id)}
             sx={{
@@ -341,7 +400,7 @@ const columns = (
                   lineHeight: 1.2,
                 }}
               >
-                {lastStatus}
+                {"Logs"}
               </Typography>
               <Typography
                 variant="caption"
@@ -385,46 +444,6 @@ const columns = (
     },
   },
 
-  {
-    field: "enquiryType",
-    headerName: "Type",
-    width: 150,
-    renderCell: (params) => (
-      <Fade in={true}>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            color: params.value === "warm" ? "#F59E0B" : "#642b8f",
-            padding: "4px 12px",
-            borderRadius: "20px",
-            transition: "all 0.3s ease",
-          }}
-        >
-          {params.value}
-          <Switch
-            size="small"
-            checked={params.value === "warm"}
-            onChange={() => handleStatusToggle(params.row._id)}
-            onClick={(e) => e.stopPropagation()}
-            className="status-update-btn"
-            sx={{
-              "& .MuiSwitch-switchBase.Mui-checked": {
-                color: "#642b8f",
-                "&:hover": {
-                  // backgroundColor: alpha(theme.palette.warm.main, 0.1),
-                },
-              },
-              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                // backgroundColor: theme.palette.warm.main,
-              },
-            }}
-          />
-        </Box>
-      </Fade>
-    ),
-  },
   {
     field: "createdAt",
     headerName: "Created At",
@@ -495,43 +514,6 @@ const columns = (
     headerName: "School Pincode",
     width: 150,
     editable: true,
-  },
-
-  {
-    field: "moveToProspect",
-    headerName: "Move to Prospects",
-    width: 150,
-    renderCell: (params) => (
-      <Fade in={true}>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            color: params.row.isProspect ? "#1D4ED8" : "#64748B",
-            padding: "4px 12px",
-            borderRadius: "20px",
-            transition: "all 0.3s ease",
-          }}
-        >
-          {params.row.isProspect ? "Prospect" : "Enquiry"}
-          <Switch
-            size="small"
-            checked={params.row.isProspect}
-            onChange={() => handleMoveProspects(params.row._id)}
-            onClick={(e) => e.stopPropagation()}
-            sx={{
-              "& .MuiSwitch-switchBase.Mui-checked": {
-                color: "#1D4ED8",
-              },
-              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                backgroundColor: "#1D4ED8",
-              },
-            }}
-          />
-        </Box>
-      </Fade>
-    ),
   },
 ];
 export default columns;

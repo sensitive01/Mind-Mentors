@@ -26,9 +26,9 @@ export const fetchAllEnquiries = async () => {
 };
 
 // Update Enquiry
-export const updateEnquiry = async (id, updatedData) => {
-  const response = await operationDeptInstance.put(`/enquiry-form/${id}`, updatedData);
-  return response.data;
+export const updateEnquiry = async ( updatedData) => {
+  const response = await operationDeptInstance.put(`/enquiry-form/${updatedData._id}`, updatedData);
+  return response;
 };
 
 // Delete Enquiry
@@ -272,6 +272,17 @@ export const moveToProspects = async (id,empId) => {
   return response;
 };
 
+export const handleMoveToEnquiry = async (id,empId) => {
+  console.log("Calliing...")
+  const response = await operationDeptInstance.put(`/move-to-enquiry/${id}`,{empId});
+  return response;
+};
+
+
+
+
+
+
 
 export const fetchAllLogs = async (id) => {
   const response = await operationDeptInstance.get(`/fetch-all-logs/${id}`);
@@ -287,8 +298,8 @@ export const fetchAllStatusLogs = async (id) => {
 
 
 
-export const getDemoClassandStudentData = async (classId) => {
-  const response = await operationDeptInstance.get(`/get-demo-class-student-data/${classId}`);
+export const getDemoClassandStudentData = async (enqId,classId) => {
+  const response = await operationDeptInstance.get(`/get-demo-class-student-data/${enqId}/${classId}`);
   return response;
 };
 

@@ -1,4 +1,4 @@
-import Prospects from "../../../department-components/operation-new/dashboard/Prospects";
+import Prospects from "../../../department-components/common-components/prospects/Prospects";
 import Sidebar from "../../../department-components/operation-new/layout/Sidebar";
 import Topbar from './../../../component/parent-component/parent-dashboard/layout/Topbar';
 
