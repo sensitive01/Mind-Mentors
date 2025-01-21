@@ -9,7 +9,7 @@ import {
   DialogTitle,
   Divider,
   Fade,
-  Grid,
+  IconButton,
   Paper,
   Slide,
   ThemeProvider,
@@ -19,7 +19,7 @@ import {
 import { alpha } from "@mui/material/styles";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import columns from "./Columns";
 
 import {
@@ -29,8 +29,10 @@ import {
 } from "../../../api/service/employee/EmployeeService";
 import toast from "react-hot-toast";
 import { ToastContainer } from "react-toastify";
-import WalkthroughGuide from "../walkThrough/EnrollMentWalkThrough";
 import DetailView from "./detailed-view/DetailView";
+import { ClipboardList, Edit, X } from "lucide-react";
+import TaskAssignmentOverlay from "../prospects/detailed-view/SlideDialog";
+import EnquiryRelatedTaskComponent from "../prospects/enquiry-task/EnquiryRelatedTaskComponent";
 
 const theme = createTheme({
   palette: {
@@ -100,6 +102,15 @@ const Enquiries = () => {
   const department = localStorage.getItem("department");
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [confirmDialog, setConfirmDialog] = useState({
+    open: false,
+    studentName: "",
+    onConfirm: null,
+  });
+  const [isTaskOverlayOpen, setIsTaskOverlayOpen] = useState(false);
+  const [enqId, setEnqId] = useState();
+
+
 
   useEffect(() => {
     const loadLeaves = async () => {
@@ -122,16 +133,11 @@ const Enquiries = () => {
 
     loadLeaves();
   }, []);
-  const [noteDialog, enquiryStatus] = useState({
-    open: false,
-    rowData: null,
-    noteText: "",
-    disposition: "",
-    enquiryStatus: "",
-  });
+
   const [viewDialog, setViewDialog] = useState({
     open: false,
     rowData: null,
+    showEdit: false,
   });
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
@@ -166,8 +172,6 @@ const Enquiries = () => {
     }
   };
 
-
-
   const handleRowEditStop = (params, event) => {
     event.defaultMuiPrevented = true;
   };
@@ -183,10 +187,38 @@ const Enquiries = () => {
   };
 
   const handleMoveProspects = async (id) => {
-    console.log(id);
-    const respose = await moveToProspects(id, empId);
-    console.log(respose);
-    toast.success("Enquiry move to prospects");
+    console.log("clicked",id)
+
+    const student = rows.find((row) => row._id === id);
+    console.log("clicked 2",student)
+    if (!student) return;
+
+    setConfirmDialog({
+      open: true,
+      studentName: student.kidFirstName,
+      onConfirm: async () => {
+        try {
+          const response = await moveToProspects(id, empId);
+          if (response.status === 200 || response.success) {
+            // Update the local state to reflect the change
+            setRows(rows.filter((row) => row._id !== id));
+
+            toast.success(
+              `Successfully moved ${student.kidFirstName} to prospects`
+            );
+          } else {
+            toast.error(`Failed to move ${student.kidFirstName} to prospects`);
+          }
+        } catch (error) {
+          console.error("Error moving to prospects:", error);
+          toast.error(
+            `Failed to move ${student.kidFirstName} to prospects: ${error.message}`
+          );
+        } finally {
+          setConfirmDialog({ open: false, studentName: "", onConfirm: null });
+        }
+      },
+    });
   };
 
   const handleShowLogs = (id) => {
@@ -201,7 +233,6 @@ const Enquiries = () => {
 
   return (
     <ThemeProvider theme={theme}>
-      <WalkthroughGuide />
       <Fade in={true}>
         <Box sx={{ width: "100%", height: "100%", p: 3, ml: "auto" }}>
           <Paper
@@ -215,35 +246,15 @@ const Enquiries = () => {
             }}
           >
             <Box
-              mb={3}
               display="flex"
               justifyContent="space-between"
               alignItems="center"
-            >
-              <Typography
-                variant="h5"
-                gutterBottom
-                sx={{ color: "text.primary", fontWeight: 600, mb: 3 }}
-              >
-                Enquiries
-              </Typography>
-              <Button
-                // className="add-enquiry-btn"
-                variant="contained"
-                color="primary"
-                component={Link}
-                to={`/${department}/department/enquiry-form`}
-              >
-                + New Enquiry Form
-              </Button>
-            </Box>
+            ></Box>
             <DataGrid
               rows={rows}
               columns={columns(
                 theme,
                 handleStatusToggle,
-                setViewDialog,
-                enquiryStatus,
                 handleMoveProspects,
                 handleShowLogs,
                 handleShowStatus
@@ -342,7 +353,13 @@ const Enquiries = () => {
 
             <Dialog
               open={viewDialog.open}
-              onClose={() => setViewDialog({ open: false, rowData: null })}
+              onClose={() => {
+                setViewDialog({
+                  open: false,
+                  rowData: null,
+                  showEdit: false,
+                });
+              }}
               maxWidth="md"
               fullWidth
               TransitionComponent={Slide}
@@ -353,30 +370,84 @@ const Enquiries = () => {
                   background: "linear-gradient(#642b8f, #aa88be)",
                   color: "#ffffff",
                   fontWeight: 600,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "16px",
                 }}
               >
-                Student Details
+                <div>Student Details</div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outlined"
+                    startIcon={<Edit size={18} />}
+                    onClick={() => {
+                      if (viewDialog.rowData) {
+                        setViewDialog((prev) => ({
+                          ...prev,
+                          showEdit: true,
+                        }));
+                      }
+                    }}
+                    sx={{
+                      borderColor: "#ffffff",
+                      color: "#ffffff",
+                      px: 3,
+                      py: 1,
+                      borderRadius: "20px",
+                      fontWeight: 600,
+                      textTransform: "none",
+                      backgroundColor: "transparent",
+                      "&:hover": {
+                        backgroundColor: "#ffdb99",
+                        borderColor: "#ff9f00",
+                        color: "#ff9f00",
+                        boxShadow: "0 4px 8px rgba(255, 158, 51, 0.3)",
+                      },
+                    }}
+                  >
+                    Edit
+                  </Button>
+                  <IconButton
+                    onClick={() =>
+                      setViewDialog({ open: false, rowData: null })
+                    }
+                    sx={{
+                      color: "#ff4444",
+                      "&:hover": {
+                        backgroundColor: "rgba(255, 68, 68, 0.1)",
+                      },
+                    }}
+                  >
+                    <X size={24} />
+                  </IconButton>
+                </div>
               </DialogTitle>
+
               <Divider />
+
               <DialogContent>
-                <DetailView data={viewDialog.rowData || {}}  />
-              </DialogContent>
-              <Divider sx={{ borderColor: "#aa88be" }} />
-              <DialogActions sx={{ p: 2.5 }}>
-                <Button
-                  class="px-8 py-3 bg-[#642b8f] text-white rounded-lg font-medium hover:bg-[#aa88be] transition-colors shadow-lg hover:shadow-xl"
-                  onClick={() => setViewDialog({ open: false, rowData: null })}
-                  variant="outlined"
-                  sx={{
-                    color: "#f8a213",
-                    borderColor: "#f8a213",
+                <DetailView
+                  data={viewDialog.rowData || {}}
+                  showEdit={viewDialog.showEdit}
+                  onEditClose={() =>
+                    setViewDialog((prev) => ({ ...prev, showEdit: false }))
+                  }
+                  onEditSave={(updatedData) => {
+                    setRows((prevRows) =>
+                      prevRows.map((row) =>
+                        row._id === updatedData._id ? updatedData : row
+                      )
+                    );
+                    setViewDialog((prev) => ({
+                      ...prev,
+                      rowData: updatedData,
+                      showEdit: false,
+                    }));
                   }}
-                >
-                  Close
-                </Button>
-              </DialogActions>
+                />
+              </DialogContent>
             </Dialog>
-           
           </Paper>
         </Box>
       </Fade>
@@ -389,6 +460,186 @@ const Enquiries = () => {
         draggable
         pauseOnFocusLoss
       />
+      <Dialog
+        open={viewDialog.open}
+        onClose={() => {
+          setViewDialog({
+            open: false,
+            rowData: null,
+            showEdit: false,
+          });
+        }}
+        maxWidth="md"
+        fullWidth
+        TransitionComponent={Slide}
+        TransitionProps={{ direction: "up" }}
+      >
+        <DialogTitle
+          sx={{
+            background: "linear-gradient(#642b8f, #aa88be)",
+            color: "#ffffff",
+            fontWeight: 600,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "16px",
+          }}
+        >
+          <div>Student Details</div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outlined"
+              startIcon={<Edit size={18} />}
+              onClick={() => {
+                if (viewDialog.rowData) {
+                  setViewDialog((prev) => ({
+                    ...prev,
+                    showEdit: true,
+                  }));
+                }
+              }}
+              sx={{
+                borderColor: "#ffffff",
+                color: "#ffffff",
+                px: 3,
+                py: 1,
+                borderRadius: "20px",
+                fontWeight: 600,
+                textTransform: "none",
+                backgroundColor: "transparent",
+                "&:hover": {
+                  backgroundColor: "#ffdb99",
+                  borderColor: "#ff9f00",
+                  color: "#ff9f00",
+                  boxShadow: "0 4px 8px rgba(255, 158, 51, 0.3)",
+                },
+              }}
+            >
+              Edit
+            </Button>
+
+            <Button
+              variant="outlined"
+              startIcon={<ClipboardList size={18} />}
+              onClick={() => {
+                if (viewDialog.rowData) {
+                  setIsTaskOverlayOpen(true);
+                  setEnqId(viewDialog.rowData._id);
+                  // Close the view dialog
+                  setViewDialog({
+                    open: false,
+                    rowData: null,
+                    showEdit: false,
+                  });
+                  // Close the confirm dialog if it's open
+                  setConfirmDialog({
+                    open: false,
+                    studentName: "",
+                    onConfirm: null,
+                  });
+                }
+              }}
+              sx={{
+                borderColor: "#ffffff",
+                color: "#ffffff",
+                px: 3,
+                py: 1,
+                borderRadius: "20px",
+                fontWeight: 600,
+                textTransform: "none",
+                backgroundColor: "transparent",
+                "&:hover": {
+                  backgroundColor: "#a5d6a7",
+                  borderColor: "#2e7d32",
+                  color: "#2e7d32",
+                  boxShadow: "0 4px 8px rgba(46, 125, 50, 0.3)",
+                },
+              }}
+            >
+              Assign Task
+            </Button>
+            <IconButton
+              onClick={() => setViewDialog({ open: false, rowData: null })}
+              sx={{
+                color: "#ff4444",
+                "&:hover": {
+                  backgroundColor: "rgba(255, 68, 68, 0.1)",
+                },
+              }}
+            >
+              <X size={24} />
+            </IconButton>
+          </div>
+        </DialogTitle>
+
+        <Divider />
+
+        <DialogContent>
+          <DetailView
+            data={viewDialog.rowData || {}}
+            showEdit={viewDialog.showEdit}
+            onEditClose={() =>
+              setViewDialog((prev) => ({ ...prev, showEdit: false }))
+            }
+            onEditSave={(updatedData) => {
+              setRows((prevRows) =>
+                prevRows.map((row) =>
+                  row._id === updatedData._id ? updatedData : row
+                )
+              );
+              setViewDialog((prev) => ({
+                ...prev,
+                rowData: updatedData,
+                showEdit: false,
+              }));
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={confirmDialog.open}
+        onClose={() =>
+          setConfirmDialog({ open: false, studentName: "", onConfirm: null })
+        }
+      >
+        <DialogTitle>Confirm Move to Enquiry</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to move {confirmDialog.studentName} back to
+            Prospects?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() =>
+              setConfirmDialog({
+                open: false,
+                studentName: "",
+                onConfirm: null,
+              })
+            }
+            color="primary"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => confirmDialog.onConfirm()}
+            color="primary"
+            variant="contained"
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <TaskAssignmentOverlay
+        isOpen={isTaskOverlayOpen}
+        onClose={() => setIsTaskOverlayOpen(false)}
+      >
+        <EnquiryRelatedTaskComponent
+          id={enqId}
+          onClose={() => setIsTaskOverlayOpen(false)}
+        />
+      </TaskAssignmentOverlay>
     </ThemeProvider>
   );
 };

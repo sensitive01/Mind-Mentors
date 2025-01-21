@@ -141,16 +141,23 @@ const ModernSidebar = () => {
       color: iconColors.dashboard,
       link: "/operation/department/dashboard",
     },
+    // {
+    //   icon: <BusinessCenter />,
+    //   text: "Lead Management",
+    //   color: iconColors.leads,
+    //   subItems: [
+    //     { text: "Enquiries", link: "/operation/department/enquiry-list" },
+    //     { text: "Prospects", link: "/operation/department/prospects" },
+    //   ],
+    //   open: openLeadManagement,
+    //   onClick: () => setOpenLeadManagement(!openLeadManagement),
+    // },
+
     {
       icon: <BusinessCenter />,
       text: "Lead Management",
       color: iconColors.leads,
-      subItems: [
-        { text: "Enquiries", link: "/operation/department/enquiry-list" },
-        { text: "Prospects", link: "/operation/department/prospects" },
-      ],
-      open: openLeadManagement,
-      onClick: () => setOpenLeadManagement(!openLeadManagement),
+      link: "/operation/department/enrollment-data",
     },
     {
       icon: <AssignmentOutlined />,

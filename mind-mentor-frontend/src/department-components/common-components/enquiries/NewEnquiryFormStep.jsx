@@ -13,10 +13,11 @@ const NewEnquiryFormStep = () => {
   const { id } = useParams();
   const [activeStep, setActiveStep] = useState(0);
   const [enquiryId, setEnquiryId] = useState(id || null);
-  
+
   const [formData, setFormData] = useState({
     parentFirstName: "",
-    parentLastName: "",
+
+    contactNumber: "",
     whatsappNumber: "",
     email: "",
     source: "",
@@ -31,6 +32,7 @@ const NewEnquiryFormStep = () => {
     schoolPincode: "",
     empId,
   });
+  const [isSameAsContact, setIsSameAsContact] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -46,9 +48,31 @@ const NewEnquiryFormStep = () => {
         });
     }
   }, [id]);
-
   const handleInputChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prevData) => ({
+      ...prevData,
+      [field]: value,
+    }));
+    if (field === "contactNumber" && isSameAsContact) {
+      setFormData((prevData) => ({
+        ...prevData,
+        whatsappNumber: value,
+      }));
+    }
+  };
+  const handleCheckboxChange = () => {
+    setIsSameAsContact((prev) => !prev);
+    if (!isSameAsContact) {
+      setFormData((prevData) => ({
+        ...prevData,
+        whatsappNumber: formData.contactNumber,
+      }));
+    } else {
+      setFormData((prevData) => ({
+        ...prevData,
+        whatsappNumber: "",
+      }));
+    }
   };
 
   const handleProgramChange = (index, field, value) => {
@@ -97,7 +121,9 @@ const NewEnquiryFormStep = () => {
       case 0:
         return {
           parentFirstName: formData.parentFirstName,
-          parentLastName: formData.parentLastName,
+          contactNumber: formData.contactNumber,
+          isSameAsContact,
+
           whatsappNumber: formData.whatsappNumber,
           email: formData.email,
           source: formData.source,
@@ -126,20 +152,25 @@ const NewEnquiryFormStep = () => {
   const saveStepData = async (step) => {
     try {
       const stepData = getStepData(step);
-      
+
       if (!enquiryId) {
         // Create new enquiry for first step
-        const response = await operationDeptInstance.post('/enquiry-form', stepData);
-        console.log("Response",response)
+        const response = await operationDeptInstance.post(
+          "/enquiry-form",
+          stepData
+        );
+        console.log("Response", response);
         setEnquiryId(response.data.id);
         toast.success("Step 1 saved successfully!");
-      } 
-      else {
+      } else {
         // Update existing enquiry for subsequent steps
-        await operationDeptInstance.put(`/enquiry-form/${enquiryId}/step/${step + 1}`, stepData);
+        await operationDeptInstance.put(
+          `/enquiry-form/${enquiryId}/step/${step + 1}`,
+          stepData
+        );
         toast.success(`Step ${step + 1} saved successfully!`);
       }
-      
+
       return true;
     } catch (error) {
       console.error(`Error saving step ${step + 1}:`, error);
@@ -179,7 +210,6 @@ const NewEnquiryFormStep = () => {
     }
   };
 
-
   const renderStepContent = () => {
     switch (activeStep) {
       case 0:
@@ -193,7 +223,7 @@ const NewEnquiryFormStep = () => {
                 <div className="flex gap-4">
                   <input
                     type="text"
-                    placeholder="First Name *"
+                    placeholder="Parent Name *"
                     className="flex-1 p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors"
                     value={formData.parentFirstName}
                     onChange={(e) =>
@@ -201,39 +231,83 @@ const NewEnquiryFormStep = () => {
                     }
                     required
                   />
+                </div>
+              </div>
+            </div>
+            <div className="space-y-4">
+              {/* Checkbox moved to top */}
+              <div>
+                <label className="inline-flex items-center text-sm font-medium text-[#642b8f] hover:cursor-pointer">
                   <input
-                    type="text"
-                    placeholder="Last Name"
-                    className="flex-1 p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors"
-                    value={formData.parentLastName}
-                    onChange={(e) =>
-                      handleInputChange("parentLastName", e.target.value)
+                    type="checkbox"
+                    className="mr-2 accent-[#642b8f]"
+                    checked={isSameAsContact}
+                    onChange={handleCheckboxChange}
+                  />
+                  WhatsApp number is the same as the contact number
+                </label>
+              </div>
+
+              {/* Phone inputs in same line */}
+              <div className="flex gap-4 items-center ml-4">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Parent's Contact Number{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <PhoneInput
+                    country="in"
+                    value={formData.contactNumber}
+                    onChange={(value) =>
+                      handleInputChange("contactNumber", value)
                     }
+                    inputProps={{
+                      placeholder: "Enter contact number",
+                      required: true,
+                      className:
+                        "w-full p-4 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:ring-2 focus:ring-[#642b8f] focus:ring-opacity-50 outline-none placeholder-gray-400",
+                    }}
+                    containerClass="w-full"
+                    buttonClass="border-2 !border-[#aa88be] !rounded-l-lg"
+                    inputStyle={{
+                      width: "100%",
+                      height: "44px",
+                      fontSize: "16px",
+                    }}
+                    preferredCountries={["in"]}
+                  />
+                </div>
+
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Parent's WhatsApp Number{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <PhoneInput
+                    country="in"
+                    value={formData.whatsappNumber}
+                    onChange={(value) =>
+                      handleInputChange("whatsappNumber", value)
+                    }
+                    inputProps={{
+                      placeholder: "Enter WhatsApp number",
+                      required: true,
+                      className:
+                        "w-full p-4 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:ring-2 focus:ring-[#642b8f] focus:ring-opacity-50 outline-none placeholder-gray-400",
+                    }}
+                    containerClass="w-full"
+                    buttonClass="border-2 !border-[#aa88be] !rounded-l-lg"
+                    inputStyle={{
+                      width: "100%",
+                      height: "44px",
+                      fontSize: "16px",
+                    }}
+                    preferredCountries={["in"]}
+                    disabled={isSameAsContact}
                   />
                 </div>
               </div>
             </div>
-
-            <div className="space-y-4">
-              <label className="block text-sm font-medium text-[#642b8f]">
-                Parents WhatsApp Number <span className="text-red-500">*</span>
-              </label>
-              <PhoneInput
-                country={"in"}
-                value={formData.whatsappNumber}
-                onChange={(value) => handleInputChange("whatsappNumber", value)}
-                inputProps={{
-                  placeholder: "81234 56789",
-                  className:
-                    "w-full p-3 rounded-lg !border-[#aa88be] focus:!border-[#642b8f]",
-                  required: true,
-                }}
-                containerClass="w-full"
-                buttonClass="!border-[#aa88be] !rounded-lg"
-                preferredCountries={["in"]}
-              />
-            </div>
-
             <div className="space-y-4">
               <label className="block text-sm font-medium text-[#642b8f]">
                 Parents Email ID

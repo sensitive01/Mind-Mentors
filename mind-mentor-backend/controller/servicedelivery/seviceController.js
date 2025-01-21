@@ -8,6 +8,11 @@ const Employee = require("../../model/employeeModel");
 const enquiryLogs = require("../../model/enquiryLogs");
 const operationDeptModel = require("../../model/operationDeptModel");
 const convertTo12HourFormat = require("../../utils/convertTo12HourFormat");
+const axios = require("axios");
+
+// const ZOOM_CLIENT_ID = "ChkFppFRmmzbQKT6jiQlA";
+
+// const ZOOM_CLIENT_SECRET = "A8hGnAi3u6v5LkfRT1fWCVU2Z9qQEqi3";
 
 const timeTableShedules = async (req, res) => {
   try {
@@ -52,7 +57,7 @@ const timeTableShedules = async (req, res) => {
           coachId: shedule.coachId,
           program: shedule.program,
           level: shedule.level,
-          meetingLink: shedule.meetingLink,
+          meetingLink: shedule.meetingLink||"https://us05web.zoom.us/j/84470917399?pwd=NFRFWwQNmTdgvQnfV0q3lhzZOzM1v7.1",
           classType: shedule.isDemo ? "Demo" : "Class",
         });
 
@@ -218,7 +223,7 @@ const getClassAndStudentsData = async (req, res) => {
           },
         },
       },
-      { kidFirstName: 1, kidId: 1,_id:1 }
+      { kidFirstName: 1, kidId: 1, _id: 1 }
     );
 
     console.log("kidsData", kidsData);
@@ -235,6 +240,124 @@ const getClassAndStudentsData = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+// async function getZoomAccessToken() {
+//   try {
+//     const response = await axios.post("https://zoom.us/oauth/token", null, {
+//       headers: {
+//         Authorization: `Basic ${Buffer.from(
+//           `${ZOOM_CLIENT_ID}:${ZOOM_CLIENT_SECRET}`
+//         ).toString("base64")}`,
+//         "Content-Type": "application/x-www-form-urlencoded",
+//       },
+//       params: {
+//         grant_type: "client_credentials",
+//       },
+//     });
+
+//     console.log("Zoom OAuth Token:", response.data.access_token);
+//     return response.data.access_token; // Return the access token
+//   } catch (error) {
+//     console.error(
+//       "Error fetching Zoom access token:",
+//       error.response?.data || error.message
+//     );
+//     throw new Error("Failed to fetch Zoom access token");
+//   }
+// }
+
+
+// async function generateZoomMeeting() {
+//   try {
+//     const accessToken = await getZoomAccessToken();
+//     const response = await axios.post(
+//       "https://api.zoom.us/v2/users/me/meetings",
+//       {
+//         topic: "Classroom Meeting",
+//         type: 2, // Scheduled meeting
+//         start_time: new Date().toISOString(), // Current time, can be customized
+//         duration: 60, // Duration in minutes
+//         timezone: "UTC", // Adjust timezone as needed
+//       },
+//       {
+//         headers: {
+//           Authorization: `Bearer ${accessToken}`,
+//           "Content-Type": "application/json",
+//         },
+//       }
+//     );
+
+//     console.log("Zoom Meeting Link:", response.data.join_url);
+//     return response.data.join_url; // Return the meeting link
+//   } catch (error) {
+//     console.error("Error creating Zoom meeting:", error);
+//     throw new Error("Failed to create Zoom meeting");
+//   }
+// }
+
+// const timeTableShedules = async (req, res) => {
+//   try {
+//     console.log("Processing timetable schedules:", req.body.shedules);
+
+//     const { id } = req.params;
+
+//     if (!id) {
+//       return res.status(400).json({ message: "Employee ID is required" });
+//     }
+
+//     const empData = await Employee.findOne(
+//       { _id: id },
+//       { firstName: 1, department: 1 }
+//     );
+
+//     if (!empData) {
+//       return res.status(404).json({ message: "Employee not found" });
+//     }
+
+//     const schedules  = req.body.shedules;
+//     console.log("schedules",schedules)
+//     if (!Array.isArray(schedules) || schedules.length === 0) {
+//       return res.status(400).json({ message: "No schedules provided" });
+//     }
+
+//     const savedSchedules = await Promise.all(
+//       schedules.map(async (schedule) => {
+//         const zoomMeetingLink = await generateZoomMeeting(); // Generate Zoom meeting link
+//         console.log("zoomMeetingLink",zoomMeetingLink)
+
+//         const newSchedule = new ClassSchedule({
+//           scheduledBy: {
+//             name: empData.firstName,
+//             id: empData._id,
+//             department: empData.department,
+//           },
+//           day: schedule.day,
+//           classTime: `${convertTo12HourFormat(
+//             schedule.fromTime
+//           )} - ${convertTo12HourFormat(schedule.toTime)}`,
+//           coachName: schedule.coachName,
+//           coachId: schedule.coachId,
+//           program: schedule.program,
+//           level: schedule.level,
+//           meetingLink: zoomMeetingLink, // Store the Zoom meeting link here
+//           classType: schedule.isDemo ? "Demo" : "Class",
+//         });
+
+//         return await newSchedule.save(); // Save the schedule to the database
+//       })
+//     );
+
+//     return res.status(201).json({
+//       message: "Schedules saved successfully",
+//       savedSchedules,
+//     });
+//   } catch (error) {
+//     console.error("Error saving timetable schedules:", error);
+//     return res
+//       .status(500)
+//       .json({ message: "Internal server error", error: error.message });
+//   }
+// };
 
 // const saveClassData = async (req, res) => {
 //   try {
@@ -409,21 +532,20 @@ const saveClassData = async (req, res) => {
 
     // Update logs for each kid based on their `logs` array (which contains log document IDs)
     const logUpdatePromises = kidsData.map(async (kid) => {
-        await enquiryLogs.findByIdAndUpdate(
-          kid.logs, // Log ID
-          {
-            $push: {
-              logs: {
-                action: classLogMessage,
-                createdAt: new Date(),
-                employeeId: empId,
-                employeeName: empData.firstName,
-              },
+      await enquiryLogs.findByIdAndUpdate(
+        kid.logs, // Log ID
+        {
+          $push: {
+            logs: {
+              action: classLogMessage,
+              createdAt: new Date(),
+              employeeId: empId,
+              employeeName: empData.firstName,
             },
           },
-          { new: true }
-        );
-      
+        },
+        { new: true }
+      );
     });
 
     // Wait for all log updates to finish
@@ -529,442 +651,6 @@ const deleteCoachAvailability = async (req, res) => {
   }
 };
 
-// Email Verification
-// const operationEmailVerification = async (req, res) => {
-//   try {
-//     console.log("Welcome to operation employee verification", req.body);
-
-//     const operationEmail = "ServiceDept@gmail.com";
-//     const { email } = req.body;
-
-//     if (operationEmail === email) {
-//       console.log("Email exists");
-//       return res.status(200).json({
-//         success: true,
-//         message: "Email verification successful. Employee exists."
-//       });
-//     } else {
-//       console.log("No details found");
-//       return res.status(404).json({
-//         success: false,
-//         message: "No employee details found for the provided email."
-//       });
-//     }
-//   } catch (err) {
-//     console.error("Error in verifying the employee login", err);
-//     res.status(500).json({
-//       success: false,
-//       message: "Internal server error. Please try again later."
-//     });
-//   }
-// };
-
-// // Password Verification
-// const operationPasswordVerification = async (req, res) => {
-//   try {
-//     console.log("Welcome to verify operation dept password", req.body);
-
-//     const orgPassword = "ServiceDept@123";
-//     const { password } = req.body;
-
-//     if (password === orgPassword) {
-//       return res.status(200).json({
-//         success: true,
-//         message: "Password verification successful."
-//       });
-//     } else {
-//       return res.status(401).json({
-//         success: false,
-//         message: "Invalid password. Please try again."
-//       });
-//     }
-//   } catch (err) {
-//     console.error("Error in verify password", err);
-//     res.status(500).json({
-//       success: false,
-//       message: "Internal server error. Please try again later."
-//     });
-//   }
-// };
-
-// // Create Enquiry Form
-// const enquiryFormData = async (req, res) => {
-//   try {
-//     const formData = req.body;
-//     const newEntry = await ServiceDept.create(formData);
-
-//     res.status(201).json({
-//       success: true,
-//       message: "Enquiry form submitted successfully",
-//       data: newEntry
-//     });
-//   } catch (error) {
-//     console.error("Error submitting enquiry form", error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Failed to submit enquiry form. Please try again later."
-//     });
-//   }
-// };
-
-// // Get All Enquiries
-// const getAllEnquiries = async (req, res) => {
-//   try {
-//     const enquiries = await ServiceDept.find();
-//     res.status(200).json(enquiries);
-//   } catch (error) {
-//     res.status(500).json({ message: 'Error fetching data' });
-//   }
-// };
-
-// // Update Enquiry
-// const updateEnquiry = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const updatedEntry = await ServiceDept.findByIdAndUpdate(id, req.body, { new: true });
-//     if (!updatedEntry) {
-//       return res.status(404).json({ message: "Enquiry not found" });
-//     }
-//     res.status(200).json(updatedEntry);
-//   } catch (error) {
-//     res.status(500).json({ message: 'Error updating data' });
-//   }
-// };
-
-// // Delete Enquiry
-// const deleteEnquiry = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const deletedEntry = await ServiceDept.findByIdAndDelete(id);
-//     if (!deletedEntry) {
-//       return res.status(404).json({ message: "Enquiry not found" });
-//     }
-//     res.status(200).json({ message: "Enquiry deleted successfully" });
-//   } catch (error) {
-//     res.status(500).json({ message: 'Error deleting data' });
-//   }
-// };
-
-// // Update Enquiry Status (Cold/Warm)
-// const updateEnquiryStatus = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { status } = req.body; // The status should be passed in the body (either 'cold' or 'warm')
-
-//     // Validate status
-//     if (!['cold', 'warm'].includes(status)) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Invalid status. It must be either 'cold' or 'warm'."
-//       });
-//     }
-
-//     // Update the status of the enquiry, including both `status` and `enquiryStatus`
-//     const updatedEntry = await ServiceDept.findByIdAndUpdate(
-//       id,
-//       {
-//         status,
-//         enquiryStatus: status  // Ensuring both fields are updated
-//       },
-//       { new: true }  // Return the updated document
-//     );
-
-//     if (!updatedEntry) {
-//       return res.status(404).json({ message: "Enquiry not found" });
-//     }
-
-//     // Send success response with updated data
-//     res.status(200).json({
-//       success: true,
-//       message: "Enquiry status updated successfully",
-//       data: updatedEntry  // Returning the updated document
-//     });
-//   } catch (error) {
-//     res.status(500).json({ message: 'Error updating enquiry status', error: error.message });
-//   }
-// };
-
-// // Add Notes to Enquiry
-// const addNotesToEnquiry = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { enquiryStageTag, addNoteTo, notes } = req.body; // Notes data from the body
-
-//     // Validate if note data is provided
-//     if (!enquiryStageTag || !addNoteTo || !notes) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Enquiry Stage Tag, Add Note To, and Notes are required."
-//       });
-//     }
-
-//     // Create the new note
-//     const newNote = { enquiryStageTag, addNoteTo, notes };
-
-//     // Find the enquiry by ID and push the new note into the notes array
-//     const updatedEntry = await ServiceDept.findByIdAndUpdate(
-//       id,
-//       { $push: { notes: newNote } },
-//       { new: true }
-//     );
-
-//     if (!updatedEntry) {
-//       return res.status(404).json({ message: "Enquiry not found" });
-//     }
-
-//     res.status(200).json({
-//       success: true,
-//       message: "Note added successfully",
-//       data: updatedEntry
-//     });
-//   } catch (error) {
-//     res.status(500).json({ message: 'Error adding note to enquiry' });
-//   }
-// };
-
-// // Update Prospect Status (Cold/Warm)
-// const updateProspectStatus = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { enquiryStatus } = req.body;
-//     const updatedEntry = await ServiceDept.findByIdAndUpdate(id, { enquiryStatus }, { new: true });
-//     if (!updatedEntry) {
-//       return res.status(404).json({ message: "Enquiry not found" });
-//     }
-//     res.status(200).json({
-//       success: true,
-//       message: "Prospect status updated successfully",
-//       data: updatedEntry
-//     });
-//   } catch (error) {
-//     console.error("Error updating prospect status", error);
-//     res.status(500).json({ message: 'Error updating prospect status' });
-//   }
-// };
-
-// // Schedule Demo
-// const scheduleDemo = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { date, status } = req.body;
-//     const updatedEntry = await ServiceDept.findByIdAndUpdate(id, { scheduleDemo: { date, status } }, { new: true });
-//     if (!updatedEntry) {
-//       return res.status(404).json({ message: "Enquiry not found" });
-//     }
-//     res.status(200).json({
-//       success: true,
-//       message: "Demo scheduled successfully",
-//       data: updatedEntry
-//     });
-//   } catch (error) {
-//     console.error("Error scheduling demo", error);
-//     res.status(500).json({ message: 'Error scheduling demo' });
-//   }
-// };
-
-// // Add Notes
-// const addNotes = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { notes } = req.body;
-//     const updatedEntry = await ServiceDept.findByIdAndUpdate(id, { notes }, { new: true });
-//     if (!updatedEntry) {
-//       return res.status(404).json({ message: "Enquiry not found" });
-//     }
-//     res.status(200).json({
-//       success: true,
-//       message: "Notes added successfully",
-//       data: updatedEntry
-//     });
-//   } catch (error) {
-//     console.error("Error adding notes", error);
-//     res.status(500).json({ message: 'Error adding notes' });
-//   }
-// };
-
-// // Referral to a Friend
-// const referToFriend = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { referredTo, referredEmail } = req.body;
-//     const updatedEntry = await ServiceDept.findByIdAndUpdate(id, { referral: { referredTo, referredEmail } }, { new: true });
-//     if (!updatedEntry) {
-//       return res.status(404).json({ message: "Enquiry not found" });
-//     }
-//     res.status(200).json({
-//       success: true,
-//       message: "Referral added successfully",
-//       data: updatedEntry
-//     });
-//   } catch (error) {
-//     console.error("Error adding referral", error);
-//     res.status(500).json({ message: 'Error adding referral' });
-//   }
-// };
-// const createLeave = async (req, res) => {
-//   try {
-//     const leaveData = req.body;
-//     const newLeave = await leaves.create(leaveData);
-
-//     res.status(201).json({
-//       success: true,
-//       message: "Leave created successfully",
-//       data: newLeave,
-//     });
-//   } catch (error) {
-//     console.error("Error creating leave", error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Failed to create leave. Please try again later.",
-//     });
-//   }
-// };
-// const createserviceattendance = async (req, res) => {
-//   try {
-//     const { employeeName } = req.body; // Get employee name from the request body
-
-//     // Get the current date
-//     const today = new Date();
-//     today.setHours(0, 0, 0, 0); // Reset time to midnight for the serviceattendanceDate
-
-//     // Set allowed time range (5:00 PM to 8:00 PM)
-//     const startTime = new Date(today);
-//     startTime.setHours(0, 0, 0, 0); // 5:00 PM
-
-//     const endTime = new Date(today);
-//     endTime.setHours(24, 0, 0, 0); // 8:00 PM
-
-//     // Check if current time is within the allowed window
-//     const currentTime = new Date();
-//     if (currentTime < startTime || currentTime > endTime) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "serviceattendance can only be marked between 5:00 PM and 8:00 PM.",
-//       });
-//     }
-
-//     // Check if serviceattendance for today is already recorded
-//     const existingserviceattendance = await serviceattendance.findOne({
-//       employeeName,
-//       serviceattendanceDate: today, // Ensure serviceattendance is for today
-//     });
-
-//     if (existingserviceattendance) {
-//       // If serviceattendance is already marked, return an error message
-//       return res.status(400).json({
-//         success: false,
-//         message: "serviceattendance for today has already been recorded.",
-//       });
-//     }
-
-//     // Create new serviceattendance entry
-//     const serviceattendanceData = {
-//       serviceattendanceDate: today,
-//       time: currentTime, // Use current time for the serviceattendance
-//       employeeName,
-//       status: "Present", // Set status to Present
-//     };
-
-//     const newserviceattendance = await serviceattendance.create(serviceattendanceData);
-
-//     res.status(201).json({
-//       success: true,
-//       message: "serviceattendance recorded successfully.",
-//       data: newserviceattendance,
-//     });
-//   } catch (error) {
-//     console.error("Error recording serviceattendance", error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Failed to record serviceattendance. Please try again later.",
-//     });
-//   }
-// };
-// const fetchserviceattendance = async (req, res) => {
-//   try {
-//     const { date } = req.query; // Get the date from query params, e.g., '?date=YYYY-MM-DD'
-
-//     // Parse the date or use today's date
-//     const targetDate = date ? new Date(date) : new Date();
-//     targetDate.setHours(0, 0, 0, 0); // Reset time to midnight
-
-//     // Fetch all employee names (assuming an Employee model or predefined list)
-//     const employees = await Employee.find({}, { name: 1 }); // Fetch all employee names
-
-//     // Fetch serviceattendance for the target date
-//     const serviceattendanceRecords = await serviceattendance.find({
-//       serviceattendanceDate: targetDate,
-//     });
-
-//     // Create a map of serviceattendance records for quick lookup
-//     const serviceattendanceMap = serviceattendanceRecords.reduce((acc, record) => {
-//       acc[record.employeeName] = record;
-//       return acc;
-//     }, {});
-
-//     // Generate the serviceattendance response, marking absent if no record found
-//     const serviceattendanceResponse = employees.map((employee) => {
-//       if (serviceattendanceMap[employee.name]) {
-//         return {
-//           employeeName: employee.name,
-//           status: serviceattendanceMap[employee.name].status,
-//           time: serviceattendanceMap[employee.name].time,
-//         };
-//       } else {
-//         return {
-//           employeeName: employee.name,
-//           status: "Absent",
-//           time: null, // No time for absent employees
-//         };
-//       }
-//     });
-
-//     res.status(200).json({
-//       success: true,
-//       data: serviceattendanceResponse,
-//     });
-//   } catch (error) {
-//     console.error("Error fetching serviceattendance", error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Failed to fetch serviceattendance. Please try again later.",
-//     });
-//   }
-// };
-
-// const updateLeave = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const updatedLeave = await leaves.findByIdAndUpdate(id, req.body, { new: true });
-//     if (!updatedLeave) {
-//       return res.status(404).json({ message: "Leave not found" });
-//     }
-//     res.status(200).json(updatedLeave);
-//   } catch (error) {
-//     res.status(500).json({ message: "Error updating leave" });
-//   }
-// };
-// const deleteLeave = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const deletedLeave = await leaves.findByIdAndDelete(id);
-//     if (!deletedLeave) {
-//       return res.status(404).json({ message: "Leave not found" });
-//     }
-//     res.status(200).json({ message: "Leave deleted successfully" });
-//   } catch (error) {
-//     res.status(500).json({ message: "Error deleting leave" });
-//   }
-// };
-// const getAllLeaves = async (req, res) => {
-//   try {
-//     const leavess = await leaves.find();
-//     res.status(200).json(leavess);
-//   } catch (error) {
-//     res.status(500).json({ message: "Error fetching leaves" });
-//   }
-// };
-
 module.exports = {
   timeTableShedules,
   getClassShedules,
@@ -975,15 +661,4 @@ module.exports = {
   saveClassData,
   updateCoachAvailabilityData,
   deleteCoachAvailability,
-
-  // operationEmailVerification,
-  // operationPasswordVerification,
-  // enquiryFormData,
-  // getAllEnquiries,
-  // updateEnquiry,createserviceattendance,fetchserviceattendance,
-  // deleteEnquiry,
-  // updateProspectStatus,addNotesToEnquiry,
-  // scheduleDemo,
-  // addNotes, getAllLeaves, deleteLeave, updateLeave, createLeave,
-  // referToFriend,updateEnquiryStatus
 };

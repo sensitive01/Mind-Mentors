@@ -385,11 +385,10 @@ const updateProspectData = async (req, res) => {
   }
 };
 
-
 const moveBackToEnquiry = async (req, res) => {
   try {
     console.log("..........................................");
-    console.log("move back to enquiry",req.params,req.body);
+    console.log("move back to enquiry", req.params, req.body);
     const formattedDateTime = new Intl.DateTimeFormat("en-US", {
       dateStyle: "medium",
       timeStyle: "short",
@@ -448,10 +447,6 @@ const moveBackToEnquiry = async (req, res) => {
       },
     ];
 
-   
-
-    
-
     // 6. Update the OperationDept Entry
     const updatedEntry = await OperationDept.findByIdAndUpdate(
       { _id: id },
@@ -472,7 +467,6 @@ const moveBackToEnquiry = async (req, res) => {
       success: true,
       message: "Prospect data  successfully and moved to enquiry ",
       data: updatedEntry,
- 
     });
   } catch (error) {
     console.error("Error updating prospect data", error);
@@ -581,7 +575,7 @@ const getAllEnquiries = async (req, res) => {
         let lastNoteAction = null;
         const noteSection = await NotesSection.findOne(
           { enqId: enquiry._id },
-          { notes: 1 }
+          { notes: 1,createdOn:1 }
         );
         if (noteSection?.notes?.length) {
           // Assuming notes are in chronological order
@@ -606,6 +600,7 @@ const getAllEnquiries = async (req, res) => {
           kidName,
           latestAction,
           lastNoteAction: lastNoteAction?.disposition || "None",
+          createdOn:lastNoteAction?.createdOn || "createdOn",
           createdAt,
           updatedAt,
         };
@@ -647,7 +642,7 @@ const getProspectsData = async (req, res) => {
         let lastNoteAction = null;
         const noteSection = await NotesSection.findOne(
           { enqId: enquiry._id },
-          { notes: 1 }
+          { notes: 1,createdOn:1 }
         );
         if (noteSection?.notes?.length) {
           lastNoteAction = noteSection.notes[noteSection.notes.length - 1];
@@ -671,6 +666,7 @@ const getProspectsData = async (req, res) => {
           kidName,
           latestAction,
           lastNoteAction: lastNoteAction?.disposition || "None",
+          createdOn:lastNoteAction?.createdOn||"Created On",
 
           createdAt,
           updatedAt,
@@ -691,14 +687,12 @@ const updateEnquiry = async (req, res) => {
     console.log("Welcome to update enquiry", req.params, req.body);
     const { id } = req.params;
 
-   
     if (req.body.parentName) {
       const parentNameParts = req.body.parentName.trim().split(" ");
       req.body.parentFirstName = parentNameParts[0] || "";
       req.body.parentLastName = parentNameParts.slice(1).join(" ") || "";
     }
 
-  
     if (req.body.kidName) {
       const kidNameParts = req.body.kidName.trim().split(" ");
       req.body.kidFirstName = kidNameParts[0] || "";
@@ -1168,15 +1162,11 @@ const addNotes = async (req, res) => {
     );
 
     const noteToAdd = {
-      enquiryStatus:
-        `${empData.firstName} in ${empData.department} department updated enquiry status from "${currentEntry.enquiryStatus}" to "${updatedEnquiryStatus}"` ||
-        currentEntry.enquiryStatus,
-      disposition:
-        `${empData.firstName} in ${empData.department} department updated disposition from "${currentEntry.disposition}" to "${updatedDisposition}"` ||
-        currentEntry.disposition,
-      note:
-        `${empData.firstName} in ${empData.department} department updated notes from "${oldNote}" to "${updatedNotes}"` ||
-        currentEntry.notes,
+      enquiryStatus: `${updatedEnquiryStatus}` || currentEntry.enquiryStatus,
+      disposition: `${updatedDisposition}` || currentEntry.disposition,
+      note: `${updatedNotes}` || currentEntry.notes,
+      updatedBy: `${empData.firstName} in ${empData.department} department`,
+      createdOn: `${formattedDateTime}`,
     };
 
     let notesSection = await NotesSection.findOne({ enqId: id });
@@ -2344,33 +2334,46 @@ const getDemoClassAndStudentsData = async (req, res) => {
       "Welcome to getting the demo class and student data",
       req.params
     );
-    const { enqId ,classId} = req.params;
+    const { enqId } = req.params;
 
-    // Find the class data by ID
-    const classData = await ClassSchedule.find({ _id: classId });
-
-    if (!classData) {
-      return res.status(404).json({ message: "Class not found" });
-    }
-
-    // Find kids data matching the program and level in arrays
-    const kidsData = await OperationDept.find(
+    // Find kids data by enquiry ID
+    const kidsData = await OperationDept.findOne(
       {
-        _id:enqId,
+        _id: enqId,
         enquiryField: "prospects",
         "scheduleDemo.status": "Pending",
-        programs: {
-          $elemMatch: {
-            program: classData[0].program,
-            level: classData[0].level,
-          },
-        },
       },
-      { kidFirstName: 1, kidId: 1 } // Project only the required fields
+      { kidFirstName: 1, kidId: 1, programs: 1 } // Project only the required fields
     );
 
-    console.log("Class Data", classData);
+    if (!kidsData) {
+      return res.status(404).json({ message: "Kids data not found" });
+    }
+
     console.log("Kids Data", kidsData);
+
+    // Extract program and level from kidsData
+    const { programs } = kidsData;
+    const programFilters = programs.map((program) => ({
+      program: program.program,
+      level: program.level,
+    }));
+
+    // Find class data matching program and level
+    const classData = await ClassSchedule.find(
+      {
+        $or: programFilters, // Match any program and level from kidsData
+        classType: "Demo", // Ensure the class type is "Demo"
+        status: "Scheduled", // Match only scheduled classes
+      },
+      { day: 1, classTime: 1 }
+    );
+
+    if (!classData.length) {
+      return res.status(404).json({ message: "No demo classes found" });
+    }
+
+    console.log("Class Data", classData);
 
     res.status(200).json({ classData, kidsData });
   } catch (err) {
@@ -2382,10 +2385,10 @@ const getDemoClassAndStudentsData = async (req, res) => {
 const getDemoClassAndStudentsDataGroup = async (req, res) => {
   try {
     console.log(
-      "Welcome to getting the demo class and student data",
+      "Welcome to getting the demo class and student data==>",
       req.params
     );
-    const { classId} = req.params;
+    const { classId } = req.params;
 
     // Find the class data by ID
     const classData = await ClassSchedule.find({ _id: classId });
@@ -2397,7 +2400,6 @@ const getDemoClassAndStudentsDataGroup = async (req, res) => {
     // Find kids data matching the program and level in arrays
     const kidsData = await OperationDept.find(
       {
-       
         enquiryField: "prospects",
         "scheduleDemo.status": "Pending",
         programs: {
@@ -2425,7 +2427,9 @@ const saveDemoClassData = async (req, res) => {
     console.log("Welcome to save the demo class", req.body, req.params);
 
     const { empId } = req.params;
-    const { classId, students } = req.body;
+    let { classId, students } = req.body;
+    students = Array.isArray(students) ? students : [students];
+    console.log(students);
 
     // Fetch employee data
     const empData = await Employee.findOne(
@@ -2708,6 +2712,42 @@ const getDropDownData = async (req, res) => {
   }
 };
 
+const specificKidAssignTask = async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log("Welcome", id);
+
+    // Fetch kid's data
+    const kidsData = await OperationDept.findOne(
+      { _id: id },
+      { _id: 1, kidFirstName: 1, programs: 1, whatsappNumber: 1 }
+    );
+
+    // Fetch employee data filtered by specific departments
+    const allowedDepartments = ["operation", "service-delivery", "marketing", "renewal"];
+    const employeeData = await Employee.find(
+      { department: { $in: allowedDepartments } },
+      { _id: 1, firstName: 1, email: 1, department: 1 }
+    );
+
+    // Send the response
+    res.status(200).json({
+      success: true,
+      message: "Dropdown data fetched successfully.",
+      data: {
+        kidsData,
+        employeeData,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching dropdown data.",
+      error: err.message,
+    });
+  }
+};
+
 const fetchAllStatusLogs = async (req, res) => {
   try {
     const { id } = req.params;
@@ -2784,5 +2824,6 @@ module.exports = {
   getMyIndividualLeave,
   updateEnquiryDetails,
   moveBackToEnquiry,
-  getDemoClassAndStudentsDataGroup
+  getDemoClassAndStudentsDataGroup,
+  specificKidAssignTask,
 };

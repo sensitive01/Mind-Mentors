@@ -9,30 +9,29 @@ import {
   DialogTitle,
   Divider,
   Fade,
-
+  IconButton,
   Paper,
   Slide,
-  TextField,
   ThemeProvider,
   Typography,
 } from "@mui/material";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
-import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
+
 import { alpha } from "@mui/material/styles";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import columns from "./Columns";
 
 import {
   updateEnquiryStatus,
-  addNotes,
   fetchProspectsEnquiries,
   handleMoveToEnquiry,
 } from "../../../api/service/employee/EmployeeService";
 import DetailView from "./detailed-view/DetailView";
+import { ClipboardList, Edit, X } from "lucide-react";
+import { toast } from "react-toastify";
+import TaskAssignmentOverlay from "./detailed-view/SlideDialog";
+import EnquiryRelatedTaskComponent from "./enquiry-task/EnquiryRelatedTaskComponent";
 
 const theme = createTheme({
   palette: {
@@ -103,6 +102,13 @@ const Prospects = () => {
 
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [confirmDialog, setConfirmDialog] = useState({
+    open: false,
+    studentName: "",
+    onConfirm: null,
+  });
+  const [isTaskOverlayOpen, setIsTaskOverlayOpen] = useState(false);
+  const [enqId, setEnqId] = useState();
 
   useEffect(() => {
     const loadLeaves = async () => {
@@ -127,16 +133,11 @@ const Prospects = () => {
     loadLeaves();
   }, []);
 
-  const [noteDialog, enquiryStatus] = useState({
-    open: false,
-    rowData: null,
-    noteText: "",
-    disposition: "",
-    enquiryStatus: "",
-  });
+  // In Prospects.jsx
   const [viewDialog, setViewDialog] = useState({
     open: false,
     rowData: null,
+    showEdit: false,
   });
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
@@ -170,58 +171,6 @@ const Prospects = () => {
       console.error("Error updating enquiry status:", error);
     }
   };
-  const handleNoteSave = async () => {
-    if (noteDialog.rowData) {
-      const updatedNotes = noteDialog.noteText;
-      const id = noteDialog.rowData._id;
-      let updatedEnquiryStatus = noteDialog.enquiryStatus;
-      let updatedDisposition = noteDialog.disposition;
-
-      console.log("Updated Notes:", updatedNotes);
-      console.log("Updated Enquiry Status:", updatedEnquiryStatus);
-      console.log("Updated Disposition:", updatedDisposition);
-
-      const validEnquiryStatus = [
-        "Pending",
-        "Qualified Lead",
-        "Unqualified Lead",
-      ];
-      const validDisposition = ["RnR", "Call Back", "None"];
-
-      if (!validEnquiryStatus.includes(updatedEnquiryStatus)) {
-        updatedEnquiryStatus = "Pending";
-      }
-      if (!validDisposition.includes(updatedDisposition)) {
-        updatedDisposition = "None";
-      }
-
-      setRows((prevRows) =>
-        prevRows.map((row) =>
-          row._id === id
-            ? {
-                ...row,
-                notes: updatedNotes,
-                enquiryStatus: updatedEnquiryStatus,
-                disposition: updatedDisposition,
-              }
-            : row
-        )
-      );
-
-      try {
-        await addNotes(id, empId, {
-          notes: updatedNotes,
-          enquiryStatus: updatedEnquiryStatus,
-          disposition: updatedDisposition,
-        });
-        console.log("Notes saved successfully");
-      } catch (error) {
-        console.error("Error saving notes:", error);
-      }
-
-      console.log("setting rows", rows);
-    }
-  };
 
   const handleRowEditStop = (params, event) => {
     event.defaultMuiPrevented = true;
@@ -238,9 +187,35 @@ const Prospects = () => {
   };
 
   const handleMoveBackToEnquiry = async (id) => {
-    console.log("new fundtion call");
-    const respose = await handleMoveToEnquiry(id, empId);
-    console.log(respose);
+    const student = rows.find((row) => row._id === id);
+    if (!student) return;
+
+    setConfirmDialog({
+      open: true,
+      studentName: student.kidFirstName,
+      onConfirm: async () => {
+        try {
+          const response = await handleMoveToEnquiry(id, empId);
+          if (response.status === 200 || response.success) {
+            // Update the local state to reflect the change
+            setRows(rows.filter((row) => row._id !== id));
+
+            toast.success(
+              `Successfully moved ${student.kidFirstName} to enquiry`
+            );
+          } else {
+            toast.error(`Failed to move ${student.kidFirstName} to enquiry`);
+          }
+        } catch (error) {
+          console.error("Error moving to enquiry:", error);
+          toast.error(
+            `Failed to move ${student.kidFirstName} to enquiry: ${error.message}`
+          );
+        } finally {
+          setConfirmDialog({ open: false, studentName: "", onConfirm: null });
+        }
+      },
+    });
   };
 
   const handleShowLogs = (id) => {
@@ -254,297 +229,308 @@ const Prospects = () => {
   };
 
   return (
-    <ThemeProvider theme={theme}>
-      <Fade in={true}>
-        <Box sx={{ width: "100%", height: "100%", p: 3, ml: "auto" }}>
-          <Paper
-            elevation={0}
-            sx={{
-              p: 3,
-              backgroundColor: "background.paper",
-              borderRadius: 3,
-              height: 650,
-              boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.05)",
-            }}
-          >
-            <Box
-              mb={3}
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-            >
-              <Typography
-                variant="h5"
-                gutterBottom
-                sx={{ color: "text.primary", fontWeight: 600, mb: 3 }}
-              >
-                Prospect Data
-              </Typography>
-            </Box>
-            <DataGrid
-              rows={rows}
-              columns={columns(
-                theme,
-                handleStatusToggle,
-                setViewDialog,
-                enquiryStatus,
-                handleMoveBackToEnquiry,
-                handleShowLogs,
-                handleShowStatus
-              )}
-              paginationModel={paginationModel}
-              onPaginationModelChange={setPaginationModel}
-              pageSizeOptions={[5, 10, 25]}
-              disableRowSelectionOnClick
-              // editMode="row"
-              getRowId={(row) => row._id}
-              onRowClick={(params) => {
-                setViewDialog({ open: true, rowData: params.row });
-              }}
-              onRowEditStop={handleRowEditStop}
-              processRowUpdate={handleProcessRowUpdate}
-              onProcessRowUpdateError={handleProcessRowUpdateError}
-              slots={{ toolbar: GridToolbar }}
-              slotProps={{
-                toolbar: {
-                  showQuickFilter: true,
-                  quickFilterProps: { debounceMs: 500 },
-                },
-              }}
+    <>
+      <ThemeProvider theme={theme}>
+        <Fade in={true}>
+          <Box sx={{ width: "100%", height: "100%", ml: "auto" }}>
+            <Paper
+              elevation={0}
               sx={{
-                height: 500,
-                border: "none",
-                "& .MuiDataGrid-cell:focus": {
-                  outline: "none",
-                },
-                // Enhanced row hover effects
-                "& .MuiDataGrid-row": {
-                  transition: "all 0.2s ease-in-out",
-                  cursor: "pointer",
-                  "&:hover": {
-                    backgroundColor: alpha("#642b8f", 0.08),
-                    transform: "translateY(-1px)",
-                    boxShadow: "0 4px 8px rgba(100, 43, 143, 0.1)",
-                  },
-                },
-                // Enhanced cell hover effects
-                "& .MuiDataGrid-cell": {
-                  transition: "background-color 0.2s ease",
-                  borderBottom: "1px solid rgba(100, 43, 143, 0.1)",
-
-                  "&:hover": {
-                    backgroundColor: alpha("#642b8f", 0.12),
-                  },
-                },
-                // Header styling
-                "& .MuiDataGrid-columnHeader": {
-                  backgroundColor: "#642b8f",
-                  color: "white",
-                  fontWeight: 600,
-                  "&:hover": {
-                    backgroundColor: "#7b3ca8", // Slightly lighter shade for hover
-                  },
-                },
-                // Selected row styling
-                "& .MuiDataGrid-row.Mui-selected": {
-                  backgroundColor: alpha("#642b8f", 0.15),
-                  "&:hover": {
-                    backgroundColor: alpha("#642b8f", 0.2),
-                  },
-                },
-                // Footer styling
-                "& .MuiDataGrid-footerContainer": {
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  borderTop: "1px solid rgba(100, 43, 143, 0.1)",
-                },
-                // Column separator styling
-                "& .MuiDataGrid-columnSeparator": {
-                  color: alpha("#642b8f", 0.2),
-                },
-                // Checkbox styling
-                "& .MuiCheckbox-root.Mui-checked": {
-                  color: "#642b8f",
-                },
-                "& .MuiDataGrid-columnHeader .MuiCheckbox-root": {
-                  color: "#FFFFFF",
-                },
-
-                "@media (hover: hover)": {
-                  "& .MuiDataGrid-row:hover": {
-                    backgroundColor: alpha("#642b8f", 0.08),
-                    transform: "translateY(-1px)",
-                    boxShadow: "0 4px 8px rgba(100, 43, 143, 0.1)",
-                  },
-                },
+                p: 3,
+                backgroundColor: "background.paper",
+                borderRadius: 3,
+                height: 650,
+                boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.05)",
               }}
-            />
-
-            <Dialog
-              open={viewDialog.open}
-              onClose={() => setViewDialog({ open: false, rowData: null })}
-              maxWidth="md"
-              fullWidth
-              TransitionComponent={Slide}
-              TransitionProps={{ direction: "up" }}
             >
-              <DialogTitle
+              <DataGrid
+                rows={rows}
+                columns={columns(
+                  theme,
+                  handleStatusToggle,
+                  setViewDialog,
+
+                  handleMoveBackToEnquiry,
+                  handleShowLogs,
+                  handleShowStatus
+                )}
+                paginationModel={paginationModel}
+                onPaginationModelChange={setPaginationModel}
+                pageSizeOptions={[5, 10, 25]}
+                disableRowSelectionOnClick
+                // editMode="row"
+                getRowId={(row) => row._id}
+                onRowClick={(params) => {
+                  setViewDialog({ open: true, rowData: params.row });
+                }}
+                onRowEditStop={handleRowEditStop}
+                processRowUpdate={handleProcessRowUpdate}
+                onProcessRowUpdateError={handleProcessRowUpdateError}
+                slots={{ toolbar: GridToolbar }}
+                slotProps={{
+                  toolbar: {
+                    showQuickFilter: true,
+                    quickFilterProps: { debounceMs: 500 },
+                  },
+                }}
                 sx={{
-                  background: "linear-gradient(#642b8f, #aa88be)",
-                  color: "#ffffff",
-                  fontWeight: 600,
+                  height: 500,
+                  border: "none",
+                  "& .MuiDataGrid-cell:focus": {
+                    outline: "none",
+                  },
+                  // Enhanced row hover effects
+                  "& .MuiDataGrid-row": {
+                    transition: "all 0.2s ease-in-out",
+                    cursor: "pointer",
+                    "&:hover": {
+                      backgroundColor: alpha("#642b8f", 0.08),
+                      transform: "translateY(-1px)",
+                      boxShadow: "0 4px 8px rgba(100, 43, 143, 0.1)",
+                    },
+                  },
+                  // Enhanced cell hover effects
+                  "& .MuiDataGrid-cell": {
+                    transition: "background-color 0.2s ease",
+                    borderBottom: "1px solid rgba(100, 43, 143, 0.1)",
+
+                    "&:hover": {
+                      backgroundColor: alpha("#642b8f", 0.12),
+                    },
+                  },
+                  // Header styling
+                  "& .MuiDataGrid-columnHeader": {
+                    backgroundColor: "#642b8f",
+                    color: "white",
+                    fontWeight: 600,
+                    "&:hover": {
+                      backgroundColor: "#7b3ca8", // Slightly lighter shade for hover
+                    },
+                  },
+                  // Selected row styling
+                  "& .MuiDataGrid-row.Mui-selected": {
+                    backgroundColor: alpha("#642b8f", 0.15),
+                    "&:hover": {
+                      backgroundColor: alpha("#642b8f", 0.2),
+                    },
+                  },
+                  // Footer styling
+                  "& .MuiDataGrid-footerContainer": {
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    borderTop: "1px solid rgba(100, 43, 143, 0.1)",
+                  },
+                  // Column separator styling
+                  "& .MuiDataGrid-columnSeparator": {
+                    color: alpha("#642b8f", 0.2),
+                  },
+                  // Checkbox styling
+                  "& .MuiCheckbox-root.Mui-checked": {
+                    color: "#642b8f",
+                  },
+                  "& .MuiDataGrid-columnHeader .MuiCheckbox-root": {
+                    color: "#FFFFFF",
+                  },
+
+                  "@media (hover: hover)": {
+                    "& .MuiDataGrid-row:hover": {
+                      backgroundColor: alpha("#642b8f", 0.08),
+                      transform: "translateY(-1px)",
+                      boxShadow: "0 4px 8px rgba(100, 43, 143, 0.1)",
+                    },
+                  },
+                }}
+              />
+
+              <Dialog
+                open={viewDialog.open}
+                onClose={() => {
+                  setViewDialog({
+                    open: false,
+                    rowData: null,
+                    showEdit: false,
+                  });
+                }}
+                maxWidth="md"
+                fullWidth
+                TransitionComponent={Slide}
+                TransitionProps={{ direction: "up" }}
+                sx={{
+                  "& .MuiDialog-container": {
+                    zIndex: isTaskOverlayOpen ? 1200 : 1300, // Lower z-index when task overlay is open
+                  },
                 }}
               >
-                Student Details
-              </DialogTitle>
-              <Divider />
-              <DialogContent>
-                <DetailView data={viewDialog.rowData || {}} />
-              </DialogContent>
-              <Divider sx={{ borderColor: "#aa88be" }} />
-              <DialogActions sx={{ p: 2.5 }}>
-                <Button
-                  class="px-8 py-3 bg-[#642b8f] text-white rounded-lg font-medium hover:bg-[#aa88be] transition-colors shadow-lg hover:shadow-xl"
-                  onClick={() => setViewDialog({ open: false, rowData: null })}
-                  variant="outlined"
+                <DialogTitle
                   sx={{
-                    color: "#f8a213",
-                    borderColor: "#f8a213",
+                    background: "linear-gradient(#642b8f, #aa88be)",
+                    color: "#ffffff",
+                    fontWeight: 600,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "16px",
                   }}
                 >
-                  Close
-                </Button>
-              </DialogActions>
-            </Dialog>
-            {/* Notes Dialog */}
-            <Dialog
-              open={noteDialog.open}
-              onClose={() =>
-                enquiryStatus({
+                  <div>Student Details</div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outlined"
+                      startIcon={<Edit size={18} />}
+                      onClick={() => {
+                        if (viewDialog.rowData) {
+                          setViewDialog((prev) => ({
+                            ...prev,
+                            showEdit: true,
+                          }));
+                        }
+                      }}
+                      sx={{
+                        borderColor: "#ffffff",
+                        color: "#ffffff",
+                        px: 3,
+                        py: 1,
+                        borderRadius: "20px",
+                        fontWeight: 600,
+                        textTransform: "none",
+                        backgroundColor: "transparent",
+                        "&:hover": {
+                          backgroundColor: "#ffdb99",
+                          borderColor: "#ff9f00",
+                          color: "#ff9f00",
+                          boxShadow: "0 4px 8px rgba(255, 158, 51, 0.3)",
+                        },
+                      }}
+                    >
+                      Edit
+                    </Button>
+
+                    <Button
+                      variant="outlined"
+                      startIcon={<ClipboardList size={18} />}
+                      onClick={() => {
+                        if (viewDialog.rowData) {
+                          setIsTaskOverlayOpen(true);
+                          setEnqId(viewDialog.rowData._id);
+                          // Close the details dialog when opening task overlay
+                          setViewDialog({
+                            open: false,
+                            rowData: null,
+                            showEdit: false,
+                          });
+                        }
+                      }}
+                      sx={{
+                        borderColor: "#ffffff",
+                        color: "#ffffff",
+                        px: 3,
+                        py: 1,
+                        borderRadius: "20px",
+                        fontWeight: 600,
+                        textTransform: "none",
+                        backgroundColor: "transparent",
+                        "&:hover": {
+                          backgroundColor: "#a5d6a7",
+                          borderColor: "#2e7d32",
+                          color: "#2e7d32",
+                          boxShadow: "0 4px 8px rgba(46, 125, 50, 0.3)",
+                        },
+                      }}
+                    >
+                      Assign Task
+                    </Button>
+                    <IconButton
+                      onClick={() =>
+                        setViewDialog({ open: false, rowData: null })
+                      }
+                      sx={{
+                        color: "#ff4444",
+                        "&:hover": {
+                          backgroundColor: "rgba(255, 68, 68, 0.1)",
+                        },
+                      }}
+                    >
+                      <X size={24} />
+                    </IconButton>
+                  </div>
+                </DialogTitle>
+
+                <DialogContent>
+                  <DetailView
+                    data={viewDialog.rowData || {}}
+                    showEdit={viewDialog.showEdit}
+                    onEditClose={() =>
+                      setViewDialog((prev) => ({ ...prev, showEdit: false }))
+                    }
+                    onEditSave={(updatedData) => {
+                      setRows((prevRows) =>
+                        prevRows.map((row) =>
+                          row._id === updatedData._id ? updatedData : row
+                        )
+                      );
+                      setViewDialog((prev) => ({
+                        ...prev,
+                        rowData: updatedData,
+                        showEdit: false,
+                      }));
+                    }}
+                  />
+                </DialogContent>
+              </Dialog>
+            </Paper>
+          </Box>
+        </Fade>
+        <Dialog
+          open={confirmDialog.open}
+          onClose={() =>
+            setConfirmDialog({ open: false, studentName: "", onConfirm: null })
+          }
+        >
+          <DialogTitle>Confirm Move to Enquiry</DialogTitle>
+          <DialogContent>
+            <Typography>
+              Are you sure you want to move {confirmDialog.studentName} back to
+              enquiry?
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() =>
+                setConfirmDialog({
                   open: false,
-                  rowData: null,
-                  noteText: "",
-                  enquiryStatus: "",
-                  disposition: "",
+                  studentName: "",
+                  onConfirm: null,
                 })
               }
-              maxWidth="sm"
-              fullWidth
-              TransitionComponent={Slide}
-              TransitionProps={{ direction: "up" }}
-              BackdropProps={{
-                sx: {
-                  backgroundColor: "rgba(0, 0, 0, 0.5)",
-                  backdropFilter: "blur(4px)",
-                },
-              }}
+              color="primary"
             >
-              <DialogTitle
-                sx={{
-                  color: "#ffffff",
-                  fontWeight: 600,
-                  background: "linear-gradient(to right, #642b8f, #aa88be)",
-                }}
-              >
-                Add Note
-              </DialogTitle>
-              <Divider />
-              <DialogContent>
-                {/* Enquiry Stage Select Box */}
-                <FormControl fullWidth sx={{ mt: 2 }}>
-                  <InputLabel>Enquiry Stage</InputLabel>
-                  <Select
-                    value={noteDialog.enquiryStatus}
-                    onChange={(e) =>
-                      enquiryStatus((prev) => ({
-                        ...prev,
-                        enquiryStatus: e.target.value,
-                      }))
-                    }
-                    label="Enquiry Stage"
-                  >
-                    <MenuItem value="Pending">Pending</MenuItem>
-                    <MenuItem value="Qualified Lead">Qualified Lead</MenuItem>
-                    <MenuItem value="Unqualified Lead">
-                      Unqualified Lead
-                    </MenuItem>
-                  </Select>
-                </FormControl>
-
-                <FormControl fullWidth sx={{ mt: 2 }}>
-                  <InputLabel>Disposition</InputLabel>
-                  <Select
-                    value={noteDialog.disposition}
-                    onChange={(e) =>
-                      enquiryStatus((prev) => ({
-                        ...prev,
-                        disposition: e.target.value,
-                      }))
-                    }
-                    label="Disposition"
-                  >
-                    <MenuItem value="RnR">RnR</MenuItem>
-                    <MenuItem value="Call Back">Call Back</MenuItem>
-                    <MenuItem value="None">None</MenuItem>
-                  </Select>
-                </FormControl>
-
-                <TextField
-                  label="Note"
-                  value={noteDialog.noteText}
-                  onChange={(e) =>
-                    enquiryStatus((prev) => ({
-                      ...prev,
-                      noteText: e.target.value,
-                    }))
-                  }
-                  multiline
-                  rows={4}
-                  fullWidth
-                  sx={{ mt: 1 }}
-                />
-              </DialogContent>
-              <Divider sx={{ borderColor: "#aa88be" }} />
-              <DialogActions sx={{ p: 2.5 }}>
-                <Button
-                  onClick={handleNoteSave}
-                  variant="contained"
-                  className="px-8 py-3 bg-[#642b8f] text-white rounded-lg font-medium hover:bg-[#aa88be] transition-colors shadow-lg hover:shadow-xl"
-                  sx={{
-                    bgcolor: "primary.main",
-                    "&:hover": {
-                      bgcolor: "primary.dark",
-                    },
-                  }}
-                >
-                  Save Note
-                </Button>
-                <Button
-                  className="px-8 py-3 bg-white border-2 border-[#642b8f] text-[#642b8f] rounded-lg font-medium hover:bg-[#efe8f0] transition-colors"
-                  onClick={() =>
-                    enquiryStatus({
-                      open: false,
-                      rowData: null,
-                      noteText: "",
-                      enquiryStatus: "",
-                      disposition: "",
-                    })
-                  }
-                  variant="outlined"
-                  sx={{
-                    color: "text.primary",
-                    borderColor: "divider",
-                  }}
-                  type="reset"
-                >
-                  Cancel
-                </Button>
-              </DialogActions>
-            </Dialog>
-          </Paper>
-        </Box>
-      </Fade>
-    </ThemeProvider>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => confirmDialog.onConfirm()}
+              color="primary"
+              variant="contained"
+            >
+              Confirm
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </ThemeProvider>
+      <TaskAssignmentOverlay
+        isOpen={isTaskOverlayOpen}
+        onClose={() => setIsTaskOverlayOpen(false)}
+        sx={{
+          "& .MuiDialog-container": {
+            zIndex: 1400, // Higher z-index to appear on top
+          },
+        }}
+      >
+        <EnquiryRelatedTaskComponent
+          id={enqId}
+          onClose={() => setIsTaskOverlayOpen(false)}
+        />
+      </TaskAssignmentOverlay>
+    </>
   );
 };
 export default Prospects;

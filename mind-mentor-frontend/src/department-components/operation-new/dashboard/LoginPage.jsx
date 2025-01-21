@@ -5,8 +5,8 @@ import {
   employeeEmailVerification,
   operationPasswordVerification,
 } from "../../../api/service/employee/EmployeeService";
-import toast from "react-hot-toast";
-import { ToastContainer } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const KidsLoginPage = () => {
   const [email, setEmail] = useState("");
@@ -31,8 +31,8 @@ const KidsLoginPage = () => {
         toast.error("Email not found. Please check your credentials.");
       }
     } catch (error) {
-      console.error("Error verifying email:", error);
-      toast.error("Something went wrong. Please try again.");
+      console.error("Error verifying email:", error.response.data.message);
+      toast.error(error.response.data.message);
     }
   };
 
@@ -84,8 +84,7 @@ const KidsLoginPage = () => {
       }
     } catch (error) {
       console.error("Error in operation department login:", error);
-      toast.error("Something went wrong. Please try again.");
-    }
+      toast.error(error.response.data.message);    }
   };
 
   return (
@@ -212,12 +211,15 @@ const KidsLoginPage = () => {
       </div>
       <ToastContainer
         position="top-right"
-        autoClose={5000}
+        autoClose={3000}
         hideProgressBar={false}
+        newestOnTop={false}
         closeOnClick
-        pauseOnHover
-        draggable
+        rtl={false}
         pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
       />
     </div>
   );

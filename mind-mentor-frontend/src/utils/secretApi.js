@@ -39,6 +39,7 @@ export async function makeCall(from, to) {
  * @returns {Promise<object>} - API response
  */
 export async function sendMessage(recipient, messageData) {
+  console.log("Sending message",recipient,messageData)
   const url = `${API_BASE_URL}/api/v1/message/${ACCOUNT_ID}/template?apikey=${API_KEY}`;
 
   try {
@@ -51,7 +52,7 @@ export async function sendMessage(recipient, messageData) {
     );
     return response.data;
   } catch (error) {
-    console.error("Error sending message:", error.message);
+    console.error("Error sending message:", error);
     throw error;
   }
 }

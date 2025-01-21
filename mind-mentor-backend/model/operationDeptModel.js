@@ -9,13 +9,16 @@ const operationDeptSchema = new mongoose.Schema(
   {
     parentFirstName: { type: String },
     parentLastName: { type: String },
-    kidFirstName: { type: String }, 
+    kidFirstName: { type: String },
     kidLastName: { type: String },
+    contactNumber: { type: String },
     whatsappNumber: { type: String },
+    isSameAsContact:{type:Boolean},
+
     email: { type: String },
     message: { type: String },
     source: { type: String },
-    kidId:{type:String},
+    kidId: { type: String },
     kidsAge: { type: Number },
     kidsGender: { type: String },
     programs: {
@@ -40,13 +43,13 @@ const operationDeptSchema = new mongoose.Schema(
       default: "None",
     },
     enquiryField: { type: String, default: "enquiryList" },
-    payment: { type: String, enum: ["Pending", "Success"], default: "Pending" }, 
+    payment: { type: String, enum: ["Pending", "Success"], default: "Pending" },
 
     notes: { type: String },
     scheduleDemo: {
       status: {
         type: String,
-        enum: ["Pending", "Scheduled", "Conducted", "Cancelled"], 
+        enum: ["Pending", "Scheduled", "Conducted", "Cancelled"],
         default: "Pending",
       },
       sheduledDay: { type: String },

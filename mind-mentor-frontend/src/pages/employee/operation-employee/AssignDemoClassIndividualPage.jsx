@@ -1,4 +1,4 @@
-import AssignDemoClass from "../../../department-components/common-components/prospects/AssignIndividualDemoClass";
+import AssignDemoClass from "../../../department-components/common-components/prospects/AssignDemoClassGroup";
 import Sidebar from "../../../department-components/operation-new/layout/Sidebar";
 import Topbar from "../../../component/parent-component/parent-dashboard/layout/Topbar";
 const AssignDemoClassIndividualPage = () => {

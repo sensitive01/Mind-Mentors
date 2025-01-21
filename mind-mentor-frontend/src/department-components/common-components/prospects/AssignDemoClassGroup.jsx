@@ -11,13 +11,13 @@ import {
   CheckCircle,
   GraduationCap
 } from "lucide-react";
-import { getDemoClassandStudentDataGroup, saveDemoClassDetails } from "../../../api/service/employee/EmployeeService";
 import { toast } from "react-toastify";
+import { getDemoClassandStudentData, getDemoClassandStudentDataGroup, saveDemoClassDetails } from "../../../api/service/employee/EmployeeService";
 
-const AssignDemoClass = () => {
+const AssignDemoClassGroup = () => {
   const navigate = useNavigate();
   const empId = localStorage.getItem("empId");
-  const { id } = useParams();
+  const { classId } = useParams();
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [classData, setClassData] = useState([]);
   const [students, setStudents] = useState([]);
@@ -25,7 +25,7 @@ const AssignDemoClass = () => {
   useEffect(() => {
     const fetchRequiredClassStudentData = async () => {
       try {
-        const response = await getDemoClassandStudentDataGroup(id);
+        const response = await getDemoClassandStudentDataGroup(classId);
         setClassData(response?.data?.classData);
         setStudents(response?.data?.kidsData);
       } catch (error) {
@@ -33,7 +33,7 @@ const AssignDemoClass = () => {
       }
     };
     fetchRequiredClassStudentData();
-  }, [id]);
+  }, []);
 
   const handleStudentSelection = async (studentId) => {
     const updatedSelection = selectedStudents.includes(studentId)
@@ -45,10 +45,10 @@ const AssignDemoClass = () => {
 
   const handleSaveAssignments = async () => {
     try {
-      const response = await saveDemoClassDetails(id, selectedStudents, empId);
+      const response = await saveDemoClassDetails(classId, selectedStudents, empId);
       if (response.status === 200) {
         toast.success(response.data.message);
-        setTimeout(() => navigate("/employee-operation/schedule"), 1500);
+        setTimeout(() => navigate("/operation/department/prospects"), 1500);
       }
     } catch (error) {
       toast.error("Failed to save assignments");
@@ -168,7 +168,7 @@ const AssignDemoClass = () => {
                       </span>
                     </div>
                     {selectedStudents.includes(student.kidId) && (
-                      <CheckCircle className="w-5 h-5  text-purple-600" />
+                      <CheckCircle className="w-5 h-5 text-purple-600" />
                     )}
                   </div>
                 ))}
@@ -198,4 +198,4 @@ const AssignDemoClass = () => {
   );
 };
 
-export default AssignDemoClass;
+export default AssignDemoClassGroup;

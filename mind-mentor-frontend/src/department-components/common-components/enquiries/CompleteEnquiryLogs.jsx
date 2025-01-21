@@ -118,7 +118,7 @@ const CompleteEnquiryLogs = () => {
         disposition: noteDialog.disposition,
       });
       if(response.status){
-        navigate("/operation/department/enquiry-list")
+        navigate("/operation/department/enrollment-data")
       }
 
       console.log("Response", response);

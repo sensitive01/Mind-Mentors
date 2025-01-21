@@ -10,8 +10,8 @@ const ActivityLog = require("../../../model/taskLogModel");
 operationRoute.get("/enquiry-form", operationController.getAllEnquiries);
 operationRoute.get("/get-shedule-demo-class", operationController.getAllSheduleClass);
 operationRoute.get("/fetch-all-logs/:id", operationController.fetchAllLogs);
-operationRoute.get("/get-demo-class-student-data/:enqId/:classId", operationController.getDemoClassAndStudentsData);
-operationRoute.get("/get-demo-class-student-data/:classId", operationController.getDemoClassAndStudentsDataGroup);
+operationRoute.get("/get-demo-class-student-data/:enqId", operationController.getDemoClassAndStudentsData);
+operationRoute.get("/get-demo-class-student-data-group/:classId", operationController.getDemoClassAndStudentsDataGroup);
 
 operationRoute.get("/get-kids-data", operationController.getAllKidData);
 operationRoute.get("/get-parent-data", operationController.getAllParentData);
@@ -22,6 +22,8 @@ operationRoute.get("/get-my-leaves/:empId", operationController.getMyLeaveData);
 operationRoute.get("/get-leaves/:levId", operationController.getMyIndividualLeave);
 
 operationRoute.get("/get-dropdown-data", operationController.getDropDownData);
+operationRoute.get("/specific-kid-assign-task/:id", operationController.specificKidAssignTask);
+
 
 operationRoute.get("/fetch-all-status-logs/:id", operationController.fetchAllStatusLogs);
 

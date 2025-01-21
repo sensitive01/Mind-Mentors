@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Chip, Typography, Button, Box } from "@mui/material";
 import { ClassCard, customColors, IconText } from "../../Layout/customStyle";
 import {
@@ -10,9 +10,12 @@ import {
   AssignmentTurnedIn as AttendanceIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import ZoomMeetingFrame from "./zoom/ZoomMeetingFrame";
 
 const RenderClassList = ({ classes = [], handleCardClick, isLiveTab = false }) => {
   const navigate = useNavigate()
+  const [activeZoomLink, setActiveZoomLink] = useState(null);
+
   if (!classes || classes.length === 0) {
     return (
       <Typography
@@ -29,10 +32,14 @@ const RenderClassList = ({ classes = [], handleCardClick, isLiveTab = false }) =
   }
 
   const handleJoinClick = (e, classItem) => {
-    e.stopPropagation(); 
-  
-    console.log("Joining class:", classItem);
+    e.stopPropagation();
+    if (classItem.meetingLink) {
+      setActiveZoomLink(classItem.meetingLink);
+    } else {
+      console.error('No Zoom link available for this class');
+    }
   };
+
 
   const handleAttendanceClick = (e, classItem) => {
     e.stopPropagation();
@@ -154,6 +161,12 @@ const RenderClassList = ({ classes = [], handleCardClick, isLiveTab = false }) =
           )}
         </ClassCard>
       ))}
+       {activeZoomLink && (
+        <ZoomMeetingFrame 
+          zoomLink={activeZoomLink}
+          onClose={() => setActiveZoomLink(null)}
+        />
+      )}
     </>
   );
 };

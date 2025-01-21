@@ -14,12 +14,13 @@ const noteSchema = new mongoose.Schema(
     note: {
       type: String,
     },
+    updatedBy: { type: String },
+    createdOn: { type: String },
   },
   {
     timestamps: true, // Automatically adds createdAt and updatedAt fields
   }
 );
-
 
 const notesSectionSchema = new mongoose.Schema(
   {
@@ -32,7 +33,7 @@ const notesSectionSchema = new mongoose.Schema(
     notes: [noteSchema],
   },
   {
-    timestamps: true, 
+    timestamps: true,
   }
 );
 

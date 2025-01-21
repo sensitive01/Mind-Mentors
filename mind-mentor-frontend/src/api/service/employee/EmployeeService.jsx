@@ -298,14 +298,14 @@ export const fetchAllStatusLogs = async (id) => {
 
 
 
-export const getDemoClassandStudentData = async (enqId,classId) => {
-  const response = await operationDeptInstance.get(`/get-demo-class-student-data/${enqId}/${classId}`);
+export const getDemoClassandStudentData = async (enqId) => {
+  const response = await operationDeptInstance.get(`/get-demo-class-student-data/${enqId}`);
   return response;
 };
 
 
 export const getDemoClassandStudentDataGroup = async (classId) => {
-  const response = await operationDeptInstance.get(`/get-demo-class-student-data/${classId}`);
+  const response = await operationDeptInstance.get(`/get-demo-class-student-data-group/${classId}`);
   return response;
 };
 
@@ -483,6 +483,11 @@ export const getAllEmployeesByName = async () => {
 
 export const getDropDownData = async () => {
   const response = await operationDeptInstance.get("/get-dropdown-data");
+  return response.data;
+};
+
+export const assignTaskForSpecificKid = async (id) => {
+  const response = await operationDeptInstance.get(`/specific-kid-assign-task/${id}`);
   return response.data;
 };
 

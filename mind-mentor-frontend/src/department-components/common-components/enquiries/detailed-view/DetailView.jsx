@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Grid,
@@ -17,8 +17,12 @@ import {
   FormControl,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
-import { Edit, Trash2, Plus } from "lucide-react";
+import {  Trash2, Plus } from "lucide-react";
 import { updateEnquiry } from "../../../../api/service/employee/EmployeeService";
+import {
+  formatEmail,
+  formatWhatsAppNumber,
+} from "../../../../utils/formatContacts";
 
 const DetailCard = ({ title, value }) => (
   <Box
@@ -59,33 +63,16 @@ const SectionTitle = ({ children }) => (
   </Typography>
 );
 
-// const TextArea = ({ label, value, onChange, rows = 4 }) => (
-//   <TextField
-//     fullWidth
-//     label={label}
-//     multiline
-//     rows={rows}
-//     value={value}
-//     onChange={onChange}
-//     variant="outlined"
-//     sx={{
-//       "& .MuiOutlinedInput-root": {
-//         backgroundColor: (theme) => alpha(theme.palette.background.paper, 0.9),
-//       },
-//     }}
-//   />
-// );
 
-const DetailView = ({ data }) => {
-  if (!data) return null;
 
+const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [formData, setFormData] = useState(data);
 
-  const handleOpenEdit = () => {
+  useEffect(() => {
     setFormData(data);
-    setIsEditOpen(true);
-  };
+  }, [data]);
+
 
   const handleCloseEdit = () => {
     setIsEditOpen(false);
@@ -100,44 +87,16 @@ const DetailView = ({ data }) => {
     const response = await updateEnquiry(formData);
     console.log("Response0", response);
     if (response.status === 200) {
-      setFormData(response.data);
+      onEditSave(response.data);
     }
     handleCloseEdit();
   };
+  if (!data) return null;
 
   return (
-    <Box sx={{ position: "relative", p: 4 }}>
-      {/* Header */}
-      <Box
-        sx={{
-          position: "absolute",
-          right: 32,
-          top: 32,
-          display: "flex",
-          gap: 2,
-        }}
-      >
-        <Button
-          variant="outlined"
-          startIcon={<Edit size={18} />}
-          onClick={handleOpenEdit}
-          sx={(theme) => ({
-            borderColor: theme.palette.primary.main,
-            color: theme.palette.primary.main,
-            px: 3,
-            py: 1,
-            "&:hover": {
-              borderColor: theme.palette.primary.dark,
-              bgcolor: alpha(theme.palette.primary.main, 0.04),
-            },
-          })}
-        >
-          Edit
-        </Button>
-      </Box>
-
-      {/* Content */}
-      <Box sx={{ mt: 8 }}>
+    <Box sx={{ position: "relative" }}>
+ 
+      <Box >
         <Grid container spacing={4}>
           {/* Parent Information */}
           <Grid item xs={12}>
@@ -147,12 +106,18 @@ const DetailView = ({ data }) => {
                 <DetailCard title="PARENT NAME" value={data.parentName} />
               </Grid>
               <Grid item xs={12} md={3}>
-                <DetailCard title="EMAIL" value={data.email} />
+                <DetailCard title="EMAIL" value={formatEmail(data.email)} />
               </Grid>
               <Grid item xs={12} md={3}>
                 <DetailCard
                   title="WHATSAPP NUMBER"
-                  value={data.whatsappNumber}
+                  value={formatWhatsAppNumber(data.whatsappNumber)}
+                />
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <DetailCard
+                  title="CONTACT NUMBER"
+                  value={formatWhatsAppNumber(data.contactNumber)}
                 />
               </Grid>
               <Grid item xs={12} md={3}>
@@ -300,8 +265,8 @@ const DetailView = ({ data }) => {
 
       {/* Edit Dialog */}
       <Dialog
-        open={isEditOpen}
-        onClose={handleCloseEdit}
+        open={showEdit}
+        onClose={onEditClose}
         maxWidth="lg"
         fullWidth
         PaperProps={{
@@ -357,6 +322,16 @@ const DetailView = ({ data }) => {
                     value={formData.whatsappNumber || ""}
                     onChange={(e) =>
                       handleInputChange("whatsappNumber", e.target.value)
+                    }
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Contact Number"
+                    value={formData.contactNumber || ""}
+                    onChange={(e) =>
+                      handleInputChange("contactNumber", e.target.value)
                     }
                   />
                 </Grid>
@@ -729,7 +704,7 @@ const DetailView = ({ data }) => {
             py: 2,
           }}
         >
-          <Button onClick={handleCloseEdit} variant="outlined" sx={{ mr: 1 }}>
+          <Button onClick={onEditClose} variant="outlined" sx={{ mr: 1 }}>
             Cancel
           </Button>
           <Button onClick={handleSave} variant="contained" color="primary">

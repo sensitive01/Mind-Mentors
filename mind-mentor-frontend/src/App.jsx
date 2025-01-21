@@ -258,6 +258,10 @@ import EnrollmentWalkThrougPage from "./pages/employee/operation-employee/Enroll
 import ShowAllStatusLogs from "./pages/employee/operation-employee/ShowAllStatusLogs";
 import DemoClassListIndividualPage from "./pages/employee/operation-employee/DemoClassListIndividualPage";
 import AssignDemoClassIndividualPage from "./pages/employee/operation-employee/AssignDemoClassIndividualPage";
+import PaymentDecode from "./department-components/common-components/prospects/detailed-view/PaymentDecode";
+import EnquiryRelatedTaskPage from "./pages/employee/operation-employee/EnquiryRelatedTaskPage";
+import EnrollmentPaymentPage from "./pages/employee/operation-employee/EnrollmentPaymentPage";
+import EnquiryProspectsTabPage from "./pages/employee/operation-employee/EnquiryProspectsTabPage";
 
 function App() {
   return (
@@ -332,20 +336,32 @@ function App() {
 
           <Route path="/employee-login" element={<LoginPage />} />
 
-          
+                {/* <Route path="/operation/department/schedule-demo-class-individual-kid/:enqId"  element={< AssignDemoClassIndividualPage />}/>
+          <Route path="/operation/department/assign-demo-class-individually/:classId"  element={<AssignDemoClassIndividualPage />} /> */}
+
         
 
-       
-
+          <Route path="/payment/:encodedData"  element={<EnrollmentPaymentPage />} />
 
           <Route path="/operation/department/dashboard"  element={<OperationDashboardPage />} />
+
+          <Route path="/operation/department/enrollment-data"  element={<EnquiryProspectsTabPage />} />
+
+
           <Route path="/operation/department/enquiry-list" element={<ListingEnquiries />} />
           <Route path="/operation/department/show-complete-enquiry-logs/:id"  element={<ShowAllEnquiryLogs />}/>
           <Route path="/operation/department/show-complete-status-logs/:id"  element={<ShowAllStatusLogs />}/>
           <Route path="/operation/department/enquiry-form" element={<SEnquiryFormPage />}/>
           <Route path="/operation/department/prospects"  element={<ProspectPage />} />
+          <Route path="/operation/department/assign-demo-class/:id"  element={<AssignDemoClassPage />} />
           <Route path="/operation/department/schedule-demo-class-list-individually/:enqId"  element={< DemoClassListIndividualPage />}/>
-          <Route path="/operation/department/assign-demo-class-individually/:enqId/:classId"  element={<AssignDemoClassIndividualPage />} />
+
+
+
+    
+
+          <Route path="/operation/department/assign-kid-task-individually/:id"  element={<EnquiryRelatedTaskPage />} />
+
 
 
 
@@ -362,7 +378,6 @@ function App() {
           <Route path="/operation/department/supports" element={<SupportRequest />} />
           <Route path="/operation/department/support/add" element={<SupportPages />}  />
           <Route path="/operation/department/schedule-demo-class-list"  element={<ScheduleClass />}/>
-          <Route path="/operation/department/assign-demo-class/:id"  element={<AssignDemoClassPage />} />
           <Route path="/operation/department/student-report"  element={<StudentReport />}  />
           <Route path="/operation/department/coach-feedback"  element={<CoachFeedback />} />
           <Route path="/operation/department/invoice" element={<InvoicePage />} />

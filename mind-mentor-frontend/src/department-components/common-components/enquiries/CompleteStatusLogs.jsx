@@ -48,15 +48,17 @@ const CompleteStatusLogs = () => {
       setLoading(true);
       try {
         const response = await fetchAllStatusLogs(id);
+        console.log("Res", response);
         if (response.status && response.data?.data?.notes) {
           const notes = response.data.data.notes;
           const totalCount = notes.length;
           const notesData = notes.map((note, index) => ({
-            id: totalCount - index, 
-            createdAt: new Date(note.createdAt).toLocaleDateString(),
+            id: totalCount - index,
+            createdAt: note.createdOn,
             enquiryStatus: note.enquiryStatus || "N/A",
             disposition: note.disposition || "N/A",
             note: note.note || "N/A",
+            updatedBy: note.updatedBy || "N/A",
           }));
           setNotes(notesData.reverse());
         }
@@ -96,7 +98,7 @@ const CompleteStatusLogs = () => {
         disposition: noteDialog.disposition,
       });
       if (response.status) {
-        navigate("/operation/department/enquiry-list");
+        navigate("/operation/department/enrollment-data");
       }
     } catch (error) {
       console.error("Error saving note:", error);
@@ -113,20 +115,20 @@ const CompleteStatusLogs = () => {
     {
       field: "createdAt",
       headerName: "Date",
-      width: 120,
-      minWidth: 120,
+      width: 160,
+      minWidth: 160,
     },
     {
       field: "enquiryStatus",
       headerName: "Enquiry Status",
-      width: 300,
-      minWidth: 300,
+      width: 200,
+      minWidth: 200,
     },
     {
       field: "disposition",
       headerName: "Disposition",
-      width: 300,
-      minWidth: 300,
+      width: 200,
+      minWidth: 200,
     },
     {
       field: "note",
@@ -146,6 +148,12 @@ const CompleteStatusLogs = () => {
           {params.value}
         </Box>
       ),
+    },
+    {
+      field: "updatedBy",
+      headerName: "Added By",
+      width: 300,
+      minWidth: 300,
     },
   ];
 
@@ -207,7 +215,6 @@ const CompleteStatusLogs = () => {
           <Paper
             elevation={0}
             sx={{
-              p: 3,
               backgroundColor: "background.paper",
               borderRadius: 3,
               height: 650,
@@ -216,17 +223,10 @@ const CompleteStatusLogs = () => {
             }}
           >
             <Box
-              mb={3}
               display="flex"
-              justifyContent="space-between"
-              alignItems="center"
+              justifyContent="flex-end" // Aligns content to the right
+              alignItems="center" // Ensures vertical alignment
             >
-              <Typography
-                variant="h5"
-                sx={{ color: "text.primary", fontWeight: 600 }}
-              >
-                Status Notes ({notes.length} entries)
-              </Typography>
               <Button
                 variant="contained"
                 onClick={handleOpenNoteDialog}
@@ -240,7 +240,7 @@ const CompleteStatusLogs = () => {
                   py: 1,
                 }}
               >
-                Add Note
+                Add Notes
               </Button>
             </Box>
 
@@ -249,7 +249,19 @@ const CompleteStatusLogs = () => {
                 No notes available for this enquiry.
               </Alert>
             ) : (
-              <Box sx={{ height: 500, width: "100%" }}>
+              <Box
+                sx={{
+                  height: 500,
+                  width: "100%",
+                  "& .MuiDataGrid-virtualScroller::-webkit-scrollbar": {
+                    display: "none",
+                  },
+                  "& .MuiDataGrid-virtualScroller": {
+                    msOverflowStyle: "none",
+                    scrollbarWidth: "none",
+                  },
+                }}
+              >
                 <DataGrid
                   rows={notes}
                   columns={columns}
@@ -272,22 +284,13 @@ const CompleteStatusLogs = () => {
                     },
                   }}
                   sx={{
-                    "& .MuiDataGrid-main": {
+                    "& .MuiDataGrid-virtualScroller": {
                       overflow: "auto",
                       "&::-webkit-scrollbar": {
-                        height: 8,
-                        width: 8,
+                        display: "none",
                       },
-                      "&::-webkit-scrollbar-track": {
-                        backgroundColor: "#f1f1f1",
-                      },
-                      "&::-webkit-scrollbar-thumb": {
-                        backgroundColor: "#888",
-                        borderRadius: 4,
-                      },
-                      "&::-webkit-scrollbar-thumb:hover": {
-                        backgroundColor: "#555",
-                      },
+                      scrollbarWidth: "none",
+                      msOverflowStyle: "none",
                     },
                     "& .MuiDataGrid-cell": {
                       whiteSpace: "normal !important",
@@ -307,6 +310,14 @@ const CompleteStatusLogs = () => {
                       backgroundColor: "#642b8f",
                       color: "white",
                       fontWeight: 600,
+                    },
+                    "& .MuiDataGrid-main": {
+                      overflow: "auto",
+                      "&::-webkit-scrollbar": {
+                        display: "none",
+                      },
+                      scrollbarWidth: "none",
+                      msOverflowStyle: "none",
                     },
                   }}
                 />

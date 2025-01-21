@@ -248,14 +248,7 @@ const ScheduleKanban = () => {
             >
               Class Schedules
             </Typography>
-            <Button
-              variant="contained"
-              component={Link}
-              to="/serviceClassShedule"
-              color="primary"
-            >
-              + Create Schedules
-            </Button>
+           
           </Box>
 
           <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
