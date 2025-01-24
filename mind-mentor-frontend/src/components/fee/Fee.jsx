@@ -1,143 +1,126 @@
-import { Search, Cloud, Menu, List, Check, Printer } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { Search, FileText, Download, Eye } from "lucide-react";
+import { useParams } from "react-router-dom";
+import { getPaidClassData } from "../../api/service/parent/ParentService";
 
 const Fee = () => {
-  const feeData = [
-    {
-      sno: "01",
-      chessKidId: "MM123",
-      program: "Chess",
-      level: "Intermediate",
-      type: "Online",
-      subscription: "02",
-      amount: "45,000.00",
-      status: "Completed",
-      date: "10th Oct, 2024 12:30 pm",
-      hasPrinter: true
-    },
-    {
-      sno: "02",
-      chessKidId: "MM123",
-      program: "Chess",
-      level: "Beginner",
-      type: "Offline",
-      subscription: "01",
-      amount: "45,000.00",
-      status: "Completed",
-      date: "09th Oct, 2024 12:30 pm",
-      hasPrinter: true
-    },
-    {
-      sno: "03",
-      chessKidId: "MM123",
-      program: "Chess",
-      level: "Advanced",
-      type: "Online",
-      subscription: "02",
-      amount: "45,000.00",
-      status: "Pending",
-      date: "08th Oct, 2024 12:30 pm",
-      hasPrinter: false
-    },
-    {
-      sno: "04",
-      chessKidId: "MM123",
-      program: "Chess",
-      level: "Intermediate",
-      type: "Online",
-      subscription: "02",
-      amount: "45,000.00",
-      status: "Completed",
-      date: "07th Oct, 2024 12:30 pm",
-      hasPrinter: true
-    },
-    {
-      sno: "05",
-      chessKidId: "MM123",
-      program: "Chess",
-      level: "Intermediate",
-      type: "Online",
-      subscription: "02",
-      amount: "45,000.00",
-      status: "Completed",
-      date: "07th Oct, 2024 12:30 pm",
-      hasPrinter: true
-    },
-    {
-      sno: "06",
-      chessKidId: "MM123",
-      program: "Chess",
-      level: "Intermediate",
-      type: "Online",
-      subscription: "02",
-      amount: "45,000.00",
-      status: "Completed",
-      date: "07th Oct, 2024 12:30 pm",
-      hasPrinter: true
-    }
-  ];
+  const { kidId } = useParams();
+  const [feeData, setFeeData] = useState([]);
+  const [kidInfo, setKidInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFeesData = async () => {
+      try {
+        const response = await getPaidClassData(kidId);
+        if (response && response.data) {
+          setFeeData(response.data.data);
+          setKidInfo({
+            name: response.data.data[0]?.kidName,
+            id: response.data.data[0]?.kidId
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching fees data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeesData();
+  }, [kidId]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gray-100">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6">
-    
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-semibold text-primary">Fee Details</h1>
-        <div className="flex gap-6">
-          <Search className="w-6 h-6 text-gray-400" />
-          <Cloud className="w-6 h-6 text-gray-400" />
-          <Menu className="w-6 h-6 text-gray-400" />
-          <List className="w-6 h-6 text-gray-400" />
+    <div className="bg-gray-50 min-h-screen p-4 md:p-8">
+      <div className="max-w-6xl mx-auto">
+        {/* Student Header */}
+        <div className="bg-white shadow-md rounded-lg p-6 mb-6 flex flex-col md:flex-row justify-between items-center">
+          <div className="mb-4 md:mb-0">
+            <h1 className="text-2xl font-bold text-blue-700 mb-2">{kidInfo?.name}</h1>
+            <p className="text-gray-600">Student ID: {kidInfo?.id}</p>
+          </div>
+          <div className="flex space-x-4">
+            <button className="p-2 bg-blue-50 rounded-full hover:bg-blue-100 transition">
+              <Search className="w-6 h-6 text-blue-600" />
+            </button>
+            <button className="p-2 bg-blue-50 rounded-full hover:bg-blue-100 transition">
+              <FileText className="w-6 h-6 text-blue-600" />
+            </button>
+            <button className="p-2 bg-blue-50 rounded-full hover:bg-blue-100 transition">
+              <Download className="w-6 h-6 text-blue-600" />
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-gray-200">
-              <th className="py-4 px-6 text-left text-sm font-medium text-gray-600">Sno</th>
-              <th className="py-4 px-6 text-left text-sm font-medium text-gray-600">ChessKid ID</th>
-              <th className="py-4 px-6 text-left text-sm font-medium text-gray-600">Program</th>
-              <th className="py-4 px-6 text-left text-sm font-medium text-gray-600">Level</th>
-              <th className="py-4 px-6 text-left text-sm font-medium text-gray-600">Type</th>
-              <th className="py-4 px-6 text-left text-sm font-medium text-gray-600">Subscription</th>
-              <th className="py-4 px-6 text-left text-sm font-medium text-gray-600">Amount</th>
-              <th className="py-4 px-6 text-center text-sm font-medium text-gray-600"></th>
-              <th className="py-4 px-6 text-left text-sm font-medium text-gray-600">Status</th>
-              <th className="py-4 px-6 text-left text-sm font-medium text-gray-600">Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {feeData.map((row, index) => (
-              <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
-                <td className="py-6 px-6 text-gray-600">{row.sno}</td>
-                <td className="py-6 px-6 text-gray-600">{row.chessKidId}</td>
-                <td className="py-6 px-6 text-gray-600">{row.program}</td>
-                <td className="py-6 px-6 text-gray-600">{row.level}</td>
-                <td className="py-6 px-6 text-gray-600">{row.type}</td>
-                <td className="py-6 px-6 text-gray-600">{row.subscription}</td>
-                <td className="py-6 px-6 text-gray-600">{row.amount}</td>
-                <td className="py-6 px-6 text-center">
-                  {row.hasPrinter && <Printer className="w-5 h-5 text-gray-400 inline-block" />}
-                </td>
-                <td className="py-6 px-6">
-                  {row.status === 'Completed' ? (
-                    <div className="flex items-center gap-2 text-primary">
-                      <div className="bg-primary rounded-full p-1">
-                        <Check className="w-3 h-3 text-white" />
-                      </div>
-                      {row.status}
-                    </div>
-                  ) : (
-                    <div className="bg-violet-100 text-primary px-4 py-1 rounded-full text-sm">
-                      {row.status}
-                    </div>
-                  )}
-                </td>
-                <td className="py-6 px-6 text-gray-400">{row.date}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {/* Fee Details Table */}
+        <div className="bg-white shadow-md rounded-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-blue-50 border-b border-blue-100">
+                <tr>
+                  {[
+                    "Transaction ID", "Amount", "Enquiry ID", 
+                    "Selection Type", "Timestamp", "Status", "Action"
+                  ].map((header) => (
+                    <th 
+                      key={header} 
+                      className="py-4 px-6 text-left text-sm font-semibold text-blue-800"
+                    >
+                      {header}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {feeData?.map((row, index) => (
+                  <tr
+                    key={index}
+                    className="border-b border-gray-100 hover:bg-blue-50 transition-colors"
+                  >
+                    <td className="py-4 px-6 text-gray-700">{row.raz_transaction_id}</td>
+                    <td className="py-4 px-6 font-semibold text-blue-700">₹{row.amount}</td>
+                    <td className="py-4 px-6 text-gray-700">{row.enqId}</td>
+                    <td className="py-4 px-6 text-gray-700 capitalize">{row.selectionType}</td>
+                    <td className="py-4 px-6 text-gray-600 text-sm">
+                      {new Date(row.timestamp).toLocaleString()}
+                    </td>
+                    <td className="py-4 px-6">
+                      {row.status === "Success" ? (
+                        <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-medium">
+                          Paid
+                        </span>
+                      ) : (
+                        <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-medium">
+                          {row.status}
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-4 px-6">
+                      <button className="p-2 bg-blue-50 rounded-full hover:bg-blue-100 transition">
+                        <Eye className="w-5 h-5 text-blue-600" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+              {/* No Data State */}
+              {(!feeData || feeData.length === 0) && (
+                <div className="text-center py-10 text-gray-500">
+                  No payment records found
+                </div>
+              )}
+          </div>
+        </div>
       </div>
     </div>
   );

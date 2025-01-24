@@ -239,3 +239,27 @@ export const fetchPaymentNotifications = async (kidId,parentId) => {
     return err;
   }
 };
+
+
+export const savepaymentInfo = async (paymentData,paymentMode,transactionId,parentId) => {
+  try {
+    const response = await parentInstance.post(
+      `/parent/save-payment-information-data/${parentId}`,{paymentData,paymentMode,transactionId}
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+
+export const getPaidClassData = async (kidId) => {
+  try {
+    const response = await parentInstance.get(
+      `/parent/get-paid-payment-information/${kidId}`
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};

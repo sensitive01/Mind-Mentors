@@ -72,3 +72,8 @@ export const deleteCoachAvailability = async (id) => {
   const response = await serviceInstance.delete(`/service/delete-coach-availability/${id}`);
   return response;
 };
+
+export const fechAllActiveEnrolledEnquiry = async () => {
+  const response = await serviceInstance.get(`/service/get-active-enquiry-data`);
+  return response.data;
+};

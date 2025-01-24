@@ -10,6 +10,7 @@ const ClassSchedule = require("../../model/classSheduleModel");
 const kidAvailability = require("../../model/kidAvailability");
 const ConductedClass = require("../../model/conductedClassSchema");
 const enquiryLogs = require("../../model/enquiryLogs");
+const classPaymentModel = require("../../model/classPaymentModel");
 
 const parentLogin = async (req, res) => {
   try {
@@ -871,6 +872,10 @@ const saveKidAvailability = async (req, res) => {
   }
 };
 
+
+
+
+
 const getKidAvailability = async (req, res) => {
   try {
     const { kidId } = req.params;
@@ -1189,6 +1194,108 @@ const getPaymentNotificationData = async (req, res) => {
   }
 };
 
+
+const savePaymentData = async (req, res) => {
+  try {
+    console.log("Welcome to save the payment data", req.body);
+
+    const { parentId } = req.params; // Extract parentId from the URL params
+    const { paymentData, paymentMode, transactionId } = req.body; // Extract data from the request body
+
+   
+
+    await Promise.all([
+      parentModel.findByIdAndUpdate(parentId, { $set: { status: "Active" } }),
+      kidModel.findByIdAndUpdate(paymentData.kidId, { $set: { status: "Active" } }),
+      operationDeptModel.findByIdAndUpdate(paymentData.enqId, { $set: { status: "Active",payment:"Succcess" } }),
+    ]);
+
+
+    if (!paymentData || !paymentMode || !transactionId) {
+      return res.status(400).json({ message: "Missing required payment data" });
+    }
+
+    const {
+      enqId,
+      kidId,
+      kidName,
+      whatsappNumber,
+      selectionType,
+      classDetails,
+      kitItem,
+      amount,
+      timestamp,
+    } = paymentData;
+
+    const paymentRecord = new classPaymentModel({
+      amount,
+      classDetails: {
+        coachName: classDetails.coach,
+        day: classDetails.day,
+        isGoldMember: classDetails.isGoldMember,
+        classType: classDetails.name,
+        numberOfClasses: classDetails.numberOfClasses,
+      },
+      enqId,
+      kidId,
+      kidName,
+      kitItem,
+      selectionType,
+      timestamp: timestamp || Date.now(),
+      whatsappNumber,
+      parentId,
+      raz_transaction_id: transactionId,
+      paymentMode: paymentMode.paymentMode,
+    });
+
+    const savedPayment = await paymentRecord.save();
+
+    console.log("Payment data saved successfully", savedPayment);
+
+    res.status(201).json({ message: "Payment data saved successfully", data: savedPayment });
+  } catch (err) {
+    console.log("Error in saving the payment data", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const getKidPaidFeeData = async (req, res) => {
+  try {
+    const { kidId } = req.params;
+
+    const paymentData = await classPaymentModel.find(
+      { kidId: kidId },
+      { amount: 1, status: 1, kidName: 1, kidId: 1, selectionType: 1, timestamp: 1, raz_transaction_id: 1, enqId: 1 }
+    );
+
+    if (!paymentData || paymentData.length === 0) {
+      return res.status(404).json({ message: "No payment data found for the specified kidId" });
+    }
+
+    res.status(200).json({
+      message: "Successfully retrieved paid fee data",
+      data: paymentData
+    });
+
+  } catch (err) {
+    console.error("Error in getting the paid fees data", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 module.exports = {
   parentLogin,
   parentVerifyOtp,
@@ -1215,4 +1322,6 @@ module.exports = {
   getKidClassData,
   getKidClassAttendanceData,
   getPaymentNotificationData,
+  savePaymentData,
+  getKidPaidFeeData
 };

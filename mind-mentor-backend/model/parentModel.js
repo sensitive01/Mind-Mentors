@@ -31,7 +31,7 @@ const parentSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      default: "Active"
+      default: "Pending"
     },
     type:{
         type:String,

@@ -146,6 +146,8 @@ const PaymentDialog = ({ open, onClose, data }) => {
     if (selectedPlan) {
       const { totalAmount } = calculateTotalAmount();
       const linkData = {
+        enqId:data._id,
+        kidId:data?.kidId,
         kidName: data?.kidName,
         whatsappNumber: data?.whatsappNumber,
         selectionType,

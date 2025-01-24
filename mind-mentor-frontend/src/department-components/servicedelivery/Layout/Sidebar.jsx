@@ -125,6 +125,12 @@ const ModernSidebar = () => {
       link: '/serviceDashboard',
     },
     {
+      icon: <DashboardIcon />,
+      text: 'Active Enquiry',
+      color: iconColors.dashboard,
+      link: '/service-delivery/department/active-kid-data',
+    },
+    {
       icon: <CoachTime />,
       text: 'Coach Availability',
       color: iconColors.coach,

@@ -6,6 +6,7 @@ const CoachAvailability = require("../../model/availabilityModel");
 const ClassSchedule = require("../../model/classSheduleModel");
 const Employee = require("../../model/employeeModel");
 const enquiryLogs = require("../../model/enquiryLogs");
+const NotesSection = require("../../model/enquiryNoteSection");
 const operationDeptModel = require("../../model/operationDeptModel");
 const convertTo12HourFormat = require("../../utils/convertTo12HourFormat");
 const axios = require("axios");
@@ -13,6 +14,78 @@ const axios = require("axios");
 // const ZOOM_CLIENT_ID = "ChkFppFRmmzbQKT6jiQlA";
 
 // const ZOOM_CLIENT_SECRET = "A8hGnAi3u6v5LkfRT1fWCVU2Z9qQEqi3";
+
+
+
+
+const getAllActiveEnquiries = async (req, res) => {
+  try {
+    const enquiries = await operationDeptModel.find({ enquiryField: "prospects",status:"Active" });
+
+    const customizedEnquiries = await Promise.all(
+      enquiries.map(async (enquiry) => {
+        const parentName = `${enquiry.parentFirstName || ""} ${
+          enquiry.parentLastName || ""
+        }`.trim();
+        const kidName = `${enquiry.kidFirstName || ""} ${
+          enquiry.kidLastName || ""
+        }`.trim();
+
+        let latestAction = null;
+        if (enquiry.logs) {
+          const lastLog = await enquiryLogs.findOne({ _id: enquiry.logs });
+          if (lastLog?.logs?.length) {
+            const sortedLogs = lastLog.logs.sort(
+              (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+            );
+            latestAction = sortedLogs[0]?.action || null;
+          }
+        }
+
+        let lastNoteAction = null;
+        const noteSection = await NotesSection.findOne(
+          { enqId: enquiry._id },
+          { notes: 1, createdOn: 1 }
+        );
+        if (noteSection?.notes?.length) {
+          // Assuming notes are in chronological order
+          lastNoteAction = noteSection.notes[noteSection.notes.length - 1];
+        }
+
+        const formatDate = (date) => {
+          if (!date) return null;
+          const d = new Date(date);
+          const day = String(d.getDate()).padStart(2, "0");
+          const month = String(d.getMonth() + 1).padStart(2, "0");
+          const year = d.getFullYear();
+          return `${day}-${month}-${year}`;
+        };
+
+        const createdAt = formatDate(enquiry.createdAt);
+        const updatedAt = formatDate(enquiry.updatedAt);
+
+        return {
+          ...enquiry.toObject(),
+          parentName,
+          kidName,
+          latestAction,
+          lastNoteAction: lastNoteAction?.disposition || "None",
+          createdOn: lastNoteAction?.createdOn || "createdOn",
+          createdAt,
+          updatedAt,
+        };
+      })
+    );
+
+    res.status(200).json(customizedEnquiries);
+  } catch (error) {
+    console.log("Error", error);
+    res.status(500).json({ message: "Error fetching data" });
+  }
+};
+
+
+
 
 const timeTableShedules = async (req, res) => {
   try {
@@ -661,4 +734,5 @@ module.exports = {
   saveClassData,
   updateCoachAvailabilityData,
   deleteCoachAvailability,
+  getAllActiveEnquiries
 };

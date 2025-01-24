@@ -50,8 +50,8 @@ const kidSchema = new mongoose.Schema(
       type: String,
     },
     status:{
-      type:"String",
-      default:"Enrolled" 
+      type:String,
+      default:"Pending" 
     },
     role:{
       type:String,

@@ -13,7 +13,7 @@ const operationDeptSchema = new mongoose.Schema(
     kidLastName: { type: String },
     contactNumber: { type: String },
     whatsappNumber: { type: String },
-    isSameAsContact:{type:Boolean},
+    isSameAsContact: { type: Boolean },
 
     email: { type: String },
     message: { type: String },
@@ -43,7 +43,11 @@ const operationDeptSchema = new mongoose.Schema(
       default: "None",
     },
     enquiryField: { type: String, default: "enquiryList" },
-    payment: { type: String, enum: ["Pending", "Success","Requested"], default: "Pending" },
+    payment: {
+      type: String,
+      enum: ["Pending", "Success", "Requested"],
+      default: "Pending",
+    },
 
     notes: { type: String },
     scheduleDemo: {
@@ -62,6 +66,7 @@ const operationDeptSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Log",
     },
+    status: { type: String, default: "Pending" },
   },
   { timestamps: true }
 );

@@ -2,14 +2,20 @@ import React, { useState, useEffect } from "react";
 import { Check, CreditCard } from "lucide-react";
 import { useParams } from "react-router-dom";
 import Swal from "sweetalert2";
+import { savepaymentInfo } from "../../../../api/service/parent/ParentService";
+import { useNavigate } from "react-router-dom";
+
+const RAZORPAY_KEY = import.meta.env.VITE_RAZORPAY_KEY_ID;
+import logo from "../../../../assets/mindmentorz.png";
 
 const ParentPayment = () => {
+  const navigate = useNavigate();
   const { encodedData } = useParams();
   const [paymentData, setPaymentData] = useState(null);
   const [paymentDetails, setPaymentDetails] = useState({
     paymentMode: "",
-    transactionId: "",
   });
+  const parentId = localStorage.getItem("parentId");
 
   const paymentModes = [
     { value: "upi", label: "UPI" },
@@ -31,25 +37,88 @@ const ParentPayment = () => {
   useEffect(() => {
     if (encodedData) {
       const decoded = decodePaymentData(encodedData);
+      console.log(decoded);
       if (decoded) {
         setPaymentData(decoded);
       }
     }
   }, [encodedData]);
 
-  const handleUpdatePayment = () => {
+  const handleUpdatePayment = async () => {
     try {
-      // Placeholder for actual API call to update payment
-      Swal.fire({
-        title: "Payment Successful",
-        text: "Thank you for your payment!",
-        icon: "success",
-        confirmButtonText: "OK",
+      const options = {
+        key: RAZORPAY_KEY,
+        amount: paymentData.amount * 100, // Amount in the smallest unit (paise)
+        currency: "INR",
+        name: "MindMentorz",
+        description: "Class Payment",
+        image: logo,
+        handler: async (response) => {
+          try {
+            const { razorpay_payment_id } = response;
+
+            const savepayment = await savepaymentInfo(
+              paymentData,
+              paymentDetails,
+              razorpay_payment_id,
+              parentId
+            );
+            console.log(savepayment);
+
+            if (savepayment.status === 201) {
+              Swal.fire({
+                title: "Payment Done Successfully",
+
+                icon: "success",
+                confirmButtonText: "OK",
+              }).then(() => {
+             
+                navigate(`/parent/kid/attendance/${paymentData.kidId}`);
+              });
+            } else {
+              Swal.fire({
+                title: "Payment Success, but failed to record!",
+                text: "Please contact support.",
+                icon: "warning",
+                confirmButtonText: "OK",
+              });
+            }
+          } catch (err) {
+            console.error(
+              "Error in verifying payment or updating status:",
+              err
+            );
+            Swal.fire({
+              title: "Payment Success, but an error occurred!",
+              text: "Please contact support.",
+              icon: "error",
+              confirmButtonText: "OK",
+            });
+          }
+        },
+        theme: {
+          color: "#3399cc",
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+
+      // Handle payment failure
+      razorpay.on("payment.failed", (response) => {
+        Swal.fire({
+          title: "Payment Failed",
+          text: `Reason: ${response.error.description}`,
+          icon: "error",
+          confirmButtonText: "Retry",
+        });
       });
+
+      razorpay.open();
     } catch (error) {
+      console.error("Error in fetching order URL:", error);
       Swal.fire({
-        title: "Payment Failed",
-        text: error.message,
+        title: "Error",
+        text: "Unable to initiate payment. Please try again later.",
         icon: "error",
         confirmButtonText: "OK",
       });
@@ -129,28 +198,10 @@ const ParentPayment = () => {
               </select>
             </div>
 
-            {/* Transaction ID Input */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Transaction ID
-              </label>
-              <input
-                type="text"
-                value={paymentDetails.transactionId}
-                onChange={(e) =>
-                  handleInputChange("transactionId", e.target.value)
-                }
-                className="w-full rounded-lg border-purple-300 focus:ring-purple-500 focus:border-purple-500 py-2 px-3"
-                placeholder="Enter Transaction ID"
-              />
-            </div>
-
             {/* Payment Button */}
             <button
               onClick={handleUpdatePayment}
-              disabled={
-                !paymentDetails.paymentMode || !paymentDetails.transactionId
-              }
+              disabled={!paymentDetails.paymentMode}
               className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold 
                          hover:bg-purple-700 transition-colors duration-300
                          disabled:opacity-50 disabled:cursor-not-allowed 

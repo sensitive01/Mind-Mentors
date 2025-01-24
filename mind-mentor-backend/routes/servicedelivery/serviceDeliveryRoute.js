@@ -4,6 +4,7 @@ const serviceController = require('../../controller/servicedelivery/seviceContro
 
 
 
+serviceRoute.get("/get-active-enquiry-data",serviceController.getAllActiveEnquiries)
 
 serviceRoute.get("/get-class-shedule",serviceController.getClassShedules)
 serviceRoute.get("/get-coach-data",serviceController.getCoachData)

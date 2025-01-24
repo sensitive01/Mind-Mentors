@@ -263,6 +263,7 @@ import EnquiryRelatedTaskPage from "./pages/employee/operation-employee/EnquiryR
 import EnrollmentPaymentPage from "./pages/employee/operation-employee/EnrollmentPaymentPage";
 import EnquiryProspectsTabPage from "./pages/employee/operation-employee/EnquiryProspectsTabPage";
 import ParentPaymentPage from "./pages/parent/ParentPaymentPage";
+import ServiceActiveKidData from "./pages/employee/servicedelivery/ServiceActiveKidData";
 
 function App() {
   return (
@@ -334,7 +335,7 @@ function App() {
           <Route path="/kids/achievements-list" element={<KidsAchievementsPage />} />
           <Route path="/kids/travel-journey" element={<KidsJourneyPage />} />
 
-          <Route path="/fee-details" element={<FeeDetailsPage />} />
+          <Route path="/fee-details/:kidId" element={<FeeDetailsPage />} />
           <Route path="/class-schedule" element={<ClassShedulePage />} />
 
 
@@ -421,6 +422,10 @@ function App() {
           <Route path="/service-delivery/department/assign-class-students"  element={<ServiceDelivaryClassShedulePage />} />
           <Route path="/service-delivery/department/serviceAssignClassToKid/:id" element={<AssignClassToKid />}/>
           <Route path="/service-delivery/department/coachAvailabilityTable"  element={<CoachAvailabilityTablePage />}  />
+          <Route path="/service-delivery/department/active-kid-data"  element={<ServiceActiveKidData />}  />
+
+
+          
 
 
 

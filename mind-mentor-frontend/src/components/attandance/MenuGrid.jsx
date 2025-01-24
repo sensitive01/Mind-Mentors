@@ -81,7 +81,7 @@ const MenuGrid = () => {
       subtitle: "Details",
       bgColor: "bg-rose-600",
       gradient: "from-rose-600 to-rose-700",
-      route: "/fee-details",
+      route: `/fee-details/${id}`,
     },
     {
       id: id,

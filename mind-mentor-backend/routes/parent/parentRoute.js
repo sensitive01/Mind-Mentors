@@ -15,6 +15,9 @@ parentRoute.get("/get-kid-class-data/:kidId",parentController.getKidClassData)
 parentRoute.get("/get-kid-attandance-data/:kidId",parentController.getKidClassAttendanceData) 
 parentRoute.get("/get-payment-notification-data/:kidId/:parentId",parentController.getPaymentNotificationData) 
 
+parentRoute.get("/get-paid-payment-information/:kidId",parentController.getKidPaidFeeData) 
+
+
 
 
 
@@ -29,6 +32,8 @@ parentRoute.post("/manage-child-pin/:id",parentController.changeChildPin)
 parentRoute.post("/book-new-demo-class/:kidId",parentController.parentBookNewDemoClass)
 parentRoute.post("/add-new-kid/:parentId",parentController.parentAddNewKid)
 parentRoute.post("/save-kid-availability/:kidId",parentController.saveKidAvailability)
+parentRoute.post("/save-payment-information-data/:parentId",parentController.savePaymentData)
+
 
 
 parentRoute.put("/update-kid-availability/:availId",parentController.updateKidAvailability)
