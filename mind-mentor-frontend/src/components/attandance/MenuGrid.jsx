@@ -124,7 +124,7 @@ const MenuGrid = () => {
   const handlePayNow = () => {
     console.log()
     // Implement payment processing logic
-    navigate(`/parent/payment-page/${link}`);
+    navigate(`/parent/payment-page${link}`);
     setIsModalOpen(false);
   };
 
