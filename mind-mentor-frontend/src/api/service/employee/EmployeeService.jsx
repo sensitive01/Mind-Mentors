@@ -3,13 +3,18 @@ import { userInstance } from "../../axios/userInstance";
 
 // Email Verification
 export const employeeEmailVerification = async (email) => {
-  const response = await operationDeptInstance.post("/email-verification", { email });
+  const response = await operationDeptInstance.post("/email-verification", {
+    email,
+  });
   return response;
 };
 
 // Password Verification
-export const operationPasswordVerification = async (email,password) => {
-  const response = await operationDeptInstance.post("/password-verification", { email,password });
+export const operationPasswordVerification = async (email, password) => {
+  const response = await operationDeptInstance.post("/password-verification", {
+    email,
+    password,
+  });
   return response;
 };
 
@@ -26,8 +31,11 @@ export const fetchAllEnquiries = async () => {
 };
 
 // Update Enquiry
-export const updateEnquiry = async ( updatedData) => {
-  const response = await operationDeptInstance.put(`/enquiry-form/${updatedData._id}`, updatedData);
+export const updateEnquiry = async (updatedData) => {
+  const response = await operationDeptInstance.put(
+    `/enquiry-form/${updatedData._id}`,
+    updatedData
+  );
   return response;
 };
 
@@ -42,31 +50,30 @@ export const createLeave = async (formData) => {
   return response;
 };
 
-
 export const fetchMyLeaves = async (empId) => {
   const response = await operationDeptInstance.get(`/get-my-leaves/${empId}`);
   return response.data;
 };
-
-
 
 export const fetchLeaveById = async (levId) => {
   const response = await operationDeptInstance.get(`/get-leaves/${levId}`);
   return response;
 };
 
-
-
 // Get All Leaves
 export const fetchAllLeaves = async (empEmail) => {
-  const response = await operationDeptInstance.get(`/leaves-form?email=${empEmail}`);
+  const response = await operationDeptInstance.get(
+    `/leaves-form?email=${empEmail}`
+  );
   return response.data;
 };
 
 // Update Leave
-export const updateLeave = async ( updatedData,id) => {
-  console.log(id, updatedData)
-  const response = await operationDeptInstance.put(`/leaves-form/${id}`, {updatedData});
+export const updateLeave = async (updatedData, id) => {
+  console.log(id, updatedData);
+  const response = await operationDeptInstance.put(`/leaves-form/${id}`, {
+    updatedData,
+  });
   return response.data;
 };
 
@@ -78,79 +85,84 @@ export const deleteLeave = async (id) => {
 
 // Update Prospect Status
 export const updateProspectStatus = async (id, enquiryStatus) => {
-  const response = await operationDeptInstance.put(`/prospect-status/${id}`, { enquiryStatus });
+  const response = await operationDeptInstance.put(`/prospect-status/${id}`, {
+    enquiryStatus,
+  });
   return response.data;
 };
 // Update Prospect Status
-export const updateEnquiryStatus = async (id, enquiryStatus,empId) => {
-  const response = await operationDeptInstance.put(`/enquiry-status/${id}`, { enquiryStatus,empId });
+export const updateEnquiryStatus = async (id, enquiryStatus, empId) => {
+  const response = await operationDeptInstance.put(`/enquiry-status/${id}`, {
+    enquiryStatus,
+    empId,
+  });
   return response.data;
 };
 // Schedule Demo
 export const scheduleDemo = async (id, scheduleData) => {
-  const response = await operationDeptInstance.put(`/schedule-demo/${id}`, scheduleData);
+  const response = await operationDeptInstance.put(
+    `/schedule-demo/${id}`,
+    scheduleData
+  );
   return response.data;
 };
 
 // Add Notes
-export const addNotes = async (id,empId, notes) => {
-  const response = await operationDeptInstance.put(`/add-notes/${id}`, { notes,empId });
+export const addNotes = async (id, empId, notes) => {
+  const response = await operationDeptInstance.put(`/add-notes/${id}`, {
+    notes,
+    empId,
+  });
   return response;
 };
 
 // Refer to Friend
 export const referToFriend = async (id, referralData) => {
-  const response = await operationDeptInstance.put(`/refer-to-friend/${id}`, referralData);
+  const response = await operationDeptInstance.put(
+    `/refer-to-friend/${id}`,
+    referralData
+  );
   return response.data;
 };
 
 export const markAttendance = async (formData) => {
-  const response = await operationDeptInstance.post("/attendance/mark", formData);
+  const response = await operationDeptInstance.post(
+    "/attendance/mark",
+    formData
+  );
   return response.data;
 };
-
 
 export const createTasks = async (formData) => {
   const response = await operationDeptInstance.post("/tasks", formData);
   return response.data;
 };
 
-
 export const fetchMyPendingTask = async (empId) => {
   try {
-    const response = await operationDeptInstance.get(`/my-pending-tasks/${empId}`, {
-    
-    });
+    const response = await operationDeptInstance.get(
+      `/my-pending-tasks/${empId}`,
+      {}
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching tasks:", error);
     throw error;
   }
 };
-
-
 
 export const fetchTaskAmAssignedToOthers = async (empId) => {
   try {
-    const response = await operationDeptInstance.get(`/assign-task-to-others/${empId}`, {
-    
-    });
+    const response = await operationDeptInstance.get(
+      `/assign-task-to-others/${empId}`,
+      {}
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching tasks:", error);
     throw error;
   }
 };
-
-
-
-
-
-
-
-
-
-
 
 // Create Enquiry
 export const fetchAllTasks = async () => {
@@ -177,7 +189,10 @@ export const getActivityLogsByTaskId = async (id) => {
 // Add Notes Service Function
 export const addNotesToTasks = async (id, payload) => {
   try {
-    const response = await operationDeptInstance.put(`/tasks/notes/${id}`, payload);
+    const response = await operationDeptInstance.put(
+      `/tasks/notes/${id}`,
+      payload
+    );
     return response.data; // Return the response data directly
   } catch (error) {
     console.error("Error in addNotesToTasks service:", error.message);
@@ -188,7 +203,7 @@ export const addNotesToTasks = async (id, payload) => {
 export const updateTaskStatus = async (id, payload) => {
   try {
     // Get empId from localStorage (or from your app's state/context)
-    const empId = localStorage.getItem('empId');
+    const empId = localStorage.getItem("empId");
     if (!empId) {
       throw new Error("Employee ID (empId) is missing.");
     }
@@ -199,7 +214,7 @@ export const updateTaskStatus = async (id, payload) => {
       payload,
       {
         headers: {
-          'empId': empId, // Pass empId in the headers
+          empId: empId, // Pass empId in the headers
         },
       }
     );
@@ -212,7 +227,10 @@ export const updateTaskStatus = async (id, payload) => {
 };
 // Update Enquiry
 export const updateTasks = async (id, updatedData) => {
-  const response = await operationDeptInstance.put(`/enquiry-form/${id}`, updatedData);
+  const response = await operationDeptInstance.put(
+    `/enquiry-form/${id}`,
+    updatedData
+  );
   return response.data;
 };
 
@@ -222,17 +240,10 @@ export const deleteTasks = async (id) => {
   return response.data;
 };
 
-
-
-
-
-
-
 export const getKidData = async () => {
   const response = await operationDeptInstance.get(`/get-kids-data`);
   return response.data;
 };
-
 
 export const getParentData = async () => {
   const response = await operationDeptInstance.get(`/get-parent-data`);
@@ -240,7 +251,9 @@ export const getParentData = async () => {
 };
 
 export const attandaceData = async (empId) => {
-  const response = await operationDeptInstance.get(`/get-attandace-data/${empId}`);
+  const response = await operationDeptInstance.get(
+    `/get-attandace-data/${empId}`
+  );
   return response.data;
 };
 
@@ -249,85 +262,111 @@ export const fetchProspectsEnquiries = async () => {
   return response.data;
 };
 
-
 export const getProspectsStudents = async () => {
-  const response = await operationDeptInstance.get(`/get-prospects-student-data`);
+  const response = await operationDeptInstance.get(
+    `/get-prospects-student-data`
+  );
   return response.data;
 };
 
-
-export const seduleDemoClass = async (empId,data) => {
-  const response = await operationDeptInstance.post(`/shedule-demo-class/${empId}`,{data});
+export const seduleDemoClass = async (empId, data) => {
+  const response = await operationDeptInstance.post(
+    `/shedule-demo-class/${empId}`,
+    { data }
+  );
   return response.data;
 };
-
 
 export const getDemoSheduleClass = async () => {
   const response = await operationDeptInstance.get(`/get-shedule-demo-class`);
   return response;
 };
 
-export const moveToProspects = async (id,empId) => {
-  const response = await operationDeptInstance.put(`/move-to-prospects/${id}`,{empId});
+export const moveToProspects = async (id, empId) => {
+  const response = await operationDeptInstance.put(`/move-to-prospects/${id}`, {
+    empId,
+  });
   return response;
 };
 
-export const handleMoveToEnquiry = async (id,empId) => {
-  console.log("Calliing...")
-  const response = await operationDeptInstance.put(`/move-to-enquiry/${id}`,{empId});
+export const handleMoveToEnquiry = async (id, empId) => {
+  console.log("Calliing...");
+  const response = await operationDeptInstance.put(`/move-to-enquiry/${id}`, {
+    empId,
+  });
   return response;
 };
 
+export const saveDemoClassDetails = async (classId, students, empId) => {
+  const response = await operationDeptInstance.post(
+    `/save-demo-class/${empId}`,
+    { classId, students }
+  );
+  return response;
+};
 
+export const rescheduleDemoClass = async ( classId, selectedStudents,empId) => {
+  console.log("Calliing...");
+  const response = await operationDeptInstance.put(`/reshedule-demo-class-for-a-kid/${classId}/${empId}`, {
+    selectedStudents,
+  });
+  return response;
+};
 
-
-
-
+export const cancelDemoClass = async (enqId,classId,empId) => {
+  console.log("Calliing...");
+  const response = await operationDeptInstance.put(`/cancel-demo-class-for-a-kid/${enqId}/${classId}/${empId}`);
+  return response;
+};
 
 export const fetchAllLogs = async (id) => {
   const response = await operationDeptInstance.get(`/fetch-all-logs/${id}`);
   return response;
 };
 
-
 export const fetchAllStatusLogs = async (id) => {
-  const response = await operationDeptInstance.get(`/fetch-all-status-logs/${id}`);
+  const response = await operationDeptInstance.get(
+    `/fetch-all-status-logs/${id}`
+  );
   return response;
 };
-
-
-
 
 export const getDemoClassandStudentData = async (enqId) => {
-  const response = await operationDeptInstance.get(`/get-demo-class-student-data/${enqId}`);
+  const response = await operationDeptInstance.get(
+    `/get-demo-class-student-data/${enqId}`
+  );
   return response;
 };
 
+export const getDemoClassById = async (enqId) => {
+  const response = await operationDeptInstance.get(
+    `/get-demo-class-for-individual-kid/${enqId}`
+  );
+  return response;
+};
 
 export const getDemoClassandStudentDataGroup = async (classId) => {
-  const response = await operationDeptInstance.get(`/get-demo-class-student-data-group/${classId}`);
+  const response = await operationDeptInstance.get(
+    `/get-demo-class-student-data-group/${classId}`
+  );
   return response;
 };
 
 
-
-export const saveDemoClassDetails = async (classId,students,empId) => {
-  const response = await operationDeptInstance.post(`/save-demo-class/${empId}`,{classId,students});
-  return response;
-};
 
 export const getConductedDemo = async () => {
   const response = await operationDeptInstance.get(`/get-conducted-demo-class`);
   return response;
 };
 
-export const updateDemoStatus = async (id,empId) => {
-  const response = await operationDeptInstance.put(`/update-conducted-enrollment-status/${empId}/${id}`);
+export const updateDemoStatus = async (id, empId) => {
+  const response = await operationDeptInstance.put(
+    `/update-conducted-enrollment-status/${empId}/${id}`
+  );
   return response;
 };
 
 // ............................................................
-
 
 // Create User
 export const createUser = async (userData) => {
@@ -366,7 +405,6 @@ export const deleteUser = async (id) => {
   return response.data;
 };
 
-
 // Create User
 export const createEmployee = async (userData) => {
   const response = await userInstance.post("employee", userData);
@@ -396,7 +434,6 @@ export const deleteEmployee = async (id) => {
   const response = await userInstance.delete(`/employees/${id}`);
   return response.data;
 };
-
 
 // tournments
 // Create Tournament
@@ -460,19 +497,18 @@ export const deleteHoliday = async (id) => {
   return response.data;
 };
 
-
-
 export const createChat = async (payload) => {
   try {
-    const response = await userInstance.post('/chats/', payload, { // Use userInstance for the POST request
+    const response = await userInstance.post("/chats/", payload, {
+      // Use userInstance for the POST request
       headers: {
-        'empId': localStorage.getItem('empId') // Pass empId from localStorage for authorization
+        empId: localStorage.getItem("empId"), // Pass empId from localStorage for authorization
       },
     });
 
     return response.data; // Return the response data
   } catch (error) {
-    throw new Error(error.message || 'Error submitting chat');
+    throw new Error(error.message || "Error submitting chat");
   }
 };
 
@@ -487,7 +523,16 @@ export const getDropDownData = async () => {
 };
 
 export const assignTaskForSpecificKid = async (id) => {
-  const response = await operationDeptInstance.get(`/specific-kid-assign-task/${id}`);
+  const response = await operationDeptInstance.get(
+    `/specific-kid-assign-task/${id}`
+  );
   return response.data;
 };
 
+
+export const sendPaymentDetailsLink = async (link,enqId) => {
+  const response = await operationDeptInstance.post(
+    `/send-payment-link/${enqId}`,{link}
+  );
+  return response;
+};

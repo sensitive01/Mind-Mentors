@@ -1,126 +1,245 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Calendar,
   Clock,
   User,
-  ChevronDown,
-  ChevronUp,
+  Users,
+  Tag,
+  BookOpen,
   CheckCircle,
   GraduationCap,
-  BookOpen,
-  Star,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
-import { toast, ToastContainer } from "react-toastify";
 import {
   getDemoClassandStudentData,
+  getDemoClassById,
+  getDemoSheduleClass,
   saveDemoClassDetails,
+  cancelDemoClass,
+  rescheduleDemoClass,
 } from "../../../api/service/employee/EmployeeService";
+import { toast, ToastContainer } from "react-toastify";
+import AlertDialogBox from "../alertDialog/AlertDialogBox"
 
-const AssignIndividualDemoClass = () => {
+const AssignDemoClass = () => {
   const navigate = useNavigate();
   const empId = localStorage.getItem("empId");
-  const { enqId, classId } = useParams();
+  const { enqId, isSheduled } = useParams();
+  const [selectedStudents, setSelectedStudents] = useState([]);
   const [classData, setClassData] = useState([]);
-  const [students, setStudents] = useState([]);
-  const [selectedClass, setSelectedClass] = useState(null);
+  const [student, setStudent] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [selectedClass, setSelectedClass] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [confirmationModal, setConfirmationModal] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+  });
 
   useEffect(() => {
-    const fetchRequiredClassStudentData = async () => {
+    const fetchData = async () => {
       try {
-        const response = await getDemoClassandStudentData(enqId);
-        setClassData(response?.data?.classData);
-        setStudents(response?.data?.kidsData);
+        if (isSheduled === "true") {
+          setIsEditing(true);
+          // Get both the current demo class and available class schedules
+          const [demoClassResponse, availableClassesResponse] =
+            await Promise.all([getDemoClassById(enqId), getDemoSheduleClass()]);
+
+          // Set available classes for rescheduling
+          setClassData(availableClassesResponse.data.scheduleData || []);
+
+          // Set current class details
+          const currentClass = demoClassResponse.data.classData[0];
+
+          setSelectedClass(currentClass);
+
+          // Set student data
+          setStudent(demoClassResponse.data.kidsData);
+
+          // Set selected students from the current class
+          if (currentClass?.selectedStudents) {
+            setSelectedStudents(
+              currentClass.selectedStudents.map((student) => student.kidId)
+            );
+          }
+        } else {
+          const response = await getDemoClassandStudentData(enqId);
+          setClassData(response?.data?.classData || []);
+          setStudent(response?.data?.kidsData);
+        }
       } catch (error) {
-        console.error("Error fetching class and student data:", error);
+        console.error("Error fetching data:", error);
+        toast.error("Failed to fetch data");
       }
     };
-    fetchRequiredClassStudentData();
-  }, []);
+    fetchData();
+  }, [enqId, isSheduled]);
 
-  const handleSaveAssignments = async () => {
-    console.log(students);
-    if (!selectedClass) {
-      toast.error("Please select a class first");
-      return;
-    }
-
-    try {
-      const response = await saveDemoClassDetails(
-        selectedClass._id,
-        students.kidId,
-        empId
+  const handleStudentSelection = (student) => {
+    if (selectedStudents.includes(student.kidId)) {
+      setSelectedStudents(
+        selectedStudents.filter((id) => id !== student.kidId)
       );
-      if (response.status === 200) {
-        toast.success(response.data.message);
-        setTimeout(() => navigate("/operation/department/prospects"), 1500);
-      }
-    } catch (error) {
-      toast.error("Failed to save assignments");
+    } else {
+      setSelectedStudents([...selectedStudents, student.kidId]);
     }
   };
 
+  const handleSaveAssignments = () => {
+    console.log("Save assignemet")
+    if (!selectedClass || selectedStudents.length === 0) {
+      toast.warning("Please select both a class and students");
+      return;
+    }
+
+    setConfirmationModal({
+      isOpen: true,
+      title: isEditing ? "Update Demo Class" : "Confirm Assignment",
+      message: `Are you sure you want to ${
+        isEditing ? "update" : "schedule"
+      } this demo class?`,
+      onConfirm: async () => {
+        try {
+          let response;
+          if (isEditing) {
+            console.log(
+              "isediting",
+              selectedClass._id,
+              selectedStudents,
+              empId
+            );
+        
+            response = await rescheduleDemoClass(
+              selectedClass._id,
+              selectedStudents,
+              empId
+            );
+          } else {
+            console.log("Else")
+            response = await saveDemoClassDetails(
+              selectedClass._id,
+              selectedStudents,
+              empId
+            );
+          }
+
+          if (response?.status === 200) {
+            toast.success(
+              isEditing
+                ? "Demo class rescheduled successfully"
+                : "Demo class scheduled successfully"
+            );
+            setTimeout(
+              () => navigate("/operation/department/enrollment-data"),
+              1500
+            );
+          }
+        } catch (error) {
+          toast.error(
+            isEditing
+              ? "Failed to reschedule demo class"
+              : "Failed to save assignments"
+          );
+        } finally {
+          setConfirmationModal({ ...confirmationModal, isOpen: false });
+        }
+      },
+    });
+  };
+
+  const handleCancelDemoClass = () => {
+    setConfirmationModal({
+      isOpen: true,
+      title: "Cancel Demo Class",
+      message: "Are you sure you want to cancel this demo class?",
+      onConfirm: async () => {
+        try {
+          const response = await cancelDemoClass(enqId, selectedClass._id,empId);
+          if (response.status === 200) {
+            toast.success("Demo class cancelled successfully");
+            setTimeout(
+              () => navigate("/operation/department/enrollment-data"),
+              1500
+            );
+          }
+        } catch (error) {
+          toast.error("Failed to cancel demo class");
+        } finally {
+          setConfirmationModal({ ...confirmationModal, isOpen: false });
+        }
+      },
+    });
+  };
+
+  const InfoCard = ({ icon: Icon, label, value, color = "text-primary" }) => (
+    <div className="flex items-center space-x-3 bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+      <Icon className={`${color} w-4 h-4`} />
+      <div>
+        <p className="text-xs text-gray-500">{label}</p>
+        <p className="text-sm font-medium text-gray-900">{value}</p>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white p-6">
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-purple-800 mb-2">
-            Demo Class Assignment
+    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-2xl font-semibold text-gray-900 mb-1">
+            {isEditing ? "Edit Demo Class" : "Demo Class Assignment"}
           </h1>
-          <p className="text-gray-600">
-            Schedule a demo class for your student
+          <p className="text-sm text-gray-600">
+            {isEditing
+              ? "Modify demo class schedule"
+              : "Schedule demo classes for students"}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Column - Class Selection */}
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div className="p-6 border-b border-purple-100">
-              <div className="flex items-center space-x-3">
-                <Calendar className="w-6 h-6 text-purple-600" />
-                <h2 className="text-xl font-semibold text-gray-800">
-                  Available Classes
-                </h2>
-              </div>
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 space-y-4">
+            <div className="bg-white rounded-lg shadow-sm p-4">
+              <h2 className="text-lg font-medium text-gray-900 mb-4">
+                Class Schedule
+              </h2>
 
-            <div className="p-6">
-              <div className="relative">
+              <div className="relative mb-4">
                 <div
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className={`w-full p-4 border-2 rounded-xl cursor-pointer flex justify-between items-center transition-all duration-200 ${
-                    isDropdownOpen
-                      ? "border-purple-500 ring-2 ring-purple-100"
-                      : "border-gray-200 hover:border-purple-300"
-                  }`}
+                  className="w-full p-3 border rounded-lg cursor-pointer flex justify-between items-center hover:border-blue-300 transition-all duration-200"
                 >
                   {selectedClass ? (
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-3">
-                        <Calendar className="w-5 h-5 text-purple-600" />
-                        <span className="font-medium">{selectedClass.day}</span>
+                    <div className="flex items-center space-x-6">
+                      <div className="flex items-center space-x-2">
+                        <Calendar className="w-5 h-5 text-primary flex-shrink-0" />
+                        <span className="text-sm font-medium">
+                          {selectedClass.day}
+                        </span>
                       </div>
-                      <div className="flex items-center space-x-3">
-                        <Clock className="w-5 h-5 text-purple-600" />
-                        <span>{selectedClass.classTime}</span>
+                      <div className="flex items-center space-x-2">
+                        <Clock className="w-5 h-5 text-primary flex-shrink-0" />
+                        <span className="text-sm font-medium">
+                          {selectedClass.classTime}
+                        </span>
                       </div>
                     </div>
                   ) : (
-                    <span className="text-gray-500">
-                      Choose a class time...
+                    <span className="text-sm text-gray-500">
+                      Select class schedules...
                     </span>
                   )}
                   {isDropdownOpen ? (
-                    <ChevronUp className="w-5 h-5 text-purple-600" />
+                    <ChevronUp className="w-4 h-4 text-primary" />
                   ) : (
-                    <ChevronDown className="w-5 h-5 text-purple-600" />
+                    <ChevronDown className="w-4 h-4 text-primary" />
                   )}
                 </div>
 
                 {isDropdownOpen && (
-                  <div className="absolute z-20 w-full mt-2 bg-white border rounded-xl shadow-xl max-h-64 overflow-y-auto">
+                  <div className="absolute z-20 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-64 overflow-y-auto">
                     {classData.map((classItem) => (
                       <div
                         key={classItem._id}
@@ -128,23 +247,34 @@ const AssignIndividualDemoClass = () => {
                           setSelectedClass(classItem);
                           setIsDropdownOpen(false);
                         }}
-                        className="p-4 hover:bg-purple-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
+                        className={`p-3 cursor-pointer border-b last:border-b-0 transition-colors ${
+                          selectedClass?._id === classItem._id
+                            ? "bg-blue-50"
+                            : "hover:bg-gray-50"
+                        }`}
                       >
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4">
-                            <div className="flex items-center space-x-3">
-                              <Calendar className="w-5 h-5 text-purple-600" />
-                              <span className="font-medium">
+                          {/* Left Section */}
+                          <div className="flex items-center space-x-6 w-full">
+                            {/* Day with Calendar Icon */}
+                            <div className="flex items-center space-x-2 w-1/4">
+                              <Calendar className="w-5 h-5 text-primary flex-shrink-0" />
+                              <span className="text-sm font-medium text-gray-800 truncate">
                                 {classItem.day}
                               </span>
                             </div>
-                            <div className="flex items-center space-x-3">
-                              <Clock className="w-5 h-5 text-purple-600" />
-                              <span>{classItem.classTime}</span>
+                            {/* Time with Clock Icon */}
+                            <div className="flex items-center space-x-2 w-1/4">
+                              <Clock className="w-5 h-5 text-primary flex-shrink-0" />
+                              <span className="text-sm font-medium text-gray-800 truncate">
+                                {classItem.classTime}
+                              </span>
                             </div>
                           </div>
+
+                          {/* Right Section: Selected Indicator */}
                           {selectedClass?._id === classItem._id && (
-                            <CheckCircle className="w-5 h-5 text-purple-600" />
+                            <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
                           )}
                         </div>
                       </div>
@@ -152,65 +282,145 @@ const AssignIndividualDemoClass = () => {
                   </div>
                 )}
               </div>
+
+              {selectedClass && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <InfoCard
+                    icon={User}
+                    label="Coach"
+                    value={selectedClass.coachName}
+                  />
+                  <InfoCard
+                    icon={Users}
+                    label="Students"
+                    value={`${
+                      selectedClass.selectedStudents?.length || 0
+                    } Enrolled`}
+                  />
+                  <InfoCard
+                    icon={BookOpen}
+                    label="Program"
+                    value={selectedClass.program}
+                  />
+                  <InfoCard
+                    icon={Tag}
+                    label="Level"
+                    value={selectedClass.level}
+                  />
+                </div>
+              )}
+
+              {selectedClass?.selectedStudents?.length > 0 && (
+                <div className="mt-4">
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">
+                    Currently Enrolled Students
+                  </h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {selectedClass.selectedStudents.map((student) => (
+                      <div
+                        key={student.kidId}
+                        className="flex items-center space-x-2 p-2 bg-gray-50 rounded-md"
+                      >
+                        <GraduationCap className="w-4 h-4 text-blue-500" />
+                        <span className="text-sm text-gray-700">
+                          {student.kidName}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Right Column - Student Details */}
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div className="p-6 border-b border-purple-100">
-              <div className="flex items-center space-x-3">
-                <GraduationCap className="w-6 h-6 text-purple-600" />
-                <h2 className="text-xl font-semibold text-gray-800">
-                  Student Profile
-                </h2>
-              </div>
-            </div>
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-lg shadow-sm p-4 sticky top-4">
+              <h2 className="text-lg font-medium text-gray-900 mb-4">
+                Select Student
+              </h2>
 
-            <div className="p-6">
-              <div className="bg-purple-50 rounded-xl p-6 mb-6">
-                <div className="flex items-center space-x-4 mb-4">
-                  <div className="w-12 h-12 bg-purple-200 rounded-full flex items-center justify-center">
-                    <User className="w-6 h-6 text-purple-700" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800">
-                      {students.kidFirstName}
-                    </h3>
-                    <p className="text-sm text-gray-600">Student</p>
-                  </div>
-                </div>
-
-                {students?.programs?.map((program, index) => (
+              {student && (
+                <div className="space-y-2 mb-4">
                   <div
-                    key={program._id}
-                    className="ml-2 space-y-3 border-l-2 border-purple-200 pl-4"
+                    onClick={() => handleStudentSelection(student)}
+                    className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
+                      selectedStudents.includes(student.kidId)
+                        ? "bg-blue-50 border-blue-200"
+                        : "bg-gray-50 hover:bg-gray-100"
+                    }`}
                   >
                     <div className="flex items-center space-x-3">
-                      <BookOpen className="w-5 h-5 text-purple-600" />
-                      <span className="text-gray-700">{program.program}</span>
+                      <GraduationCap
+                        className={`w-4 h-4 ${
+                          selectedStudents.includes(student.kidId)
+                            ? "text-primary"
+                            : "text-gray-400"
+                        }`}
+                      />
+                      <div>
+                        <span className="text-sm font-medium text-gray-700">
+                          {student.kidFirstName}
+                        </span>
+                        <div className="text-xs text-gray-500">
+                          {student.programs
+                            .map((p) => `${p.program} - ${p.level}`)
+                            .join(", ")}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-3">
-                      <Star className="w-5 h-5 text-purple-600" />
-                      <span className="text-gray-700">{program.level}</span>
-                    </div>
+                    {selectedStudents.includes(student.kidId) && (
+                      <CheckCircle className="w-4 h-4 text-primary" />
+                    )}
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
 
-              <button
-                onClick={handleSaveAssignments}
-                disabled={!selectedClass}
-                className="w-full bg-purple-600 text-white py-4 px-6 rounded-xl
-                  hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed
-                  transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]
-                  disabled:hover:scale-100 font-medium text-sm"
-              >
-                Confirm Class Assignment
-              </button>
+              <div className="border-t pt-4">
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-xs text-gray-600">
+                    {selectedStudents.length} student selected
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  <button
+                    onClick={handleSaveAssignments}
+                    disabled={!selectedClass || selectedStudents.length === 0}
+                    className="w-full bg-primary text-white py-2 px-4 rounded-lg
+                      text-sm font-medium
+                      hover:bg-blue-700 
+                      disabled:opacity-50 disabled:cursor-not-allowed
+                      transition-colors duration-200"
+                  >
+                    {isEditing ? "Update Demo Class" : "Confirm Assignment"}
+                  </button>
+
+                  {isEditing && (
+                    <button
+                      onClick={handleCancelDemoClass}
+                      className="w-full bg-red-500 text-white py-2 px-4 rounded-lg
+                        text-sm font-medium
+                        hover:bg-red-600
+                        transition-colors duration-200"
+                    >
+                      Cancel Demo Class
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
+       
       </div>
+      <AlertDialogBox
+          isOpen={confirmationModal.isOpen}
+          onClose={() =>
+            setConfirmationModal({ ...confirmationModal, isOpen: false })
+          }
+          onConfirm={confirmationModal.onConfirm}
+          title={confirmationModal.title}
+          message={confirmationModal.message}
+        />
       <ToastContainer
         position="top-right"
         autoClose={5000}
@@ -219,10 +429,10 @@ const AssignIndividualDemoClass = () => {
         pauseOnHover
         draggable
         pauseOnFocusLoss
-        style={{ marginTop: "60px" }} // Adjust the value as needed
+        style={{ marginTop: "60px" }}
       />
     </div>
   );
 };
 
-export default AssignIndividualDemoClass;
+export default AssignDemoClass;

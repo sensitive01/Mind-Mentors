@@ -262,6 +262,7 @@ import PaymentDecode from "./department-components/common-components/prospects/d
 import EnquiryRelatedTaskPage from "./pages/employee/operation-employee/EnquiryRelatedTaskPage";
 import EnrollmentPaymentPage from "./pages/employee/operation-employee/EnrollmentPaymentPage";
 import EnquiryProspectsTabPage from "./pages/employee/operation-employee/EnquiryProspectsTabPage";
+import ParentPaymentPage from "./pages/parent/ParentPaymentPage";
 
 function App() {
   return (
@@ -320,6 +321,9 @@ function App() {
           <Route path="/parent/support" element={<SupportPage />} />
           <Route path="/parent/walkthrough-video"  element={<WalkThroughPage />} />
           <Route path="/parent/add-kid-availability/:kidId" element={<AddKidAvailabilityPage />} />
+          <Route path="/parent/payment-page/payment/:encodedData" element={<ParentPaymentPage />} />
+
+          
 
           <Route path="/kids/login" element={<KidsLoginPage />} />
           <Route path="/kid/otp" element={<KidsPinPage />} />
@@ -354,7 +358,9 @@ function App() {
           <Route path="/operation/department/enquiry-form" element={<SEnquiryFormPage />}/>
           <Route path="/operation/department/prospects"  element={<ProspectPage />} />
           <Route path="/operation/department/assign-demo-class/:id"  element={<AssignDemoClassPage />} />
-          <Route path="/operation/department/schedule-demo-class-list-individually/:enqId"  element={< DemoClassListIndividualPage />}/>
+
+          {/* This is for shedule demo class for individual kid */}
+          <Route path="/operation/department/schedule-demo-class-list-individually/:enqId/:isSheduled"  element={< DemoClassListIndividualPage />}/>
 
 
 

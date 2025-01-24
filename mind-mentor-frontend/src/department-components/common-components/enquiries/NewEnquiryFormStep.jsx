@@ -334,9 +334,12 @@ const NewEnquiryFormStep = () => {
                 onChange={(e) => handleInputChange("source", e.target.value)}
               >
                 <option value="">-Select-</option>
-                <option value="website">Website</option>
+                <option value="web_form">Web Form</option>
+                <option value="justdial">JustDial</option>
+                <option value="whatsapp">WhatsApp</option>
+                <option value="phone_call">Phone Call</option>
+                <option value="centre_walkin">Centre Walk-in</option>
                 <option value="referral">Referral</option>
-                <option value="social">Social Media</option>
               </select>
             </div>
           </div>

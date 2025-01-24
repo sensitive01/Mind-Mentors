@@ -13,6 +13,10 @@ operationRoute.get("/fetch-all-logs/:id", operationController.fetchAllLogs);
 operationRoute.get("/get-demo-class-student-data/:enqId", operationController.getDemoClassAndStudentsData);
 operationRoute.get("/get-demo-class-student-data-group/:classId", operationController.getDemoClassAndStudentsDataGroup);
 
+operationRoute.get("/get-demo-class-for-individual-kid/:enqId", operationController.getSheduledDemoClassDataOfKid);
+
+
+
 operationRoute.get("/get-kids-data", operationController.getAllKidData);
 operationRoute.get("/get-parent-data", operationController.getAllParentData);
 operationRoute.get("/get-prospects-data", operationController.getProspectsData);
@@ -40,6 +44,9 @@ operationRoute.post("/enquiry-form", operationController.enquiryFormData);
 operationRoute.post("/shedule-demo-class/:id", operationController.scheduleDemoClass);
 operationRoute.post("/save-demo-class/:empId", operationController.saveDemoClassData);
 
+operationRoute.post("/send-payment-link/:enqId", operationController.sendPaymentLink);
+
+
 
 
 operationRoute.put("/enquiry-form/:enqId/step/:step", operationController.updateEnquiryDetails);
@@ -53,6 +60,12 @@ operationRoute.put("/enquiry-status/:id",operationController.updateEnquiryStatus
 operationRoute.put("/schedule-demo/:id", operationController.scheduleDemo);
 operationRoute.put("/update-conducted-enrollment-status/:empId/:id", operationController.updateEnrollmentStatus);
 operationRoute.put("/add-notes/:id", operationController.addNotes);
+
+operationRoute.put("/cancel-demo-class-for-a-kid/:enqId/:classId/:empId", operationController.cancelDemoClassForKid);
+operationRoute.put("/reshedule-demo-class-for-a-kid/:classId/:empId", operationController.rescheduleDemoClass);
+
+
+
 
 
 operationRoute.delete("/enquiry-form/:id", operationController.deleteEnquiry);

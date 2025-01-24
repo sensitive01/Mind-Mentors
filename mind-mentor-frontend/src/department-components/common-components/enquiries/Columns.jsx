@@ -60,9 +60,9 @@ const columns = (
               console.log("WhatsApp:", params.row.whatsappNumber);
             }}
             sx={{
-              color: "#25D366", // WhatsApp green
+              color: "#8B5CF6", // Purple
               "&:hover": {
-                bgcolor: alpha("#25D366", 0.1),
+                bgcolor: alpha("#8B5CF6", 0.1),
               },
             }}
           >
@@ -79,9 +79,9 @@ const columns = (
               console.log("Email:", params.row.email);
             }}
             sx={{
-              color: "#EA4335", // Gmail red
+              color: "#8B5CF6", // Purple
               "&:hover": {
-                bgcolor: alpha("#EA4335", 0.1),
+                bgcolor: alpha("#8B5CF6", 0.1),
               },
             }}
           >
@@ -108,9 +108,9 @@ const columns = (
               console.log("Contact Number:", params.row.contactNumber);
             }}
             sx={{
-              color: "#34B7F1", // Call blue
+              color: "#8B5CF6", // Purple
               "&:hover": {
-                bgcolor: alpha("#34B7F1", 0.1),
+                bgcolor: alpha("#8B5CF6", 0.1),
               },
             }}
           >

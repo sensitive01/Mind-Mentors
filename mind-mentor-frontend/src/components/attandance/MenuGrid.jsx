@@ -1,4 +1,3 @@
-
 import { Link, useParams } from "react-router-dom";
 import {
   BookOpen,
@@ -9,11 +8,34 @@ import {
   Users,
   GraduationCap,
   Award,
-  Clock
+  Clock,
+  X,
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { fetchPaymentNotifications } from "../../api/service/parent/ParentService";
+import { useNavigate } from "react-router-dom";
 
 const MenuGrid = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const parentId = localStorage.getItem("parentId");
+  const [link, setLink] = useState();
+
+  useEffect(() => {
+    const paymentNotification = async () => {
+      try {
+        const response = await fetchPaymentNotifications(id, parentId);
+        if (response.status === 200) {
+          setIsModalOpen(true);
+          setLink(response.data.paymentLink);
+        }
+      } catch (error) {
+        console.error("Error fetching payment notifications:", error);
+      }
+    };
+    paymentNotification();
+  }, [id]);
 
   const menuItems = [
     {
@@ -99,21 +121,69 @@ const MenuGrid = () => {
     },
   ];
 
+  const handlePayNow = () => {
+    console.log()
+    // Implement payment processing logic
+    navigate(`/parent/payment-page/${link}`);
+    setIsModalOpen(false);
+  };
+
   return (
-    <div className="min-h-auto bg-gray-50">
-      <div className="max-w-7xl mx-auto p-6 sm:p-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-5">Dashboard Menu</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {menuItems.map((item) => (
-            <Link 
-              key={item.id} 
-              to={item.route.replace(":id", item.id)}
-              className="group"
-            >
-              <div className="relative bg-white rounded-xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 ease-in-out transform hover:-translate-y-1 border border-gray-100 flex flex-col h-full">
-                <div className="flex items-center gap-4 mb-4">
-                  <div
-                    className={`
+    <>
+      {/* Payment Notification Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white w-[500px] rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+            <div className="bg-indigo-600 p-6 relative">
+              <h2 className="text-xl font-bold text-white">
+                Payment Notification
+              </h2>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="absolute top-4 right-4 text-white hover:bg-indigo-500 rounded-full p-1"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <div className="p-6">
+              <p className="text-gray-700 mb-6 text-center">
+                You have a pending payment for your child's classes. Would you
+                like to proceed with the payment?
+              </p>
+              <div className="flex justify-center space-x-4">
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-6 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handlePayNow}
+                  className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
+                >
+                  Pay Now
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      <div className="min-h-auto bg-gray-50">
+        <div className="max-w-7xl mx-auto p-6 sm:p-8">
+          <h1 className="text-2xl font-bold text-gray-900 mb-5">
+            Dashboard Menu
+          </h1>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {menuItems.map((item) => (
+              <Link
+                key={item.id}
+                to={item.route.replace(":id", item.id)}
+                className="group"
+              >
+                <div className="relative bg-white rounded-xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 ease-in-out transform hover:-translate-y-1 border border-gray-100 flex flex-col h-full">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div
+                      className={`
                       w-16 h-16 rounded-xl bg-gradient-to-br ${item.gradient}
                       flex items-center justify-center 
                       shadow-lg 
@@ -121,39 +191,40 @@ const MenuGrid = () => {
                       group-hover:scale-110 group-hover:rotate-3
                       relative overflow-hidden
                     `}
-                  >
-                    <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
-                    <div className="transform transition-transform duration-300 group-hover:scale-110">
-                      {item.icon}
+                    >
+                      <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+                      <div className="transform transition-transform duration-300 group-hover:scale-110">
+                        {item.icon}
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-semibold text-lg text-gray-900 mb-1 group-hover:text-gray-900 transition-colors duration-300">
+                        {item.title}
+                      </div>
+                      <div className="text-sm text-gray-500 group-hover:text-gray-700 transition-colors duration-300">
+                        {item.subtitle}
+                      </div>
                     </div>
                   </div>
-                  <div className="flex-1">
-                    <div className="font-semibold text-lg text-gray-900 mb-1 group-hover:text-gray-900 transition-colors duration-300">
-                      {item.title}
-                    </div>
-                    <div className="text-sm text-gray-500 group-hover:text-gray-700 transition-colors duration-300">
-                      {item.subtitle}
-                    </div>
+
+                  <div className="mt-6 h-1 w-full bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full bg-gradient-to-r ${item.gradient} transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-out origin-left`}
+                    ></div>
+                  </div>
+
+                  <div className="absolute top-0 right-0 w-16 h-16 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div
+                      className={`absolute top-0 right-0 w-16 h-16 ${item.bgColor} opacity-5 transform rotate-45 translate-x-8 -translate-y-8`}
+                    ></div>
                   </div>
                 </div>
-
-             
-                <div className="mt-6 h-1 w-full bg-gray-100 rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full bg-gradient-to-r ${item.gradient} transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-out origin-left`}
-                  ></div>
-                </div>
-
-            
-                <div className="absolute top-0 right-0 w-16 h-16 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className={`absolute top-0 right-0 w-16 h-16 ${item.bgColor} opacity-5 transform rotate-45 translate-x-8 -translate-y-8`}></div>
-                </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

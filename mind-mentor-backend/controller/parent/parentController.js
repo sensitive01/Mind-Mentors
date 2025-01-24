@@ -93,8 +93,6 @@ const parentVerifyOtp = async (req, res) => {
       { type: 1, _id: 1 }
     );
 
-
-
     if (storedOtp == otp || otp == "0000") {
       res.status(200).json({
         success: true,
@@ -141,7 +139,7 @@ const parentStudentRegistration = async (req, res) => {
 
     await newKid.save();
 
-    console.log("New kid data",newKid)
+    console.log("New kid data", newKid);
 
     if (parentData) {
       parentData = await parentModel.findOneAndUpdate(
@@ -185,15 +183,13 @@ const parentStudentRegistration = async (req, res) => {
   }
 };
 
-
-
 const createEnquiryParent = async (formData, state) => {
   try {
     // Extract data
     const { parent, kid } = state;
     const { programs, scheduleId, hasSchedule } = formData;
 
-    console.log("programs",programs)
+    console.log("programs", programs);
 
     // Format date and time
     const formattedDateTime = new Date().toLocaleString("en-US", {
@@ -203,12 +199,11 @@ const createEnquiryParent = async (formData, state) => {
 
     const logUpdate = {
       employeeId: "",
-      employeeName:"" ,
+      employeeName: "",
       action: `Demo class booking for ${parent.parentName} on ${formattedDateTime}`,
       updatedAt: new Date(),
     };
 
-   
     const newLog = new enquiryLogs({
       logs: [
         {
@@ -221,16 +216,15 @@ const createEnquiryParent = async (formData, state) => {
     });
     const savedLog = await newLog.save();
 
- 
     const operationDeptData = {
-      parentFirstName: parent.parentName.split(" ")[0], 
+      parentFirstName: parent.parentName.split(" ")[0],
       parentLastName: parent.parentName.split(" ")[1] || "",
       kidFirstName: kid.kidsName.split(" ")[0],
       kidLastName: kid.kidsName.split(" ")[1] || "",
       whatsappNumber: parent.parentMobile.toString(),
       email: parent.parentEmail,
       message: "",
-      source: "Demo Class Booking", 
+      source: "Demo Class Booking",
       kidId: kid.chessId,
       kidsAge: kid.age,
       kidsGender: kid.gender,
@@ -259,23 +253,17 @@ const createEnquiryParent = async (formData, state) => {
       logs: savedLog._id, // Reference the saved log
     };
 
-
-    console.log("operationDeptData",operationDeptData.logs)
+    console.log("operationDeptData", operationDeptData.logs);
 
     const newOperationDept = new operationDeptModel(operationDeptData);
     const savedOperationDept = await newOperationDept.save();
 
-    console.log("savedOperationDept",savedOperationDept)
+    console.log("savedOperationDept", savedOperationDept);
 
-
-
-    savedLog.enqId = savedOperationDept._id
-    await savedLog.save()
+    savedLog.enqId = savedOperationDept._id;
+    await savedLog.save();
 
     // console.log("savedLog 2",savedLog)
-
-
-
 
     console.log(
       "OperationDept entry created successfully with log:",
@@ -287,7 +275,6 @@ const createEnquiryParent = async (formData, state) => {
     throw error;
   }
 };
-
 
 const parentBookDemoClass = async (req, res) => {
   try {
@@ -341,12 +328,8 @@ const parentBookDemoClass = async (req, res) => {
       new: true,
     });
 
-
-
- 
-
     // Invoke the logging function
-    
+
     const logResult = await createEnquiryParent(formData, state);
     console.log("Log entry created:", logResult);
 
@@ -363,12 +346,6 @@ const parentBookDemoClass = async (req, res) => {
     });
   }
 };
-
-
-
-
-
-
 
 // const parentBookDemoClass = async (req, res) => {
 //   try {
@@ -411,8 +388,6 @@ const parentBookDemoClass = async (req, res) => {
 //         );
 //       }
 //     }
-
-
 
 //     const parentData = await parentModel.findByIdAndUpdate(parent._id, {
 //       type: "exist",
@@ -858,20 +833,17 @@ const getKidDemoClassDetails = async (req, res) => {
       classDetails: updatedDemoClassDetails,
     });
   } catch (err) {
-    res
-      .status(500)
-      .json({
-        error: "An error occurred while fetching the demo class details.",
-      });
+    res.status(500).json({
+      error: "An error occurred while fetching the demo class details.",
+    });
   }
 };
 
 const saveKidAvailability = async (req, res) => {
   try {
-    console.log("Welcome to add availability",req.body)
+    console.log("Welcome to add availability", req.body);
     const { kidId } = req.params;
     const { day, availableFrom, availableTo, status } = req.body.data;
-
 
     if (!kidId) {
       return res.status(404).json({ message: "Kid not found" });
@@ -887,12 +859,10 @@ const saveKidAvailability = async (req, res) => {
 
     await newAvailability.save();
 
-    return res
-      .status(201)
-      .json({
-        message: "Kid availability saved successfully",
-        newAvailability,
-      });
+    return res.status(201).json({
+      message: "Kid availability saved successfully",
+      newAvailability,
+    });
   } catch (err) {
     console.error("Error in saving the kid availability", err);
     return res
@@ -913,12 +883,10 @@ const getKidAvailability = async (req, res) => {
     }
 
     // Send the data as the response
-    return res
-      .status(200)
-      .json({
-        message: "Kid availability data fetched successfully",
-        KidAvailableData,
-      });
+    return res.status(200).json({
+      message: "Kid availability data fetched successfully",
+      KidAvailableData,
+    });
   } catch (err) {
     console.log("Error in fetching the available data", err);
     return res
@@ -1189,6 +1157,38 @@ const getKidClassAttendanceData = async (req, res) => {
   }
 };
 
+const getPaymentNotificationData = async (req, res) => {
+  try {
+    const { kidId,parentId } = req.params;
+    const kidData = await kidModel.findOne({ _id: kidId }, { enqId: 1 });
+    const parentData = await parentModel.findOne({ _id: parentId }, { paymentLink: 1 });
+
+    if (!kidData) {
+      return res.status(404).json({ message: "Kid data not found" });
+    }
+
+    const enqData = await operationDeptModel.findOne(
+      { _id: kidData.enqId, payment: "Requested" },
+      { payment: 1 }
+    );
+
+    console.log("Payment notification data", enqData);
+
+    if (enqData) {
+      return res
+        .status(200)
+        .json({
+          message:
+            "You have a pending payment scheduled. Please pay through the payment page!",
+            paymentLink:parentData.paymentLink
+        });
+    }
+  } catch (err) {
+    console.log("Error in getting the payment notification", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 module.exports = {
   parentLogin,
   parentVerifyOtp,
@@ -1214,4 +1214,5 @@ module.exports = {
   getKidClassData,
   getKidClassData,
   getKidClassAttendanceData,
+  getPaymentNotificationData,
 };

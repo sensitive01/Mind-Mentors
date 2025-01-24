@@ -1,90 +1,86 @@
 import React, { useState, useEffect } from "react";
-import { CreditCard } from "lucide-react";
+import { CreditCard, Check } from "lucide-react";
 import { useParams } from "react-router-dom";
-import { formatWhatsAppNumber } from "../../../../utils/formatContacts";
+import logo from "../../../../assets/mindmentorz.png";
+import Swal from "sweetalert2";
 
 const PaymentDecode = () => {
   const { encodedData } = useParams();
-  const [selectedClass, setSelectedClass] = useState("");
-  const [selectedPlan, setSelectedPlan] = useState(null);
-  const [calculatedAmount, setCalculatedAmount] = useState(0);
+  const [paymentData, setPaymentData] = useState(null);
+  const [paymentStatus, setPaymentStatus] = useState("pending");
+  const [paymentDetails, setPaymentDetails] = useState({
+    paymentMode: "",
+    transactionId: "",
+    paymentDate: null,
+  });
 
-  const classSchedules = [
-    {
-      id: 1,
-      name: "Online night class (7pm to 8pm)",
-      coach: "Awinraj",
-      day: "Monday",
-      plans: [
-        {
-          duration: "1 month",
-          classes: 8,
-          baseAmount: 3250,
-          gst: 585,
-          total: 3835,
-        },
-        {
-          duration: "2 months",
-          classes: 16,
-          baseAmount: 6000,
-          gst: 1080,
-          total: 7080,
-        },
-      ],
-    },
-    {
-      id: 2,
-      name: "Online morning class (10am to 11am)",
-      coach: "Rajesh",
-      day: "Wednesday",
-      plans: [
-        {
-          duration: "1 month",
-          classes: 8,
-          baseAmount: 3250,
-          gst: 585,
-          total: 3835,
-        },
-        {
-          duration: "2 months",
-          classes: 16,
-          baseAmount: 6000,
-          gst: 1080,
-          total: 7080,
-        },
-      ],
-    },
+  const paymentModes = [
+    { value: "upi", label: "UPI" },
+    { value: "netBanking", label: "Net Banking" },
+    { value: "card", label: "Card" },
+    { value: "cash", label: "Cash" },
   ];
 
   const decodePaymentData = (encodedData) => {
     try {
       const decodedString = atob(encodedData);
-      const paymentData = JSON.parse(decodedString);
-      return paymentData;
+      return JSON.parse(decodedString);
     } catch (error) {
       console.error("Error decoding payment data:", error);
       return null;
     }
   };
 
-  const paymentData = decodePaymentData(encodedData);
-
   useEffect(() => {
-    if (paymentData && paymentData.amount) {
-      // Find the matching plan based on the decoded amount
-      for (const schedule of classSchedules) {
-        const matchingPlan = schedule.plans.find(
-          (plan) => plan.baseAmount === paymentData.amount
-        );
-        if (matchingPlan) {
-          setSelectedClass(schedule.id.toString());
-          setSelectedPlan(matchingPlan);
-          setCalculatedAmount(matchingPlan.total);
-          break;
-        }
+    if (encodedData) {
+      const decoded = decodePaymentData(encodedData);
+      if (decoded) {
+        setPaymentData(decoded);
       }
     }
-  }, [paymentData]);
+  }, [encodedData]);
+
+  const handleUpdatePayment = () => {
+    // Implement your update logic here
+    const updatedPaymentData = {
+      ...paymentData,
+      ...paymentDetails,
+      status: "success",
+    };
+
+    try {
+      // Replace with actual API call to update payment
+      // updatePaymentDetails(updatedPaymentData)
+      setPaymentStatus("success");
+      Swal.fire({
+        title: "Payment Details Updated",
+        icon: "success",
+        confirmButtonText: "OK",
+      });
+    } catch (error) {
+      Swal.fire({
+        title: "Update Failed",
+        text: error.message,
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    }
+  };
+
+  const handleInputChange = (field, value) => {
+    setPaymentDetails((prev) => ({
+      ...prev,
+      [field]: value,
+      paymentDate: new Date(),
+    }));
+  };
+
+  const formatWhatsAppNumber = (number) => {
+    if (!number) return "N/A";
+    return number.length === 10
+      ? `+91 ${number.slice(0, 5)} ${number.slice(5)}`
+      : number;
+  };
 
   if (!paymentData) {
     return (
@@ -93,140 +89,119 @@ const PaymentDecode = () => {
           <h2 className="text-2xl font-bold text-red-600 mb-2">
             Invalid Payment Link
           </h2>
-          <p className="text-gray-600">
-            The payment link appears to be invalid or expired.
-          </p>
         </div>
       </div>
     );
   }
 
-  const { kidName, whatsappNumber, paymentMode } = paymentData;
-  const selectedSchedule = classSchedules.find(
-    (c) => c.id === parseInt(selectedClass)
-  );
-
-  const handlePlanSelection = (plan) => {
-    setSelectedPlan(plan);
-    setCalculatedAmount(plan.total);
-  };
-
-  const handleMakePayment = () => {
-    console.log("Processing payment:", {
-      ...paymentData,
-      selectedClass: selectedSchedule,
-      selectedPlan,
-      finalAmount: calculatedAmount,
-    });
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-lg mx-auto">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          {/* Header */}
           <div className="bg-gradient-to-r from-[#642b8f] to-[#aa88be] px-6 py-4">
             <div className="text-white">
-              <h1 className="text-xl font-semibold mb-1">Course </h1>
-              <p className="text-sm opacity-90">{kidName}</p>
+              <h1 className="text-xl font-semibold mb-1">Payment Details</h1>
+              <p className="text-sm opacity-90">{paymentData.kidName}</p>
               <p className="text-sm opacity-90">
-                {formatWhatsAppNumber(whatsappNumber)}
+                {formatWhatsAppNumber(paymentData.whatsappNumber)}
               </p>
             </div>
           </div>
 
-          <div className="p-6 space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Please choose the type of Plan
-              </label>
-              <select
-                value={selectedClass}
-                onChange={(e) => setSelectedClass(e.target.value)}
-                className="block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-purple-500 focus:ring-purple-500"
-              >
-                <option value="">Select a class schedule</option>
-                {classSchedules.map((schedule) => (
-                  <option key={schedule.id} value={schedule.id}>
-                    {schedule.name} by {schedule.coach} on {schedule.day}
-                  </option>
-                ))}
-              </select>
+          {/* Payment Details */}
+          <div className="p-6 space-y-4">
+            {/* Existing payment data display */}
+            <div className="bg-gray-100 p-3 rounded-md">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-sm font-medium">
+                    {paymentData.classDetails?.name || "No Class Selected"}
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    {paymentData.classDetails?.coach} |{" "}
+                    {paymentData.classDetails?.day}
+                  </p>
+                </div>
+                <span className="text-sm font-semibold">
+                  ₹{Math.round(paymentData.amount)}
+                </span>
+              </div>
             </div>
 
-            {selectedSchedule && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Available Plans
-                </label>
-                <div className="space-y-3">
-                  {selectedSchedule.plans.map((plan, index) => (
-                    <div
-                      key={index}
-                      className="flex items-start cursor-pointer"
-                      onClick={() => handlePlanSelection(plan)}
-                    >
-                      <input
-                        type="radio"
-                        name="plan"
-                        id={`plan-${index}`}
-                        className="mt-1"
-                        checked={
-                          selectedPlan && selectedPlan.total === plan.total
-                        }
-                        onChange={() => handlePlanSelection(plan)}
-                      />
-                      <label htmlFor={`plan-${index}`} className="ml-3 flex-1">
-                        <div className="flex justify-between">
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">
-                              {plan.duration} of {plan.classes} classes
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              Base amount: ₹{plan.baseAmount}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              GST (18%): ₹{plan.gst}
-                            </p>
-                          </div>
-                          <p className="text-lg font-semibold text-purple-600">
-                            ₹{plan.total}
-                          </p>
-                        </div>
-                      </label>
-                    </div>
-                  ))}
-                </div>
+            {/* Payment Status Section */}
+            {paymentStatus === "pending" && (
+              <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg flex items-center">
+                <span className="text-yellow-800">
+                  Pending Payment Confirmation
+                </span>
               </div>
             )}
+{/* 
+            {paymentStatus === "success" && ( */}
+              <div className="space-y-4">
+                <div className="bg-green-50 border border-green-200 p-3 rounded-lg flex items-center">
+                  <Check className="w-6 h-6 text-green-600 mr-2" />
+                  <span className="text-green-800">Payment Confirmed</span>
+                </div>
 
-            <div className="border-t pt-4 space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Payment Mode</span>
-                <span className="font-medium capitalize">{paymentMode}</span>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Payment Mode
+                  </label>
+                  <select
+                    value={paymentDetails.paymentMode}
+                    onChange={(e) =>
+                      handleInputChange("paymentMode", e.target.value)
+                    }
+                    className="w-full rounded-md border border-gray-300 px-3 py-2"
+                  >
+                    <option value="">Select Payment Mode</option>
+                    {paymentModes.map((mode) => (
+                      <option key={mode.value} value={mode.value}>
+                        {mode.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Transaction ID
+                  </label>
+                  <input
+                    type="text"
+                    value={paymentDetails.transactionId}
+                    onChange={(e) =>
+                      handleInputChange("transactionId", e.target.value)
+                    }
+                    className="w-full rounded-md border border-gray-300 px-3 py-2"
+                    placeholder="Enter Transaction ID"
+                  />
+                </div>
+
+                <button
+                  onClick={handleUpdatePayment}
+                  disabled={
+                    !paymentDetails.paymentMode || !paymentDetails.transactionId
+                  }
+                  className="w-full bg-green-600 text-white py-3 rounded-lg font-medium disabled:opacity-50"
+                >
+                  Update Payment Details
+                </button>
               </div>
+            {/* )} */}
+
+            {/* Total Amount */}
+            <div className="border-t pt-4 space-y-3">
               <div className="flex justify-between">
                 <span className="text-gray-600">Total Amount</span>
                 <span className="font-bold text-purple-600">
-                  ₹{calculatedAmount}
+                  ₹{Math.round(paymentData.amount)}
                 </span>
               </div>
             </div>
           </div>
-
-          <div className="px-6 pb-6">
-            <button
-              onClick={handleMakePayment}
-              disabled={!selectedPlan}
-              className="w-full bg-gradient-to-r from-[#642b8f] to-[#aa88be] text-white py-3 rounded-lg font-medium flex items-center justify-center space-x-2 hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <CreditCard className="w-5 h-5" />
-              <span>Make Payment</span>
-            </button>
-          </div>
-        </div>
-
-        <div className="mt-4 text-center text-sm text-gray-500">
-          <p>Secure payment powered by your institution</p>
         </div>
       </div>
     </div>

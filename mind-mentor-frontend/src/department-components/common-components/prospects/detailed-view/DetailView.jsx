@@ -200,24 +200,36 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                     title={
                       data.scheduleDemo?.status === "Pending"
                         ? "CLICK HERE TO SCHEDULE DEMO CLASS"
-                        : "CLICK HERE TO VIEW DEMO CLASS"
+                        : "DEMO CLASS ACTIONS"
                     }
                     value={
-                      <div className="flex items-center gap-3 border-2 border-primary rounded-lg w-max min-h-10">
-                        <Button
-                          onClick={() =>
-                            navigate(
-                              data.scheduleDemo?.status === "Pending"
-                                ? `/operation/department/schedule-demo-class-list-individually/${data._id}`
-                                : `/operation/department/schedule-demo-class-list-individually/${data._id}`
-                            )
-                          }
-                          className="px-6 bg-primary text-white border-2 border-primary hover:bg-primary/90 hover:text-white hover:border-white transition-colors"
-                        >
-                          {data.scheduleDemo?.status === "Pending"
-                            ? "Schedule Demo"
-                            : "View Demo"}
-                        </Button>
+                      <div className="flex flex-col gap-3  rounded-lg">
+                        {data.scheduleDemo?.status === "Pending" ? (
+                          <button
+                            onClick={() =>
+                              navigate(
+                                `/operation/department/schedule-demo-class-list-individually/${data._id}/false`
+                              )
+                            }
+                            className="w-full px-2 py-2 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:border-primary/80 hover:text-white transition-all duration-800 text-sm font-medium rounded-md shadow-2xl"
+                          >
+                            Schedule Demo
+                          </button>
+                        ) : (
+                          <div className="flex flex-col gap-1 w-full">
+                            <button
+                              onClick={() =>
+                                navigate(
+                                  `/operation/department/schedule-demo-class-list-individually/${data._id}/true`
+                                )
+                              }
+                              className="w-full px-2 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:text-white  hover:border-primary/80 transition-all duration-200 text-sm font-medium rounded-md shadow-sm"
+                            >
+                              View Demo
+                            </button>
+                            
+                          </div>
+                        )}
                       </div>
                     }
                   />
@@ -226,15 +238,15 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
 
               <Grid item xs={12} md={3} style={{ overflow: "visible" }}>
                 <DetailCard
-                  title="CLICK HERE TO SENT THE PAYMENT LINK"
+                  title="MAKE PAYMENT"
                   value={
-                    <div className="flex items-center gap-3 border-2 border-primary rounded-lg w-max min-h-10">
-                      <Button
+                    <div className="flex flex-col gap-1 w-full">
+                      <button
                         onClick={() => setIsPaymentDialogOpen(true)}
-                        className="px-6 bg-primary text-white border-2 border-primary hover:bg-primary/90 hover:text-white hover:border-white transition-colors"
+                        className="w-full px-2 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:text-white  hover:border-primary/80 transition-all duration-200 text-sm font-medium rounded-md shadow-sm"
                       >
-                        Send payment link
-                      </Button>
+                        Payment 
+                      </button>
                     </div>
                   }
                 />

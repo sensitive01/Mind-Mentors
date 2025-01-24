@@ -15,6 +15,7 @@ const ClassSchedule = require("../../../model/classSheduleModel");
 const ConductedClass = require("../../../model/conductedClassSchema");
 const ActivityLog = require("../../../model/taskLogModel");
 const NotesSection = require("../../../model/enquiryNoteSection");
+const  sendMessage  = require("../../../utils/sendMessage");
 
 // Email Verification
 
@@ -575,7 +576,7 @@ const getAllEnquiries = async (req, res) => {
         let lastNoteAction = null;
         const noteSection = await NotesSection.findOne(
           { enqId: enquiry._id },
-          { notes: 1,createdOn:1 }
+          { notes: 1, createdOn: 1 }
         );
         if (noteSection?.notes?.length) {
           // Assuming notes are in chronological order
@@ -600,7 +601,7 @@ const getAllEnquiries = async (req, res) => {
           kidName,
           latestAction,
           lastNoteAction: lastNoteAction?.disposition || "None",
-          createdOn:lastNoteAction?.createdOn || "createdOn",
+          createdOn: lastNoteAction?.createdOn || "createdOn",
           createdAt,
           updatedAt,
         };
@@ -642,7 +643,7 @@ const getProspectsData = async (req, res) => {
         let lastNoteAction = null;
         const noteSection = await NotesSection.findOne(
           { enqId: enquiry._id },
-          { notes: 1,createdOn:1 }
+          { notes: 1, createdOn: 1 }
         );
         if (noteSection?.notes?.length) {
           lastNoteAction = noteSection.notes[noteSection.notes.length - 1];
@@ -666,7 +667,7 @@ const getProspectsData = async (req, res) => {
           kidName,
           latestAction,
           lastNoteAction: lastNoteAction?.disposition || "None",
-          createdOn:lastNoteAction?.createdOn||"Created On",
+          createdOn: lastNoteAction?.createdOn || "Created On",
 
           createdAt,
           updatedAt,
@@ -1213,6 +1214,167 @@ const addNotes = async (req, res) => {
       .json({ message: "Error adding notes", error: error.message });
   }
 };
+
+const cancelDemoClassForKid = async (req, res) => {
+  try {
+    console.log("Welcome to cancel the demo", req.params, req.body);
+
+    // Extract the ID from request parameters
+    const { enqId, classId, empId } = req.params;
+
+    const empData = await Employee.findOne(
+      { _id: empId },
+      { firstName: 1, department: 1 }
+    );
+
+    // Find the enrollment data to get the kidId and scheduleDemo
+    const enqData = await OperationDept.findOne(
+      { _id: enqId },
+      { kidId: 1, scheduleDemo: 1, logs: 1 }
+    );
+    console.log("EnqData", enqData);
+    if (!enqData) {
+      return res.status(404).json({ message: "Enrollment data not found" });
+    }
+
+    const { kidId, scheduleDemo } = enqData;
+
+    // Remove the student from the demo class
+    const democlassData = await ClassSchedule.updateOne(
+      { "selectedStudents.kidId": kidId, _id: classId },
+      { $pull: { selectedStudents: { kidId: kidId } } }
+    );
+    console.log("cancelled demo class", democlassData);
+
+    // // Update the scheduleDemo.status to "Pending"
+    const updatedEnqData = await OperationDept.updateOne(
+      { _id: enqId },
+      { $set: { "scheduleDemo.status": "Pending" } }
+    );
+
+    if (updatedEnqData.modifiedCount === 0) {
+      return res
+        .status(500)
+        .json({ message: "Failed to update demo schedule status" });
+    }
+    const formattedDateTime = new Intl.DateTimeFormat("en-US", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(new Date());
+
+    // Update logs for each student
+    const classSchedule = await ClassSchedule.findById(classId);
+
+    await enquiryLogs.findByIdAndUpdate(
+      enqData.logs,
+      {
+        $push: {
+          logs: {
+            employeeId: empId,
+            employeeName: empData.firstName, // Assuming 'name' contains the employee's full name
+            action: ` ${empData.firstName} in the ${empData.department} department cancelled the demo class for the ${classSchedule.program} . Created on ${formattedDateTime}`,
+            createdAt: new Date(),
+          },
+        },
+      },
+      { new: true }
+    );
+
+    res.status(200).json({
+      message:
+        "Demo class canceled successfully, and schedule status updated to Pending",
+    });
+  } catch (err) {
+    console.error("Error in canceling the demo", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const rescheduleDemoClass = async (req, res) => {
+  try {
+    console.log("Welcome to reschedule demo class", req.body);
+    const { classId, empId } = req.params; // Get classId and empId from params
+    const { selectedStudents } = req.body; // List of kidIds to be rescheduled
+
+    // Fetch class details
+    const classSchedule = await ClassSchedule.findById(classId);
+    if (!classSchedule) {
+      return res.status(404).json({ message: "Class not found" });
+    }
+
+    // Fetch employee details
+    const empData = await Employee.findOne(
+      { _id: empId },
+      { firstName: 1, department: 1 }
+    );
+    if (!empData) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+
+    // Fetch kids data
+    const kidsData = await OperationDept.find(
+      { kidId: { $in: selectedStudents } },
+      { kidFirstName: 1, logs: 1, kidId: 1 }
+    );
+    if (kidsData.length === 0) {
+      return res.status(404).json({ message: "Kids data not found" });
+    }
+
+    // Remove each kid from their current class
+    const removeStudent = await ClassSchedule.updateMany(
+      { "selectedStudents.kidId": { $in: selectedStudents } },
+      { $pull: { selectedStudents: { kidId: { $in: selectedStudents } } } }
+    );
+    console.log("Removed students from current class:", removeStudent);
+
+    // Add students to the new class
+    const addStudentsData = kidsData.map((kid) => ({
+      kidId: kid.kidId,
+      kidName: kid.kidFirstName,
+    }));
+
+    const addStudent = await ClassSchedule.findByIdAndUpdate(
+      classId,
+      {
+        $push: { selectedStudents: { $each: addStudentsData } },
+      },
+      { new: true }
+    );
+
+    console.log("Added students to new class:", addStudent);
+
+    // Log the rescheduling action
+    const formattedDateTime = new Intl.DateTimeFormat("en-US", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(new Date());
+
+    await Promise.all(
+      kidsData.map((kid) =>
+        enquiryLogs.findByIdAndUpdate(
+          kid.logs,
+          {
+            $push: {
+              logs: {
+                employeeId: empId,
+                employeeName: empData.firstName,
+                action: `${empData.firstName} in the ${empData.department} department rescheduled a demo class for the ${classSchedule.program} program at the ${classSchedule.level} level with coach ${classSchedule.coachName}. Created on ${formattedDateTime}`,
+                createdAt: new Date(),
+              },
+            },
+          },
+          { new: true }
+        )
+      )
+    );
+
+    res.status(200).json({ message: "Demo class rescheduled successfully" });
+  } catch (err) {
+    console.error("Error in rescheduling the demo class", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 
 const addNotesToTasks = async (req, res) => {
   try {
@@ -2331,7 +2493,7 @@ const fetchAllLogs = async (req, res) => {
 const getDemoClassAndStudentsData = async (req, res) => {
   try {
     console.log(
-      "Welcome to getting the demo class and student data",
+      "Welcome to getting the demo class and student data ==>",
       req.params
     );
     const { enqId } = req.params;
@@ -2360,14 +2522,62 @@ const getDemoClassAndStudentsData = async (req, res) => {
     }));
 
     // Find class data matching program and level
-    const classData = await ClassSchedule.find(
-      {
-        $or: programFilters, // Match any program and level from kidsData
-        classType: "Demo", // Ensure the class type is "Demo"
-        status: "Scheduled", // Match only scheduled classes
-      },
-      { day: 1, classTime: 1 }
+    const classData = await ClassSchedule.find({
+      $or: programFilters, // Match any program and level from kidsData
+      classType: "Demo", // Ensure the class type is "Demo"
+      status: "Scheduled", // Match only scheduled classes
+    });
+
+    if (!classData.length) {
+      return res.status(404).json({ message: "No demo classes found" });
+    }
+
+    console.log("Class Data", classData);
+
+    res.status(200).json({ classData, kidsData });
+  } catch (err) {
+    console.error("Error in getting the demo class and student data", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const getSheduledDemoClassDataOfKid = async (req, res) => {
+  try {
+    console.log(
+      "Welcome to getting the demo class of the selected kid with enq id",
+      req.params
     );
+    const { enqId } = req.params;
+
+    // Find kids data by enquiry ID
+    const kidsData = await OperationDept.findOne(
+      { _id: enqId },
+      { kidFirstName: 1, kidId: 1, programs: 1 } // Project only the required fields
+    );
+
+    if (!kidsData) {
+      return res.status(404).json({ message: "Kids data not found" });
+    }
+
+    console.log("Kids Data", kidsData);
+
+    // Extract program and level from kidsData
+    const { programs, kidId } = kidsData;
+
+    // Iterate over each program and level and fetch classes
+    const classData = await ClassSchedule.find({
+      $and: [
+        { classType: "Demo" }, // Match classType
+        { status: "Scheduled" }, // Match status
+        { selectedStudents: { $elemMatch: { kidId } } }, // Match kidId in selectedStudents
+        {
+          $or: programs.map((program) => ({
+            program: program.program, // Match program
+            level: program.level, // Match level
+          })),
+        },
+      ],
+    });
 
     if (!classData.length) {
       return res.status(404).json({ message: "No demo classes found" });
@@ -2724,7 +2934,12 @@ const specificKidAssignTask = async (req, res) => {
     );
 
     // Fetch employee data filtered by specific departments
-    const allowedDepartments = ["operation", "service-delivery", "marketing", "renewal"];
+    const allowedDepartments = [
+      "operation",
+      "service-delivery",
+      "marketing",
+      "renewal",
+    ];
     const employeeData = await Employee.find(
       { department: { $in: allowedDepartments } },
       { _id: 1, firstName: 1, email: 1, department: 1 }
@@ -2773,6 +2988,65 @@ const fetchAllStatusLogs = async (req, res) => {
     });
   }
 };
+
+const sendPaymentLink = async (req, res) => {
+  try {
+    console.log("Welcome to send the payment link", req.body);
+
+    const { enqId } = req.params;
+    const { link } = req.body;
+
+    // Fetch the kid data
+    const enqData = await OperationDept.findOne({_id:enqId},{ payment: 1, logs: 1 })
+    const kidData = await kidSchema.findOne({ enqId: enqId }, { parentId: 1,});
+    if (!kidData) {
+      return res.status(404).json({ message: "Kid data not found" });
+    }
+    console.log("Kid data", kidData);
+
+    // Fetch the parent data
+    const parentData = await parentSchema.findOne(
+      { _id: kidData.parentId },
+      { parentMobile: 1, paymentLink: 1 }
+    );
+    if (!parentData) {
+      return res.status(404).json({ message: "Parent data not found" });
+    }
+    console.log("Parent data", parentData);
+
+    // Update the parent's payment link
+    const updatedParent = await parentSchema.findByIdAndUpdate(
+      kidData.parentId,
+      { $set: { paymentLink: link } },
+      { new: true } // Return the updated document
+    );
+    console.log("Updated parent data", updatedParent);
+
+    // Update the kid's payment status
+    enqData.payment = "Requested";
+    await enqData.save(); // Make sure you save the kidData after modifying the payment field
+
+    res.status(200).json({ message: "Payment link sent successfully" });
+  } catch (err) {
+    console.error("Error in sending the payment link", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 module.exports = {
   fetchAllStatusLogs,
@@ -2826,4 +3100,8 @@ module.exports = {
   moveBackToEnquiry,
   getDemoClassAndStudentsDataGroup,
   specificKidAssignTask,
+  getSheduledDemoClassDataOfKid,
+  cancelDemoClassForKid,
+  rescheduleDemoClass,
+  sendPaymentLink
 };

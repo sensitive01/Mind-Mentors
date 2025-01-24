@@ -38,15 +38,15 @@ export const parentKidsRegistration = async (formData, state) => {
   }
 };
 
-export const parentBookDemoClass = async (formData, state,filteredSlots) => {
+export const parentBookDemoClass = async (formData, state, filteredSlots) => {
   try {
-    console.log("parentBookDemoClass", formData, state,filteredSlots);
+    console.log("parentBookDemoClass", formData, state, filteredSlots);
     const response = await parentInstance.post(
       `/parent/parent-book-demo-class`,
       {
         formData,
         state,
-        filteredSlots
+        filteredSlots,
       }
     );
     return response;
@@ -207,7 +207,6 @@ export const deleteKidAvailability = async (availId) => {
   }
 };
 
-
 export const fetchkidClassData = async (kidId) => {
   try {
     const response = await parentInstance.get(
@@ -223,6 +222,17 @@ export const getKidAttendace = async (kidId) => {
   try {
     const response = await parentInstance.get(
       `/parent/get-kid-attandance-data/${kidId}`
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+export const fetchPaymentNotifications = async (kidId,parentId) => {
+  try {
+    const response = await parentInstance.get(
+      `/parent/get-payment-notification-data/${kidId}/${parentId}`
     );
     return response;
   } catch (err) {
