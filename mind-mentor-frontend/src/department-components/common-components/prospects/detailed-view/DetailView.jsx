@@ -27,6 +27,7 @@ import {
 } from "../../../../utils/formatContacts";
 import PaymentDialog from "./PaymentDialog";
 import EditDialogBox from "./edit/EditDialogBox";
+import PaymentVerification from "./PaymentVerification";
 
 const DetailCard = ({ title, value }) => (
   <Box
@@ -73,6 +74,8 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [formData, setFormData] = useState(data);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [verifyPaymentDialogOpen, setIsVerifyPaymentDialogOpen] =
+    useState(false);
 
   useEffect(() => {
     setFormData(data);
@@ -144,6 +147,15 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                 <DetailCard title="GENDER" value={data.kidsGender} />
               </Grid>
               <Grid item xs={12} md={3}>
+                <DetailCard title="KID PINCODE" value={data.pincode} />
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <DetailCard title="KID CITY" value={data.city} />
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <DetailCard title="KID STATE" value={data.state} />
+              </Grid>
+              <Grid item xs={12} md={3}>
                 <DetailCard title="SCHOOL NAME" value={data.schoolName} />
               </Grid>
               <Grid item xs={12} md={3}>
@@ -199,7 +211,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                   <DetailCard
                     title={
                       data.scheduleDemo?.status === "Pending"
-                        ? "CLICK HERE TO SCHEDULE DEMO CLASS"
+                        ? "SCHEDULE DEMO CLASS"
                         : "DEMO CLASS ACTIONS"
                     }
                     value={
@@ -211,7 +223,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                                 `/operation/department/schedule-demo-class-list-individually/${data._id}/false`
                               )
                             }
-                            className="w-full px-2 py-2 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:border-primary/80 hover:text-white transition-all duration-800 text-sm font-medium rounded-md shadow-2xl"
+                            className="w-full px-3 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:border-primary/80 hover:text-white transition-all duration-800 text-sm font-medium rounded-md shadow-2xl"
                           >
                             Schedule Demo
                           </button>
@@ -227,7 +239,6 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                             >
                               View Demo
                             </button>
-                            
                           </div>
                         )}
                       </div>
@@ -238,15 +249,38 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
 
               <Grid item xs={12} md={3} style={{ overflow: "visible" }}>
                 <DetailCard
-                  title="MAKE PAYMENT"
+                  title={
+                    data.payment === "Pending"
+                      ? "MAKE PAYMENT"
+                      : "UPDATE PAYMENT STATUS"
+                  }
                   value={
                     <div className="flex flex-col gap-1 w-full">
-                      <button
-                        onClick={() => setIsPaymentDialogOpen(true)}
-                        className="w-full px-2 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:text-white  hover:border-primary/80 transition-all duration-200 text-sm font-medium rounded-md shadow-sm"
-                      >
-                        Payment 
-                      </button>
+                      {data.payment === "Pending" ? (
+                        <button
+                          onClick={() => setIsPaymentDialogOpen(true)}
+                          className="w-full px-2 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:text-white hover:border-primary/80 transition-all duration-200 text-sm font-medium rounded-md shadow-sm"
+                        >
+                          Payment
+                        </button>
+                      ) : (
+                        <>
+                        <button
+                          onClick={() => setIsVerifyPaymentDialogOpen(true)}
+                          className="w-full px-2 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:text-white hover:border-primary/80 transition-all duration-200 text-sm font-medium rounded-md shadow-sm"
+                        >
+                          Update Payment Status
+                        </button>
+                        <button
+                          onClick={() => setIsVerifyPaymentDialogOpen(true)}
+                          className="w-full px-2 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:text-white hover:border-primary/80 transition-all duration-200 text-sm font-medium rounded-md shadow-sm"
+                        >
+                          Resend Payment Link
+                        </button>
+
+                        </>
+                        
+                      )}
                     </div>
                   }
                 />
@@ -256,7 +290,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
 
           {/* Messages and Notes */}
           <Grid item xs={12}>
-            <SectionTitle>Messages & Notes</SectionTitle>
+            <SectionTitle>Remarks & Notes</SectionTitle>
             <Grid container spacing={3}>
               <Grid item xs={12}>
                 <Box
@@ -270,7 +304,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                     variant="subtitle2"
                     sx={{ mb: 1, fontWeight: 600 }}
                   >
-                    Messages
+                    Remarks
                   </Typography>
                   <Typography variant="body1">
                     {data.message || "No messages"}
@@ -331,6 +365,13 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
         open={isPaymentDialogOpen}
         onClose={() => setIsPaymentDialogOpen(false)}
         data={data}
+        enqId={formData._id}
+      />
+
+      <PaymentVerification
+        data={data.paymentLink}
+        open={verifyPaymentDialogOpen}
+        onCancel={() => setIsVerifyPaymentDialogOpen(false)}
       />
     </Box>
   );

@@ -20,7 +20,8 @@ const columns = (
   handleStatusToggle,
   handleMoveProspects,
   handleShowLogs,
-  handleShowStatus
+  handleShowStatus,
+  handleMessage
 ) => [
   {
     field: "slNo",
@@ -51,13 +52,14 @@ const columns = (
     headerName: "Contact",
     width: 180,
     renderCell: (params) => (
-      <Box sx={{ display: "flex", gap: 2 }}>
+      <Box sx={{ display: "flex", gap: 2,marginTop:"7px" }}>
         {params.row.whatsappNumber && (
           <IconButton
             size="small"
-            onClick={(e) => {
+            onClick={async (e) => {
               e.stopPropagation();
-              console.log("WhatsApp:", params.row.whatsappNumber);
+
+              handleMessage(params.row.whatsappNumber);
             }}
             sx={{
               color: "#8B5CF6", // Purple
@@ -71,12 +73,24 @@ const columns = (
             </svg>
           </IconButton>
         )}
-        {params.row.email && (
+        {/* {params.row.email && (
           <IconButton
             size="small"
-            onClick={(e) => {
+            onClick={async (e) => {
               e.stopPropagation();
-              console.log("Email:", params.row.email);
+              try {
+                const response = await fetch("/api/send-email", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ email: params.row.email }),
+                });
+                const data = await response.json();
+                console.log("Email API response:", data);
+              } catch (error) {
+                console.error("Error sending email:", error);
+              }
             }}
             sx={{
               color: "#8B5CF6", // Purple
@@ -99,13 +113,27 @@ const columns = (
               <polyline points="22,6 12,13 2,6" />
             </svg>
           </IconButton>
-        )}
+        )} */}
         {params.row.contactNumber && (
           <IconButton
             size="small"
-            onClick={(e) => {
+            onClick={async (e) => {
               e.stopPropagation();
-              console.log("Contact Number:", params.row.contactNumber);
+              try {
+                const response = await fetch("/api/call-contact", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    contactNumber: params.row.contactNumber,
+                  }),
+                });
+                const data = await response.json();
+                console.log("Call API response:", data);
+              } catch (error) {
+                console.error("Error calling contact:", error);
+              }
             }}
             sx={{
               color: "#8B5CF6", // Purple
@@ -315,21 +343,25 @@ const columns = (
     renderCell: (params) => (
       <button
         onClick={(e) => {
-          console.log("Clocked")
+          console.log("Clicked", params.row.enquiryType);
           e.stopPropagation(); // Prevent row selection
 
           handleMoveProspects(params.row._id);
         }}
-        className={`px-4 py-2 text-sm font-medium rounded-md 
+        className={`px-4 py-1 text-sm font-medium rounded-md 
                    transition-all duration-300 ease-in-out
                    border-2 ${
-                     params.row.isProspect
+                     params.row.enquiryType !== "warm"
                        ? "bg-gray-200 text-gray-600 border-gray-300 cursor-not-allowed"
-                       : "text-white bg-primary border-transparent hover:border-primary hover:bg-white hover:text-primary"
+                       : "text-white bg-primary  border-2 border-primary hover:border-primary hover:bg-primary hover:text-white"
                    }`}
-        disabled={params.row.isProspect}
+        disabled={params.row.enquiryType !== "warm"}
       >
-        {params.row.isProspect ? "Already Prospect" : "Move to Prospects"}
+        {params.row.isProspect
+          ? "Already Prospect"
+          : params.row.status !== "warm"
+          ? "Move to Prospects"
+          : "Move to Prospects"}
       </button>
     ),
   },
@@ -464,32 +496,7 @@ const columns = (
     width: 200,
     valueFormatter: (params) => params.value,
   },
-  {
-    field: "kidsAge",
-    headerName: "Kid Age",
-    type: "number",
-    width: 100,
-    editable: true,
-  },
-  {
-    field: "kidsGender",
-    headerName: "Kid Gender",
-    width: 120,
-    editable: true,
-  },
 
-  {
-    field: "message",
-    headerName: "Message",
-    width: 250,
-    editable: true,
-  },
-  {
-    field: "source",
-    headerName: "Source",
-    width: 150,
-    editable: true,
-  },
   {
     field: "programs",
     headerName: "Programs",
@@ -510,24 +517,6 @@ const columns = (
         ))}
       </Box>
     ),
-  },
-  {
-    field: "schoolName",
-    headerName: "School Name",
-    width: 200,
-    editable: true,
-  },
-  {
-    field: "address",
-    headerName: "Address",
-    width: 250,
-    editable: true,
-  },
-  {
-    field: "schoolPincode",
-    headerName: "School Pincode",
-    width: 150,
-    editable: true,
   },
 ];
 export default columns;

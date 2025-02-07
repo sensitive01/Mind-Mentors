@@ -241,10 +241,11 @@ export const fetchPaymentNotifications = async (kidId,parentId) => {
 };
 
 
-export const savepaymentInfo = async (paymentData,paymentMode,transactionId,parentId) => {
+export const savepaymentInfo = async (paymentData,transactionId,parentId) => {
   try {
+    console.log(paymentData,transactionId,parentId)
     const response = await parentInstance.post(
-      `/parent/save-payment-information-data/${parentId}`,{paymentData,paymentMode,transactionId}
+      `/parent/save-payment-information-data/${parentId}`,{paymentData,transactionId}
     );
     return response;
   } catch (err) {

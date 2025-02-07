@@ -30,6 +30,8 @@ operationRoute.get("/specific-kid-assign-task/:id", operationController.specific
 
 
 operationRoute.get("/fetch-all-status-logs/:id", operationController.fetchAllStatusLogs);
+operationRoute.get("/get-package-data", operationController.getPackageData);
+
 
 
 
@@ -92,6 +94,7 @@ operationRoute.post("/register",operationController.registerEmployee)
 operationRoute.post("/leaves-form", operationController.createLeave);
 operationRoute.post("/attendance/mark", operationController.createAttendance);
 operationRoute.post("/tasks", operationController.createTask);
+
 
 
 operationRoute.put("/leaves-form/:id", operationController.updateLeave);

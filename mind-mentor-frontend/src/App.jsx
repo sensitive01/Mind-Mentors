@@ -257,13 +257,18 @@ import MarketingTaskLogs from "./pages/employee/marketing/MarketingTaskLogs";
 import EnrollmentWalkThrougPage from "./pages/employee/operation-employee/EnrollmentWalkThrougPage";
 import ShowAllStatusLogs from "./pages/employee/operation-employee/ShowAllStatusLogs";
 import DemoClassListIndividualPage from "./pages/employee/operation-employee/DemoClassListIndividualPage";
-import AssignDemoClassIndividualPage from "./pages/employee/operation-employee/AssignDemoClassIndividualPage";
-import PaymentDecode from "./department-components/common-components/prospects/detailed-view/PaymentDecode";
+// import AssignDemoClassIndividualPage from "./pages/employee/operation-employee/AssignDemoClassIndividualPage";
+// import PaymentDecode from "./department-components/common-components/prospects/detailed-view/PaymentDecode";
 import EnquiryRelatedTaskPage from "./pages/employee/operation-employee/EnquiryRelatedTaskPage";
 import EnrollmentPaymentPage from "./pages/employee/operation-employee/EnrollmentPaymentPage";
 import EnquiryProspectsTabPage from "./pages/employee/operation-employee/EnquiryProspectsTabPage";
 import ParentPaymentPage from "./pages/parent/ParentPaymentPage";
 import ServiceActiveKidData from "./pages/employee/servicedelivery/ServiceActiveKidData";
+import MyTaskAssinedTaskTable from "./pages/employee/operation-employee/MyTaskAssinedTaskTable";
+import AssignMulipleClassPage from "./pages/employee/servicedelivery/AssignMulipleClassPage";
+import AssignWholeClassToKidPage from "./pages/employee/servicedelivery/AssignWholeClassToKidPage";
+import PaymentConfigAdmin from "./mislanous/PaymentConfigAdmin";
+// import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
 function App() {
   return (
@@ -322,7 +327,7 @@ function App() {
           <Route path="/parent/support" element={<SupportPage />} />
           <Route path="/parent/walkthrough-video"  element={<WalkThroughPage />} />
           <Route path="/parent/add-kid-availability/:kidId" element={<AddKidAvailabilityPage />} />
-          <Route path="/parent/payment-page/payment/:encodedData" element={<ParentPaymentPage />} />
+          <Route path="/parent/payment-page/payment-details/:encodedData" element={<ParentPaymentPage />} />
 
           
 
@@ -346,11 +351,15 @@ function App() {
 
         
 
-          <Route path="/payment/:encodedData"  element={<EnrollmentPaymentPage />} />
+          <Route path="/payment-details/:encodedData"  element={<EnrollmentPaymentPage />} />
 
           <Route path="/operation/department/dashboard"  element={<OperationDashboardPage />} />
 
           <Route path="/operation/department/enrollment-data"  element={<EnquiryProspectsTabPage />} />
+          <Route path="/operation/department/task-table"  element={<MyTaskAssinedTaskTable />} />
+
+
+          
 
 
           <Route path="/operation/department/enquiry-list" element={<ListingEnquiries />} />
@@ -393,6 +402,11 @@ function App() {
 
 
 
+          <Route path="/sample" element={<PaymentConfigAdmin />} />
+
+
+
+
 
 
 
@@ -423,6 +437,10 @@ function App() {
           <Route path="/service-delivery/department/serviceAssignClassToKid/:id" element={<AssignClassToKid />}/>
           <Route path="/service-delivery/department/coachAvailabilityTable"  element={<CoachAvailabilityTablePage />}  />
           <Route path="/service-delivery/department/active-kid-data"  element={<ServiceActiveKidData />}  />
+          <Route path="/service-delivery/department/assign-multiple-class"  element={<AssignMulipleClassPage />}  />
+          <Route path="/service-delivery/department/assign-whole-plan-class/:enqId"  element={<AssignWholeClassToKidPage />}  />
+
+
 
 
           
@@ -497,6 +515,8 @@ function App() {
         <Route path="/coach/department/assign-new-task" element={<CoachMyAssignTasks />} />
         <Route path="/coach/department/taskslogs/:id" element={<CoachTaskLogs />} /> 
         <Route path="/coach/department/attendance" element={<CoachAttendance />} />
+        {/* <Route path="/zoom/:meetingNumber/:passcode" element={<CoachZoomMeeting />} /> */}
+
 
 
 

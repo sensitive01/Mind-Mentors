@@ -17,7 +17,7 @@ import {
   FormControl,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
-import {  Trash2, Plus } from "lucide-react";
+import { Trash2, Plus } from "lucide-react";
 import { updateEnquiry } from "../../../../api/service/employee/EmployeeService";
 import {
   formatEmail,
@@ -63,8 +63,6 @@ const SectionTitle = ({ children }) => (
   </Typography>
 );
 
-
-
 const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [formData, setFormData] = useState(data);
@@ -72,7 +70,6 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
   useEffect(() => {
     setFormData(data);
   }, [data]);
-
 
   const handleCloseEdit = () => {
     setIsEditOpen(false);
@@ -95,8 +92,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
 
   return (
     <Box sx={{ position: "relative" }}>
- 
-      <Box >
+      <Box>
         <Grid container spacing={4}>
           {/* Parent Information */}
           <Grid item xs={12}>
@@ -140,11 +136,21 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                 <DetailCard title="GENDER" value={data.kidsGender} />
               </Grid>
               <Grid item xs={12} md={3}>
+                <DetailCard title="KID PINCODE" value={data.pincode} />
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <DetailCard title="KID CITY" value={data.city} />
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <DetailCard title="KID STATE" value={data.state} />
+              </Grid>
+              <Grid item xs={12} md={3}>
                 <DetailCard title="SCHOOL NAME" value={data.schoolName} />
               </Grid>
               <Grid item xs={12} md={3}>
                 <DetailCard title="SCHOOL PINCODE" value={data.schoolPincode} />
               </Grid>
+              
             </Grid>
           </Grid>
 
@@ -199,7 +205,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
 
           {/* Messages and Notes */}
           <Grid item xs={12}>
-            <SectionTitle>Messages & Notes</SectionTitle>
+            <SectionTitle>Remarks & Notes</SectionTitle>
             <Grid container spacing={3}>
               <Grid item xs={12}>
                 <Box
@@ -213,7 +219,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                     variant="subtitle2"
                     sx={{ mb: 1, fontWeight: 600 }}
                   >
-                    Messages
+                    Remarks
                   </Typography>
                   <Typography variant="body1">
                     {data.message || "No messages"}
@@ -648,19 +654,18 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
               </Grid>
             </Grid>
 
-            {/* Messages and Notes */}
             <Grid item xs={12}>
               <Typography
                 variant="subtitle1"
                 sx={{ mb: 2, mt: 2, fontWeight: 600 }}
               >
-                Messages & Notes
+                Remarks & Notes
               </Typography>
               <Grid container spacing={2}>
                 <Grid item xs={12}>
                   <TextField
                     fullWidth
-                    label="Messages"
+                    label="Remarks"
                     multiline
                     rows={4}
                     value={formData.message || ""}
@@ -669,28 +674,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                     }
                   />
                 </Grid>
-                {/* <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Notes"
-                    multiline
-                    rows={4}
-                    value={formData.notes || ""}
-                    onChange={(e) => handleInputChange("notes", e.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Status Log"
-                    multiline
-                    rows={4}
-                    value={formData.lastNoteAction || ""}
-                    onChange={(e) =>
-                      handleInputChange("lastNoteAction", e.target.value)
-                    }
-                  />
-                </Grid> */}
+                
               </Grid>
             </Grid>
           </Grid>

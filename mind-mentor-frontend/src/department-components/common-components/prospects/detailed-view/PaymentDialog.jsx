@@ -1,181 +1,137 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Send, X } from "lucide-react";
 import { formatWhatsAppNumber } from "../../../../utils/formatContacts";
-import { sendPaymentDetailsLink } from "../../../../api/service/employee/EmployeeService";
-import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
-import { ToastContainer } from "react-toastify";
+import {
+  fetchPackageDetails,
+  sendPaymentDetailsLink,
+} from "../../../../api/service/employee/EmployeeService";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-const PaymentDialog = ({ open, onClose, data }) => {
-  const navigate = useNavigate();
-
-  // State variables
-  const [selectionType, setSelectionType] = useState("class");
-  const [selectedClass, setSelectedClass] = useState("");
-  const [selectedPlan, setSelectedPlan] = useState(null);
-  const [numberOfClasses, setNumberOfClasses] = useState(0);
-  const [isGoldMember, setIsGoldMember] = useState(false);
-  const [kitItem, setKitItem] = useState("");
+const PaymentDialog = ({ open, onClose, data, enqId }) => {
+  const [selectedPackage, setSelectedPackage] = useState("");
+  const [onlineClasses, setOnlineClasses] = useState(0);
+  const [offlineClasses, setOfflineClasses] = useState(0);
   const [customAmount, setCustomAmount] = useState(0);
-  const [discount, setDiscount] = useState(0);
-  const [tax, setTax] = useState(0);
-  // const [paymentDetails, setPaymentDetails] = useState({
-  //   paymentMode: "",
-  // });
+  const [kitItems, setKitItems] = useState([{ name: "", quantity: 0 }]);
+  const [packages, setPackages] = useState([]);
 
-  const classSchedules = [
-    {
-      id: 1,
-      name: "Online night class (7pm to 8pm)",
-      coach: "Awinraj",
-      day: "Monday",
-      plans: [
-        {
-          duration: "1 month",
-          classes: 8,
-          baseAmount: 3250,
-        },
-        {
-          duration: "2 months",
-          classes: 16,
-          baseAmount: 6000,
-        },
-      ],
-    },
-    {
-      id: 2,
-      name: "Online morning class (10am to 11am)",
-      coach: "Rajesh",
-      day: "Wednesday",
-      plans: [
-        {
-          duration: "1 month",
-          classes: 8,
-          baseAmount: 3250,
-        },
-        {
-          duration: "2 months",
-          classes: 16,
-          baseAmount: 6000,
-        },
-      ],
-    },
-  ];
+  const GST_RATE = 0.18;
+
+  useEffect(() => {
+    const fetchPackage = async () => {
+      const response = await fetchPackageDetails();
+      if (response.status === 200) {
+        // Add custom and kit options to packages
+        const updatedPackages = [
+          ...response.data.data,
+          {
+            _id: "CUSTOM",
+            type: "custom",
+            packageName: "Custom Package",
+          },
+          {
+            _id: "KIT",
+            type: "kit",
+            packageName: "Kit/Items",
+          },
+        ];
+        setPackages(updatedPackages);
+      }
+    };
+    fetchPackage();
+  }, []);
 
   const calculateTotalAmount = () => {
-    const baseAmount = customAmount;
-    const discountAmount = baseAmount * (discount / 100);
-    const taxAmount = baseAmount * (tax / 100);
-    const totalAmount = baseAmount - discountAmount + taxAmount;
-    return {
-      baseAmount,
-      discountAmount,
-      taxAmount,
-      totalAmount,
-    };
-  };
+    const selected = packages.find((pkg) => pkg._id === selectedPackage);
+    if (!selected) return { baseAmount: 0, gstAmount: 0, totalAmount: 0 };
 
-  const handlePlanSelection = (plan) => {
-    if (selectionType === "class") {
-      setSelectedPlan(plan);
-      setNumberOfClasses(plan.classes);
-      setCustomAmount(plan.baseAmount);
+    let baseAmount = 0;
+    if (selected.type === "hybrid") {
+      baseAmount = onlineClasses * 400 + offlineClasses * 600;
+    } else if (selected.type === "custom") {
+      baseAmount = customAmount;
+    } else if (selected.type === "kit") {
+      baseAmount = kitItems.reduce(
+        (total, item) => total + item.quantity * 799,
+        0
+      );
+    } else {
+      baseAmount = selected.pricing.amount;
     }
+
+    const gstAmount = baseAmount * GST_RATE;
+    const totalAmount = baseAmount + gstAmount;
+
+    return { baseAmount, gstAmount, totalAmount };
   };
 
-  const handleContinuePayment = async () => {
+  const generatePaymentLink = async () => {
+    const selected = packages.find((pkg) => pkg._id === selectedPackage);
+    if (!selected) return;
+
+    const paymentData = {
+      enqId,
+      selectedPackage: selected.packageName,
+      onlineClasses:
+        selected.type === "hybrid"
+          ? Number(onlineClasses)
+          : selected.type === "custom"
+          ? 0
+          : selected.onlineClasses || 0,
+      offlineClasses:
+        selected.type === "hybrid"
+          ? Number(offlineClasses)
+          : selected.type === "custom"
+          ? 0
+          : selected.physicalClasses || 0,
+      kidName: data?.kidName,
+      kidId: data.kidId,
+      whatsappNumber: data?.whatsappNumber,
+      programs: data?.programs,
+      customAmount: selected.type === "custom" ? customAmount : 0,
+      kitItems: selected.type === "kit" ? kitItems : [],
+      ...calculateTotalAmount(),
+    };
+
+    const encodedData = btoa(JSON.stringify(paymentData));
+    const baseUrl = window.location.origin;
+    const link = `${baseUrl}/payment-details/${encodedData}`;
+    const parentLink = `/payment-details/${encodedData}`;
+
     try {
-      const link = generatePaymentLink();
-      console.log("Generated payment link:", link);
-
-      console.log("Sending payment link for ID:", data?._id);
-
-      const response = await sendPaymentDetailsLink(link, data?._id);
-      console.log("Response from backend:", response);
-
+      const response = await sendPaymentDetailsLink(parentLink, data._id);
       if (response.status === 200) {
-        toast.success(response.data.message);
-        onClose();
+        toast.success("Payment request submitted successfully");
+        setTimeout(() => {
+          onClose();
+        }, 1500);
       } else {
-        toast.error("Something went wrong, please try again later.");
+        toast.error("Failed to submit payment request");
       }
     } catch (error) {
-      console.error("Error in continuing payment:", error);
-      toast.error("An error occurred, please try again.");
+      toast.error("An error occurred: " + error.message);
     }
   };
 
-  // const showRazorpay = async (amount) => {
-  //   try {
-  //     const options = {
-  //       key: RAZORPAY_KEY,
-  //       amount: amount * 100,
-  //       currency: "INR",
-  //       name: "MindMentorz",
-  //       description: "Class Payment",
-  //       image: logo,
-  //       handler: async () => {
-  //         try {
-  //           Swal.fire({
-  //             title: "Payment Done Successfully",
-  //             icon: "success",
-  //             confirmButtonText: "OK",
-  //           });
-  //         } catch (err) {
-  //           console.log("Error in verify order", err);
-  //         }
-  //       },
-  //       theme: {
-  //         color: "#3399cc",
-  //       },
-  //     };
-
-  //     const razorpay = new window.Razorpay(options);
-  //     console.log("Razorpay open", razorpay);
-  //     razorpay.open();
-  //   } catch (error) {
-  //     console.error("Error in fetching order URL:", error);
-  //   }
-  // };
-
-  // const handleInputChange = (field, value) => {
-  //   setPaymentDetails((prev) => ({ ...prev, [field]: value }));
-  // };
-
-  const generatePaymentLink = () => {
-    if (selectedPlan) {
-      const { totalAmount } = calculateTotalAmount();
-      const linkData = {
-        enqId:data._id,
-        kidId:data?.kidId,
-        kidName: data?.kidName,
-        whatsappNumber: data?.whatsappNumber,
-        selectionType,
-        classDetails:
-          selectionType === "class"
-            ? {
-                name: selectedSchedule?.name,
-                coach: selectedSchedule?.coach,
-                day: selectedSchedule?.day,
-                numberOfClasses,
-                isGoldMember,
-              }
-            : null,
-        kitItem: selectionType === "kit" ? kitItem : null,
-        amount: totalAmount,
-        timestamp: new Date().toISOString(),
-      };
-
-      const encodedData = btoa(JSON.stringify(linkData));
-      // return `${window.location.origin}/payment/${encodedData}`;
-      return `/payment/${encodedData}`;
-    }
-    return "";
-  };
-
-  const selectedSchedule = classSchedules.find(
-    (c) => c.id === parseInt(selectedClass)
+  const selectedPackageDetails = packages.find(
+    (pkg) => pkg._id === selectedPackage
   );
+
+  const addKitItem = () => {
+    setKitItems([...kitItems, { name: "", quantity: 0 }]);
+  };
+
+  const updateKitItem = (index, field, value) => {
+    const newKitItems = [...kitItems];
+    newKitItems[index][field] = value;
+    setKitItems(newKitItems);
+  };
+
+  const removeKitItem = (index) => {
+    const newKitItems = kitItems.filter((_, i) => i !== index);
+    setKitItems(newKitItems);
+  };
 
   return (
     <div
@@ -184,7 +140,7 @@ const PaymentDialog = ({ open, onClose, data }) => {
       } transition-transform duration-300 ease-in-out bg-white shadow-lg`}
     >
       <div className="flex flex-col h-full">
-        {/* Fixed Header */}
+        {/* Header */}
         <div className="flex-none bg-gradient-to-r from-[#642b8f] to-[#aa88be] px-6 py-4 flex justify-between items-center">
           <h2 className="text-white text-xl font-semibold">Pay</h2>
           <button onClick={onClose} className="text-white hover:opacity-80">
@@ -192,7 +148,7 @@ const PaymentDialog = ({ open, onClose, data }) => {
           </button>
         </div>
 
-        {/* Scrollable Content */}
+        {/* Content */}
         <div className="flex-1 overflow-y-auto bg-[#f8f9fa]">
           <div className="p-6 space-y-4">
             {/* Kid Details Section */}
@@ -210,237 +166,177 @@ const PaymentDialog = ({ open, onClose, data }) => {
                   <label className="text-sm text-gray-600 block mb-1">
                     Program
                   </label>
-                  <p className="font-medium text-gray-900">
-                    {data?.program || "N/A"}
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-6 mt-2">
-                <div className="flex-1">
-                  <label className="text-sm text-gray-600 block mb-1">
-                    Level
-                  </label>
-                  <p className="font-medium text-gray-900">
-                    {data?.level || "N/A"}
-                  </p>
-                </div>
-                <div className="flex-1">
-                  <label className="text-sm text-gray-600 block mb-1">
-                    Mobile
-                  </label>
-                  <p className="font-medium text-gray-900">
-                    {formatWhatsAppNumber(data?.whatsappNumber) || "N/A"}
-                  </p>
-                </div>
-              </div>
-            </div>
-            {/* Selection Type Radio Buttons */}
-            <div className="bg-white p-4 rounded-lg shadow-sm">
-              <div className="flex space-x-4">
-                <div className="flex items-center">
-                  <input
-                    type="radio"
-                    id="classSelection"
-                    name="selectionType"
-                    checked={selectionType === "class"}
-                    onChange={() => setSelectionType("class")}
-                    className="mr-2"
-                  />
-                  <label htmlFor="classSelection">Class</label>
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="radio"
-                    id="kitSelection"
-                    name="selectionType"
-                    checked={selectionType === "kit"}
-                    onChange={() => setSelectionType("kit")}
-                    className="mr-2"
-                  />
-                  <label htmlFor="kitSelection">Kit/Items</label>
-                </div>
-              </div>
-
-              {/* Class Selection */}
-              {selectionType === "class" && (
-                <div className="mt-4 space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Select Class Schedule
-                    </label>
-                    <select
-                      value={selectedClass}
-                      onChange={(e) => setSelectedClass(e.target.value)}
-                      className="block w-full rounded-md border border-gray-300 px-4 py-2"
-                    >
-                      <option value="">Select a class schedule</option>
-                      {classSchedules.map((schedule) => (
-                        <option key={schedule.id} value={schedule.id}>
-                          {schedule.name} by {schedule.coach} on {schedule.day}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {selectedSchedule && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-3">
-                        Available Plans
-                      </label>
-                      <div className="space-y-3">
-                        {selectedSchedule.plans.map((plan, index) => (
-                          <div
-                            key={index}
-                            className="flex items-start cursor-pointer"
-                            onClick={() => handlePlanSelection(plan)}
-                          >
-                            <input
-                              type="radio"
-                              name="plan"
-                              id={`plan-${index}`}
-                              className="mt-1"
-                              checked={
-                                selectedPlan &&
-                                selectedPlan.baseAmount === plan.baseAmount
-                              }
-                              onChange={() => handlePlanSelection(plan)}
-                            />
-                            <label
-                              htmlFor={`plan-${index}`}
-                              className="ml-3 flex-1"
-                            >
-                              <div className="flex justify-between">
-                                <div>
-                                  <p className="text-sm font-medium text-gray-900">
-                                    {plan.duration} of {plan.classes} classes
-                                  </p>
-                                  <p className="text-sm text-gray-500">
-                                    Base amount: ₹{plan.baseAmount}
-                                  </p>
-                                </div>
-                              </div>
-                            </label>
-                          </div>
-                        ))}
-                      </div>
+                  {data?.programs?.map((item, index) => (
+                    <div key={index} className="mb-1">
+                      <p className="font-medium text-gray-900">
+                        {item.program || "N/A"}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Level: {item.level || "N/A"}
+                      </p>
                     </div>
-                  )}
-
-                  {selectedPlan && (
-                    <>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Number of Classes
-                        </label>
-                        <input
-                          type="number"
-                          value={numberOfClasses}
-                          onChange={(e) =>
-                            setNumberOfClasses(parseInt(e.target.value))
-                          }
-                          className="block w-full rounded-md border border-gray-300 px-4 py-2"
-                        />
-                      </div>
-
-                      {data?.level === "Advanced" && (
-                        <div className="flex items-center">
-                          <input
-                            type="checkbox"
-                            id="goldMembership"
-                            checked={isGoldMember}
-                            onChange={() => setIsGoldMember(!isGoldMember)}
-                            className="mr-2"
-                          />
-                          <label htmlFor="goldMembership" className="text-sm">
-                            Gold Membership
-                          </label>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              )}
-
-              {/* Kit/Items Selection */}
-              {selectionType === "kit" && (
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Enter Kit/Item Details
-                  </label>
-                  <input
-                    type="text"
-                    value={kitItem}
-                    onChange={(e) => setKitItem(e.target.value)}
-                    className="block w-full rounded-md border border-gray-300 px-4 py-2"
-                  />
-                </div>
-              )}
-            </div>
-            {/* Financial Calculations Section */}
-            <div className="bg-white p-4 rounded-lg shadow-sm">
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Plan Amount</span>
-                  <span className="font-bold">₹{customAmount}</span>
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-600 mb-1">
-                    Discount (%)
-                  </label>
-                  <input
-                    type="number"
-                    value={discount}
-                    onChange={(e) => setDiscount(parseFloat(e.target.value))}
-                    className="block w-full rounded-md border border-gray-300 px-4 py-2"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-600 mb-1">
-                    Tax (%)
-                  </label>
-                  <input
-                    type="number"
-                    value={tax}
-                    onChange={(e) => setTax(parseFloat(e.target.value))}
-                    className="block w-full rounded-md border border-gray-300 px-4 py-2"
-                  />
-                </div>
-                <div className="border-t pt-4">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Discount Amount</span>
-                    <span>
-                      ₹{calculateTotalAmount().discountAmount.toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Tax Amount</span>
-                    <span>₹{calculateTotalAmount().taxAmount.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 font-semibold">
-                      Total Amount
-                    </span>
-                    <span className="font-bold text-purple-600">
-                      ₹{calculateTotalAmount().totalAmount.toFixed(2)}
-                    </span>
-                  </div>
+                  ))}
                 </div>
               </div>
-            </div>{" "}
-            {generatePaymentLink() && (
-              <div className="bg-white p-4 rounded-lg shadow-sm">
-                <label className="text-sm text-gray-600 block mb-2">
-                  Generated Payment Link
+              <div className="mt-2">
+                <label className="text-sm text-gray-600 block mb-1">
+                  Mobile
                 </label>
-                <div className="p-3 bg-purple-50 rounded-md break-all font-mono text-sm border border-purple-100">
-                  {generatePaymentLink()}
+                <p className="font-medium text-gray-900">
+                  {formatWhatsAppNumber(data?.whatsappNumber) || "N/A"}
+                </p>
+              </div>
+            </div>
+
+            {/* Package Selection */}
+            <div className="bg-white p-4 rounded-lg shadow-sm">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select Package
+              </label>
+              <select
+                value={selectedPackage}
+                onChange={(e) => {
+                  setSelectedPackage(e.target.value);
+                  const selected = packages.find(
+                    (pkg) => pkg._id === e.target.value
+                  );
+                  if (selected) {
+                    // Reset all input states
+                    setOnlineClasses(selected.onlineClasses || 0);
+                    setOfflineClasses(selected.physicalClasses || 0);
+                    setCustomAmount(0);
+                    setKitItems([{ name: "", quantity: 0 }]);
+                  }
+                }}
+                className="block w-full rounded-md border border-gray-300 px-4 py-2"
+              >
+                <option value="">Select package</option>
+                {packages.map((pkg) => (
+                  <option key={pkg._id} value={pkg._id}>
+                    {pkg.packageName}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Hybrid Package Class Inputs */}
+            {selectedPackageDetails?.type === "hybrid" && (
+              <div className="bg-white p-4 rounded-lg shadow-sm space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Number of Online Classes
+                  </label>
+                  <input
+                    type="number"
+                    value={onlineClasses}
+                    onChange={(e) => setOnlineClasses(Number(e.target.value))}
+                    className="block w-full rounded-md border border-gray-300 px-4 py-2"
+                    min="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Number of Offline Classes
+                  </label>
+                  <input
+                    type="number"
+                    value={offlineClasses}
+                    onChange={(e) => setOfflineClasses(Number(e.target.value))}
+                    className="block w-full rounded-md border border-gray-300 px-4 py-2"
+                    min="0"
+                  />
                 </div>
               </div>
             )}
+
+            {/* Custom Package Input */}
+            {selectedPackageDetails?.type === "custom" && (
+              <div className="bg-white p-4 rounded-lg shadow-sm space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Custom Amount
+                  </label>
+                  <input
+                    type="number"
+                    value={customAmount}
+                    onChange={(e) => setCustomAmount(Number(e.target.value))}
+                    className="block w-full rounded-md border border-gray-300 px-4 py-2"
+                    min="0"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Kit/Items Input */}
+            {selectedPackageDetails?.type === "kit" && (
+              <div className="bg-white p-4 rounded-lg shadow-sm space-y-4">
+                {kitItems.map((item, index) => (
+                  <div key={index} className="flex space-x-2 items-center">
+                    <input
+                      type="text"
+                      placeholder="Item Name"
+                      value={item.name}
+                      onChange={(e) =>
+                        updateKitItem(index, "name", e.target.value)
+                      }
+                      className="flex-1 rounded-md border border-gray-300 px-2 py-1"
+                    />
+                    <input
+                      type="number"
+                      placeholder="Quantity"
+                      value={item.quantity}
+                      onChange={(e) =>
+                        updateKitItem(index, "quantity", Number(e.target.value))
+                      }
+                      className="w-24 rounded-md border border-gray-300 px-2 py-1"
+                      min="0"
+                    />
+                    {kitItems.length > 1 && (
+                      <button
+                        onClick={() => removeKitItem(index)}
+                        className="text-red-500 hover:bg-red-50 rounded-md p-1"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  onClick={addKitItem}
+                  className="w-full bg-purple-50 text-purple-600 py-2 rounded-md hover:bg-purple-100"
+                >
+                  Add Item
+                </button>
+              </div>
+            )}
+
+            {/* Financial Calculations */}
+            <div className="bg-white p-4 rounded-lg shadow-sm">
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Base Amount</span>
+                  <span className="font-bold">
+                    ₹{calculateTotalAmount().baseAmount.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">GST (18%)</span>
+                  <span>₹{calculateTotalAmount().gstAmount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between border-t pt-3">
+                  <span className="text-gray-600 font-semibold">
+                    Total Amount
+                  </span>
+                  <span className="font-bold text-purple-600">
+                    ₹{calculateTotalAmount().totalAmount.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Fixed Footer */}
+        {/* Footer */}
         <div className="flex-none border-t border-gray-200 p-4 bg-white">
           <div className="flex justify-end space-x-4">
             <button
@@ -450,13 +346,8 @@ const PaymentDialog = ({ open, onClose, data }) => {
               Cancel
             </button>
             <button
-              onClick={handleContinuePayment}
-              disabled={
-                !(
-                  (selectionType === "class" && selectedPlan) ||
-                  (selectionType === "kit" && kitItem)
-                )
-              }
+              onClick={generatePaymentLink}
+              disabled={!selectedPackage}
               className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             >
               <Send className="w-4 h-4 mr-2" />
@@ -465,6 +356,7 @@ const PaymentDialog = ({ open, onClose, data }) => {
           </div>
         </div>
       </div>
+
       <ToastContainer
         position="top-right"
         autoClose={5000}
@@ -473,7 +365,7 @@ const PaymentDialog = ({ open, onClose, data }) => {
         pauseOnHover
         draggable
         pauseOnFocusLoss
-        style={{ marginTop: "60px" }} // Adjust the value as needed
+        style={{ marginTop: "60px" }}
       />
     </div>
   );

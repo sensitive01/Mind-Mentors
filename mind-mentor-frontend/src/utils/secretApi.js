@@ -16,7 +16,7 @@ const CHESSKID_GROUP_ID = import.meta.env.VITE_CHESSKID_GROUP_ID;
 export async function makeCall(from, to) {
   const url = `${API_BASE_URL}/v1/Accounts/${ACCOUNT_ID}/Calls/connect?apikey=${API_KEY}`;
   const params = new URLSearchParams({
-    From: from,
+    From: from,//9074140114 919074140114
     To: to,
     CallerId: CALLER_ID,
   });
@@ -39,7 +39,8 @@ export async function makeCall(from, to) {
  * @returns {Promise<object>} - API response
  */
 export async function sendMessage(recipient, messageData) {
-  console.log("Sending message",recipient,messageData)
+  console.log("Sending message",recipient,messageData,)
+  console.log(`${API_BASE_URL}/api/v1/message/${ACCOUNT_ID}/template?apikey=${API_KEY}`)
   const url = `${API_BASE_URL}/api/v1/message/${ACCOUNT_ID}/template?apikey=${API_KEY}`;
 
   try {

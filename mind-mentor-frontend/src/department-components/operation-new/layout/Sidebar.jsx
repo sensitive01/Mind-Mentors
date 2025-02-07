@@ -169,16 +169,22 @@ const ModernSidebar = () => {
       icon: <AssignmentOutlined />,
       text: "Tasks",
       color: iconColors.tasks,
-      subItems: [
-        { text: "My Tasks", link: "/operation/department/list-mytask" },
-        {
-          text: "Task Assigned By Me",
-          link: "/operation/department/list-task-assigned-me",
-        },
-      ],
-      open: openTasks,
-      onClick: () => setOpenTasks(!openTasks),
+      link: "/operation/department/task-table",
     },
+    // {
+    //   icon: <AssignmentOutlined />,
+    //   text: "Tasks",
+    //   color: iconColors.tasks,
+    //   subItems: [
+    //     { text: "My Tasks", link: "/operation/department/list-mytask" },
+    //     {
+    //       text: "Task Assigned By Me",
+    //       link: "/operation/department/list-task-assigned-me",
+    //     },
+    //   ],
+    //   open: openTasks,
+    //   onClick: () => setOpenTasks(!openTasks),
+    // },
     {
       icon: <CalendarToday />,
       text: "Demo Class Schedule",

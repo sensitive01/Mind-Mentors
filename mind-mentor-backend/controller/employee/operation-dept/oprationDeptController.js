@@ -16,6 +16,7 @@ const ConductedClass = require("../../../model/conductedClassSchema");
 const ActivityLog = require("../../../model/taskLogModel");
 const NotesSection = require("../../../model/enquiryNoteSection");
 const  sendMessage  = require("../../../utils/sendMessage");
+const packageSchema = require("../../../model/packageDetails")
 
 // Email Verification
 
@@ -3024,12 +3025,23 @@ const sendPaymentLink = async (req, res) => {
 
     // Update the kid's payment status
     enqData.payment = "Requested";
+    enqData.paymentLink = link
     await enqData.save(); // Make sure you save the kidData after modifying the payment field
 
     res.status(200).json({ message: "Payment link sent successfully" });
   } catch (err) {
     console.error("Error in sending the payment link", err);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const getPackageData = async (req, res) => {
+  try {
+    const packageData = await packageSchema.find();
+    res.status(200).json({ success: true, data: packageData });
+  } catch (err) {
+    console.error("Error fetching package data:", err);
+    res.status(500).json({ success: false, error: "Failed to fetch package data" });
   }
 };
 
@@ -3043,13 +3055,9 @@ const sendPaymentLink = async (req, res) => {
 
 
 
-
-
-
-
-
 module.exports = {
   fetchAllStatusLogs,
+  getPackageData,
 
   operationEmailVerification,
   operationPasswordVerification,

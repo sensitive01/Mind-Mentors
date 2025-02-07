@@ -286,28 +286,7 @@ const TaskAssignedByMeTable = () => {
               boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.05)",
             }}
           >
-            <Box
-              mb={3}
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-            >
-              <Typography
-                variant="h5"
-                gutterBottom
-                sx={{ color: "text.primary", fontWeight: 600, mb: 3 }}
-              >
-                Assigned Tasks
-              </Typography>
-              <Button
-                variant="contained"
-                color="primary"
-                component={Link}
-                to={`/${department}/department/assign-new-task`}
-              >
-                + Assign New Task
-              </Button>
-            </Box>
+           
             <DataGrid
               rows={rows}
               columns={columns(

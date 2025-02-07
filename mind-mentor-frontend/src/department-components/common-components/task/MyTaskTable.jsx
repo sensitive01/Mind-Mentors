@@ -25,28 +25,32 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import columns from "./TaskColumn";
-import { addNotesToTasks, fetchMyPendingTask, updateTaskStatus } from "../../../api/service/employee/EmployeeService";
+import {
+  addNotesToTasks,
+  fetchMyPendingTask,
+  updateTaskStatus,
+} from "../../../api/service/employee/EmployeeService";
 
 const theme = createTheme({
   palette: {
     primary: {
-      main: "#642b8f", 
+      main: "#642b8f",
       // main: '#f8a213',
       light: "#818CF8",
       dark: "#4F46E5",
     },
     secondary: {
-      main: "#EC4899", 
+      main: "#EC4899",
       light: "#F472B6",
       dark: "#DB2777",
     },
     warm: {
-      main: "#F59E0B", 
+      main: "#F59E0B",
       light: "#FCD34D",
       dark: "#D97706",
     },
     cold: {
-      main: "#3B82F6", 
+      main: "#3B82F6",
       light: "#60A5FA",
       dark: "#2563EB",
     },
@@ -98,7 +102,7 @@ const DetailView = ({ data }) => (
               sx={{
                 p: 2,
                 borderRadius: 2,
-                bgcolor: alpha("#1976d2", 0.04), 
+                bgcolor: alpha("#1976d2", 0.04),
                 height: "100%",
               }}
             >
@@ -135,36 +139,33 @@ const DetailView = ({ data }) => (
 );
 const MyTaskTable = () => {
   const [rows, setRows] = useState([]);
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const [logDialog, setLogDialog] = useState({ open: false, rowData: null });
   const empId = localStorage.getItem("empId");
 
   useEffect(() => {
     const fetchTask = async () => {
       try {
-     
         const response = await fetchMyPendingTask(empId);
         console.log(response);
 
-       
-        const formattedData = response.map((task,index) => ({
-          ...task, 
-          slNo:index+1,
+        const formattedData = response.map((task, index) => ({
+          ...task,
+          slNo: index + 1,
           id: task._id,
-          taskTime: task.taskTime, 
+          taskTime: task.taskTime,
           createdAt: task.createdAt,
-          updatedAt: task.updatedAt, 
+          updatedAt: task.updatedAt,
           assignedBy: task.assignedBy,
-        
         }));
-        setRows(formattedData); 
+        setRows(formattedData);
       } catch (error) {
         console.error("Failed to fetch tasks:", error);
       }
     };
 
     fetchTask();
-  }, []); 
+  }, []);
 
   useEffect(() => {}, []);
   const [noteDialog, setNoteDialog] = useState({
@@ -183,38 +184,37 @@ const MyTaskTable = () => {
   const handleStatusToggle = async (id, newStatus) => {
     console.log("Toggle");
     try {
-   
       const empId = localStorage.getItem("empId");
       if (!empId) {
         console.error("Employee ID (empId) is missing.");
         return;
       }
-    
+
       setRows(
         rows.map((row) => {
           if (row._id === id) {
             return {
               ...row,
-              status: newStatus, 
-              stageTag: newStatus, 
+              status: newStatus,
+              stageTag: newStatus,
             };
           }
           return row;
         })
       );
-      
+
       const payload = {
         status: newStatus,
-        updatedBy: empId, 
+        updatedBy: empId,
       };
-    
+
       console.log("Updating before response");
 
       const data = await updateTaskStatus(id, payload, empId);
       console.log("Updating after response", data);
       if (data.success) {
         console.log("Task status updated successfully:", data);
-  
+
         if (data.activityLog) {
           console.log("Activity Log:", data.activityLog);
         }
@@ -230,32 +230,32 @@ const MyTaskTable = () => {
       try {
         const { id } = noteDialog.rowData;
         const { noteText, enquiryStage } = noteDialog;
-      
+
         if (!enquiryStage || !noteText) {
           console.error("Enquiry Stage and Note Text are required.");
           return;
         }
-    
+
         const empId = localStorage.getItem("empId");
         if (!empId) {
           console.error("Employee ID (empId) is missing.");
           return;
         }
-   
+
         const payload = {
           enquiryStageTag: enquiryStage,
-          addNoteTo: "parent", 
+          addNoteTo: "parent",
           notes: noteText,
-          addedBy: empId, 
+          addedBy: empId,
         };
-     
+
         console.log("Payload to be sent:", payload);
-     
+
         const data = await addNotesToTasks(id, payload);
-    
+
         if (data.success) {
           console.log("Note added successfully:", data);
-       
+
           setRows(
             rows.map((row) =>
               row.id === id
@@ -263,7 +263,7 @@ const MyTaskTable = () => {
                 : row
             )
           );
-      
+
           setNoteDialog({
             open: false,
             rowData: null,
@@ -294,21 +294,6 @@ const MyTaskTable = () => {
               boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.05)",
             }}
           >
-            <Box
-              mb={3}
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-            >
-              <Typography
-                variant="h5"
-                gutterBottom
-                sx={{ color: "text.primary", fontWeight: 600, mb: 3 }}
-              >
-                My Tasks
-              </Typography>
-             
-            </Box>
             <DataGrid
               rows={rows}
               columns={columns(
@@ -317,7 +302,7 @@ const MyTaskTable = () => {
                 setViewDialog,
                 setNoteDialog,
                 setLogDialog,
-                navigate 
+                navigate
               )}
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel}
@@ -331,7 +316,7 @@ const MyTaskTable = () => {
                 },
               }}
               sx={{
-                height: 500, 
+                height: 500,
                 "& .MuiDataGrid-cell:focus": {
                   outline: "none",
                 },
@@ -351,7 +336,7 @@ const MyTaskTable = () => {
                 },
               }}
             />
-         
+
             <Dialog
               open={viewDialog.open}
               onClose={() => setViewDialog({ open: false, rowData: null })}
@@ -388,7 +373,7 @@ const MyTaskTable = () => {
                 </Button>
               </DialogActions>
             </Dialog>
-         
+
             <Dialog
               open={noteDialog.open}
               onClose={() =>
@@ -423,7 +408,6 @@ const MyTaskTable = () => {
               </DialogTitle>
               <Divider />
               <DialogContent>
-            
                 <FormControl fullWidth sx={{ mt: 2 }}>
                   <InputLabel>Enquiry Stage</InputLabel>
                   <Select
@@ -442,7 +426,7 @@ const MyTaskTable = () => {
                     <MenuItem value="Converted">Converted</MenuItem>
                   </Select>
                 </FormControl>
-              
+
                 <TextField
                   label="Notes To"
                   value={noteDialog.notesTo}

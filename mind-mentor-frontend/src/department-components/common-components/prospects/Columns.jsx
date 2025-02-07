@@ -45,13 +45,12 @@ const columns = (
     editable: true,
   },
 
- 
   {
     field: "contact",
     headerName: "Contact",
     width: 180,
     renderCell: (params) => (
-      <Box sx={{ display: "flex", gap: 2 }}>
+      <Box sx={{ display: "flex", gap: 2, marginTop: "7px" }}>
         {params.row.whatsappNumber && (
           <IconButton
             size="small"
@@ -71,7 +70,7 @@ const columns = (
             </svg>
           </IconButton>
         )}
-        {params.row.email && (
+        {/* {params.row.email && (
           <IconButton
             size="small"
             onClick={(e) => {
@@ -99,7 +98,7 @@ const columns = (
               <polyline points="22,6 12,13 2,6" />
             </svg>
           </IconButton>
-        )}
+        )} */}
         {params.row.contactNumber && (
           <IconButton
             size="small"
@@ -236,7 +235,7 @@ const columns = (
                   lineHeight: 1.2,
                 }}
               >
-               {date}
+                {date}
               </Typography>
             </Box>
 
@@ -312,20 +311,29 @@ const columns = (
     field: "moveToProspect",
     headerName: "Move to Enquiry",
     width: 150,
-    renderCell: (params) => (
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          handleMoveBackToEnquiry(params.row._id);
-        }}
-        className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md 
-                   transition-all duration-300 ease-in-out
-                   border-2 border-transparent
-                   hover:border-primary hover:border-2 hover:bg-white hover:text-primary"
-      >
-        {"Move to Enquiry"}
-      </button>
-    ),
+    renderCell: (params) => {
+      const isWarmStatus = params.row.enquiryType === "warm"; // Assuming "status" is the field name
+
+      return (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!isWarmStatus) {
+              handleMoveBackToEnquiry(params.row._id);
+            }
+          }}
+          disabled={isWarmStatus} // Disable the button if the status is "warm"
+          className={`px-4 py-1 text-sm font-medium text-white rounded-md transition-all duration-300 ease-in-out border-2 border-transparent
+                      ${
+                        isWarmStatus
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-primary hover:bg-primary hover:text-white hover:border-primary hover:border-2"
+                      }`}
+        >
+          {"Move to Enquiry"}
+        </button>
+      );
+    },
   },
 
   {
@@ -421,7 +429,6 @@ const columns = (
               >
                 {"Logs"}
               </Typography>
-              
             </Box>
 
             {/* Subtle Arrow Indicator */}
@@ -460,32 +467,6 @@ const columns = (
     valueFormatter: (params) => params.value,
   },
   {
-    field: "kidsAge",
-    headerName: "Kid Age",
-    type: "number",
-    width: 100,
-    editable: true,
-  },
-  {
-    field: "kidsGender",
-    headerName: "Kid Gender",
-    width: 120,
-    editable: true,
-  },
-
-  {
-    field: "message",
-    headerName: "Message",
-    width: 250,
-    editable: true,
-  },
-  {
-    field: "source",
-    headerName: "Source",
-    width: 150,
-    editable: true,
-  },
-  {
     field: "programs",
     headerName: "Programs",
     width: 250,
@@ -506,23 +487,50 @@ const columns = (
       </Box>
     ),
   },
-  {
-    field: "schoolName",
-    headerName: "School Name",
-    width: 200,
-    editable: true,
-  },
-  {
-    field: "address",
-    headerName: "Address",
-    width: 250,
-    editable: true,
-  },
-  {
-    field: "schoolPincode",
-    headerName: "School Pincode",
-    width: 150,
-    editable: true,
-  },
+  // {
+  //   field: "kidsAge",
+  //   headerName: "Kid Age",
+  //   type: "number",
+  //   width: 100,
+  //   editable: true,
+  // },
+  // {
+  //   field: "kidsGender",
+  //   headerName: "Kid Gender",
+  //   width: 120,
+  //   editable: true,
+  // },
+
+  // {
+  //   field: "message",
+  //   headerName: "Message",
+  //   width: 250,
+  //   editable: true,
+  // },
+  // {
+  //   field: "source",
+  //   headerName: "Source",
+  //   width: 150,
+  //   editable: true,
+  // },
+
+  // {
+  //   field: "schoolName",
+  //   headerName: "School Name",
+  //   width: 200,
+  //   editable: true,
+  // },
+  // {
+  //   field: "address",
+  //   headerName: "Address",
+  //   width: 250,
+  //   editable: true,
+  // },
+  // {
+  //   field: "schoolPincode",
+  //   headerName: "School Pincode",
+  //   width: 150,
+  //   editable: true,
+  // },
 ];
 export default columns;

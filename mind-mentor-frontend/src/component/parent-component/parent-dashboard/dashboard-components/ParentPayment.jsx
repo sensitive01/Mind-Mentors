@@ -12,22 +12,49 @@ const ParentPayment = () => {
   const navigate = useNavigate();
   const { encodedData } = useParams();
   const [paymentData, setPaymentData] = useState(null);
-  const [paymentDetails, setPaymentDetails] = useState({
-    paymentMode: "",
-  });
+  const [error, setError] = useState(null);
   const parentId = localStorage.getItem("parentId");
-
-  const paymentModes = [
-    { value: "upi", label: "UPI" },
-    { value: "netBanking", label: "Net Banking" },
-    { value: "card", label: "Card" },
-    { value: "cash", label: "Cash" },
-  ];
 
   const decodePaymentData = (encodedData) => {
     try {
-      const decodedString = atob(encodedData);
-      return JSON.parse(decodedString);
+      // Replace URL-safe characters and add padding
+      const sanitizedData = encodedData
+        .replace(/-/g, "+")
+        .replace(/_/g, "/")
+        .padEnd(encodedData.length + ((4 - (encodedData.length % 4)) % 4), "=");
+
+      const decodedString = atob(sanitizedData);
+      const parsedData = JSON.parse(decodedString);
+      console.log("parsedData", parsedData);
+
+      // Transform the decoded data to match the expected format for Razorpay
+      return {
+        enqId: parsedData.enqId || null, // Ensure enqId is included
+        kidId: parsedData.kidId,
+        kidName: parsedData.kidName,
+        amount: parsedData.totalAmount, // Use total amount including GST
+        classDetails: {
+          name:
+            parsedData.selectionType === "class"
+              ? `${parsedData.selectedCenter} - ${parsedData.selectedClass}`
+              : parsedData.kitItem,
+          coach: "Not Specified", // You may want to add coach information if available
+          day: parsedData.selectedClass || "Not Specified",
+          classType: parsedData.selectedPackage,
+          numberOfClasses: parsedData.offlineClasses + parsedData.onlineClasses,
+        },
+        whatsappNumber: parsedData.whatsappNumber,
+        selectionType: parsedData.selectionType,
+        kitItem: parsedData.kitItem,
+        baseAmount: parsedData.baseAmount,
+        gstAmount: parsedData.gstAmount,
+        programs: parsedData.programs,
+        offlineClasses: parsedData.offlineClasses,
+        onlineClasses: parsedData.onlineClasses,
+        selectedCenter: parsedData.selectedCenter,
+        selectedClass: parsedData.selectedClass,
+        selectedPackage: parsedData.selectedPackage,
+      };
     } catch (error) {
       console.error("Error decoding payment data:", error);
       return null;
@@ -37,10 +64,14 @@ const ParentPayment = () => {
   useEffect(() => {
     if (encodedData) {
       const decoded = decodePaymentData(encodedData);
-      console.log(decoded);
+      console.log("Decoded payment data:", decoded);
       if (decoded) {
         setPaymentData(decoded);
+      } else {
+        setError("Invalid payment data");
       }
+    } else {
+      setError("No payment data provided");
     }
   }, [encodedData]);
 
@@ -51,28 +82,31 @@ const ParentPayment = () => {
         amount: paymentData.amount * 100, // Amount in the smallest unit (paise)
         currency: "INR",
         name: "MindMentorz",
-        description: "Class Payment",
+        description:
+          paymentData.selectionType === "class"
+            ? "Class Payment"
+            : `Kit Payment - ${paymentData.kitItem}`,
         image: logo,
         handler: async (response) => {
           try {
             const { razorpay_payment_id } = response;
 
             const savepayment = await savepaymentInfo(
-              paymentData,
-              paymentDetails,
+              {
+                ...paymentData,
+                razorpay_payment_id: razorpay_payment_id,
+              },
               razorpay_payment_id,
               parentId
             );
-            console.log(savepayment);
+            console.log("Payment save response:", savepayment);
 
             if (savepayment.status === 201) {
               Swal.fire({
                 title: "Payment Done Successfully",
-
                 icon: "success",
                 confirmButtonText: "OK",
               }).then(() => {
-             
                 navigate(`/parent/kid/attendance/${paymentData.kidId}`);
               });
             } else {
@@ -103,7 +137,6 @@ const ParentPayment = () => {
 
       const razorpay = new window.Razorpay(options);
 
-      // Handle payment failure
       razorpay.on("payment.failed", (response) => {
         Swal.fire({
           title: "Payment Failed",
@@ -125,14 +158,7 @@ const ParentPayment = () => {
     }
   };
 
-  const handleInputChange = (field, value) => {
-    setPaymentDetails((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  if (!paymentData) {
+  if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-purple-100">
         <div className="text-center p-8 bg-white rounded-xl shadow-lg">
@@ -143,6 +169,14 @@ const ParentPayment = () => {
             Please check the payment link and try again.
           </p>
         </div>
+      </div>
+    );
+  }
+
+  if (!paymentData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-purple-100 py-8 px-4 flex items-center justify-center">
+        <div className="text-gray-600">Loading payment details...</div>
       </div>
     );
   }
@@ -159,49 +193,45 @@ const ParentPayment = () => {
 
           {/* Payment Content */}
           <div className="p-6 space-y-6">
-            {/* Class Details */}
+            {/* Class/Kit Details */}
             <div className="bg-purple-50 p-4 rounded-lg">
               <div className="flex justify-between items-center">
                 <div>
                   <p className="text-lg font-semibold text-purple-800">
-                    {paymentData.classDetails?.name || "No Class Selected"}
+                    {paymentData.selectedCenter} - {paymentData.selectedClass}
                   </p>
                   <p className="text-sm text-purple-600">
-                    {paymentData.classDetails?.coach} |{" "}
-                    {paymentData.classDetails?.day}
+                    {paymentData.selectedPackage}
                   </p>
+                  {paymentData.programs && paymentData.programs.length > 0 && (
+                    <p className="text-sm text-purple-600">
+                      Program: {paymentData.programs[0].program} (
+                      {paymentData.programs[0].level})
+                    </p>
+                  )}
                 </div>
                 <span className="text-xl font-bold text-purple-700">
                   ₹{Math.round(paymentData.amount)}
                 </span>
               </div>
-            </div>
 
-            {/* Payment Mode Selection */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Payment Mode
-              </label>
-              <select
-                value={paymentDetails.paymentMode}
-                onChange={(e) =>
-                  handleInputChange("paymentMode", e.target.value)
-                }
-                className="w-full rounded-lg border-purple-300 focus:ring-purple-500 focus:border-purple-500 py-2 px-3"
-              >
-                <option value="">Select Payment Mode</option>
-                {paymentModes.map((mode) => (
-                  <option key={mode.value} value={mode.value}>
-                    {mode.label}
-                  </option>
-                ))}
-              </select>
+              {/* Class Breakdown */}
+              <div className="mt-4 text-sm text-purple-600 flex justify-between">
+                <span>Offline Classes: {paymentData.offlineClasses}</span>
+                <span>Online Classes: {paymentData.onlineClasses}</span>
+              </div>
+
+              {/* Enquiry ID */}
+              {paymentData.enqId && (
+                <div className="mt-2 text-xs text-gray-500">
+                  Enquiry ID: {paymentData.enqId}
+                </div>
+              )}
             </div>
 
             {/* Payment Button */}
             <button
               onClick={handleUpdatePayment}
-              disabled={!paymentDetails.paymentMode}
               className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold 
                          hover:bg-purple-700 transition-colors duration-300
                          disabled:opacity-50 disabled:cursor-not-allowed 
@@ -216,6 +246,10 @@ const ParentPayment = () => {
               <p className="text-sm text-gray-600">Total Amount</p>
               <p className="text-2xl font-bold text-purple-700">
                 ₹{Math.round(paymentData.amount)}
+              </p>
+              <p className="text-sm text-gray-600">
+                Base Amount: ₹{paymentData.baseAmount} | GST: ₹
+                {paymentData.gstAmount}
               </p>
             </div>
           </div>

@@ -26,6 +26,7 @@ import {
   updateEnquiryStatus,
   fetchProspectsEnquiries,
   handleMoveToEnquiry,
+  
 } from "../../../api/service/employee/EmployeeService";
 import DetailView from "./detailed-view/DetailView";
 import { ClipboardList, Edit, X } from "lucide-react";
@@ -227,6 +228,7 @@ const Prospects = () => {
     console.log("Handle logs ", id);
     navigate(`/${department}/department/show-complete-status-logs/${id}`);
   };
+  
 
   return (
     <>
@@ -412,12 +414,7 @@ const Prospects = () => {
                         if (viewDialog.rowData) {
                           setIsTaskOverlayOpen(true);
                           setEnqId(viewDialog.rowData._id);
-                          // Close the details dialog when opening task overlay
-                          setViewDialog({
-                            open: false,
-                            rowData: null,
-                            showEdit: false,
-                          });
+               
                         }
                       }}
                       sx={{
@@ -516,7 +513,7 @@ const Prospects = () => {
           </DialogActions>
         </Dialog>
       </ThemeProvider>
-      <TaskAssignmentOverlay
+      {/* <TaskAssignmentOverlay
         isOpen={isTaskOverlayOpen}
         onClose={() => setIsTaskOverlayOpen(false)}
         sx={{
@@ -529,7 +526,7 @@ const Prospects = () => {
           id={enqId}
           onClose={() => setIsTaskOverlayOpen(false)}
         />
-      </TaskAssignmentOverlay>
+      </TaskAssignmentOverlay> */}
     </>
   );
 };

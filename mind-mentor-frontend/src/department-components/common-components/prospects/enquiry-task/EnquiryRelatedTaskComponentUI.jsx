@@ -225,19 +225,15 @@ const EnquiryRelatedTaskComponentUI = ({
                       })}
                     </div>
                   )}
+                  {/* Team Members Dropdown */}
                   <div className="relative mt-1">
                     <div
                       className="w-full p-2 text-sm rounded-lg border flex justify-between items-center cursor-pointer"
-                      onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                      onClick={() => setIsUserDropdownOpen((prev) => !prev)}
                     >
-                      <input
-                        type="text"
-                        placeholder="Search team members..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
-                        className="outline-none w-full text-sm"
-                      />
+                      <span className="text-gray-500">
+                        Select team members...
+                      </span>
                       {isUserDropdownOpen ? (
                         <ChevronUp size={14} />
                       ) : (
@@ -245,29 +241,28 @@ const EnquiryRelatedTaskComponentUI = ({
                       )}
                     </div>
                     {isUserDropdownOpen && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-32 overflow-y-auto">
-                        {filteredEmployees.map((employee) => (
-                          <div
-                            key={employee._id}
-                            className="flex items-center p-2 hover:bg-gray-50 cursor-pointer"
-                            onClick={() => handleUserSelection(employee.email)}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={selectedUsers.includes(employee.email)}
-                              onChange={() => {}}
-                              className="w-3 h-3 rounded border-gray-300 text-purple-600"
-                            />
-                            <label className="ml-2">
-                              <span className="block text-sm">
-                                {employee.firstName}
-                              </span>
-                              <span className="block text-xs text-gray-500">
-                                {employee.department}
-                              </span>
-                            </label>
+                      <div className="absolute z-20 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-32 overflow-y-auto">
+                        {filteredEmployees.length > 0 ? (
+                          filteredEmployees.map((user) => (
+                            <div
+                              key={user.email}
+                              className="flex items-center p-2 hover:bg-gray-50 cursor-pointer text-sm"
+                              onClick={() => handleUserSelection(user.email)}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedUsers.includes(user.email)}
+                                readOnly
+                                className="w-3 h-3 rounded border-gray-300 text-purple-600"
+                              />
+                              <label className="ml-2">{user.firstName}</label>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="p-2 text-sm text-gray-500">
+                            No team members available
                           </div>
-                        ))}
+                        )}
                       </div>
                     )}
                   </div>

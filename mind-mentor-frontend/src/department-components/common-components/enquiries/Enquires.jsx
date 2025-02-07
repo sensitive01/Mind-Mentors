@@ -33,6 +33,7 @@ import DetailView from "./detailed-view/DetailView";
 import { ClipboardList, Edit, X } from "lucide-react";
 import TaskAssignmentOverlay from "../prospects/detailed-view/SlideDialog";
 import EnquiryRelatedTaskComponent from "../prospects/enquiry-task/EnquiryRelatedTaskComponent";
+import { sendMessage } from "../../../utils/secretApi";
 
 const theme = createTheme({
   palette: {
@@ -172,6 +173,13 @@ const Enquiries = () => {
     }
   };
 
+  const handleSend = async(number)=>{
+    console.log("number",number)
+    const message  ="Haii welcome to mind mentors"
+    const sendingMessage =await sendMessage(number,message)
+    console.log('message respoense',sendingMessage)
+  }
+
   const handleRowEditStop = (params, event) => {
     event.defaultMuiPrevented = true;
   };
@@ -257,7 +265,8 @@ const Enquiries = () => {
                 handleStatusToggle,
                 handleMoveProspects,
                 handleShowLogs,
-                handleShowStatus
+                handleShowStatus,
+                handleSend
               )}
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel}
@@ -631,7 +640,7 @@ const Enquiries = () => {
           </Button>
         </DialogActions>
       </Dialog>
-      <TaskAssignmentOverlay
+      {/* <TaskAssignmentOverlay
         isOpen={isTaskOverlayOpen}
         onClose={() => setIsTaskOverlayOpen(false)}
       >
@@ -639,7 +648,7 @@ const Enquiries = () => {
           id={enqId}
           onClose={() => setIsTaskOverlayOpen(false)}
         />
-      </TaskAssignmentOverlay>
+      </TaskAssignmentOverlay> */}
     </ThemeProvider>
   );
 };

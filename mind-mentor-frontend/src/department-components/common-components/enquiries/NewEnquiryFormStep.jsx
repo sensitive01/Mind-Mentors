@@ -13,10 +13,12 @@ const NewEnquiryFormStep = () => {
   const { id } = useParams();
   const [activeStep, setActiveStep] = useState(0);
   const [enquiryId, setEnquiryId] = useState(id || null);
+  const [pincode, setPincode] = useState("");
+  const [error, setError] = useState("");
+  const [isSameAsContact, setIsSameAsContact] = useState(false);
 
   const [formData, setFormData] = useState({
     parentFirstName: "",
-
     contactNumber: "",
     whatsappNumber: "",
     email: "",
@@ -31,8 +33,61 @@ const NewEnquiryFormStep = () => {
     address: "",
     schoolPincode: "",
     empId,
+    city: "",
+    state: "",
+    relationship: "",
+    otherRelationship: "",
+    pincode: ""
   });
-  const [isSameAsContact, setIsSameAsContact] = useState(false);
+
+  const fetchCityDetails = async (pin) => {
+    try {
+      const response = await fetch(
+        `https://api.postalpincode.in/pincode/${pin}`
+      );
+      const data = await response.json();
+
+      if (data[0].Status === "Success") {
+        const postOffice = data[0].PostOffice[0];
+        setFormData((prev) => ({
+          ...prev,
+          city: postOffice.District,
+          state: postOffice.State,
+          pincode: pin
+        }));
+        setError("");
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          city: "",
+          state: "",
+          pincode: ""
+        }));
+        setError("Invalid Pincode");
+      }
+    } catch (err) {
+      setError("Unable to fetch city details");
+      setFormData((prev) => ({
+        ...prev,
+        city: "",
+        state: "",
+        pincode: ""
+      }));
+    }
+  };
+
+  useEffect(() => {
+    if (pincode.length === 6) {
+      fetchCityDetails(pincode);
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        city: "",
+        state: "",
+        pincode: ""
+      }));
+    }
+  }, [pincode]);
 
   useEffect(() => {
     if (id) {
@@ -41,6 +96,7 @@ const NewEnquiryFormStep = () => {
         .then((response) => {
           setFormData(response.data);
           setEnquiryId(id);
+          setPincode(response.data.pincode || "");
         })
         .catch((error) => {
           console.error("Error fetching enquiry:", error);
@@ -48,6 +104,7 @@ const NewEnquiryFormStep = () => {
         });
     }
   }, [id]);
+
   const handleInputChange = (field, value) => {
     setFormData((prevData) => ({
       ...prevData,
@@ -60,6 +117,7 @@ const NewEnquiryFormStep = () => {
       }));
     }
   };
+
   const handleCheckboxChange = () => {
     setIsSameAsContact((prev) => !prev);
     if (!isSameAsContact) {
@@ -107,87 +165,13 @@ const NewEnquiryFormStep = () => {
         return (
           formData.kidFirstName.trim() &&
           formData.kidsAge &&
-          formData.kidsGender
+          formData.kidsGender &&
+          formData.relationship
         );
       case 2:
         return formData.programs[0].program && formData.programs[0].level;
       default:
         return true;
-    }
-  };
-
-  const getStepData = (step) => {
-    switch (step) {
-      case 0:
-        return {
-          parentFirstName: formData.parentFirstName,
-          contactNumber: formData.contactNumber,
-          isSameAsContact,
-
-          whatsappNumber: formData.whatsappNumber,
-          email: formData.email,
-          source: formData.source,
-          empId,
-        };
-      case 1:
-        return {
-          kidFirstName: formData.kidFirstName,
-          kidLastName: formData.kidLastName,
-          kidsAge: formData.kidsAge,
-          kidsGender: formData.kidsGender,
-          schoolName: formData.schoolName,
-          address: formData.address,
-          schoolPincode: formData.schoolPincode,
-        };
-      case 2:
-        return {
-          programs: formData.programs,
-          message: formData.message,
-        };
-      default:
-        return {};
-    }
-  };
-
-  const saveStepData = async (step) => {
-    try {
-      const stepData = getStepData(step);
-
-      if (!enquiryId) {
-        // Create new enquiry for first step
-        const response = await operationDeptInstance.post(
-          "/enquiry-form",
-          stepData
-        );
-        console.log("Response", response);
-        setEnquiryId(response.data.id);
-        toast.success("Step 1 saved successfully!");
-      } else {
-        // Update existing enquiry for subsequent steps
-        await operationDeptInstance.put(
-          `/enquiry-form/${enquiryId}/step/${step + 1}`,
-          stepData
-        );
-        toast.success(`Step ${step + 1} saved successfully!`);
-      }
-
-      return true;
-    } catch (error) {
-      console.error(`Error saving step ${step + 1}:`, error);
-      toast.error(`Error saving step ${step + 1}`);
-      return false;
-    }
-  };
-
-  const handleContinue = async () => {
-    if (!validateStep(activeStep)) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-
-    const saved = await saveStepData(activeStep);
-    if (saved) {
-      setActiveStep((prev) => prev + 1);
     }
   };
 
@@ -199,7 +183,18 @@ const NewEnquiryFormStep = () => {
     }
 
     try {
-      await saveStepData(2);
+      const completeFormData = {
+        ...formData,
+        pincode: pincode || formData.pincode,
+      };
+
+      if (!enquiryId) {
+        const response = await operationDeptInstance.post("/enquiry-form", completeFormData);
+        setEnquiryId(response.data.id);
+      } else {
+        await operationDeptInstance.put(`/enquiry-form/${enquiryId}`, completeFormData);
+      }
+
       toast.success("Enquiry submitted successfully!");
       setTimeout(() => {
         navigate("/operation/department/enquiry-list");
@@ -207,6 +202,70 @@ const NewEnquiryFormStep = () => {
     } catch (error) {
       console.error("Error submitting enquiry:", error);
       toast.error("There was an error submitting the enquiry.");
+    }
+  };
+
+  const handleContinue = async () => {
+    if (!validateStep(activeStep)) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    try {
+      const stepData = getStepData(activeStep);
+
+      if (!enquiryId) {
+        const response = await operationDeptInstance.post("/enquiry-form", stepData);
+        setEnquiryId(response.data.id);
+        toast.success("Step saved successfully!");
+      } else {
+        await operationDeptInstance.put(
+          `/enquiry-form/${enquiryId}/step/${activeStep + 1}`,
+          stepData
+        );
+        toast.success("Step saved successfully!");
+      }
+
+      setActiveStep((prev) => prev + 1);
+    } catch (error) {
+      console.error(`Error saving step ${activeStep + 1}:`, error);
+      toast.error(`Error saving step ${activeStep + 1}`);
+    }
+  };
+
+  const getStepData = (step) => {
+    switch (step) {
+      case 0:
+        return {
+          parentFirstName: formData.parentFirstName,
+          contactNumber: formData.contactNumber,
+          whatsappNumber: formData.whatsappNumber,
+          email: formData.email,
+          source: formData.source,
+          empId,
+        };
+      case 1:
+        return {
+          kidFirstName: formData.kidFirstName,
+          kidLastName: formData.kidLastName,
+          kidsAge: formData.kidsAge,
+          kidsGender: formData.kidsGender,
+          relationship: formData.relationship,
+          otherRelationship: formData.otherRelationship,
+          pincode: pincode,
+          city: formData.city,
+          state: formData.state,
+          schoolName: formData.schoolName,
+          address: formData.address,
+          schoolPincode: formData.schoolPincode,
+        };
+      case 2:
+        return {
+          programs: formData.programs,
+          message: formData.message,
+        };
+      default:
+        return {};
     }
   };
 
@@ -223,7 +282,7 @@ const NewEnquiryFormStep = () => {
                 <div className="flex gap-4">
                   <input
                     type="text"
-                    placeholder="Parent Name *"
+                    placeholder="Yours Name *"
                     className="flex-1 p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors"
                     value={formData.parentFirstName}
                     onChange={(e) =>
@@ -235,88 +294,91 @@ const NewEnquiryFormStep = () => {
               </div>
             </div>
             <div className="space-y-4">
-              {/* Checkbox moved to top */}
-              <div>
-                <label className="inline-flex items-center text-sm font-medium text-[#642b8f] hover:cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="mr-2 accent-[#642b8f]"
-                    checked={isSameAsContact}
-                    onChange={handleCheckboxChange}
-                  />
-                  WhatsApp number is the same as the contact number
+              {/* Contact Number Input */}
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Yours's Contact Number <span className="text-red-500">*</span>
                 </label>
+                <PhoneInput
+                  country="in"
+                  value={formData.contactNumber}
+                  onChange={(value) => {
+                    handleInputChange("contactNumber", value);
+                    // Add logic to enable WhatsApp input/checkbox after contact number is entered
+                  }}
+                  inputProps={{
+                    placeholder: "Enter your contact number",
+                    required: true,
+                    className:
+                      "w-full p-4 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:ring-2 focus:ring-[#642b8f] focus:ring-opacity-50 outline-none placeholder-gray-400",
+                  }}
+                  containerClass="w-full"
+                  buttonClass="border-2 !border-[#aa88be] !rounded-l-lg"
+                  inputStyle={{
+                    width: "100%",
+                    height: "44px",
+                    fontSize: "16px",
+                  }}
+                  preferredCountries={["in"]}
+                />
               </div>
 
-              {/* Phone inputs in same line */}
-              <div className="flex gap-4 items-center ml-4">
-                <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Parent's Contact Number{" "}
-                    <span className="text-red-500">*</span>
-                  </label>
-                  <PhoneInput
-                    country="in"
-                    value={formData.contactNumber}
-                    onChange={(value) =>
-                      handleInputChange("contactNumber", value)
-                    }
-                    inputProps={{
-                      placeholder: "Enter contact number",
-                      required: true,
-                      className:
-                        "w-full p-4 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:ring-2 focus:ring-[#642b8f] focus:ring-opacity-50 outline-none placeholder-gray-400",
-                    }}
-                    containerClass="w-full"
-                    buttonClass="border-2 !border-[#aa88be] !rounded-l-lg"
-                    inputStyle={{
-                      width: "100%",
-                      height: "44px",
-                      fontSize: "16px",
-                    }}
-                    preferredCountries={["in"]}
-                  />
-                </div>
+              {/* Checkbox and WhatsApp Number - Appears after Contact Number is entered */}
+              {formData.contactNumber && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="inline-flex items-center text-sm font-medium text-[#642b8f] hover:cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="mr-2 accent-[#642b8f]"
+                        checked={isSameAsContact}
+                        onChange={handleCheckboxChange}
+                      />
+                      Is WhatsApp number same as contact number?
+                    </label>
+                  </div>
 
-                <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Parent's WhatsApp Number{" "}
-                    <span className="text-red-500">*</span>
-                  </label>
-                  <PhoneInput
-                    country="in"
-                    value={formData.whatsappNumber}
-                    onChange={(value) =>
-                      handleInputChange("whatsappNumber", value)
-                    }
-                    inputProps={{
-                      placeholder: "Enter WhatsApp number",
-                      required: true,
-                      className:
-                        "w-full p-4 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:ring-2 focus:ring-[#642b8f] focus:ring-opacity-50 outline-none placeholder-gray-400",
-                    }}
-                    containerClass="w-full"
-                    buttonClass="border-2 !border-[#aa88be] !rounded-l-lg"
-                    inputStyle={{
-                      width: "100%",
-                      height: "44px",
-                      fontSize: "16px",
-                    }}
-                    preferredCountries={["in"]}
-                    disabled={isSameAsContact}
-                  />
+                  {!isSameAsContact && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Your's WhatsApp Number{" "}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <PhoneInput
+                        country="in"
+                        value={formData.whatsappNumber}
+                        onChange={(value) =>
+                          handleInputChange("whatsappNumber", value)
+                        }
+                        inputProps={{
+                          placeholder: "Enter your whatsApp number",
+                          required: true,
+                          className:
+                            "w-full p-4 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:ring-2 focus:ring-[#642b8f] focus:ring-opacity-50 outline-none placeholder-gray-400",
+                        }}
+                        containerClass="w-full"
+                        buttonClass="border-2 !border-[#aa88be] !rounded-l-lg"
+                        inputStyle={{
+                          width: "100%",
+                          height: "44px",
+                          fontSize: "16px",
+                        }}
+                        preferredCountries={["in"]}
+                      />
+                    </div>
+                  )}
                 </div>
-              </div>
+              )}
             </div>
             <div className="space-y-4">
               <label className="block text-sm font-medium text-[#642b8f]">
-                Parents Email ID
+                Your's Email ID
               </label>
               <div className="relative">
                 <input
                   type="email"
                   className="w-full p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors pl-4 pr-10"
-                  placeholder="example@email.com"
+                  placeholder="Enter your email id"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
                 />
@@ -408,8 +470,98 @@ const NewEnquiryFormStep = () => {
                 </select>
               </div>
             </div>
+            <div className="flex gap-4">
+              <div className="flex-1 space-y-4">
+                <label className="block text-sm font-medium text-[#642b8f]">
+                  Relationship with Kid *
+                </label>
+                <div className="flex gap-4">
+                  <select
+                    className="flex-1 p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors bg-white"
+                    value={formData.relationship}
+                    onChange={(e) => {
+                      handleInputChange("relationship", e.target.value);
+                      if (e.target.value !== "other") {
+                        handleInputChange("otherRelationship", "");
+                      }
+                    }}
+                    required
+                  >
+                    <option value="">Select Relationship</option>
+                    <option value="father">Father</option>
+                    <option value="mother">Mother</option>
+                    <option value="guardian">Guardian</option>
+                    <option value="other">Other</option>
+                  </select>
 
-            <div className="space-y-4">
+                  {formData.relationship === "other" && (
+                    <input
+                      type="text"
+                      placeholder="Specify Relationship"
+                      className="flex-1 p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors"
+                      value={formData.otherRelationship || ""}
+                      onChange={(e) =>
+                        handleInputChange("otherRelationship", e.target.value)
+                      }
+                      required
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-4">
+              <div className="flex-1 space-y-4">
+                <label className="block text-sm font-medium text-[#642b8f]">
+                  Pincode *
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter Pincode"
+                  maxLength="6"
+                  className="w-full p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors"
+                  value={pincode}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, "");
+                    setPincode(value);
+                  }}
+                />
+                {error && <p className="text-red-500 text-sm">{error}</p>}
+              </div>
+
+              <div className="flex-1 space-y-4">
+                <label className="block text-sm font-medium text-[#642b8f]">
+                  City
+                </label>
+                <input
+                  type="text"
+                  placeholder="City"
+                  className="w-full p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors"
+                  value={formData.city}
+                  onChange={(e) => {
+                    handleInputChange("city", e.target.value);
+                  }}
+                  readOnly
+                />
+              </div>
+
+              <div className="flex-1 space-y-4">
+                <label className="block text-sm font-medium text-[#642b8f]">
+                  State
+                </label>
+                <input
+                  type="text"
+                  placeholder="State"
+                  className="w-full p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors"
+                  value={formData.state}
+                  onChange={(e) => {
+                    handleInputChange("state", e.target.value);
+                  }}
+                  readOnly
+                />
+              </div>
+            </div>
+
+            {/* <div className="space-y-4">
               <h3 className="text-[#642b8f] font-semibold text-lg pb-2 border-b-2 border-[#f8a213]">
                 School Details
               </h3>
@@ -438,7 +590,7 @@ const NewEnquiryFormStep = () => {
                   handleInputChange("schoolPincode", e.target.value)
                 }
               />
-            </div>
+            </div> */}
           </div>
         );
 
@@ -505,7 +657,7 @@ const NewEnquiryFormStep = () => {
 
             <div className="space-y-4">
               <label className="block text-sm font-medium text-[#642b8f]">
-                Message
+                Remarks
               </label>
               <textarea
                 rows={4}

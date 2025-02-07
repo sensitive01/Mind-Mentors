@@ -1,354 +1,347 @@
-import React, { useEffect, useState } from "react";
-import {
-  Grid,
-  Box,
-  Typography,
-  Button,
-  Checkbox,
-  FormControlLabel,
-  FormGroup,
-  Paper,
-  Chip,
-  Divider,
-  List,
-  ListItem,
-  ListItemIcon,
-} from "@mui/material";
-import ChildCareIcon from "@mui/icons-material/ChildCare";
-import {
-  CalendarToday as DayIcon,
-  School as SubjectIcon,
-  AccessTime as TimeIcon,
-  Person as TeacherIcon,
-  Group as StudentsIcon,
-  Label as LevelIcon,
-  Book as ProgramIcon,
-  Close as CloseIcon,
-} from "@mui/icons-material";
-import { useNavigate, useParams } from "react-router-dom";
+// import { useState, useEffect } from "react";
+// import { Button } from "@mui/material";
+// import { Link } from "react-router-dom";
+// import { createTasks, getDropDownData } from "../../../api/service/employee/EmployeeService";
 
-import { toast } from "react-toastify";
-// import { getClassandStudentData, saveClassDetails } from "../../../api/service/employee/serviceDeliveryService";
 
-import {
-  getClassandStudentData,
-  saveClassDetails,
-} from "../../../api/service/employee/serviceDeliveryService";
+// const NewTaskForm = () => {
+//   const empId = localStorage.getItem("empId");
+//   const department = localStorage.getItem("department")
 
-// Enhanced color palette
-const customColors = {
-  primary: "#3f51b5",
-  secondary: "#f50057",
-  background: "#f4f4f4",
-  text: "#333333",
-  accent: "#4caf50",
-  highlight: "#2196f3",
-};
+//   const [kidsData, setKidsData] = useState([]);
+//   const [employeesData, setEmployeesData] = useState([]);
+//   const [isLoading, setIsLoading] = useState(true);
 
-// Student Multi-Select Component
-const StudentMultiSelect = ({
-  students,
-  onStudentSelect,
-  selectedStudents,
-}) => {
-  const [localSelectedStudents, setLocalSelectedStudents] = useState(
-    selectedStudents || []
-  );
+//   const [formData, setFormData] = useState({
+//     kidsRelatedTo: "",
+//     task: "",
+//     taskDate: "",
+//     taskTime: "",
+//     assignedTo: "",
+//     assignedBy: empId || "",
+//   });
 
-  const handleStudentToggle = (student) => {
-    setLocalSelectedStudents((prev) => {
-      // Check if the student is already in the list
-      const isStudentSelected = prev.some(
-        (selectedStudent) => selectedStudent._id === student._id
-      );
+//   const [submissionStatus, setSubmissionStatus] = useState({
+//     submitted: false,
+//     message: "",
+//   });
 
-      return isStudentSelected
-        ? prev.filter((selectedStudent) => selectedStudent._id !== student._id)
-        : [...prev, student];
-    });
-  };
 
-  return (
-    <Paper
-      elevation={3}
-      sx={{
-        p: 3,
-        backgroundColor: "white",
-        borderRadius: 2,
-        height: "500px", // Fixed height
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <Typography
-        variant="h6"
-        sx={{
-          color: customColors.primary,
-          mb: 2,
-          fontWeight: 600,
-        }}
-      >
-        Class Assign
-      </Typography>
-      <Divider sx={{ mb: 2 }} />
+//   useEffect(() => {
+//     const fetchData = async () => {
+//       try {
 
-      {/* Scrollable student list */}
-      <Box
-        sx={{
-          overflowY: "auto",
-          flexGrow: 1,
-          pr: 1, // Add some padding for scrollbar
-        }}
-      >
-        <FormGroup>
-          {students?.map((student, index) => (
-            <FormControlLabel
-              key={index}
-              control={
-                <Checkbox
-                  checked={localSelectedStudents.some(
-                    (selectedStudent) => selectedStudent._id === student._id
-                  )}
-                  onChange={() => handleStudentToggle(student)}
-                  color="primary"
-                />
-              }
-              label={student.kidFirstName}
-            />
-          ))}
-        </FormGroup>
-      </Box>
+//         const dropDownData = await getDropDownData();
+//         console.log("dropDownData", dropDownData);
 
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          mt: 2,
-          borderTop: "1px solid rgba(0,0,0,0.12)",
-          pt: 2,
-        }}
-      >
-        <Typography variant="body2" color="textSecondary">
-          {localSelectedStudents.length} students selected
-        </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => onStudentSelect(localSelectedStudents)}
-          sx={{
-            textTransform: "none",
-            boxShadow: "none",
-            "&:hover": {
-              boxShadow: "none",
-            },
-          }}
-        >
-          Confirm Selection
-        </Button>
-      </Box>
-    </Paper>
-  );
-};
+//         if (!dropDownData.status === 200) {
+//           throw new Error("Failed to fetch data");
+//         }
 
-// Main Class Display Component
-const AssignClasses = () => {
-  const navigate = useNavigate();
-  const empId = localStorage.getItem("empId");
-  const { id } = useParams();
-  const [selectedStudents, setSelectedStudents] = useState([]);
-  const [classData, setClassData] = useState([]);
-  const [students, setStudents] = useState([]);
+//         setKidsData(dropDownData.data.kidsData);
+//         setEmployeesData(dropDownData.data.employeeData);
+//       } catch (error) {
+//         console.error("Error fetching data:", error);
+//         setSubmissionStatus({
+//           submitted: true,
+//           message: "Error loading data. Please refresh the page.",
+//         });
+//       } finally {
+//         setIsLoading(false);
+//       }
+//     };
+
+//     fetchData();
+//   }, []);
+
+//   useEffect(() => {
+//     const storedempId = localStorage.getItem("empId");
+//     if (storedempId) {
+//       setFormData((prevState) => ({
+//         ...prevState,
+//         assignedBy: storedempId,
+//       }));
+//     }
+//   }, []);
+
+//   const handleInputChange = (e) => {
+//     const { name, value } = e.target;
+//     setFormData((prevState) => ({
+//       ...prevState,
+//       [name]: value,
+//     }));
+//   };
+
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     const { kidsRelatedTo, task, taskDate, taskTime, assignedTo } = formData;
+
+//     if (!kidsRelatedTo || !task || !taskDate || !taskTime || !assignedTo) {
+//       setSubmissionStatus({
+//         submitted: true,
+//         message: "Please fill in all required fields.",
+//       });
+//       return;
+//     }
+
+//     try {
+//       await createTasks(formData);
+
+//       const empId = localStorage.getItem("empId");
+
+//       setSubmissionStatus({
+//         submitted: true,
+//         message: `Task Successfully Assigned to ${assignedTo} for ${kidsRelatedTo} on ${taskDate} at ${taskTime}`,
+//       });
+
+//       setFormData({
+//         kidsRelatedTo: "",
+//         task: "",
+//         taskDate: "",
+//         taskTime: "",
+//         assignedTo: "",
+//         assignedBy: empId || "",
+//       });
+//     } catch (error) {
+//       console.error("Error creating task:", error);
+//       setSubmissionStatus({
+//         submitted: true,
+//         message: "Error creating task, please try again.",
+//       });
+//     }
+//   };
+
+//   const handleReset = () => {
+//     setFormData({
+//       kidsRelatedTo: "",
+//       task: "",
+//       taskDate: "",
+//       taskTime: "",
+//       assignedTo: "",
+//       assignedBy: empId || "",
+//     });
+//     setSubmissionStatus({
+//       submitted: false,
+//       message: "",
+//     });
+//   };
+
+//   if (isLoading) {
+//     return (
+//       <div className="min-h-screen p-6 flex items-center justify-center">
+//         <div className="text-[#642b8f]">Loading...</div>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <div className="min-h-screen p-6">
+//       <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-xl overflow-hidden">
+//         <div className="bg-gradient-to-r from-[#642b8f] to-[#aa88be] p-8 text-white flex justify-between items-center">
+//           <div>
+//             <h2 className="text-3xl font-bold mb-2">Task Assignment Form</h2>
+//             <p className="text-sm opacity-90">
+//               Please fill in the required information below
+//             </p>
+//           </div>
+//           <Button
+//           variant="contained"
+//             color="#642b8f"
+//             component={Link}
+//             to={`/${department}/department/list-task-assigned-me`}
+//           >
+//             View Assigned Task
+//           </Button>
+//         </div>
+
+//         {submissionStatus.submitted && (
+//           <div
+//             className={`
+//             p-4 m-4 rounded-lg text-center font-medium 
+//             ${
+//               submissionStatus.message.includes("Successfully")
+//                 ? "bg-green-100 text-green-800"
+//                 : "bg-red-100 text-red-800"
+//             }
+//           `}
+//           >
+//             {submissionStatus.message}
+//           </div>
+//         )}
+
+//         <form onSubmit={handleSubmit} onReset={handleReset} className="p-8">
+//           <div className="space-y-8">
+
+//             <div className="space-y-4">
+//               <label className="block text-sm font-medium text-[#642b8f]">
+//                 Kids Related To
+//               </label>
+//               <select
+//                 name="kidsRelatedTo"
+//                 value={formData.kidsRelatedTo}
+//                 onChange={handleInputChange}
+//                 className="w-full p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors bg-white"
+//               >
+//                 <option value="">-Select-</option>
+//                 {kidsData?.map((kid) => (
+//                   <option key={kid._id} value={kid._id}>
+//                     {kid.kidsName}
+//                   </option>
+//                 ))}
+//               </select>
+//             </div>
+
+
+//             <div className="space-y-4">
+//               <label className="block text-sm font-medium text-[#642b8f]">
+//                 Task
+//               </label>
+//               <textarea
+//                 name="task"
+//                 value={formData.task}
+//                 onChange={handleInputChange}
+//                 rows={4}
+//                 className="w-full p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors resize-none"
+//                 placeholder="Enter task description here..."
+//               />
+//             </div>
+
+//             <div className="flex gap-4">
+//               <div className="flex-1 space-y-4">
+//                 <label className="block text-sm font-medium text-[#642b8f]">
+//                   Task Date
+//                 </label>
+//                 <input
+//                   type="date"
+//                   name="taskDate"
+//                   value={formData.taskDate}
+//                   onChange={handleInputChange}
+//                   className="w-full p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors"
+//                 />
+//               </div>
+//               <div className="flex-1 space-y-4">
+//                 <label className="block text-sm font-medium text-[#642b8f]">
+//                   Task Time
+//                 </label>
+//                 <input
+//                   type="time"
+//                   name="taskTime"
+//                   value={formData.taskTime}
+//                   onChange={handleInputChange}
+//                   className="w-full p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors"
+//                 />
+//               </div>
+//             </div>
+
+     
+//             <div className="space-y-4">
+//               <label className="block text-sm font-medium text-[#642b8f]">
+//                 Assigned To
+//               </label>
+//               <select
+//                 name="assignedTo"
+//                 value={formData.assignedTo}
+//                 onChange={handleInputChange}
+//                 className="w-full p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors bg-white"
+//               >
+//                 <option value="">-Select-</option>
+//                 {employeesData.map((employee) => (
+//                   <option key={employee._id} value={employee.email}>
+//                     {employee.firstName}-{employee.department}
+//                   </option>
+//                 ))}
+//               </select>
+//             </div>
+//           </div>
+
+//           <div className="flex justify-center gap-6 mt-8">
+//             <button
+//               type="submit"
+//               className="px-8 py-3 bg-[#642b8f] text-white rounded-lg font-medium hover:bg-[#aa88be] transition-colors shadow-lg hover:shadow-xl"
+//             >
+//               Submit Task
+//             </button>
+//             <button
+//               type="reset"
+//               className="px-8 py-3 bg-white border-2 border-[#642b8f] text-[#642b8f] rounded-lg font-medium hover:bg-[#efe8f0] transition-colors"
+//             >
+//               Reset Form
+//             </button>
+//           </div>
+//         </form>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default NewTaskForm;
+
+
+
+import { useEffect } from "react";
+import { ZoomMtg } from "@zoomus/websdk";
+
+const ZoomMeetingFrame = ({ onClose }) => {
+
+  const zoomLink = "https://us05web.zoom.us/j/83512846600?pwd=Gt5v484hVhbH2d4aAQwbZaER6h8HLd.1"
 
   useEffect(() => {
-    const fetchRequiredClassStudentData = async () => {
-      try {
-        const response = await getClassandStudentData(id);
-        console.log("Use effect data in demo assign", response);
-        setClassData(response?.data?.classData);
-        setStudents(response?.data?.kidsData);
-      } catch (error) {
-        console.error("Error fetching class and student data:", error);
-      }
+    const meetConfig = {
+      apiKey: "cFNIRob2ReiHwmo2P4tgXA", // You need to obtain this from the Zoom Developer portal
+      apiSecret: "X5jubMHKo1lWzCuyAG81ibJnoGXbIBRC",
+      meetingNumber: getMeetingNumberFromLink(zoomLink), // Extract meeting number from link
+      userName: "Aswinraj",
+      userEmail: "user@example.com", // Optional
+      passWord: getPasswordFromLink(zoomLink), // Extract the password if needed from the link
+      leaveUrl: window.location.href, // URL to redirect after meeting ends
     };
-    fetchRequiredClassStudentData();
-  }, [id]);
 
-  const handleStudentSelection = async (students) => {
-    console.log("Selected Students:", students);
-    setSelectedStudents(students);
+    ZoomMtg.preLoadWasm();
+    ZoomMtg.prepareJssdk();
 
-    // Extract student IDs for the API call
-    const studentIds = students.map((student) => student._id);
+    ZoomMtg.init({
+      leaveUrl: meetConfig.leaveUrl,
+      isSupportAV: true,
+      success: () => {
+        ZoomMtg.join(
+          {
+            meetingNumber: meetConfig.meetingNumber,
+            userName: meetConfig.userName,
+            userEmail: meetConfig.userEmail,
+            passWord: meetConfig.passWord,
+            apiKey: meetConfig.apiKey,
+            apiSecret: meetConfig.apiSecret,
+          },
+          (success) => console.log("Meeting started"),
+          (error) => console.error("Zoom meeting error", error)
+        );
+      },
+      error: (err) => {
+        console.log("ZoomMtg.init error:", err);
+      },
+    });
+  }, [zoomLink]);
 
-    try {
-      const response = await saveClassDetails(id, studentIds, empId);
-      console.log("Save  Class Response:", response);
-      if (response.status === 200) {
-        toast.success(response.data.message);
-        setTimeout(() => {
-          navigate("/serviceScheduleClass");
-        }, 1500);
-      }
-    } catch (error) {
-      console.error("Error saving demo class details:", error);
-    }
+  const getMeetingNumberFromLink = (link) => {
+    // Extract the meeting number from the Zoom link
+    const regex = /zoom.us\/j\/(\d+)/;
+    const match = link.match(regex);
+    return match ? match[1] : "";
   };
 
-  const handleRemoveStudent = (studentToRemove) => {
-    setSelectedStudents((prev) =>
-      prev.filter((student) => student._id !== studentToRemove._id)
-    );
+  const getPasswordFromLink = (link) => {
+    // Optionally extract the password if it's included in the link
+    const regex = /pwd=([a-zA-Z0-9]+)/;
+    const match = link.match(regex);
+    return match ? match[1] : "";
   };
 
   return (
-    <Box
-      sx={{
-        p: 4,
-        backgroundColor: customColors.background,
-        minHeight: "100vh",
-      }}
-    >
-      <Typography
-        variant="h4"
-        sx={{
-          color: customColors.primary,
-          mb: 4,
-          fontWeight: 700,
-          textAlign: "center",
-        }}
-      >
-        Student Class Assign Dashboard
-      </Typography>
-
-      <Grid container spacing={4}>
-        {/* Class Details Column */}
-        <Grid item xs={12} md={8}>
-          <Paper
-            elevation={3}
-            sx={{
-              p: 3,
-              borderRadius: 2,
-              backgroundColor: "white",
-            }}
-          >
-            {classData.map((classItem, index) => (
-              <Box key={index}>
-                {/* Class Details Grid */}
-                <Grid container spacing={2} sx={{ mb: 3 }}>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <DayIcon color="primary" />
-                      <Typography variant="subtitle1">
-                        {classItem.day}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <TimeIcon color="secondary" />
-                      <Typography variant="subtitle1">
-                        {classItem.classTime}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <TeacherIcon color="success" />
-                      <Typography variant="subtitle1">
-                        {classItem.coachName}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <StudentsIcon color="primary" />
-                      <Typography variant="subtitle1">
-                        {classItem.students || 0} Students
-                      </Typography>
-                    </Box>
-                  </Grid>
-                </Grid>
-
-                {/* Program and Level Row */}
-                <Grid container spacing={2} sx={{ mb: 3 }}>
-                  <Grid item xs={6} sm={6}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <ProgramIcon color="primary" />
-                      <Typography variant="subtitle1">
-                        {classItem.program}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={6} sm={6}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <LevelIcon color="secondary" />
-                      <Typography variant="subtitle1">
-                        {classItem.level}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Typography variant="h6">Selected Students</Typography>
-                    </Box>
-                    {/* List of selected students with icons */}
-                    <List>
-                      {classItem.selectedStudents &&
-                        classItem.selectedStudents.map((student, index) => (
-                          <ListItem key={index}>
-                            <ListItemIcon>
-                              <ChildCareIcon color="primary" />{" "}
-                              {/* Icon for each student */}
-                            </ListItemIcon>
-                            <Typography variant="body1">
-                              {student.kidName}
-                            </Typography>
-                          </ListItem>
-                        ))}
-                    </List>
-                  </Grid>
-                </Grid>
-
-                {/* Selected Students Chips */}
-                {selectedStudents.length > 0 && (
-                  <Box sx={{ mt: 2 }}>
-                    <Typography
-                      variant="subtitle2"
-                      color="textSecondary"
-                      sx={{ mb: 1 }}
-                    >
-                      Selected Students:
-                    </Typography>
-                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                      {selectedStudents.map((student, index) => (
-                        <Chip
-                          key={index}
-                          label={student.kidFirstName}
-                          onDelete={() => handleRemoveStudent(student)}
-                          deleteIcon={<CloseIcon />}
-                          color="primary"
-                          variant="outlined"
-                        />
-                      ))}
-                    </Box>
-                  </Box>
-                )}
-              </Box>
-            ))}
-          </Paper>
-        </Grid>
-
-        {/* Student Selection Column */}
-        <Grid item xs={12} md={4}>
-          <StudentMultiSelect
-            students={students}
-            onStudentSelect={handleStudentSelection}
-            selectedStudents={selectedStudents}
-          />
-        </Grid>
-      </Grid>
-    </Box>
+    <div>
+      {/* You can add a custom UI here if needed */}
+      <button onClick={onClose}>Close Meeting</button>
+    </div>
   );
 };
 
-export default AssignClasses;
+export default ZoomMeetingFrame;

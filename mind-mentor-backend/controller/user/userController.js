@@ -2,6 +2,8 @@ const express = require("express");
 const multer = require("multer");
 const User = require("../../model/userModel"); // Adjust the path as necessary
 const Employee = require("../../model/employeeModel");
+const packagesData = require("../../controller/centeradmin/package");
+const Package = require("../../model/packageDetails");
 const app = express();
 const upload = multer(); // You can configure storage options if needed
 const bcrypt = require("bcryptjs");
@@ -50,7 +52,7 @@ const createUser = async (req, res) => {
       profilePicture: req.body.profilePicture || null, // Handle null case
     };
 
-    // Create a new user application document in the database 
+    // Create a new user application document in the database
     const newApplication = await User.create(applicationData);
 
     // Send success response
@@ -67,7 +69,6 @@ const createUser = async (req, res) => {
     });
   }
 };
-
 
 // Set up the route
 app.post("/superadmin/users", upload.single("profilePicture"), createUser);
@@ -118,7 +119,10 @@ const getUserById = async (req, res) => {
 
 const getAllEmployeesByName = async (req, res) => {
   try {
-    const applications = await Employee.find({}, "_id firstName lastName email"); // Only fetch _id, firstName, and lastName
+    const applications = await Employee.find(
+      {},
+      "_id firstName lastName email"
+    ); // Only fetch _id, firstName, and lastName
     console.log(applications);
     res.status(200).json(applications);
   } catch (error) {
@@ -414,11 +418,17 @@ const deleteNotification = async (req, res) => {
   }
 };
 
-
 const createHoliday = async (req, res) => {
   try {
     console.log("Request body:", req.body); // Debugging req.body
-    const { holidayName, startDate, endDate, description, attachment, category } = req.body;
+    const {
+      holidayName,
+      startDate,
+      endDate,
+      description,
+      attachment,
+      category,
+    } = req.body;
     const newHoliday = new Holiday({
       holidayName,
       startDate,
@@ -429,7 +439,7 @@ const createHoliday = async (req, res) => {
     });
     await newHoliday.save();
     console.log("Saved holiday:", newHoliday); // Debugging saved data
-    res.status(200).json(newHoliday); 
+    res.status(200).json(newHoliday);
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
@@ -444,7 +454,6 @@ const getAllHolidays = async (req, res) => {
   }
 };
 
-
 const getHolidayById = async (req, res) => {
   try {
     const holiday = await Holiday.findById(req.params.id);
@@ -457,13 +466,19 @@ const getHolidayById = async (req, res) => {
   }
 };
 
-
 const updateHoliday = async (req, res) => {
   try {
-    const { holidayName, startDate, endDate, description, attachment, category } = req.body;
+    const {
+      holidayName,
+      startDate,
+      endDate,
+      description,
+      attachment,
+      category,
+    } = req.body;
     const updatedHoliday = await Holiday.findByIdAndUpdate(
       req.params.id,
-       { holidayName, startDate, endDate, description, attachment, category },
+      { holidayName, startDate, endDate, description, attachment, category },
       { new: true }
     );
     if (!updatedHoliday) {
@@ -474,7 +489,6 @@ const updateHoliday = async (req, res) => {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
-
 
 const deleteHoliday = async (req, res) => {
   try {
@@ -723,12 +737,10 @@ const updateTransaction = async (req, res) => {
       return res.status(404).json({ message: "Transaction not found" });
     }
 
-    res
-      .status(200)
-      .json({
-        message: "Transaction updated successfully",
-        updatedTransaction,
-      });
+    res.status(200).json({
+      message: "Transaction updated successfully",
+      updatedTransaction,
+    });
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
@@ -747,7 +759,6 @@ const deleteTransaction = async (req, res) => {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
-
 
 // Create a new chat message
 const createChat = async (req, res) => {
@@ -782,14 +793,17 @@ const createChat = async (req, res) => {
     if (!chat) {
       // Generate a custom ticket ID
       const randomDigits = Math.floor(1000 + Math.random() * 9000); // 4 random digits
-      const randomLetters = Math.random().toString(36).substring(2, 4).toUpperCase(); // 2 random letters
+      const randomLetters = Math.random()
+        .toString(36)
+        .substring(2, 4)
+        .toUpperCase(); // 2 random letters
       const ticketId = `TKT${randomDigits}${randomLetters}`; // Combine to form ticketId
 
       chat = new Chat({
         ticketId,
         category,
         messages: [],
-        status
+        status,
       });
     }
 
@@ -798,15 +812,15 @@ const createChat = async (req, res) => {
       sender: {
         _id: sender._id,
         firstName: sender.firstName,
-        lastName: sender.lastName
+        lastName: sender.lastName,
       },
       receiver: {
         _id: receiver._id,
         firstName: receiver.firstName,
-        lastName: receiver.lastName
+        lastName: receiver.lastName,
       },
       message,
-      attachment
+      attachment,
     });
 
     // Save the updated chat document
@@ -815,7 +829,7 @@ const createChat = async (req, res) => {
     // Send a response back to the client
     res.status(201).json({
       message: "Chat created successfully",
-      chat
+      chat,
     });
   } catch (error) {
     // Log and return error if something goes wrong
@@ -837,20 +851,24 @@ const getAllChats = async (req, res) => {
     // Fetch chats where the empId is either the sender or the receiver
     const chats = await Chat.find({
       $or: [
-        { "messages.sender._id": empId },  // Check if empId is sender
-        { "messages.receiver._id": empId }  // Check if empId is receiver
-      ]
-    }).populate({
-      path: 'messages.sender._id', // Populate sender's _id inside the message
-      select: 'firstName lastName email',
-    }).populate({
-      path: 'messages.receiver._id', // Populate receiver's _id inside the message
-      select: 'firstName lastName email',
-    });
+        { "messages.sender._id": empId }, // Check if empId is sender
+        { "messages.receiver._id": empId }, // Check if empId is receiver
+      ],
+    })
+      .populate({
+        path: "messages.sender._id", // Populate sender's _id inside the message
+        select: "firstName lastName email",
+      })
+      .populate({
+        path: "messages.receiver._id", // Populate receiver's _id inside the message
+        select: "firstName lastName email",
+      });
 
     // If no chats found, return an appropriate message
     if (chats.length === 0) {
-      return res.status(400).json({ message: "No chats found for this employee." });
+      return res
+        .status(400)
+        .json({ message: "No chats found for this employee." });
     }
 
     res.status(200).json({
@@ -878,12 +896,12 @@ const getChatByTicketId = async (req, res) => {
     // Query chat by ticketId
     const chat = await Chat.findOne({ ticketId }) // Query using an object with ticketId
       .populate({
-        path: 'messages.sender._id', // Populate sender's _id inside the message
-        select: 'firstName lastName email',
+        path: "messages.sender._id", // Populate sender's _id inside the message
+        select: "firstName lastName email",
       })
       .populate({
-        path: 'messages.receiver._id', // Populate receiver's _id inside the message
-        select: 'firstName lastName email',
+        path: "messages.receiver._id", // Populate receiver's _id inside the message
+        select: "firstName lastName email",
       });
 
     if (!chat) {
@@ -924,16 +942,18 @@ const updateChat = async (req, res) => {
     // if (!receiverId) {
     //   return res.status(400).json({ message: "Receiver ID is required" });
     // }
-    const chat = await Chat.findOne({ ticketId }) // Query using an object with ticketId
+    const chat = await Chat.findOne({ ticketId }); // Query using an object with ticketId
 
     // Find the chat by ticketId
-    const updatedChat = await Chat.findOne({ ticketId }).populate({
-      path: 'messages.sender._id',
-      select: 'firstName lastName email',
-    }).populate({
-      path: 'messages.receiver._id',
-      select: 'firstName lastName email',
-    });
+    const updatedChat = await Chat.findOne({ ticketId })
+      .populate({
+        path: "messages.sender._id",
+        select: "firstName lastName email",
+      })
+      .populate({
+        path: "messages.receiver._id",
+        select: "firstName lastName email",
+      });
 
     if (!updatedChat) {
       return res.status(404).json({ message: "Chat not found" });
@@ -988,8 +1008,19 @@ const deleteChat = async (req, res) => {
   }
 };
 
+const insertPackage = async (req, res) => {
+  try {
+    await Package.insertMany(packagesData);
+    console.log("Data inserted successfully");
+    res.status(201).json({ message: "Data inserted successfully" });
+  } catch (err) {
+    console.error("Error inserting package data:", err);
+    res.status(500).json({ error: "Failed to insert data" });
+  }
+};
 
 module.exports = {
+  insertPackage,
   createUser,
   deleteExpense,
   deleteTransaction,
@@ -1036,5 +1067,5 @@ module.exports = {
   getChatByTicketId,
   updateChat,
   deleteChat,
-  getAllEmployeesByName
+  getAllEmployeesByName,
 };

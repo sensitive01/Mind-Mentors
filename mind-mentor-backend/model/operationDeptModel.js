@@ -29,6 +29,11 @@ const operationDeptSchema = new mongoose.Schema(
     schoolName: { type: String },
     address: { type: String },
     schoolPincode: { type: String },
+    city: { type: String },
+    state: { type: String },
+    relationship: { type: String },
+    otherRelationship: { type: String },
+    pincode: { type: String },
 
     enquiryStatus: {
       type: String,
@@ -36,7 +41,7 @@ const operationDeptSchema = new mongoose.Schema(
       default: "Pending",
     },
 
-    enquiryType: { type: String, enum: ["warm", "cold"], default: "warm" },
+    enquiryType: { type: String, enum: ["warm", "cold"], default: "cold" },
     disposition: {
       type: String,
       enum: ["RnR", "Call Back", "None"],
@@ -67,6 +72,7 @@ const operationDeptSchema = new mongoose.Schema(
       ref: "Log",
     },
     status: { type: String, default: "Pending" },
+    paymentLink: { type: String },
   },
   { timestamps: true }
 );

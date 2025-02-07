@@ -536,3 +536,11 @@ export const sendPaymentDetailsLink = async (link,enqId) => {
   );
   return response;
 };
+
+
+export const fetchPackageDetails = async () => {
+  const response = await operationDeptInstance.get(
+    `/get-package-data`,
+  );
+  return response;
+};

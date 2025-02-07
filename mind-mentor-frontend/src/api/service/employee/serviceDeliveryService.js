@@ -77,3 +77,16 @@ export const fechAllActiveEnrolledEnquiry = async () => {
   const response = await serviceInstance.get(`/service/get-active-enquiry-data`);
   return response.data;
 };
+
+export const getActiveKidData = async (enqId) => {
+  const response = await serviceInstance.get(`/service/get-active-kid-class-data/${enqId}`);
+  return response.data;
+};
+
+
+
+
+export const assignWholeClass = async (submissionData) => {
+  const response = await serviceInstance.post(`/service/assign-whole-class`,{submissionData});
+  return response.data;
+};

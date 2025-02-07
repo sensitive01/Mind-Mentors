@@ -872,10 +872,6 @@ const saveKidAvailability = async (req, res) => {
   }
 };
 
-
-
-
-
 const getKidAvailability = async (req, res) => {
   try {
     const { kidId } = req.params;
@@ -1164,9 +1160,12 @@ const getKidClassAttendanceData = async (req, res) => {
 
 const getPaymentNotificationData = async (req, res) => {
   try {
-    const { kidId,parentId } = req.params;
+    const { kidId, parentId } = req.params;
     const kidData = await kidModel.findOne({ _id: kidId }, { enqId: 1 });
-    const parentData = await parentModel.findOne({ _id: parentId }, { paymentLink: 1 });
+    const parentData = await parentModel.findOne(
+      { _id: parentId },
+      { paymentLink: 1 }
+    );
 
     if (!kidData) {
       return res.status(404).json({ message: "Kid data not found" });
@@ -1180,13 +1179,11 @@ const getPaymentNotificationData = async (req, res) => {
     console.log("Payment notification data", enqData);
 
     if (enqData) {
-      return res
-        .status(200)
-        .json({
-          message:
-            "You have a pending payment scheduled. Please pay through the payment page!",
-            paymentLink:parentData.paymentLink
-        });
+      return res.status(200).json({
+        message:
+          "You have a pending payment scheduled. Please pay through the payment page!",
+        paymentLink: parentData.paymentLink,
+      });
     }
   } catch (err) {
     console.log("Error in getting the payment notification", err);
@@ -1194,26 +1191,28 @@ const getPaymentNotificationData = async (req, res) => {
   }
 };
 
-
 const savePaymentData = async (req, res) => {
   try {
-    console.log("Welcome to save the payment data", req.body);
+    console.log("Welcome to save the payment data", req.body, req.params);
 
     const { parentId } = req.params; // Extract parentId from the URL params
-    const { paymentData, paymentMode, transactionId } = req.body; // Extract data from the request body
+    const { paymentData, transactionId } = req.body; // Extract data from the request body
+    console.log("===>", parentId);
 
-   
-
-    await Promise.all([
-      parentModel.findByIdAndUpdate(parentId, { $set: { status: "Active" } }),
-      kidModel.findByIdAndUpdate(paymentData.kidId, { $set: { status: "Active" } }),
-      operationDeptModel.findByIdAndUpdate(paymentData.enqId, { $set: { status: "Active",payment:"Succcess" } }),
-    ]);
-
-
-    if (!paymentData || !paymentMode || !transactionId) {
+    if (!paymentData || !transactionId) {
       return res.status(400).json({ message: "Missing required payment data" });
     }
+
+    console.log("paymentData", paymentData);
+    await Promise.all([
+      parentModel.findByIdAndUpdate(parentId, { $set: { status: "Active" } }),
+      kidModel.findByIdAndUpdate(paymentData.kidId, {
+        $set: { status: "Active" },
+      }),
+      operationDeptModel.findByIdAndUpdate(paymentData.enqId, {
+        $set: { status: "Active", payment: "Succcess" },
+      }),
+    ]);
 
     const {
       enqId,
@@ -1223,36 +1222,50 @@ const savePaymentData = async (req, res) => {
       selectionType,
       classDetails,
       kitItem,
+      baseAmount,
+      gstAmount,
+      totalAmount,
+      offlineClasses,
+      onlineClasses,
+      selectedCenter,
+      selectedClass,
+      selectedPackage,
       amount,
-      timestamp,
     } = paymentData;
 
     const paymentRecord = new classPaymentModel({
-      amount,
+      amount: totalAmount,
       classDetails: {
-        coachName: classDetails.coach,
+        selectedCenter,
+        selectedClass,
+        selectedPackage,
+        classType: classDetails.classType,
         day: classDetails.day,
-        isGoldMember: classDetails.isGoldMember,
-        classType: classDetails.name,
         numberOfClasses: classDetails.numberOfClasses,
+        offlineClasses,
+        onlineClasses,
       },
       enqId,
       kidId,
       kidName,
       kitItem,
       selectionType,
-      timestamp: timestamp || Date.now(),
+      baseAmount,
+      gstAmount,
+      totalAmount: amount,
       whatsappNumber,
       parentId,
       raz_transaction_id: transactionId,
-      paymentMode: paymentMode.paymentMode,
+      timestamp: Date.now(), // Assuming timestamp is not provided in paymentData
     });
 
     const savedPayment = await paymentRecord.save();
 
     console.log("Payment data saved successfully", savedPayment);
 
-    res.status(201).json({ message: "Payment data saved successfully", data: savedPayment });
+    res
+      .status(201)
+      .json({ message: "Payment data saved successfully", data: savedPayment });
   } catch (err) {
     console.log("Error in saving the payment data", err);
     res.status(500).json({ message: "Internal server error" });
@@ -1265,36 +1278,33 @@ const getKidPaidFeeData = async (req, res) => {
 
     const paymentData = await classPaymentModel.find(
       { kidId: kidId },
-      { amount: 1, status: 1, kidName: 1, kidId: 1, selectionType: 1, timestamp: 1, raz_transaction_id: 1, enqId: 1 }
+      {
+        amount: 1,
+        status: 1,
+        kidName: 1,
+        kidId: 1,
+        selectionType: 1,
+        timestamp: 1,
+        raz_transaction_id: 1,
+        enqId: 1,
+      }
     );
 
     if (!paymentData || paymentData.length === 0) {
-      return res.status(404).json({ message: "No payment data found for the specified kidId" });
+      return res
+        .status(404)
+        .json({ message: "No payment data found for the specified kidId" });
     }
 
     res.status(200).json({
       message: "Successfully retrieved paid fee data",
-      data: paymentData
+      data: paymentData,
     });
-
   } catch (err) {
     console.error("Error in getting the paid fees data", err);
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 module.exports = {
   parentLogin,
@@ -1323,5 +1333,5 @@ module.exports = {
   getKidClassAttendanceData,
   getPaymentNotificationData,
   savePaymentData,
-  getKidPaidFeeData
+  getKidPaidFeeData,
 };

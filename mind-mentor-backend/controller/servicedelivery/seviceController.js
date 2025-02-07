@@ -10,17 +10,21 @@ const NotesSection = require("../../model/enquiryNoteSection");
 const operationDeptModel = require("../../model/operationDeptModel");
 const convertTo12HourFormat = require("../../utils/convertTo12HourFormat");
 const axios = require("axios");
+const jwt = require("jsonwebtoken");
+const { generateZoomMeeting } = require("../../utils/generateZoomLink");
+const classPaymentModel = require("../../model/classPaymentModel");
+const SelectedClass = require("../../model/wholeClassAssignedModel")
 
 // const ZOOM_CLIENT_ID = "ChkFppFRmmzbQKT6jiQlA";
 
 // const ZOOM_CLIENT_SECRET = "A8hGnAi3u6v5LkfRT1fWCVU2Z9qQEqi3";
 
-
-
-
 const getAllActiveEnquiries = async (req, res) => {
   try {
-    const enquiries = await operationDeptModel.find({ enquiryField: "prospects",status:"Active" });
+    const enquiries = await operationDeptModel.find({
+      enquiryField: "prospects",
+      status: "Active",
+    });
 
     const customizedEnquiries = await Promise.all(
       enquiries.map(async (enquiry) => {
@@ -84,71 +88,68 @@ const getAllActiveEnquiries = async (req, res) => {
   }
 };
 
+// const timeTableShedules = async (req, res) => {
+//   try {
+//     console.log("Welcome to time table schedules", req.body);
 
+//     const { id } = req.params;
 
+//     if (!id) {
+//       return res.status(400).json({ message: "Employee ID is required" });
+//     }
 
-const timeTableShedules = async (req, res) => {
-  try {
-    console.log("Welcome to time table schedules", req.body);
+//     const empData = await Employee.findOne(
+//       { _id: id },
+//       { firstName: 1, department: 1 }
+//     );
 
-    const { id } = req.params;
+//     if (!empData) {
+//       return res.status(404).json({ message: "Employee not found" });
+//     }
 
-    if (!id) {
-      return res.status(400).json({ message: "Employee ID is required" });
-    }
+//     const { shedules } = req.body;
+//     console.log("Shedules00", shedules);
 
-    const empData = await Employee.findOne(
-      { _id: id },
-      { firstName: 1, department: 1 }
-    );
+//     if (!Array.isArray(shedules) || shedules.length === 0) {
+//       return res.status(400).json({ message: "No shedules provided" });
+//     }
 
-    if (!empData) {
-      return res.status(404).json({ message: "Employee not found" });
-    }
+//     const savedShedules = await Promise.all(
+//       shedules.map(async (shedule) => {
+//         const newSchedule = new ClassSchedule({
+//           scheduledBy: {
+//             name: empData.firstName,
+//             id: empData._id,
+//             department: empData.department,
+//           },
+//           day: shedule.day,
+//           classTime: `${convertTo12HourFormat(
+//             shedule.fromTime
+//           )} - ${convertTo12HourFormat(shedule.toTime)}`,
 
-    const { shedules } = req.body;
-    console.log("Shedules00", shedules);
+//           coachName: shedule.coachName,
+//           coachId: shedule.coachId,
+//           program: shedule.program,
+//           level: shedule.level,
+//           meetingLink: shedule.meetingLink||"https://us05web.zoom.us/j/84470917399?pwd=NFRFWwQNmTdgvQnfV0q3lhzZOzM1v7.1",
+//           classType: shedule.isDemo ? "Demo" : "Class",
+//         });
 
-    if (!Array.isArray(shedules) || shedules.length === 0) {
-      return res.status(400).json({ message: "No shedules provided" });
-    }
+//         return await newSchedule.save();
+//       })
+//     );
 
-    const savedShedules = await Promise.all(
-      shedules.map(async (shedule) => {
-        const newSchedule = new ClassSchedule({
-          scheduledBy: {
-            name: empData.firstName,
-            id: empData._id,
-            department: empData.department,
-          },
-          day: shedule.day,
-          classTime: `${convertTo12HourFormat(
-            shedule.fromTime
-          )} - ${convertTo12HourFormat(shedule.toTime)}`,
-
-          coachName: shedule.coachName,
-          coachId: shedule.coachId,
-          program: shedule.program,
-          level: shedule.level,
-          meetingLink: shedule.meetingLink||"https://us05web.zoom.us/j/84470917399?pwd=NFRFWwQNmTdgvQnfV0q3lhzZOzM1v7.1",
-          classType: shedule.isDemo ? "Demo" : "Class",
-        });
-
-        return await newSchedule.save();
-      })
-    );
-
-    return res.status(201).json({
-      message: "Schedules saved successfully",
-      savedShedules,
-    });
-  } catch (err) {
-    console.error("Error in saving the timetable schedules:", err);
-    return res
-      .status(500)
-      .json({ message: "Internal server error", error: err.message });
-  }
-};
+//     return res.status(201).json({
+//       message: "Schedules saved successfully",
+//       savedShedules,
+//     });
+//   } catch (err) {
+//     console.error("Error in saving the timetable schedules:", err);
+//     return res
+//       .status(500)
+//       .json({ message: "Internal server error", error: err.message });
+//   }
+// };
 
 const getClassShedules = async (req, res) => {
   try {
@@ -313,230 +314,6 @@ const getClassAndStudentsData = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
-// async function getZoomAccessToken() {
-//   try {
-//     const response = await axios.post("https://zoom.us/oauth/token", null, {
-//       headers: {
-//         Authorization: `Basic ${Buffer.from(
-//           `${ZOOM_CLIENT_ID}:${ZOOM_CLIENT_SECRET}`
-//         ).toString("base64")}`,
-//         "Content-Type": "application/x-www-form-urlencoded",
-//       },
-//       params: {
-//         grant_type: "client_credentials",
-//       },
-//     });
-
-//     console.log("Zoom OAuth Token:", response.data.access_token);
-//     return response.data.access_token; // Return the access token
-//   } catch (error) {
-//     console.error(
-//       "Error fetching Zoom access token:",
-//       error.response?.data || error.message
-//     );
-//     throw new Error("Failed to fetch Zoom access token");
-//   }
-// }
-
-
-// async function generateZoomMeeting() {
-//   try {
-//     const accessToken = await getZoomAccessToken();
-//     const response = await axios.post(
-//       "https://api.zoom.us/v2/users/me/meetings",
-//       {
-//         topic: "Classroom Meeting",
-//         type: 2, // Scheduled meeting
-//         start_time: new Date().toISOString(), // Current time, can be customized
-//         duration: 60, // Duration in minutes
-//         timezone: "UTC", // Adjust timezone as needed
-//       },
-//       {
-//         headers: {
-//           Authorization: `Bearer ${accessToken}`,
-//           "Content-Type": "application/json",
-//         },
-//       }
-//     );
-
-//     console.log("Zoom Meeting Link:", response.data.join_url);
-//     return response.data.join_url; // Return the meeting link
-//   } catch (error) {
-//     console.error("Error creating Zoom meeting:", error);
-//     throw new Error("Failed to create Zoom meeting");
-//   }
-// }
-
-// const timeTableShedules = async (req, res) => {
-//   try {
-//     console.log("Processing timetable schedules:", req.body.shedules);
-
-//     const { id } = req.params;
-
-//     if (!id) {
-//       return res.status(400).json({ message: "Employee ID is required" });
-//     }
-
-//     const empData = await Employee.findOne(
-//       { _id: id },
-//       { firstName: 1, department: 1 }
-//     );
-
-//     if (!empData) {
-//       return res.status(404).json({ message: "Employee not found" });
-//     }
-
-//     const schedules  = req.body.shedules;
-//     console.log("schedules",schedules)
-//     if (!Array.isArray(schedules) || schedules.length === 0) {
-//       return res.status(400).json({ message: "No schedules provided" });
-//     }
-
-//     const savedSchedules = await Promise.all(
-//       schedules.map(async (schedule) => {
-//         const zoomMeetingLink = await generateZoomMeeting(); // Generate Zoom meeting link
-//         console.log("zoomMeetingLink",zoomMeetingLink)
-
-//         const newSchedule = new ClassSchedule({
-//           scheduledBy: {
-//             name: empData.firstName,
-//             id: empData._id,
-//             department: empData.department,
-//           },
-//           day: schedule.day,
-//           classTime: `${convertTo12HourFormat(
-//             schedule.fromTime
-//           )} - ${convertTo12HourFormat(schedule.toTime)}`,
-//           coachName: schedule.coachName,
-//           coachId: schedule.coachId,
-//           program: schedule.program,
-//           level: schedule.level,
-//           meetingLink: zoomMeetingLink, // Store the Zoom meeting link here
-//           classType: schedule.isDemo ? "Demo" : "Class",
-//         });
-
-//         return await newSchedule.save(); // Save the schedule to the database
-//       })
-//     );
-
-//     return res.status(201).json({
-//       message: "Schedules saved successfully",
-//       savedSchedules,
-//     });
-//   } catch (error) {
-//     console.error("Error saving timetable schedules:", error);
-//     return res
-//       .status(500)
-//       .json({ message: "Internal server error", error: error.message });
-//   }
-// };
-
-// const saveClassData = async (req, res) => {
-//   try {
-//     console.log("Welcome to save the  class", req.body, req.params);
-
-//     const formattedDateTime = new Intl.DateTimeFormat("en-US", {
-//       dateStyle: "medium",
-//       timeStyle: "short",
-//     }).format(new Date());
-
-//     const { empId } = req.params;
-//     const { classId, students } = req.body;
-
-//     // Fetch employee data
-//     const empData = await Employee.findOne(
-//       { _id: empId },
-//       { name: 1, department: 1 }
-//     );
-
-//     // Fetch kids data
-//     const kidsData = await operationDeptModel.find(
-//       { _id: { $in: students } },
-//       { kidFirstName: 1, _id: 1, logs: 1, kidId: 1 }
-//     );
-
-//     console.log("Fetched kids data:", kidsData);
-//     console.log("Fetched empData:", empData);
-
-//     // Fetch the class schedule data
-//     const classSchedule = await ClassSchedule.findById(classId);
-
-//     if (!classSchedule) {
-//       return res.status(404).json({ message: "Class schedule not found." });
-//     }
-
-//     // Prepare new selected students data
-//     const updatedSelectedStudents = students.map((studentId) => {
-//       console.log();
-//       const kid = kidsData.find((kid) => kid._id.toString() === studentId);
-//       return {
-//         kidId: kid.kidId,
-//         kidName: kid ? kid.kidFirstName : "Unknown",
-//       };
-//     });
-
-//     console.log("updatedSelectedStudents", updatedSelectedStudents, kidsData);
-
-//     // Update class schedule with the new selected students (using $push to add to existing array)
-//     // await ClassSchedule.findByIdAndUpdate(
-//     //   classId,
-//     //   {
-//     //     $push: {
-//     //       selectedStudents: { $each: updatedSelectedStudents },
-//     //     },
-//     //     $set: {
-//     //       "scheduledBy.id": empData._id,
-//     //       "scheduledBy.department": empData.department,
-//     //       "scheduledBy.name": empData.name || "",
-//     //     },
-//     //   },
-//     //   { new: true }
-//     // );
-
-//     // Update the scheduleDemo field in the kidsData
-//     // const updatedKidsDataPromises = kidsData.map(async (kid) => {
-//     //   if (students.includes(kid._id.toString())) {
-//     //     kid.scheduleDemo = {
-//     //       status: "Scheduled",
-//     //       scheduledDay: classSchedule.day,
-//     //     };
-
-//     //     await kid.save();
-//     //   }
-//     // });
-
-//     // Wait for all updates to finish
-//     // await Promise.all(updatedKidsDataPromises);
-
-//     // const logUpdate = await enquiryLogs.findByIdAndUpdate(
-//     //   { _id: kidsData.logs },
-//     //   {
-//     //     $push: {
-//     //       logs: {
-//     //         employeeId: empId,
-//     //         employeeName: empData.firstName, // empData.firstName should exist here
-//     //         action: ` ${empData.firstName} in ${empData.department} department sheduled class for kid. created on ${formattedDateTime}`,
-//     //         createdAt: new Date(),
-//     //       },
-//     //     },
-//     //   },
-//     //   { new: true }
-//     // );
-
-//     // Respond with success
-//     // res.status(200).json({
-//     //   message: "Demo class data saved successfully.",
-//     //   updatedClassSchedule: classSchedule,
-//     //   updatedKidsData: kidsData,
-//     // });
-//   } catch (err) {
-//     console.log("Error in saving the demo class", err);
-//     res
-//       .status(500)
-//       .json({ error: "An error occurred while saving the demo class." });
-//   }
-// };
 
 const saveClassData = async (req, res) => {
   try {
@@ -724,7 +501,170 @@ const deleteCoachAvailability = async (req, res) => {
   }
 };
 
+const timeTableShedules = async (req, res) => {
+  try {
+    console.log("Welcome to time table schedules", req.body);
+
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ message: "Employee ID is required" });
+    }
+
+    const empData = await Employee.findOne(
+      { _id: id },
+      { firstName: 1, department: 1 }
+    );
+
+    if (!empData) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+
+    const { shedules } = req.body;
+    console.log("Shedules00", shedules);
+
+    if (!Array.isArray(shedules) || shedules.length === 0) {
+      return res.status(400).json({ message: "No shedules provided" });
+    }
+
+    const savedShedules = await Promise.all(
+      shedules.map(async (shedule) => {
+        const zoomLink = await generateZoomMeeting(); // Generate Zoom link
+        console.log("zoomLink", zoomLink);
+
+        const newSchedule = new ClassSchedule({
+          scheduledBy: {
+            name: empData.firstName,
+            id: empData._id,
+            department: empData.department,
+          },
+          day: shedule.day,
+          classTime: `${convertTo12HourFormat(
+            shedule.fromTime
+          )} - ${convertTo12HourFormat(shedule.toTime)}`,
+          coachName: shedule.coachName,
+          coachId: shedule.coachId,
+          program: shedule.program,
+          level: shedule.level,
+          meetingLink: zoomLink,
+          classType: shedule.isDemo ? "Demo" : "Class",
+        });
+
+        return await newSchedule.save();
+      })
+    );
+
+    return res.status(201).json({
+      message: "Schedules saved successfully",
+      savedShedules,
+    });
+  } catch (err) {
+    console.error("Error in saving the timetable schedules:", err);
+    return res
+      .status(500)
+      .json({ message: "Internal server error", error: err.message });
+  }
+};
+const moment = require('moment');  // Import moment.js for date formatting
+
+const getActiveKidAndClassData = async (req, res) => {
+  try {
+    const { enqId } = req.params;
+    const paymentClassData = await classPaymentModel.findOne(
+      { enqId: enqId },
+      { baseAmount: 0, gstAmount: 0, totalAmount: 0, raz_transaction_id: 0 }
+    );
+
+    if (!paymentClassData) {
+      return res.status(404).json({
+        success: false,
+        message: 'No payment data found for the provided enquiry ID.',
+      });
+    }
+
+    console.log("PaymentData", paymentClassData);
+
+    const { classDetails } = paymentClassData;
+
+    // Check if offlineClasses and onlineClasses are present
+    let classData;
+    if (classDetails.offlineClasses && classDetails.onlineClasses) {
+      // If both offlineClasses and onlineClasses exist
+      classData = {
+        offlineClasses: classDetails.offlineClasses,
+        onlineClasses: classDetails.onlineClasses,
+      };
+    } else {
+      // If offlineClasses or onlineClasses are missing, fall back to numberOfClasses
+      classData = {
+        numberOfClasses: classDetails.numberOfClasses,
+      };
+    }
+
+    // Include other class-related data
+    classData = {
+      ...classData,
+      selectedCenter: classDetails.selectedCenter,
+      selectedClass: classDetails.selectedClass,
+      selectedPackage: classDetails.selectedPackage,
+      classType: classDetails.classType,
+      day: classDetails.day,
+    };
+
+    // Format dates using moment.js
+    const formattedTimestamp = moment(paymentClassData.timestamp).format('YYYY-MM-DD HH:mm:ss');
+    const formattedCreatedAt = moment(paymentClassData.createdAt).format('DD-MM-YY');
+    const formattedUpdatedAt = moment(paymentClassData.updatedAt).format('YYYY-MM-DD HH:mm:ss');
+
+    // Send the response with the necessary class details along with other info
+    return res.status(200).json({
+      success: true,
+      message: 'Active class data fetched successfully',
+      data: {
+        kidName: paymentClassData.kidName,
+        kitItem: paymentClassData.kitItem,
+        selectionType: paymentClassData.selectionType,
+        whatsappNumber: paymentClassData.whatsappNumber,
+        parentId: paymentClassData.parentId,
+        enqId: paymentClassData.enqId,
+        classDetails: classData,
+     
+      },
+    });
+  } catch (err) {
+    console.log("Error in getting the active enquiry", err);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error while fetching the data',
+      error: err.message,
+    });
+  }
+};
+
+
+const assignWholeClass = async (req, res) => {
+  try {
+    console.log("Req.bbody",req.body)
+    const { studentId, studentName, selectedClasses } = req.body;
+
+    if (!studentId || !studentName || !Array.isArray(selectedClasses)) {
+      return res.status(400).json({ success: false, message: "Invalid data" });
+    }
+
+    const newClassSelection = new SelectedClass({ studentId, studentName, selectedClasses });
+    await newClassSelection.save();
+
+    res.status(201).json({ success: true, message: "Classes saved successfully" });
+  } catch (error) {
+    console.error("Error saving selected classes:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+
 module.exports = {
+  assignWholeClass,
+  getActiveKidAndClassData,
   timeTableShedules,
   getClassShedules,
   getCoachData,
@@ -734,5 +674,5 @@ module.exports = {
   saveClassData,
   updateCoachAvailabilityData,
   deleteCoachAvailability,
-  getAllActiveEnquiries
+  getAllActiveEnquiries,
 };

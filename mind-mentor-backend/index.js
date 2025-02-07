@@ -12,6 +12,7 @@ const kidRoute = require("./routes/kid/kidRoutes")
 const coachRoute = require("./routes/coach/CoachRoute");
 const serviceRoute = require("./routes/servicedelivery/serviceDeliveryRoute");
 const userRoute = require("./routes/superadmin/superAdminRoute")
+const zoomRoute = require("./routes/zoom/zoomRoute")
 const PORT = 3000
 
 app.set("trust proxy", true);
@@ -41,38 +42,19 @@ app.use(cors(corsOptions));
 app.disable("x-powered-by");
 
 
+
+
 app.use("/parent",parentRoute)
 app.use("/employee/operation",operationRoute)
 app.use("/kid",kidRoute)
 app.use("/coach",coachRoute)
 app.use("/service",serviceRoute)
 app.use("/superadmin",userRoute)
+app.use("/zoom/api",zoomRoute)
 
 
-app.post('/create-meeting', async (req, res) => {
-  try {
-    const response = await axios.post('https://api.zoom.us/v2/users/me/meetings', {
-      topic: req.body.topic,
-      type: 1, // Instant meeting
-      settings: {
-        host_video: true,
-        participant_video: true
-      }
-    }, {
-      headers: {
-        'Authorization': `Bearer YOUR_ZOOM_JWT_TOKEN`,
-        'Content-Type': 'application/json'
-      }
-    });
 
-    res.json({
-      meetingNumber: response.data.id,
-      password: response.data.password
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to create meeting' });
-  }
-});
+
 
 
 

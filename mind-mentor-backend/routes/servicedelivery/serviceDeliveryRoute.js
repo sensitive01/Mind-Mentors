@@ -10,11 +10,18 @@ serviceRoute.get("/get-class-shedule",serviceController.getClassShedules)
 serviceRoute.get("/get-coach-data",serviceController.getCoachData)
 serviceRoute.get("/get-coach-availabledata-table",serviceController.getCoachAvailableDays)
 serviceRoute.get("/get-class-student-data/:classId", serviceController.getClassAndStudentsData);
+serviceRoute.get("/get-active-kid-class-data/:enqId", serviceController.getActiveKidAndClassData);
+
 
 
 serviceRoute.post("/save-class-shedule/:id",serviceController.timeTableShedules)
 serviceRoute.post("/save-coach-availabledays",serviceController.saveCoachAvailableDays)
 serviceRoute.post("/save-class-data/:empId", serviceController.saveClassData);
+
+serviceRoute.post("/assign-whole-class", serviceController.assignWholeClass);
+
+
+
 
 
 serviceRoute.put("/edit-coach-availability/:id", serviceController.updateCoachAvailabilityData);

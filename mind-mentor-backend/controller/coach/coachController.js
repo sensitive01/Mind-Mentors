@@ -8,6 +8,7 @@ const ConductedClass = require("../../model/conductedClassSchema");
 const Employee = require("../../model/employeeModel");
 const enquiryLogs = require("../../model/enquiryLogs");
 const operationDeptModel = require("../../model/operationDeptModel");
+const { zoomIntegration2 } = require("../../utils/zoomIntegration2");
 
 
 
@@ -75,6 +76,7 @@ const getMyScheduledClasses = async (req, res) => {
     if (!classData || classData.length === 0) {
       return res.status(404).json({ message: "No classes scheduled for this coach." });
     }
+    // const zoomData = await zoomIntegration2()
 
     return res.status(200).json({
       message: "Classes retrieved successfully",

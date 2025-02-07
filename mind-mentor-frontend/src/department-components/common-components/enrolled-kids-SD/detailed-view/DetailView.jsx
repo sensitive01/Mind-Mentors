@@ -193,62 +193,27 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
               <Grid item xs={12} md={3}>
                 <DetailCard title="ENQUIRY FIELD" value={data.enquiryField} />
               </Grid>
-              {data.enquiryField === "prospects" && (
+              {data.status === "Active" && (
                 <Grid item xs={12} md={3} style={{ overflow: "visible" }}>
                   <DetailCard
-                    title={
-                      data.scheduleDemo?.status === "Pending"
-                        ? "CLICK HERE TO SCHEDULE DEMO CLASS"
-                        : "DEMO CLASS ACTIONS"
-                    }
+                    title={"ASSIGN CLASS"}
                     value={
-                      <div className="flex flex-col gap-3  rounded-lg">
-                        {data.scheduleDemo?.status === "Pending" ? (
-                          <button
-                            onClick={() =>
-                              navigate(
-                                `/operation/department/schedule-demo-class-list-individually/${data._id}/false`
-                              )
-                            }
-                            className="w-full px-2 py-2 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:border-primary/80 hover:text-white transition-all duration-800 text-sm font-medium rounded-md shadow-2xl"
-                          >
-                            Schedule Demo
-                          </button>
-                        ) : (
-                          <div className="flex flex-col gap-1 w-full">
-                            <button
-                              onClick={() =>
-                                navigate(
-                                  `/operation/department/schedule-demo-class-list-individually/${data._id}/true`
-                                )
-                              }
-                              className="w-full px-2 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:text-white  hover:border-primary/80 transition-all duration-200 text-sm font-medium rounded-md shadow-sm"
-                            >
-                              View Demo
-                            </button>
-                          </div>
-                        )}
+                      <div className="flex flex-col gap-3 border-2 border-primary rounded-lg">
+                        <button
+                          onClick={() =>
+                            navigate(
+                              `/service-delivery/department/assign-whole-plan-class/${data._id}`
+                            )
+                          }
+                          className="w-full px-2 py-2 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:border-primary/80 hover:text-white transition-all duration-800 text-sm font-medium rounded-md shadow-2xl"
+                        >
+                          Assign Class
+                        </button>
                       </div>
                     }
                   />
                 </Grid>
               )}
-
-              <Grid item xs={12} md={3} style={{ overflow: "visible" }}>
-                <DetailCard
-                  title="MAKE PAYMENT"
-                  value={
-                    <div className="flex flex-col gap-1 w-full">
-                      <button
-                        onClick={() => setIsPaymentDialogOpen(true)}
-                        className="w-full px-2 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:text-white  hover:border-primary/80 transition-all duration-200 text-sm font-medium rounded-md shadow-sm"
-                      >
-                        Payment
-                      </button>
-                    </div>
-                  }
-                />
-              </Grid>
             </Grid>
           </Grid>
 

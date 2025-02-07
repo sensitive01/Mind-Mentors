@@ -1,54 +1,37 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-const classPaymentModel = new mongoose.Schema({
-  amount: {
-    type: Number,
-  },
-  classDetails: {
-    coachName: {
-      type: String,
+// Define the Class Payment schema
+const classPaymentSchema = new Schema(
+  {
+    amount: { type: Number},
+    classDetails: {
+      selectedCenter: { type: String},
+      selectedClass: { type: String},
+      selectedPackage: { type: String},
+      classType: { type: String},
+      day: { type: String},
+      numberOfClasses: { type: Number},
+      offlineClasses: { type: Number},
+      onlineClasses: { type: Number},
     },
-    day: {
-      type: String,
-    },
-    isGoldMember: {
-      type: Boolean,
-      default: false,
-    },
-    classType: {
-      type: String,
-    },
-    numberOfClasses: {
-      type: Number,
-    },
+    enqId: { type: String},
+    kidId: { type: String},
+    kidName: { type: String},
+    kitItem: { type: String, default: '' },
+    selectionType: { type: String},
+    baseAmount: { type: Number},
+    gstAmount: { type: Number},
+    totalAmount: { type: Number},
+    whatsappNumber: { type: String},
+    parentId: { type: String},
+    raz_transaction_id: { type: String},
+    timestamp: { type: Date, default: Date.now },
   },
-  enqId: {
-    type: String,
-  },
-  kidId: {
-    type: String,
-  },
-  kidName: {
-    type: String,
-  },
-  kitItem: {
-    type: String,
-    default: null,
-  },
-  selectionType: {
-    type: String,
-  },
-  timestamp: {
-    type: Date,
-    default: Date.now,
-  },
-  whatsappNumber: {
-    type: String,
-  },
-  parentId: { type: String },
-  raz_transaction_id: { type: String },
-  paymentMode: { type: String },
-  status: { type: String, default: "Success" },
-});
+  { timestamps: true }
+);
 
-module.exports = mongoose.model("paidFees", classPaymentModel);
+// Create a model from the schema
+const classPaymentModel = mongoose.model('ClassPayment', classPaymentSchema);
+
+module.exports = classPaymentModel;

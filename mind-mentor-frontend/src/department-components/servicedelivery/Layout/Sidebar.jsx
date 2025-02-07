@@ -126,7 +126,7 @@ const ModernSidebar = () => {
     },
     {
       icon: <DashboardIcon />,
-      text: 'Active Enquiry',
+      text: 'Active Kids',
       color: iconColors.dashboard,
       link: '/service-delivery/department/active-kid-data',
     },

@@ -86,4 +86,9 @@ userRoute.delete('/chats/:id', userController.deleteChat);
 
 
 
+userRoute.post('/package', userController.insertPackage);
+
+
+
+
 module.exports = userRoute;

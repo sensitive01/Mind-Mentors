@@ -6,6 +6,11 @@ const MarketController = require('../../controller/centeradmin/centerAdminContro
 CenterRoute.post('/email-verification', MarketController.operationEmailVerification);
 CenterRoute.post('/password-verification', MarketController.operationPasswordVerification);
 
+
+
+
+
+
 // Enquiry Form CRUD
 CenterRoute.post('/enquiry-form', MarketController.enquiryFormData);
 CenterRoute.get('/enquiry-form', MarketController.getAllEnquiries);

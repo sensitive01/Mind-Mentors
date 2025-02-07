@@ -133,6 +133,12 @@ const ModernSidebar = () => {
       path: '/centeradmin-dashboard'
     },
     { 
+      icon: <ClassScheduleIcon />, 
+      text: 'Class Schedules', 
+      color: iconColors.classSchedules, 
+      path: '/centeradmin/department/class-schedule-list'
+    },
+    { 
       icon: <DashboardIcon />, 
       text: 'Enquiries', 
       color: iconColors.enquiries, 
@@ -208,12 +214,7 @@ const ModernSidebar = () => {
       open: openTasks,
       onClick: handleTasksClick
     },
-    { 
-      icon: <ClassScheduleIcon />, 
-      text: 'Class Schedules', 
-      color: iconColors.classSchedules, 
-      path: '/centeradmin/department/class-schedule-list'
-    },
+
     { 
       icon: <TentTree />, 
       text: 'Holiday', 
