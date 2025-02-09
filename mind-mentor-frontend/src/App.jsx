@@ -268,6 +268,9 @@ import MyTaskAssinedTaskTable from "./pages/employee/operation-employee/MyTaskAs
 import AssignMulipleClassPage from "./pages/employee/servicedelivery/AssignMulipleClassPage";
 import AssignWholeClassToKidPage from "./pages/employee/servicedelivery/AssignWholeClassToKidPage";
 import PaymentConfigAdmin from "./mislanous/PaymentConfigAdmin";
+import DisplayAssignedClass from "./pages/employee/servicedelivery/DisplayAssignedClass";
+import DiscountFormPage from "./pages/employee/superadmin/DiscountFormPage";
+import VoucherTablePage from "./pages/employee/superadmin/voucher/VoucherTablePage";
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
 function App() {
@@ -439,6 +442,8 @@ function App() {
           <Route path="/service-delivery/department/active-kid-data"  element={<ServiceActiveKidData />}  />
           <Route path="/service-delivery/department/assign-multiple-class"  element={<AssignMulipleClassPage />}  />
           <Route path="/service-delivery/department/assign-whole-plan-class/:enqId"  element={<AssignWholeClassToKidPage />}  />
+          <Route path="/service-delivery/department/display-whole-selectedClass/:enqId"  element={<DisplayAssignedClass />}  />
+
 
 
 
@@ -631,6 +636,11 @@ function App() {
         <Route path="/super-admin/department/edit-leaves/:id" element={<SuperadminLeavesAdd />} />
         <Route path="/super-admin/department/attendance" element={<SuperadminAttendance />} />
         <Route path="/superadminScheduleClass/" element={<SuperadminScheduleClass />} />
+
+        <Route path="/superadmin/department/discount-form" element={<DiscountFormPage />} />
+        <Route path="/superadmin/department/discount-table" element={<VoucherTablePage />} />
+
+
 
 
 

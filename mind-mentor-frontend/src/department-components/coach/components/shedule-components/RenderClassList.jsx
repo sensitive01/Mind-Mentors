@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { Chip, Typography, Button, Box } from "@mui/material";
+import {
+  Typography,
+  Button,
+  Box,
+  Chip,
+  Dialog,
+  DialogContent,
+} from "@mui/material";
 import { ClassCard, customColors, IconText } from "../../Layout/customStyle";
 import {
   AccessTime as TimeIcon,
@@ -10,7 +17,7 @@ import {
   AssignmentTurnedIn as AttendanceIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import ZoomMeeting from "./zoom2/ZoomMeeting"; // Import the video SDK component
+// import ZoomMeeting from "./zoom/ZoomMeeting";
 
 const RenderClassList = ({
   classes = [],
@@ -19,7 +26,6 @@ const RenderClassList = ({
 }) => {
   const navigate = useNavigate();
   const [activeMeeting, setActiveMeeting] = useState(null);
-  console.log(classes)
 
   if (!classes || classes.length === 0) {
     return (
@@ -36,19 +42,13 @@ const RenderClassList = ({
     );
   }
 
-  // Function to extract meeting details
   const extractMeetingDetails = (meetingLink) => {
     try {
-      console.log("meetingLink",meetingLink)
       const url = new URL(meetingLink);
-      console.log("url",url)
       const params = new URLSearchParams(url.search);
       const meetingId = params.get("meetingId") || "86278368257";
-      const password = params.get("password") || "NCRojxPdabjCUKIgDX2prRy9qaI0wq";
-      console.log("meetingId",meetingId)
-      console.log("password",password)
-
-
+      const password =
+        params.get("password") || "NCRojxPdabjCUKIgDX2prRy9qaI0wq";
       return { meetingId, password };
     } catch (error) {
       console.error("Invalid meeting link:", meetingLink);
@@ -74,8 +74,11 @@ const RenderClassList = ({
 
   const handleAttendanceClick = (e, classItem) => {
     e.stopPropagation();
-    console.log("Adding attendance for:", classItem);
     navigate(`/coachAttendanceFeedback/${classItem._id}`);
+  };
+
+  const handleCloseMeeting = () => {
+    setActiveMeeting(null);
   };
 
   return (
@@ -190,13 +193,17 @@ const RenderClassList = ({
         </ClassCard>
       ))}
 
-      {activeMeeting && (
-        <ZoomMeeting
-          meetingId={"86278368257"}
-          password={"NCRojxPdabjCUKIgDX2prRy9qaI0wq"}
-          onClose={() => setActiveMeeting(null)}
-        />
-      )}
+      {/* <Dialog fullScreen open={!!activeMeeting} onClose={handleCloseMeeting}>
+        <DialogContent sx={{ padding: 0 }}>
+          {activeMeeting && (
+            <ZoomMeeting
+              meetingId={activeMeeting.meetingId}
+              password={activeMeeting.password}
+              onClose={handleCloseMeeting}
+            />
+          )}
+        </DialogContent>
+      </Dialog> */}
     </>
   );
 };

@@ -73,6 +73,7 @@ const operationDeptSchema = new mongoose.Schema(
     },
     status: { type: String, default: "Pending" },
     paymentLink: { type: String },
+    isNewUser :{type:Boolean,default:true}
   },
   { timestamps: true }
 );

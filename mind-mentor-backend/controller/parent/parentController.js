@@ -1210,7 +1210,7 @@ const savePaymentData = async (req, res) => {
         $set: { status: "Active" },
       }),
       operationDeptModel.findByIdAndUpdate(paymentData.enqId, {
-        $set: { status: "Active", payment: "Succcess" },
+        $set: { status: "Active", payment: "Success" },
       }),
     ]);
 

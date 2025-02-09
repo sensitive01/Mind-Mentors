@@ -90,3 +90,9 @@ export const assignWholeClass = async (submissionData) => {
   const response = await serviceInstance.post(`/service/assign-whole-class`,{submissionData});
   return response.data;
 };
+
+
+export const dispaySelectedClass = async (enqId) => {
+  const response = await serviceInstance.get(`/service/display-selected-class/${enqId}`);
+  return response;
+};

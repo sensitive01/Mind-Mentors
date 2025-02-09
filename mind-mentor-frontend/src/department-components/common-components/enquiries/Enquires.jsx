@@ -111,8 +111,6 @@ const Enquiries = () => {
   const [isTaskOverlayOpen, setIsTaskOverlayOpen] = useState(false);
   const [enqId, setEnqId] = useState();
 
-
-
   useEffect(() => {
     const loadLeaves = async () => {
       try {
@@ -173,12 +171,12 @@ const Enquiries = () => {
     }
   };
 
-  const handleSend = async(number)=>{
-    console.log("number",number)
-    const message  ="Haii welcome to mind mentors"
-    const sendingMessage =await sendMessage(number,message)
-    console.log('message respoense',sendingMessage)
-  }
+  const handleSend = async (number) => {
+    console.log("number", number);
+    const message = "Haii welcome to mind mentors";
+    const sendingMessage = await sendMessage(number, message);
+    console.log("message respoense", sendingMessage);
+  };
 
   const handleRowEditStop = (params, event) => {
     event.defaultMuiPrevented = true;
@@ -195,10 +193,10 @@ const Enquiries = () => {
   };
 
   const handleMoveProspects = async (id) => {
-    console.log("clicked",id)
+    console.log("clicked", id);
 
     const student = rows.find((row) => row._id === id);
-    console.log("clicked 2",student)
+    console.log("clicked 2", student);
     if (!student) return;
 
     setConfirmDialog({
@@ -534,18 +532,6 @@ const Enquiries = () => {
                 if (viewDialog.rowData) {
                   setIsTaskOverlayOpen(true);
                   setEnqId(viewDialog.rowData._id);
-                  // Close the view dialog
-                  setViewDialog({
-                    open: false,
-                    rowData: null,
-                    showEdit: false,
-                  });
-                  // Close the confirm dialog if it's open
-                  setConfirmDialog({
-                    open: false,
-                    studentName: "",
-                    onConfirm: null,
-                  });
                 }
               }}
               sx={{
@@ -640,7 +626,7 @@ const Enquiries = () => {
           </Button>
         </DialogActions>
       </Dialog>
-      {/* <TaskAssignmentOverlay
+      <TaskAssignmentOverlay
         isOpen={isTaskOverlayOpen}
         onClose={() => setIsTaskOverlayOpen(false)}
       >
@@ -648,7 +634,7 @@ const Enquiries = () => {
           id={enqId}
           onClose={() => setIsTaskOverlayOpen(false)}
         />
-      </TaskAssignmentOverlay> */}
+      </TaskAssignmentOverlay>
     </ThemeProvider>
   );
 };

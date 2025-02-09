@@ -7,6 +7,7 @@ const Package = require("../../model/packageDetails");
 const app = express();
 const upload = multer(); // You can configure storage options if needed
 const bcrypt = require("bcryptjs");
+const Voucher = require("../../model/discount_voucher/voucherModel");
 const {
   Tournament,
   Notification,
@@ -1019,7 +1020,36 @@ const insertPackage = async (req, res) => {
   }
 };
 
+const addNewVoucher = async (req, res) => {
+  try {
+    const {formData} = req.body
+    const newVoucher = new Voucher(formData);
+    const savedVoucher = await newVoucher.save();
+    res
+      .status(201)
+      .json({ message: "Voucher created successfully", savedVoucher });
+  } catch (err) {
+    console.log("Error in adding new discount voucher");
+    res
+      .status(500)
+      .json({ message: "Error creating voucher", error: error.message });
+  }
+};
+
+const getAllVouchers = async (req, res) => {
+  try {
+    const vouchers = await Voucher.find();
+    res.status(200).json(vouchers);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error fetching vouchers", error: error.message });
+  }
+};
+
 module.exports = {
+  getAllVouchers,
+  addNewVoucher,
   insertPackage,
   createUser,
   deleteExpense,

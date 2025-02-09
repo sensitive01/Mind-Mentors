@@ -644,14 +644,29 @@ const getActiveKidAndClassData = async (req, res) => {
 
 const assignWholeClass = async (req, res) => {
   try {
-    console.log("Req.bbody",req.body)
-    const { studentId, studentName, selectedClasses } = req.body;
+    console.log("Req.body", req.body);
+    
+    const { submissionData } = req.body; // Extract submissionData
+
+    if (!submissionData) {
+      return res.status(400).json({ success: false, message: "Invalid data" });
+    }
+
+    const { studentId, studentName, selectedClasses, generatedSchedule, cancelledSessions } = submissionData;
+    const enqData = await operationDeptModel.findOne({_id:studentId,payment:"Success",status:"Active"},{kidId:1})
+    console.log("EnqId==>",enqData)
 
     if (!studentId || !studentName || !Array.isArray(selectedClasses)) {
       return res.status(400).json({ success: false, message: "Invalid data" });
     }
 
-    const newClassSelection = new SelectedClass({ studentId, studentName, selectedClasses });
+    console.log("Student ID:", studentId);
+    console.log("Student Name:", studentName);
+    console.log("Selected Classes:", selectedClasses);
+    console.log("Generated Schedule:", generatedSchedule);
+    console.log("Cancelled Sessions:", cancelledSessions);
+
+    const newClassSelection = new SelectedClass({ kidId:enqData.kidId, studentName, selectedClasses,generatedSchedule,cancelledSessions,enqId:studentId });
     await newClassSelection.save();
 
     res.status(201).json({ success: true, message: "Classes saved successfully" });
@@ -662,7 +677,31 @@ const assignWholeClass = async (req, res) => {
 };
 
 
+const displaySelectedClass = async (req, res) => {
+  try {
+    const { enqId } = req.params;
+
+    const selectedClass = await SelectedClass.findOne(
+      { enqId: enqId }, 
+      { generatedSchedule: 1, _id: 0 ,studentName:1} // Only return the `generatedSchedule` field
+    );
+
+    if (!selectedClass) {
+      return res.status(404).json({ message: "No schedule found for the given ID" });
+    }
+
+    res.status(200).json({ message: "Selected class retrieved successfully", data: selectedClass.generatedSchedule,kidName:selectedClass.studentName });
+  } catch (err) {
+    console.error("Error in displaying the selected class", err);
+    res.status(500).json({ message: "Internal Server Error", error: err.message });
+  }
+};
+
+
+
+
 module.exports = {
+  displaySelectedClass,
   assignWholeClass,
   getActiveKidAndClassData,
   timeTableShedules,

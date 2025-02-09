@@ -544,3 +544,25 @@ export const fetchPackageDetails = async () => {
   );
   return response;
 };
+
+
+export const addNewVoucher = async (formData) => {
+  const response = await userInstance.post(
+    `/add-new-voucher`,{formData}
+  );
+  return response;
+};
+
+export const fetchAllVouchers = async () => {
+  const response = await userInstance.get(
+    `/get-all-vouchers`,
+  );
+  return response;
+};
+
+export const getDiscountAmount = async (enqId) => {
+  const response = await operationDeptInstance.get(
+    `/get-discount-vouchers/${enqId}`,
+  );
+  return response;
+};

@@ -2,8 +2,8 @@ const axios = require("axios");
 const jwt = require("jsonwebtoken");
 
 // Zoom Credentials
-const ZOOM_CLIENT_ID = "cFNIRob2ReiHwmo2P4tgXA";
-const ZOOM_CLIENT_SECRET = "X5jubMHKo1lWzCuyAG81ibJnoGXbIBRC";
+const ZOOM_CLIENT_ID = "1R8cvp2KTCGJQl9zzX8gQ";
+const ZOOM_CLIENT_SECRET = "vraDNr4XDr8C3itjb6q8ml5CPMMH8QXs";
 
 // Generate a signature for the Zoom Web SDK
 const generateZoomSignature = (meetingNumber) => {

@@ -3,8 +3,10 @@ const { createZoomMeeting } = require("../../utils/generateZoomSignature"); // A
 
 const zoomRoute = express.Router();
 
-const ZOOM_API_KEY = "ChkFppFRmmzbQKT6jiQlA";
-const ZOOM_API_SECRET = "A8hGnAi3u6v5LkfRT1fWCVU2Z9qQEqi3";
+// const ZOOM_API_KEY = "ChkFppFRmmzbQKT6jiQlA";
+// const ZOOM_API_SECRET = "A8hGnAi3u6v5LkfRT1fWCVU2Z9qQEqi3";
+const ZOOM_API_KEY = "1R8cvp2KTCGJQl9zzX8gQ";
+const ZOOM_API_SECRET = "vraDNr4XDr8C3itjb6q8ml5CPMMH8QXs";
 const USER_ID = "aswinrajr07@gmail.com"; 
 
 // zoomRoute.get("/zoom", async (req, res) => {

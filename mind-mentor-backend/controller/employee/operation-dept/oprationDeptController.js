@@ -15,8 +15,9 @@ const ClassSchedule = require("../../../model/classSheduleModel");
 const ConductedClass = require("../../../model/conductedClassSchema");
 const ActivityLog = require("../../../model/taskLogModel");
 const NotesSection = require("../../../model/enquiryNoteSection");
-const  sendMessage  = require("../../../utils/sendMessage");
-const packageSchema = require("../../../model/packageDetails")
+const sendMessage = require("../../../utils/sendMessage");
+const packageSchema = require("../../../model/packageDetails");
+const Voucher = require("../../../model/discount_voucher/voucherModel");
 
 // Email Verification
 
@@ -1375,7 +1376,6 @@ const rescheduleDemoClass = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 const addNotesToTasks = async (req, res) => {
   try {
@@ -2998,8 +2998,11 @@ const sendPaymentLink = async (req, res) => {
     const { link } = req.body;
 
     // Fetch the kid data
-    const enqData = await OperationDept.findOne({_id:enqId},{ payment: 1, logs: 1 })
-    const kidData = await kidSchema.findOne({ enqId: enqId }, { parentId: 1,});
+    const enqData = await OperationDept.findOne(
+      { _id: enqId },
+      { payment: 1, logs: 1 }
+    );
+    const kidData = await kidSchema.findOne({ enqId: enqId }, { parentId: 1 });
     if (!kidData) {
       return res.status(404).json({ message: "Kid data not found" });
     }
@@ -3025,7 +3028,7 @@ const sendPaymentLink = async (req, res) => {
 
     // Update the kid's payment status
     enqData.payment = "Requested";
-    enqData.paymentLink = link
+    enqData.paymentLink = link;
     await enqData.save(); // Make sure you save the kidData after modifying the payment field
 
     res.status(200).json({ message: "Payment link sent successfully" });
@@ -3041,23 +3044,59 @@ const getPackageData = async (req, res) => {
     res.status(200).json({ success: true, data: packageData });
   } catch (err) {
     console.error("Error fetching package data:", err);
-    res.status(500).json({ success: false, error: "Failed to fetch package data" });
+    res
+      .status(500)
+      .json({ success: false, error: "Failed to fetch package data" });
   }
 };
 
+const getDiscountVouchers = async (req, res) => {
+  try {
+    const { enqId } = req.params;
+    const enqData = await OperationDept.findOne(
+      { _id: enqId },
+      { isNewUser: 1 }
+    );
 
+    if (!enqData) {
+      return res.status(404).json({ message: "Enquiry not found" });
+    }
 
+    const discountData = await Voucher.find();
+    const today = new Date();
+    console.log("discountData",discountData)
 
+    const validVouchers = discountData.filter((voucher) => {
+      const isUserValid = voucher.condition === "new user" && enqData.isNewUser;
 
+      const isDateValid =
+        today >= new Date(voucher.startDate) &&
+        today <= new Date(voucher.expiry);
+      const isSlotsAvailable = voucher.usedCount < voucher.slots;
 
+      return isUserValid && isDateValid && isSlotsAvailable;
+    });
 
+    if (validVouchers.length === 0) {
+      return res
+        .status(200)
+        .json({ message: "No valid vouchers available", discount: 0 });
+    }
+    console.log("validVouchers",validVouchers)
 
-
-
+    return res
+      .status(200)
+      .json({ message: "Valid vouchers found", vouchers: validVouchers[0].value });
+  } catch (err) {
+    console.error("Error in getting the discount for new enquiry", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 module.exports = {
   fetchAllStatusLogs,
   getPackageData,
+  getDiscountVouchers,
 
   operationEmailVerification,
   operationPasswordVerification,
@@ -3111,5 +3150,5 @@ module.exports = {
   getSheduledDemoClassDataOfKid,
   cancelDemoClassForKid,
   rescheduleDemoClass,
-  sendPaymentLink
+  sendPaymentLink,
 };

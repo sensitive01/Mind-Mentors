@@ -74,12 +74,16 @@ const ParentPayment = () => {
       setError("No payment data provided");
     }
   }, [encodedData]);
+  console.log("paymentData", paymentData);
 
   const handleUpdatePayment = async () => {
     try {
+      const amountInPaise = Math.round(paymentData.amount * 100);
+      console.log(amountInPaise)
+
       const options = {
         key: RAZORPAY_KEY,
-        amount: paymentData.amount * 100, // Amount in the smallest unit (paise)
+        amount: amountInPaise, // Amount in the smallest unit (paise)
         currency: "INR",
         name: "MindMentorz",
         description:
@@ -89,6 +93,7 @@ const ParentPayment = () => {
         image: logo,
         handler: async (response) => {
           try {
+            console.log("Response", response);
             const { razorpay_payment_id } = response;
 
             const savepayment = await savepaymentInfo(

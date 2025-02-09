@@ -214,6 +214,27 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                   />
                 </Grid>
               )}
+                {data.status === "Active" && (
+                <Grid item xs={12} md={3} style={{ overflow: "visible" }}>
+                  <DetailCard
+                    title={"VIEW ASSIGNED CLASS"}
+                    value={
+                      <div className="flex flex-col gap-3 border-2 border-primary rounded-lg">
+                        <button
+                          onClick={() =>
+                            navigate(
+                              `/service-delivery/department/display-whole-selectedClass/${data._id}`
+                            )
+                          }
+                          className="w-full px-2 py-2 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:border-primary/80 hover:text-white transition-all duration-800 text-sm font-medium rounded-md shadow-2xl"
+                        >
+                          View Assigned Class
+                        </button>
+                      </div>
+                    }
+                  />
+                </Grid>
+              )}
             </Grid>
           </Grid>
 

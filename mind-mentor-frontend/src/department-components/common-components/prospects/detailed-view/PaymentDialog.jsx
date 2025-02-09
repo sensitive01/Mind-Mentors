@@ -3,6 +3,7 @@ import { Send, X } from "lucide-react";
 import { formatWhatsAppNumber } from "../../../../utils/formatContacts";
 import {
   fetchPackageDetails,
+  getDiscountAmount,
   sendPaymentDetailsLink,
 } from "../../../../api/service/employee/EmployeeService";
 import { ToastContainer, toast } from "react-toastify";
@@ -15,20 +16,63 @@ const PaymentDialog = ({ open, onClose, data, enqId }) => {
   const [customAmount, setCustomAmount] = useState(0);
   const [kitItems, setKitItems] = useState([{ name: "", quantity: 0 }]);
   const [packages, setPackages] = useState([]);
+  const [kitItemsList, setKitItemsList] = useState([]);
+  const [discount, setDiscount] = useState(0);
 
   const GST_RATE = 0.18;
+  const DEFAULT_ONLINE_RATE = 400;
+  const DEFAULT_OFFLINE_RATE = 600;
 
   useEffect(() => {
     const fetchPackage = async () => {
       const response = await fetchPackageDetails();
       if (response.status === 200) {
-        // Add custom and kit options to packages
+        const hybridPricing = {
+          online:
+            response.data.data.find(
+              (pkg) => pkg.type === "hybrid" && pkg.onlineClasses === 1
+            )?.pricing?.amount || DEFAULT_ONLINE_RATE,
+          offline:
+            response.data.data.find(
+              (pkg) => pkg.type === "hybrid" && pkg.physicalClasses === 1
+            )?.pricing?.amount || DEFAULT_OFFLINE_RATE,
+        };
+
+        // Filter out duplicate hybrid packages and keep only unique packages
+        const uniquePackages = response.data.data.reduce((acc, curr) => {
+          if (
+            curr.type === "hybrid" &&
+            curr.packageName === "Hybrid day classes"
+          ) {
+            const existingPackage = acc.find(
+              (p) => p.packageName === curr.packageName
+            );
+            if (!existingPackage) {
+              return [
+                ...acc,
+                {
+                  ...curr,
+                  hybridPricing,
+                },
+              ];
+            }
+            return acc;
+          }
+          return [...acc, curr];
+        }, []);
+
+        const kitItems = response.data.data.filter((pkg) => pkg.type === "kit");
+        setKitItemsList(kitItems);
+
         const updatedPackages = [
-          ...response.data.data,
+          ...uniquePackages,
           {
             _id: "CUSTOM",
             type: "custom",
             packageName: "Custom Package",
+            onlineClasses: 0,
+            physicalClasses: 0,
+            hybridPricing,
           },
           {
             _id: "KIT",
@@ -42,28 +86,57 @@ const PaymentDialog = ({ open, onClose, data, enqId }) => {
     fetchPackage();
   }, []);
 
+  useEffect(() => {
+    const fetchDiscount = async () => {
+      const response = await getDiscountAmount(enqId);
+      console.log(response);
+      if (response.status === 200) {
+        setDiscount(response.data.vouchers);
+      }
+    };
+    fetchDiscount();
+  }, []);
+
   const calculateTotalAmount = () => {
     const selected = packages.find((pkg) => pkg._id === selectedPackage);
-    if (!selected) return { baseAmount: 0, gstAmount: 0, totalAmount: 0 };
+    if (!selected)
+      return { baseAmount: 0, gstAmount: 0, discountAmount: 0, totalAmount: 0 };
 
     let baseAmount = 0;
-    if (selected.type === "hybrid") {
-      baseAmount = onlineClasses * 400 + offlineClasses * 600;
-    } else if (selected.type === "custom") {
-      baseAmount = customAmount;
+    if (selected.type === "hybrid" || selected.type === "custom") {
+      const onlineRate = selected.hybridPricing?.online || DEFAULT_ONLINE_RATE;
+      const offlineRate =
+        selected.hybridPricing?.offline || DEFAULT_OFFLINE_RATE;
+      const classesAmount =
+        onlineClasses * onlineRate + offlineClasses * offlineRate;
+
+      if (selected.type === "custom") {
+        baseAmount = classesAmount + customAmount;
+      } else {
+        baseAmount = classesAmount;
+      }
     } else if (selected.type === "kit") {
-      baseAmount = kitItems.reduce(
-        (total, item) => total + item.quantity * 799,
-        0
-      );
+      baseAmount = kitItems.reduce((total, item) => {
+        const kitPackage = kitItemsList.find(
+          (kit) => kit.packageName === item.name
+        );
+        return total + item.quantity * (kitPackage?.pricing?.amount || 0);
+      }, 0);
     } else {
       baseAmount = selected.pricing.amount;
     }
 
-    const gstAmount = baseAmount * GST_RATE;
-    const totalAmount = baseAmount + gstAmount;
+    const discountAmount = discount || 0;
+    const discountedBaseAmount = Math.max(baseAmount - discountAmount, 0);
+    const gstAmount = discountedBaseAmount * GST_RATE;
+    const totalAmount = discountedBaseAmount + gstAmount;
 
-    return { baseAmount, gstAmount, totalAmount };
+    return {
+      baseAmount,
+      discountAmount,
+      gstAmount,
+      totalAmount,
+    };
   };
 
   const generatePaymentLink = async () => {
@@ -73,24 +146,15 @@ const PaymentDialog = ({ open, onClose, data, enqId }) => {
     const paymentData = {
       enqId,
       selectedPackage: selected.packageName,
-      onlineClasses:
-        selected.type === "hybrid"
-          ? Number(onlineClasses)
-          : selected.type === "custom"
-          ? 0
-          : selected.onlineClasses || 0,
-      offlineClasses:
-        selected.type === "hybrid"
-          ? Number(offlineClasses)
-          : selected.type === "custom"
-          ? 0
-          : selected.physicalClasses || 0,
+      onlineClasses: Number(onlineClasses),
+      offlineClasses: Number(offlineClasses),
       kidName: data?.kidName,
       kidId: data.kidId,
       whatsappNumber: data?.whatsappNumber,
       programs: data?.programs,
       customAmount: selected.type === "custom" ? customAmount : 0,
       kitItems: selected.type === "kit" ? kitItems : [],
+      discount: discount,
       ...calculateTotalAmount(),
     };
 
@@ -113,7 +177,6 @@ const PaymentDialog = ({ open, onClose, data, enqId }) => {
       toast.error("An error occurred: " + error.message);
     }
   };
-
   const selectedPackageDetails = packages.find(
     (pkg) => pkg._id === selectedPackage
   );
@@ -200,13 +263,11 @@ const PaymentDialog = ({ open, onClose, data, enqId }) => {
                   const selected = packages.find(
                     (pkg) => pkg._id === e.target.value
                   );
-                  if (selected) {
-                    // Reset all input states
-                    setOnlineClasses(selected.onlineClasses || 0);
-                    setOfflineClasses(selected.physicalClasses || 0);
-                    setCustomAmount(0);
-                    setKitItems([{ name: "", quantity: 0 }]);
-                  }
+                  // Reset all input states
+                  setOnlineClasses(0);
+                  setOfflineClasses(0);
+                  setCustomAmount(0);
+                  setKitItems([{ name: "", quantity: 0 }]);
                 }}
                 className="block w-full rounded-md border border-gray-300 px-4 py-2"
               >
@@ -220,11 +281,15 @@ const PaymentDialog = ({ open, onClose, data, enqId }) => {
             </div>
 
             {/* Hybrid Package Class Inputs */}
-            {selectedPackageDetails?.type === "hybrid" && (
+            {(selectedPackageDetails?.type === "hybrid" ||
+              selectedPackageDetails?.type === "custom") && (
               <div className="bg-white p-4 rounded-lg shadow-sm space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Number of Online Classes
+                    Number of Online Classes (₹
+                    {selectedPackageDetails.hybridPricing?.online ||
+                      DEFAULT_ONLINE_RATE}
+                    /class)
                   </label>
                   <input
                     type="number"
@@ -236,7 +301,10 @@ const PaymentDialog = ({ open, onClose, data, enqId }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Number of Offline Classes
+                    Number of Offline Classes (₹
+                    {selectedPackageDetails.hybridPricing?.offline ||
+                      DEFAULT_OFFLINE_RATE}
+                    /class)
                   </label>
                   <input
                     type="number"
@@ -254,7 +322,7 @@ const PaymentDialog = ({ open, onClose, data, enqId }) => {
               <div className="bg-white p-4 rounded-lg shadow-sm space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Custom Amount
+                    Additional Custom Amount
                   </label>
                   <input
                     type="number"
@@ -272,15 +340,20 @@ const PaymentDialog = ({ open, onClose, data, enqId }) => {
               <div className="bg-white p-4 rounded-lg shadow-sm space-y-4">
                 {kitItems.map((item, index) => (
                   <div key={index} className="flex space-x-2 items-center">
-                    <input
-                      type="text"
-                      placeholder="Item Name"
+                    <select
                       value={item.name}
                       onChange={(e) =>
                         updateKitItem(index, "name", e.target.value)
                       }
                       className="flex-1 rounded-md border border-gray-300 px-2 py-1"
-                    />
+                    >
+                      <option value="">Select Item</option>
+                      {kitItemsList.map((kit) => (
+                        <option key={kit._id} value={kit.packageName}>
+                          {kit.packageName} (₹{kit.pricing.amount})
+                        </option>
+                      ))}
+                    </select>
                     <input
                       type="number"
                       placeholder="Quantity"
@@ -319,6 +392,14 @@ const PaymentDialog = ({ open, onClose, data, enqId }) => {
                     ₹{calculateTotalAmount().baseAmount.toFixed(2)}
                   </span>
                 </div>
+                {discount > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Discount Applied</span>
+                    <span>
+                      -₹{calculateTotalAmount().discountAmount.toFixed(2)}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-gray-600">GST (18%)</span>
                   <span>₹{calculateTotalAmount().gstAmount.toFixed(2)}</span>

@@ -190,6 +190,12 @@ const ModernSidebar = () => {
       link: "/superadminEnquiries",
     },
     {
+      icon: <EnquiriesIcon />,
+      text: "Voucher_Discounts",
+      color: iconColors.enquiries,
+      link: "/superadmin/department/discount-table",
+    },
+    {
       icon: <KidsIcon />,
       text: "Kids",
       color: iconColors.kids,
