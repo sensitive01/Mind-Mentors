@@ -9,7 +9,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; object-src 'none'"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; object-src 'none'; connect-src 'self' https://mind-mentors-1.onrender.com https://mind-mentors.vercel.app https://mind-mentors-vt11.vercel.app;"
         },
         {
           "key": "Referrer-Policy",
