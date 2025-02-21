@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import {
-  TextField,
   Button,
   FormControl,
   InputLabel,
@@ -10,6 +9,7 @@ import {
   IconButton,
   Switch,
   FormControlLabel,
+  TextField,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import {
@@ -25,6 +25,17 @@ const programs = [
   { name: "Math", levels: ["Beginner", "Intermediate", "Advanced"] },
 ];
 
+// Map day names to their index in the week (0 = Sunday, 1 = Monday, etc.)
+const dayToIndex = {
+  "Sunday": 0,
+  "Monday": 1,
+  "Tuesday": 2,
+  "Wednesday": 3,
+  "Thursday": 4,
+  "Friday": 5,
+  "Saturday": 6
+};
+
 const ClassScheduleForm = () => {
   const navigate = useNavigate();
   const empId = localStorage.getItem("empId");
@@ -32,13 +43,13 @@ const ClassScheduleForm = () => {
   const [schedules, setSchedules] = useState([
     {
       day: "",
+      date: "",
       coachId: "",
       coachName: "",
       program: "",
       level: "",
       fromTime: "",
       toTime: "",
-      meetingLink: "",
       isDemo: false,
     },
   ]);
@@ -57,6 +68,29 @@ const ClassScheduleForm = () => {
     fetchAvailableData();
   }, []);
 
+
+  const getNextDayDate = (dayName) => {
+    const today = new Date();
+    const todayIndex = today.getDay();
+    const targetIndex = dayToIndex[dayName];
+    
+
+    let daysUntilTarget = targetIndex - todayIndex;
+    if (daysUntilTarget <= 0) {
+    
+      daysUntilTarget += 7;
+    }
+    
+
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() + daysUntilTarget);
+    
+  
+    return `${targetDate.getDate().toString().padStart(2, '0')}-${
+      (targetDate.getMonth() + 1).toString().padStart(2, '0')}-${
+      targetDate.getFullYear()}`;
+  };
+
   const coaches = [
     ...new Set(
       availabilityData.map((item) => ({
@@ -68,7 +102,7 @@ const ClassScheduleForm = () => {
     (coach, index, self) => index === self.findIndex((c) => c.id === coach.id)
   );
 
-  // Helper function to generate time options in 15-minute intervals
+
   const generateTimeOptions = (startTime, endTime) => {
     const times = [];
     let currentTime = new Date(`2024-01-01T${startTime}`);
@@ -131,6 +165,12 @@ const ClassScheduleForm = () => {
         currentSchedule.coachName = selectedCoach.name;
         currentSchedule.coachId = selectedCoach.id;
       }
+    } else if (field === "day") {
+      currentSchedule[field] = value;
+  
+      if (value) {
+        currentSchedule.date = getNextDayDate(value);
+      }
     } else {
       currentSchedule[field] = value;
     }
@@ -188,6 +228,7 @@ const ClassScheduleForm = () => {
       ...schedules,
       {
         day: "",
+        date: "",
         coachId: "",
         coachName: "",
         program: "",
@@ -256,6 +297,7 @@ const ClassScheduleForm = () => {
     setSchedules([
       {
         day: "",
+        date: "",
         coachId: "",
         coachName: "",
         program: "",
@@ -448,6 +490,20 @@ const ClassScheduleForm = () => {
                       </Select>
                     </FormControl>
                   </Grid>
+                  
+                  {/* Date field - read-only, automatically calculated */}
+                  <Grid item xs={12} sm={2}>
+                    <TextField
+                      fullWidth
+                      label="Date"
+                      value={schedule.date || ""}
+                      InputProps={{
+                        readOnly: true,
+                      }}
+                      variant="outlined"
+                      multiline
+                    />
+                  </Grid>
 
                   <Grid item xs={12} sm={2}>
                     <FormControl fullWidth>
@@ -491,22 +547,6 @@ const ClassScheduleForm = () => {
                           ))}
                       </Select>
                     </FormControl>
-                  </Grid>
-
-                  <Grid item xs={12} sm={3}>
-                    <TextField
-                      fullWidth
-                      label="Meeting Link"
-                      value={schedule.meetingLink}
-                      onChange={(e) =>
-                        handleScheduleChange(
-                          index,
-                          "meetingLink",
-                          e.target.value
-                        )
-                      }
-                      placeholder="Enter meeting link (Zoom, Google Meet, etc.)"
-                    />
                   </Grid>
 
                   {/* Remove Schedule Button */}

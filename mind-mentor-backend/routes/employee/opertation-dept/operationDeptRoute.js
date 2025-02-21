@@ -27,14 +27,6 @@ operationRoute.get("/get-package-data", operationController.getPackageData);
 operationRoute.get("/get-discount-vouchers/:enqId", operationController.getDiscountVouchers);
 
 
-
-
-
-
-
-
-
-
 operationRoute.post("/email-verification",operationController.operationEmailVerification);
 operationRoute.post("/password-verification",operationController.operationPasswordVerification);
 operationRoute.post("/enquiry-form", operationController.enquiryFormData);

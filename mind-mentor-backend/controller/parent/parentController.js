@@ -1210,7 +1210,7 @@ const savePaymentData = async (req, res) => {
         $set: { status: "Active" },
       }),
       operationDeptModel.findByIdAndUpdate(paymentData.enqId, {
-        $set: { status: "Active", payment: "Success" },
+        $set: { status: "Active", payment: "Success",isNewUser:false },
       }),
     ]);
 
@@ -1306,7 +1306,36 @@ const getKidPaidFeeData = async (req, res) => {
   }
 };
 
+const getParentKidData = async(req,res)=>{
+  try{
+    const {kidId}=req.params;
+    const kidData = await kidModel.findOne({_id:kidId})
+    console.log("KidData",kidData)
+  }catch(err){
+    console.log("Error in getting the ki datad",err)
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 module.exports = {
+  getParentKidData,
   parentLogin,
   parentVerifyOtp,
   parentStudentRegistration,

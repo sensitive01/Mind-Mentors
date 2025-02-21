@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chess Kid Registration</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.7/axios.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+      }
+      input {
+        width: 300px;
+        padding: 8px;
+      }
+      button {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Chess Kid Registration</h2>
+    <form id="registrationForm">
+      <div class="form-group">
+        <label for="avatarFilename">Avatar Filename:</label>
+        <input type="text" id="avatarFilename"  />
+      </div>
+
+      <div class="form-group">
+        <label for="club">Club:</label>
+        <input type="text" id="club"  />
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email:</label>
+        <input type="email" id="email"  />
+      </div>
+
+      <div class="form-group">
+        <label for="locale">Locale:</label>
+        <input type="text" id="locale" value="en_US"  />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password:</label>
+        <input type="password" id="password"  />
+      </div>
+
+      <div class="form-group">
+        <label for="signupProgramId">Signup Program ID:</label>
+        <input type="text" id="signupProgramId"  />
+      </div>
+
+      <div class="form-group">
+        <label for="userType">User Type:</label>
+        <input type="text" id="userType" value="kid"  />
+      </div>
+
+      <div class="form-group">
+        <label for="username">Username:</label>
+        <input type="text" id="username"  />
+      </div>
+
+      <button type="submit">Submit</button>
+    </form>
+
+    <script>
+      document
+        .getElementById("registrationForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const formData = {
+            avatarFilename: document.getElementById("avatarFilename").value,
+            club: document.getElementById("club").value,
+            email: document.getElementById("email").value,
+            locale: document.getElementById("locale").value,
+            password: document.getElementById("password").value,
+            signupProgramId: document.getElementById("signupProgramId").value,
+            userType: document.getElementById("userType").value,
+            username: document.getElementById("username").value,
+          };
+
+          try {
+            const response = await axios.post(
+              "https://www.chesskid.com/api/v1/register/account",
+              formData
+            );
+            console.log("Response:", response.data);
+            alert("Registration successful!");
+          } catch (error) {
+            console.error("Error:", error);
+            alert("Error submitting registration");
+          }
+        });
+    </script>
+  </body>
+</html>

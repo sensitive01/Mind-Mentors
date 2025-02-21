@@ -1,75 +1,129 @@
-/* eslint-disable react/prop-types */
+import { Bell } from "lucide-react";
 
-import { Maximize2 } from "lucide-react";
+const NotificationItem = ({ time, title, message, type }) => (
+  <div className="flex gap-6 relative">
+    <div className="relative shrink-0 w-[14px]">
+      <div className="absolute left-1/2 top-7 w-[2px] h-full bg-purple-500 -translate-x-1/2" />
+      <div className="absolute left-1/2 top-1.5 w-4 h-4 rounded-full border-2 border-purple-500 bg-white -translate-x-1/2" />
+    </div>
 
-const ProgressBar = ({ color, progress }) => (
-  <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
-    <div
-      className={`h-full rounded-full ${color}`}
-      style={{ width: `${progress}%` }}
-    />
+    <div className="w-[60px] pt-[2px] text-gray-400 text-sm shrink-0">
+      {time}
+    </div>
+
+    <div className="flex-1 pb-8">
+      <div>
+        <span
+          className={`font-medium text-[15px] ${
+            type === "payment"
+              ? "text-orange-500"
+              : type === "upcoming"
+              ? "text-blue-500"
+              : type === "achievement"
+              ? "text-green-500"
+              : "text-black"
+          }`}
+        >
+          {title}
+        </span>
+        <p className="text-gray-400 mt-0.5 text-[14px] leading-relaxed">
+          {message}
+        </p>
+      </div>
+    </div>
   </div>
 );
 
-const TargetItem = ({ title, progress, color }) => (
-  <div className="mb-8 last:mb-0">
-    <h3 className="text-gray-600 text-lg mb-2.5">{title}</h3>
-    <ProgressBar color={color} progress={progress} />
-  </div>
-);
-
-const AchievementTarget = () => {
-  const targets = [
+const ParentNotifications = () => {
+  const notifications = [
     {
-      title: "Get 10 attending",
-      progress: 85,
-      color: "bg-pink-500",
+      time: "Now",
+      title: "Tournament Registration Open",
+      message:
+        "Spring Chess Tournament registration is now open. Register before Feb 25th.",
+      type: "upcoming",
     },
     {
-      title: "Get less than 10 complaint",
-      progress: 90,
-      color: "bg-blue-500",
+      time: "2h ago",
+      title: "Payment Due",
+      message: "Monthly chess class payment for March is due in 3 days.",
+      type: "payment",
     },
     {
-      title: "Get less than 10 complaint",
-      progress: 75,
-      color: "bg-orange-500",
+      time: "Yesterday",
+      title: "Achievement Unlocked",
+      message: "Sarah completed the Advanced Tactics module with distinction!",
+      type: "achievement",
     },
     {
-      title: "Upload 5 videos or articles",
-      progress: 45,
-      color: "bg-green-500",
+      time: "2 days ago",
+      title: "Class Rescheduled",
+      message:
+        "Next week's Wednesday class will be held at 4 PM instead of 3 PM.",
+      type: "upcoming",
     },
     {
-      title: "Completing profile",
-      progress: 95,
-      color: "bg-cyan-500",
+      time: "3 days ago",
+      title: "New Learning Materials",
+      message:
+        "New chess puzzles have been uploaded to your child's dashboard.",
+      type: "upcoming",
+    },
+    {
+      time: "1 week ago",
+      title: "Payment Successful",
+      message: "February month's chess class payment has been processed.",
+      type: "payment",
+    },
+    {
+      time: "2 weeks ago",
+      title: "Class Performance",
+      message:
+        "Monthly progress report has been generated. View your child's performance.",
+      type: "achievement",
     },
   ];
 
   return (
-    <div className="w-full max-w-2xl bg-white rounded-lg border border-[#b115b1] shadow-md p-6">
-      <div className="flex items-center gap-3 mb-10">
-        <div className="w-11 h-11 rounded-full bg-purple-50 flex items-center justify-center">
-          <Maximize2 className="w-5 h-5 text-purple-600" />
+    <div className="w-full max-w-2xl bg-white rounded-lg shadow-md border border-[#b115b1]">
+      <div className="px-6 pt-5">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-11 h-11 rounded-full bg-purple-50 flex items-center justify-center">
+            <Bell className="w-5 h-5 text-purple-500" />
+          </div>
+          <h2 className="text-[#b115b1] text-2xl font-semibold">
+            Notifications
+          </h2>
         </div>
-        <h2 className="text-[#b115b1] text-2xl font-semibold">
-        Achievement Target
-        </h2>
       </div>
 
-      <div className="space-y-8">
-        {targets.map((target, index) => (
-          <TargetItem
-            key={index}
-            title={target.title}
-            progress={target.progress}
-            color={target.color}
-          />
-        ))}
+      <div className="px-6 pb-4">
+        <div
+          className="relative h-[380px] overflow-y-auto pr-3"
+          style={{
+            scrollbarWidth: "thin",
+            scrollbarColor: "#E2E8F0 #CBD5E1",
+          }}
+        >
+          <div className="relative">
+            {notifications.map((notification, index) => (
+              <NotificationItem
+                key={index}
+                time={notification.time}
+                title={notification.title}
+                message={notification.message}
+                type={notification.type}
+              />
+            ))}
+
+            <div className="relative w-[14px]">
+              <div className="absolute left-1/2 bottom-0 w-[2px] h-6 bg-white -translate-x-1/2" />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
-export default AchievementTarget;
+export default ParentNotifications;

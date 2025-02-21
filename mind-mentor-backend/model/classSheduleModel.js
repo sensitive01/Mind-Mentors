@@ -18,6 +18,7 @@ const classScheduleSchema = new mongoose.Schema({
   day: {
     type: String,
   },
+  classDate:{type:Date},
   classTime: {
     type: String,
   },

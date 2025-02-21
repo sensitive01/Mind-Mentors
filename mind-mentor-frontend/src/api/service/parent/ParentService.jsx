@@ -264,3 +264,15 @@ export const getPaidClassData = async (kidId) => {
     return err;
   }
 };
+
+
+export const getParentKidData = async (kidId) => {
+  try {
+    const response = await parentInstance.get(
+      `/parent/get-kid-data/${kidId}`
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};

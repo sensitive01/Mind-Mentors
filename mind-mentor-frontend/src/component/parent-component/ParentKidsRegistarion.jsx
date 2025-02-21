@@ -21,7 +21,6 @@ const ParentKidsRegistration = () => {
     kidsName: state?.childName || "",
     age:regFormData.age|| "",
     gender:regFormData.gender|| "",
-    intention:regFormData.intention|| "",
     schoolName:regFormData.schoolName|| "",
     address:regFormData.address|| "",
     pincode:regFormData.pincode|| "",
@@ -42,13 +41,12 @@ const ParentKidsRegistration = () => {
     e.preventDefault();
     if (isCooldown) return;
 
-    const { kidsName, age, gender, intention, schoolName, address, pincode } =
+    const { kidsName, age, gender, schoolName, address, pincode } =
       formData;
     if (
       !kidsName ||
       !age ||
       !gender ||
-      !intention ||
       !schoolName ||
       !address ||
       !pincode
@@ -171,26 +169,7 @@ const ParentKidsRegistration = () => {
               </div>
             </div>
 
-            <div className="p-4 rounded-lg shadow-sm bg-white border border-primary mb-4">
-              <h3 className="text-lg font-semibold text-primary mb-4">
-                Intention of Parents
-              </h3>
-              <div className="space-y-4">
-                <select
-                  name="intention"
-                  value={formData.intention}
-                  onChange={handleChange}
-                  className="w-full p-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
-                >
-                  <option value="">Select Intention</option>
-                  {intention.map((level) => (
-                    <option key={level} value={level}>
-                      {level}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+        
 
             <div className="bg-white border border-primary p-4 rounded-lg shadow-sm mb-4">
               <h3 className="text-lg font-semibold text-primary mb-4">
