@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 const cookieParser = require("cookie-parser");
-const crypto = require('crypto');
+const crypto = require("crypto");
 
 // const { PORT } = require("./config/variables/variables");
 const dbConnect = require("./config/database/dbConnect");
@@ -25,9 +25,8 @@ app.use(express.json());
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "http://localhost:5174",
   "https://mind-mentors.vercel.app",
-  "https://mind-mentors.vercel.app",
+  "https://mind-mentors-vt11.vercel.app",
 ];
 
 const corsOptions = {
@@ -45,10 +44,17 @@ const corsOptions = {
 app.use(cors(corsOptions));
 function generateSignature(apiKey, apiSecret, meetingNumber, role) {
   const timestamp = new Date().getTime() - 30000;
-  const msg = Buffer.from(apiKey + meetingNumber + timestamp + role).toString('base64');
-  const hash = crypto.createHmac('sha256', apiSecret).update(msg).digest('base64');
-  const signature = Buffer.from(`${apiKey}.${meetingNumber}.${timestamp}.${role}.${hash}`).toString('base64');
-  
+  const msg = Buffer.from(apiKey + meetingNumber + timestamp + role).toString(
+    "base64"
+  );
+  const hash = crypto
+    .createHmac("sha256", apiSecret)
+    .update(msg)
+    .digest("base64");
+  const signature = Buffer.from(
+    `${apiKey}.${meetingNumber}.${timestamp}.${role}.${hash}`
+  ).toString("base64");
+
   return signature;
 }
 
@@ -62,22 +68,22 @@ app.use("/service", serviceRoute);
 app.use("/superadmin", userRoute);
 app.use("/zoom/api", zoomRoute);
 
-app.post('/api/get-signature', (req, res) => {
-  console.log("zoom welcome",req.body)
+app.post("/api/get-signature", (req, res) => {
+  console.log("zoom welcome", req.body);
   const { meetingNumber, role } = req.body;
-  
+
   try {
     const signature = generateSignature(
-     "1R8cvp2KTCGJQl9zzX8gQ",
+      "1R8cvp2KTCGJQl9zzX8gQ",
       "vraDNr4XDr8C3itjb6q8ml5CPMMH8QXs",
       meetingNumber,
       role
     );
-    console.log(signature)
-    
+    console.log(signature);
+
     res.json({ signature });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to generate signature' });
+    res.status(500).json({ error: "Failed to generate signature" });
   }
 });
 
