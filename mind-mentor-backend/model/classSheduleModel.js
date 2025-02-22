@@ -53,6 +53,7 @@ const classScheduleSchema = new mongoose.Schema({
   },
   selectedStudents:[{
     kidId:{type:String},
+    chessKid:{type:String},
     kidName:{type:String},
     status:{type:String,default:"Sheduled"}
   }]

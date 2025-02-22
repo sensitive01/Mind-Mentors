@@ -1,16 +1,15 @@
 const parentModel = require("../../model/parentModel");
 const kidModel = require("../../model/kidModel");
 const demoClassModel = require("../../model/demoClassModel");
-
 const generateChessId = require("../../utils/generateChessId");
 const generateOTP = require("../../utils/generateOtp");
 const operationDeptModel = require("../../model/operationDeptModel");
-
 const ClassSchedule = require("../../model/classSheduleModel");
 const kidAvailability = require("../../model/kidAvailability");
 const ConductedClass = require("../../model/conductedClassSchema");
 const enquiryLogs = require("../../model/enquiryLogs");
 const classPaymentModel = require("../../model/classPaymentModel");
+const notificationSchema = require("../../model/notification/notificationSchema");
 
 const parentLogin = async (req, res) => {
   try {
@@ -1210,7 +1209,7 @@ const savePaymentData = async (req, res) => {
         $set: { status: "Active" },
       }),
       operationDeptModel.findByIdAndUpdate(paymentData.enqId, {
-        $set: { status: "Active", payment: "Success",isNewUser:false },
+        $set: { status: "Active", payment: "Success", isNewUser: false },
       }),
     ]);
 
@@ -1306,35 +1305,111 @@ const getKidPaidFeeData = async (req, res) => {
   }
 };
 
-const getParentKidData = async(req,res)=>{
-  try{
-    const {kidId}=req.params;
-    const kidData = await kidModel.findOne({_id:kidId})
-    console.log("KidData",kidData)
-  }catch(err){
-    console.log("Error in getting the ki datad",err)
+const getParentKidData = async (req, res) => {
+  try {
+    const { kidId } = req.params;
+    const kidData = await kidModel.findOne({ _id: kidId });
+    console.log("KidData", kidData);
+  } catch (err) {
+    console.log("Error in getting the ki datad", err);
   }
-}
+};
 
+const getKidEnquiryStatus = async (req, res) => {
+  try {
+    console.log("Welcome to get enquiry status");
 
+    const { kidId } = req.params;
+    const enqData = await operationDeptModel.findOne(
+      { kidId: kidId },
+      { enquiryStatus: 1, status: 1, scheduleDemo: 1 }
+    );
 
+    console.log("enqData", enqData);
 
+    if (!enqData) {
+      return res
+        .status(404)
+        .json({ success: false, message: "No enquiry data found" });
+    }
 
+    res.status(200).json({ success: true, data: enqData });
+  } catch (err) {
+    console.error("Error in getting the kid data", err);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
 
+const parentBookDemoClassInProfile = async (req, res) => {
+  try {
+    console.log("welcome");
 
+    const { kidId } = req.params;
+    const { formData } = req.body;
+    const { programs, scheduleId } = formData;
 
+    const kidData = await kidModel.findOne(
+      { _id: kidId },
+      { kidsName: 1, chessId: 1, enqId: 1 }
+    );
+    const enqData = await operationDeptModel.findOne(
+      { _id: kidData.enqId },
+      { scheduleDemo: 1 }
+    );
 
+    if (!kidData) {
+      return res.status(404).json({ success: false, message: "Kid not found" });
+    }
 
+    console.log("kidData", kidData);
 
+    const updateClass = await ClassSchedule.findOne({ _id: scheduleId });
 
+    if (!updateClass) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Class schedule not found" });
+    }
 
+    const newStudent = {
+      kidId: kidId,
+      chessKid: kidData.chessId,
+      kidName: kidData.kidsName,
+      status: "Scheduled",
+    };
 
+    await ClassSchedule.updateOne(
+      { _id: scheduleId },
+      { $push: { selectedStudents: newStudent } }
+    );
 
+    enqData.scheduleDemo.status = "Scheduled";
+    await enqData.save();
 
+    const newAlert = new alertModel({
+      subject: "Demo Class Request Submitted",
+      kidId,
+      kidName: kidData.kidsName,
+      chessKidId: kidData.chessId,
+      createdDate: new Date(),
+      assignedTo: "operation",
+    });
 
+    await newAlert.save();
 
+    res.status(200).json({
+      success: true,
+      message: "Demo class booked successfully and notification generated",
+      data: newStudent,
+    });
+  } catch (err) {
+    console.error("Error in booking the demo class", err);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
 
 module.exports = {
+  getKidEnquiryStatus,
   getParentKidData,
   parentLogin,
   parentVerifyOtp,
@@ -1363,4 +1438,5 @@ module.exports = {
   getPaymentNotificationData,
   savePaymentData,
   getKidPaidFeeData,
+  parentBookDemoClassInProfile,
 };

@@ -31,9 +31,10 @@ import {
 import { styled } from '@mui/material/styles';
 import { TentTree } from 'lucide-react';
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const ModernSidebar = () => {
+  const navigate = useNavigate()
   const [openReports, setOpenReports] = useState(false);
   const [openTasks, setOpenTasks] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -55,15 +56,8 @@ const ModernSidebar = () => {
     support: '#E74C3C',
     logout: '#95A5A6'
   };
-  // Function to lighten colors
-  const lightenColor = (color, amount = 0.5) => {
-    const hex = color.replace('#', '');
-    const num = parseInt(hex, 16);
-    const r = Math.min(255, Math.floor((num >> 16) + (255 - (num >> 16)) * amount));
-    const g = Math.min(255, Math.floor(((num >> 8) & 0x00FF) + (255 - ((num >> 8) & 0x00FF)) * amount));
-    const b = Math.min(255, Math.floor((num & 0x0000FF) + (255 - (num & 0x0000FF)) * amount));
-    return `#${(r << 16 | g << 8 | b).toString(16).padStart(6, '0')}`;
-  };
+
+
   // Styled components for enhanced interactivity
   const StyledListItem = styled(ListItem)(({ theme }) => ({
     borderRadius: 8,
@@ -239,44 +233,70 @@ const ModernSidebar = () => {
   
   return (
     <StyledDrawer variant="permanent">
-      <Box sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        py: 2,
-        px: 2
-      }}>
-        {!isCollapsed && (
-          <Box display="flex" flexDirection="column" alignItems="center" mt={2}>
-            {/* Profile Icon */}
-            <Box
-              sx={{
-                width: 60,
-                height: 60,
-                backgroundColor: iconColors.profile || 'primary.main',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                mb: 1,
-              }}
-            >
-              <ProfileIcon sx={{ color: 'white', fontSize: 30 }} />
-            </Box>
-            {/* Name and Role */}
-            <Typography variant="body2" color="#642b8f" fontWeight="bold">
-              Renewal Associate  Manager
-            </Typography>
-            <Divider/>
-            {/* <Typography variant="body2" color="text.secondary">
-              mindmentorz
-            </Typography> */}
-          </Box>
-        )}
-        <IconButton onClick={toggleSidebar}>
-          {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
-        </IconButton>
-      </Box>
+  <Box
+         sx={{
+           display: "flex",
+           alignItems: "center",
+           justifyContent: "space-between",
+           py: 2,
+           px: 2,
+         }}
+       >
+         {!isCollapsed && (
+           <Box
+             sx={{
+               display: "flex",
+               flexDirection: "column",
+               alignItems: "center",
+               width: "100%",
+               gap: 1,
+             }}
+           >
+             <Box
+               onClick={() =>
+                 navigate("/renewal-associate/department/renewalprofile")
+               }
+               sx={{
+                 width: 60,
+                 height: 60,
+                 backgroundColor: iconColors.profile,
+                 borderRadius: "50%",
+                 display: "flex",
+                 alignItems: "center",
+                 justifyContent: "center",
+                 boxShadow: 2,
+                 cursor: "pointer", // Added cursor pointer
+                 "&:hover": {
+                   opacity: 0.9,
+                 },
+               }}
+             >
+               <ProfileIcon sx={{ color: "white", fontSize: 30 }} />
+             </Box>
+             <Typography
+               variant="body2"
+               color="#642b8f"
+               fontWeight="bold"
+               textAlign="center"
+             >
+             Renewal Associates
+             </Typography>
+             <Divider sx={{ width: "100%", my: 1 }} />
+           </Box>
+         )}
+         <IconButton
+           onClick={() => setIsCollapsed(!isCollapsed)}
+           sx={{
+             bgcolor: "#642b8f",
+             color: "white",
+             "&:hover": { bgcolor: "#4a1d6e" },
+             position: isCollapsed ? "static" : "absolute",
+             right: 10,
+           }}
+         >
+           {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
+         </IconButton>
+       </Box>
       <Box sx={{ overflow: 'auto' }}>
         <List disablePadding>
           {menuItems.map((item, index) => (

@@ -1,199 +1,366 @@
-import { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { fetchDemoClassDetails, parentBookNewDemoClass } from '../../../../api/service/parent/ParentService';
+import { useEffect, useState } from "react";
+import { Calendar, Clock, User, Book, ChevronRight, MapPin } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
+import { getDemoSheduleClass } from "../../../../api/service/employee/EmployeeService";
+import { toast, ToastContainer } from "react-toastify";
+import { parentBookDemoClassinProfile } from "../../../../api/service/parent/ParentService";
+
+// Dummy data for physical centers
+const physicalCenters = [
+  {
+    _id: "pc1",
+    centerName: "MindMentorz Chess Academy",
+    address: "123 Chess Street, Jayanagar",
+    slots: [
+      { day: "Monday", times: ["9:00 AM", "2:00 PM", "4:00 PM"] },
+      { day: "Wednesday", times: ["10:00 AM", "3:00 PM", "5:00 PM"] },
+    ],
+    coachName: "Anand Kumar"
+  },
+  {
+    _id: "pc2",
+    centerName: "Royal Chess Club",
+    address: "456 Game Avenue, Indiranagar",
+    slots: [
+      { day: "Tuesday", times: ["9:30 AM", "2:30 PM", "4:30 PM"] },
+      { day: "Thursday", times: ["10:30 AM", "3:30 PM", "5:30 PM"] },
+    ],
+    coachName: "Vishal Sharma"
+  },
+  {
+    _id: "pc3",
+    centerName: "Elite Chess Center",
+    address: "789 Master Road, Koramangala",
+    slots: [
+      { day: "Friday", times: ["9:00 AM", "2:00 PM", "4:00 PM"] },
+      { day: "Saturday", times: ["10:00 AM", "3:00 PM", "5:00 PM"] },
+    ],
+    coachName: "Rajesh Patel"
+  }
+];
 
 const SheduleDemoClass = () => {
   const { id } = useParams();
+  const [formData, setFormData] = useState({
+    program: "",
+    programLevel: "",
+    classMode: "online" // default to online
+  });
+  const [availableSlots, setAvailableSlots] = useState([]);
+  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [selectedCenter, setSelectedCenter] = useState(null);
+  const [selectedCenterSlot, setSelectedCenterSlot] = useState(null);
   const navigate = useNavigate();
-  const [enrollments, setEnrollments] = useState([{ id: Date.now(), program: "", programLevel: "" }]);
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [demoClass, setDemoClass] = useState(null); 
-  const [isScheduled, setIsScheduled] = useState(true); 
 
   useEffect(() => {
     const fetchDemoClass = async () => {
       try {
-        const response = await fetchDemoClassDetails(id); 
-        console.log(response)
-        if (response.status === 200 && response.data.data !== null) {
-          setDemoClass(response.data.data); 
-          setIsScheduled(true); 
-          setEnrollments(response.data.data.programs || [{ id: Date.now(), program: "", programLevel: "" }]);
-          setDate(formatDate(response.data.data.date)); 
-          setTime(response.data.data.time || "");
-        }
+        const response = await getDemoSheduleClass();
+        setAvailableSlots(response.data.scheduleData);
       } catch (error) {
-        console.error("Failed to fetch demo class details:", error);
+        console.error("Error fetching demo classes:", error);
+        // Set some dummy data for demonstration
+        setAvailableSlots([
+          {
+            _id: "1",
+            day: "Monday",
+            classTime: "10:00 AM",
+            coachName: "John Doe",
+            program: "Chess",
+            level: "Beginner"
+          },
+          {
+            _id: "2",
+            day: "Wednesday",
+            classTime: "2:00 PM",
+            coachName: "Jane Smith",
+            program: "Chess",
+            level: "Intermediate"
+          }
+        ]);
       }
     };
-
     fetchDemoClass();
-  }, [id]);
+  }, []);
 
-  const formatDate = (isoDate) => {
-    const dateObj = new Date(isoDate);
-    return dateObj.toISOString().split('T')[0]; 
+  const handleInputChange = (field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    setSelectedSlot(null);
+    setSelectedCenter(null);
+    setSelectedCenterSlot(null);
   };
 
-  const handleAddProgram = () => {
-    setEnrollments([...enrollments, { id: Date.now(), program: "", programLevel: "" }]);
-  };
-
-  const handleRemoveProgram = (index) => {
-    if (enrollments.length > 1) {
-      setEnrollments(enrollments.filter((_, i) => i !== index)); 
-    }
-  };
-
-  const handleProgramChange = (index, field, value) => {
-    setEnrollments((prevEnrollments) =>
-      prevEnrollments.map((enrollment, i) =>
-        i === index
-          ? { ...enrollment, [field]: value } 
-          : enrollment 
-      )
+  const getMatchingSlots = () => {
+    return availableSlots.filter(
+      (slot) =>
+        slot.program === formData.program &&
+        slot.level === formData.programLevel
     );
   };
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-  
-    const programsData = enrollments.map(({ program, programLevel }) => ({ program, programLevel }));
-    const formData = { programs: programsData, date, time };
-  
+
+    if (!formData.program || !formData.programLevel) {
+      toast.error("Please complete all program and level selections");
+      return;
+    }
+
+    if (formData.classMode === "physical" && (!selectedCenter || !selectedCenterSlot)) {
+      toast.error("Please select a center and time slot");
+      return;
+    }
+
+    if (formData.classMode === "online" && !selectedSlot) {
+      toast.error("Please select an online slot");
+      return;
+    }
+
+    const submitData = {
+      programs: [
+        {
+          program: formData.program,
+          programLevel: formData.programLevel,
+          classMode: formData.classMode,
+          centerDetails: formData.classMode === "physical" ? {
+            centerId: selectedCenter?._id,
+            slotTime: selectedCenterSlot
+          } : null
+        },
+      ],
+      scheduleId: selectedSlot?._id,
+      hasSchedule: !!selectedSlot || !!selectedCenterSlot,
+    };
+
     try {
-      if (isScheduled) {
-        await parentBookNewDemoClass(id, formData);
-        toast.success("Demo class updated successfully!");
-      } else {
-        await parentBookNewDemoClass(id, formData);
-        toast.success("Demo class booked successfully!");
+      const response = await parentBookDemoClassinProfile(submitData, id);
+      if (response.status === 201) {
+        toast.success("Registration successful! Your demo class has been scheduled.");
+        localStorage.setItem("parentId", response?.data?.parentId);
+        setTimeout(() => {
+          navigate("/parent/dashboard");
+        }, 1500);
       }
-  
-      setTimeout(() => {
-        navigate("/parent/dashboard");
-      }, 1500);
     } catch (error) {
-      console.error("Error booking or updating demo class:", error);
-      toast.error("Operation failed. Please try again.");
-    } finally {
-      setLoading(false);
+      toast.error("Registration failed. Please try again.");
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center mb-6">
-          <button onClick={() => navigate("/parent/kid/attendance/:id")} className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200">
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
-          </button>
-          <h1 className="ml-4 text-2xl font-bold text-primary">Demo Class</h1>
-        </div>
+    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-3xl mx-auto">
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div className="bg-gradient-to-r from-primary to-primary px-6 py-8 text-white">
+            <h1 className="text-3xl font-bold">Schedule a Demo Class</h1>
+            <p className="mt-2 text-purple-100">
+              Choose your preferred program and discover the perfect learning
+              journey for your child
+            </p>
+          </div>
 
-        <div className="bg-white rounded-lg shadow-md p-9">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {enrollments.map((enrollment, index) => (
-              <div key={index} className="relative">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label htmlFor={`program-${index}`} className="font-medium block mb-2">Program</label>
-                    <select
-                      id={`program-${index}`}
-                      className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent w-full"
-                      value={enrollment.program}
-                      onChange={(e) => handleProgramChange(index, 'program', e.target.value)}
-                    >
-                      <option value="">Choose a program</option>
-                      <option value="Chess">Chess</option>
-                      <option value="Coding">Coding</option>
-                      <option value="Rubiks Cube">Rubiks Cube</option>
-                      <option value="Robotics">Robotics</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label htmlFor={`program-level-${index}`} className="font-medium block mb-2">Program Level</label>
-                    <select
-                      id={`program-level-${index}`}
-                      className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent w-full"
-                      value={enrollment.programLevel}
-                      onChange={(e) => handleProgramChange(index, 'programLevel', e.target.value)}
-                    >
-                      <option value="">Choose a level</option>
-                      <option value="Beginner">Beginner</option>
-                      <option value="Intermediate">Intermediate</option>
-                      <option value="Advanced">Advanced</option>
-                    </select>
-                  </div>
-                </div>
-                {enrollments.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveProgram(index)} 
-                    className="absolute -right-6 top-10 text-red-500 hover:text-red-700"
-                  >
-                    <Trash2 size={20} />
-                  </button>
-                )}
+          <form onSubmit={handleSubmit} className="p-6 space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="flex items-center text-sm font-medium text-gray-700">
+                  <Book className="w-4 h-4 mr-2" />
+                  Select Program
+                </label>
+                <select
+                  value={formData.program}
+                  onChange={(e) => handleInputChange("program", e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white shadow-sm"
+                  required
+                >
+                  <option value="">Choose a program</option>
+                  <option value="Chess">Chess</option>
+                  <option value="Coding">Coding</option>
+                  <option value="Rubiks Cube">Rubiks Cube</option>
+                  <option value="Robotics">Robotics</option>
+                </select>
               </div>
-            ))}
 
-            <button type="button" onClick={handleAddProgram} className="flex items-center gap-2 text-primary hover:text-opacity-80">
-              <Plus size={20} />
-              Add Another Program
-            </button>
-
-            <div>
-              <label htmlFor="date-time" className="font-medium block mb-2">Suitable Date & Time</label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="flex flex-col">
-                  <label htmlFor="date" className="text-sm mb-2">Date</label>
-                  <input
-                    type="date"
-                    id="date"
-                    className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <label htmlFor="time" className="text-sm mb-2">Time</label>
-                  <input
-                    type="time"
-                    id="time"
-                    className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent"
-                    value={time}
-                    onChange={(e) => setTime(e.target.value)}
-                  />
-                </div>
+              <div className="space-y-2">
+                <label className="flex items-center text-sm font-medium text-gray-700">
+                  <ChevronRight className="w-4 h-4 mr-2" />
+                  Select Level
+                </label>
+                <select
+                  value={formData.programLevel}
+                  onChange={(e) => handleInputChange("programLevel", e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white shadow-sm"
+                  required
+                >
+                  <option value="">Choose a level</option>
+                  <option value="Beginner">Beginner</option>
+                  <option value="Intermediate">Intermediate</option>
+                  <option value="Advanced">Advanced</option>
+                </select>
               </div>
             </div>
 
-            <button
-              type="submit"
-              className="w-full py-3 bg-primary text-white rounded-md hover:bg-opacity-90 transition-all disabled:opacity-50"
-              disabled={loading}
-            >
-              {loading ? "Saving..." : isScheduled ? "Update Demo Class" : "Book Demo Class"}
-            </button>
+            {formData.program && formData.programLevel && (
+              <div className="space-y-6">
+                <div className="flex gap-6">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="classMode"
+                      value="online"
+                      checked={formData.classMode === "online"}
+                      onChange={(e) => handleInputChange("classMode", e.target.value)}
+                      className="w-4 h-4 text-purple-600"
+                    />
+                    <span>Online Class</span>
+                  </label>
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="classMode"
+                      value="physical"
+                      checked={formData.classMode === "physical"}
+                      onChange={(e) => handleInputChange("classMode", e.target.value)}
+                      className="w-4 h-4 text-purple-600"
+                    />
+                    <span>Physical Center</span>
+                  </label>
+                </div>
+
+                {formData.classMode === "online" ? (
+                  <div className="mt-8">
+                    <h4 className="text-lg font-medium text-gray-800 mb-4">
+                      Available Online Demo Classes
+                    </h4>
+                    <div className="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                      <div className="grid gap-4">
+                        {getMatchingSlots().length > 0 ? (
+                          getMatchingSlots().map((slot) => (
+                            <div
+                              key={slot._id}
+                              onClick={() => setSelectedSlot(slot)}
+                              className={`p-4 rounded-lg cursor-pointer transition-all duration-200 hover:transform hover:scale-[1.01] ${
+                                selectedSlot?._id === slot._id
+                                  ? "bg-purple-50 border-2 border-purple-500"
+                                  : "border border-gray-200 hover:border-purple-300 hover:shadow-md"
+                              }`}
+                            >
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div className="flex items-center">
+                                  <Calendar className="w-5 h-5 text-primary mr-2 flex-shrink-0" />
+                                  <span className="font-medium">{slot.day}</span>
+                                </div>
+                                <div className="flex items-center">
+                                  <Clock className="w-5 h-5 text-primary mr-2 flex-shrink-0" />
+                                  <span>{slot.classTime}</span>
+                                </div>
+                                <div className="flex items-center">
+                                  <User className="w-5 h-5 text-primary mr-2 flex-shrink-0" />
+                                  <span>Coach {slot.coachName}</span>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center p-8 bg-gray-50 rounded-lg border border-gray-200">
+                            <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                            <p className="text-gray-600">
+                              No scheduled online demo classes available for this program and
+                              level. Register anyway, and our team will contact you to
+                              schedule your demo class.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-8">
+                    <h4 className="text-lg font-medium text-gray-800 mb-4">
+                      Available Physical Centers
+                    </h4>
+                    <div className="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                      <div className="grid gap-4">
+                        {physicalCenters.map((center) => (
+                          <div key={center._id} className="border rounded-lg p-4">
+                            <div
+                              onClick={() => {
+                                setSelectedCenter(center);
+                                setSelectedCenterSlot(null);
+                              }}
+                              className={`cursor-pointer ${
+                                selectedCenter?._id === center._id
+                                  ? "text-purple-600"
+                                  : "text-gray-800"
+                              }`}
+                            >
+                              <div className="flex items-start gap-2 mb-2">
+                                <MapPin className="w-5 h-5 flex-shrink-0 mt-1" />
+                                <div>
+                                  <h5 className="font-medium">{center.centerName}</h5>
+                                  <p className="text-sm text-gray-600">{center.address}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-gray-600">
+                                <User className="w-4 h-4" />
+                                <span>Coach {center.coachName}</span>
+                              </div>
+                            </div>
+
+                            {selectedCenter?._id === center._id && (
+                              <div className="mt-4 pl-4 border-t pt-4">
+                                <h6 className="text-sm font-medium mb-2">Available Slots:</h6>
+                                <div className="grid grid-cols-2 gap-4">
+                                  {center.slots.map((slot, idx) => (
+                                    <div key={idx} className="space-y-2">
+                                      <div className="flex items-center gap-2 text-sm">
+                                        <Calendar className="w-4 h-4" />
+                                        <span className="font-medium">{slot.day}</span>
+                                      </div>
+                                      <div className="grid gap-2">
+                                        {slot.times.map((time, timeIdx) => (
+                                          <button
+                                            key={timeIdx}
+                                            type="button"
+                                            onClick={() => setSelectedCenterSlot({
+                                              day: slot.day,
+                                              time: time
+                                            })}
+                                            className={`px-3 py-1 text-sm rounded ${
+                                              selectedCenterSlot?.day === slot.day &&
+                                              selectedCenterSlot?.time === time
+                                                ? "bg-purple-100 text-purple-700"
+                                                : "bg-gray-100 hover:bg-gray-200"
+                                            }`}
+                                          >
+                                            {time}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="mt-8">
+              <button
+                type="submit"
+                className="w-full px-8 py-4 bg-gradient-to-r from-primary to-primary text-white rounded-lg hover:from-primary hover:to-purple-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.01]"
+              >
+                Schedule Demo Class
+              </button>
+            </div>
           </form>
         </div>
       </div>
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        closeOnClick
-        pauseOnHover
-        draggable
-        pauseOnFocusLoss
-      />
+      <ToastContainer position="top-right" autoClose={5000} />
     </div>
   );
 };

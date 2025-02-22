@@ -30,7 +30,7 @@ import {
 import { styled } from "@mui/material/styles";
 import { TentTree } from "lucide-react";
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const ModernSidebar = () => {
   const [openReports, setOpenReports] = useState(false);
@@ -38,6 +38,7 @@ const ModernSidebar = () => {
   const [openLeadManagement, setOpenLeadManagement] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Auto-expand parent menu when child is active
   useEffect(() => {
@@ -141,18 +142,6 @@ const ModernSidebar = () => {
       color: iconColors.dashboard,
       link: "/operation/department/dashboard",
     },
-    // {
-    //   icon: <BusinessCenter />,
-    //   text: "Lead Management",
-    //   color: iconColors.leads,
-    //   subItems: [
-    //     { text: "Enquiries", link: "/operation/department/enquiry-list" },
-    //     { text: "Prospects", link: "/operation/department/prospects" },
-    //   ],
-    //   open: openLeadManagement,
-    //   onClick: () => setOpenLeadManagement(!openLeadManagement),
-    // },
-
     {
       icon: <BusinessCenter />,
       text: "Lead Management",
@@ -171,20 +160,6 @@ const ModernSidebar = () => {
       color: iconColors.tasks,
       link: "/operation/department/task-table",
     },
-    // {
-    //   icon: <AssignmentOutlined />,
-    //   text: "Tasks",
-    //   color: iconColors.tasks,
-    //   subItems: [
-    //     { text: "My Tasks", link: "/operation/department/list-mytask" },
-    //     {
-    //       text: "Task Assigned By Me",
-    //       link: "/operation/department/list-task-assigned-me",
-    //     },
-    //   ],
-    //   open: openTasks,
-    //   onClick: () => setOpenTasks(!openTasks),
-    // },
     {
       icon: <CalendarToday />,
       text: "Demo Class Schedule",
@@ -206,7 +181,10 @@ const ModernSidebar = () => {
           text: "Student Attendance",
           link: "/operation/department/student-report",
         },
-        { text: "Coach Feedback", link: "/operation/department/coach-feedback" },
+        {
+          text: "Coach Feedback",
+          link: "/operation/department/coach-feedback",
+        },
       ],
       open: openReports,
       onClick: () => setOpenReports(!openReports),
@@ -313,6 +291,9 @@ const ModernSidebar = () => {
             }}
           >
             <Box
+              onClick={() =>
+                navigate("/operation/department/enrollment-profile")
+              }
               sx={{
                 width: 60,
                 height: 60,
@@ -322,6 +303,10 @@ const ModernSidebar = () => {
                 alignItems: "center",
                 justifyContent: "center",
                 boxShadow: 2,
+                cursor: "pointer", // Added cursor pointer
+                "&:hover": {
+                  opacity: 0.9,
+                },
               }}
             >
               <ProfileIcon sx={{ color: "white", fontSize: 30 }} />

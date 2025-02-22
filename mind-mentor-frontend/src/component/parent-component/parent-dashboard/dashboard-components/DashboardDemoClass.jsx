@@ -8,9 +8,9 @@ import {
   Video,
   RefreshCw,
   Check,
-  MessageSquare,
+
   Clock,
-  Star,
+  
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getDemoClass } from "../../../../api/service/parent/ParentService";
@@ -33,7 +33,7 @@ const DashboardDemoClass = () => {
         }
       } catch (err) {
         console.log("Error in getting demo class", err);
-        setError("Failed to fetch demo class details");
+
       }
     };
 

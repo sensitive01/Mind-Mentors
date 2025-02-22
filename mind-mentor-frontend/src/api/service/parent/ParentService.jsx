@@ -276,3 +276,31 @@ export const getParentKidData = async (kidId) => {
     return err;
   }
 };
+
+
+export const fetchEnquiryStatus = async (kidId) => {
+  try {
+    const response = await parentInstance.get(
+      `/parent/get-kid-enquiry-status/${kidId}`
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+
+export const parentBookDemoClassinProfile = async (formData, kidId) => {
+  try {
+    console.log(formData, kidId)
+    const response = await parentInstance.put(
+      `/parent/parent-book-demo-class-in-profile/${kidId}`,
+      {
+        formData,
+      }
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};

@@ -37,6 +37,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 const ModernSidebar = () => {
+  const navigate = useNavigate()
   const [openReports, setOpenReports] = useState(false);
   const [openTasks, setOpenTasks] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -122,7 +123,7 @@ const ModernSidebar = () => {
       icon: <DashboardIcon />,
       text: 'Dashboard',
       color: iconColors.dashboard,
-      link: '/serviceDashboard',
+      link: '/service-delivery/department/dashboard',
     },
     {
       icon: <DashboardIcon />,
@@ -165,12 +166,12 @@ const ModernSidebar = () => {
       color: iconColors.leaves,
       link: '/service-delivery/department/leaves',
     },
-    {
-      icon: <KidsIcon />,
-      text: 'Kids',
-      color: iconColors.kids,
-      link: '/servicekids',
-    },
+    // {
+    //   icon: <KidsIcon />,
+    //   text: 'Kids',
+    //   color: iconColors.kids,
+    //   link: '/servicekids',
+    // },
     {
       icon: <TentTree />,
       text: 'Holidays',
@@ -222,48 +223,70 @@ const ModernSidebar = () => {
   ];
   return (
     <StyledDrawer variant="permanent">
-  <Box sx={{
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  py: 2,
-  px: 2
-}}>
-  {!isCollapsed && (
-    <Box sx={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center',
-      width: '100%',
-      gap: 1
-    }}>
-      <Box sx={{
-        width: 60,
-        height: 60,
-        backgroundColor: iconColors.profile,
-        borderRadius: '50%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        boxShadow: 2
-      }}>
-        <ProfileIcon sx={{ color: 'white', fontSize: 30 }} />
-      </Box>
-      <Typography 
-        variant="body2" 
-        color="#642b8f" 
-        fontWeight="bold"
-        textAlign="center"
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          py: 2,
+          px: 2,
+        }}
       >
-        Service Delivery Manager
-      </Typography>
-      <Divider sx={{ width: '100%' }} />
-    </Box>
-  )}
-  <IconButton onClick={toggleSidebar}>
-    {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
-  </IconButton>
-</Box>
+        {!isCollapsed && (
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              width: "100%",
+              gap: 1,
+            }}
+          >
+            <Box
+              onClick={() =>
+                navigate("/service-delivery/department/serviceProfile")
+              }
+              sx={{
+                width: 60,
+                height: 60,
+                backgroundColor: iconColors.profile,
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: 2,
+                cursor: "pointer", // Added cursor pointer
+                "&:hover": {
+                  opacity: 0.9,
+                },
+              }}
+            >
+              <ProfileIcon sx={{ color: "white", fontSize: 30 }} />
+            </Box>
+            <Typography
+              variant="body2"
+              color="#642b8f"
+              fontWeight="bold"
+              textAlign="center"
+            >
+             Service Delivary
+            </Typography>
+            <Divider sx={{ width: "100%", my: 1 }} />
+          </Box>
+        )}
+        <IconButton
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          sx={{
+            bgcolor: "#642b8f",
+            color: "white",
+            "&:hover": { bgcolor: "#4a1d6e" },
+            position: isCollapsed ? "static" : "absolute",
+            right: 10,
+          }}
+        >
+          {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
+        </IconButton>
+      </Box>
       <Box sx={{ overflow: 'auto' }}>
         <List disablePadding>
           {menuItems.map((item, index) => (
