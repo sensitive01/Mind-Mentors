@@ -566,3 +566,40 @@ export const getDiscountAmount = async (enqId) => {
   );
   return response;
 };
+
+
+export const savePhysicalCenterData = async (formData) => {
+  const response = await userInstance.post(
+    `/save-physcical-center-data`,formData
+  );
+  return response;
+};
+
+
+export const fetchPhycicalCenterData = async () => {
+  const response = await userInstance.get(
+    `/get-physcical-center-data`
+  );
+  return response;
+};
+
+export const getPhycicalCenterData = async () => {
+  const response = await userInstance.get(
+    `/get-physcical-center-data`
+  );
+  return response;
+};
+
+export const getIndividualPhysicalCenterData = async (id) => {
+  const response = await userInstance.get(
+    `/get-individual-physcical-center-data/${id}`
+  );
+  return response;
+};
+
+export const updatePhysicalCenterData = async (id,formData) => {
+  const response = await userInstance.put(
+    `/update-individual-physcical-center-data/${id}`,{formData}
+  );
+  return response;
+};

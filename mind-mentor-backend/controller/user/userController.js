@@ -17,6 +17,7 @@ const {
   Transaction,
   Chat,
 } = require("../../model/tournamentsModel");
+const PhysicalCenter = require("../../model/physicalcenter/physicalCenterShema");
 
 const createUser = async (req, res) => {
   try {
@@ -1047,7 +1048,94 @@ const getAllVouchers = async (req, res) => {
   }
 };
 
+
+const savePhysicalCenterData = async (req, res) => {
+  try {
+    const formData = req.body;
+    console.log("Received Form Data:", formData);
+
+
+    const newCenter = new PhysicalCenter({
+      centerName: formData.centerName,
+      address: formData.address,
+      city: formData.city,
+      state: formData.state,
+      pincode: formData.pincode,
+      email: formData.email,
+      phoneNumber: formData.phoneNumber,
+      photos: formData.photos || [],
+    });
+
+   
+    const savedCenter = await newCenter.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Physical center data saved successfully",
+      data: savedCenter,
+    });
+  } catch (err) {
+    console.error("Error in saving the physical center data", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to save physical center data",
+      error: err.message,
+    });
+  }
+};
+
+const getPhysicalCenterData = async (req, res) => {
+  try {
+    const physicalCenters = await PhysicalCenter.find();
+    res.status(200).json({
+      success: true,
+      message: "Physical center data retrieved successfully",
+       physicalCenters,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve physical center data",
+      error: err.message,
+    });
+  }
+};
+
+
+const getIndividualPhysicalCenterData = async (req, res) => {
+  try {
+   
+    const { centerId } = req.params;
+    const physicalCenter = await PhysicalCenter.findById(centerId);
+
+    if (!physicalCenter) {
+      return res.status(404).json({
+        success: false,
+        message: "Physical center not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Physical center data retrieved successfully",
+      data: physicalCenter,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve physical center data",
+      error: err.message,
+    });
+  }
+};
+
+
+
+
 module.exports = {
+  getIndividualPhysicalCenterData,
+  getPhysicalCenterData,
+  savePhysicalCenterData,
   getAllVouchers,
   addNewVoucher,
   insertPackage,

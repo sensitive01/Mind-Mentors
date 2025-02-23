@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { 
+import React, { useState } from "react";
+import {
   AssignmentOutlined as AttendanceIcon,
   ChevronLeft,
   ChevronRight,
@@ -16,11 +16,13 @@ import {
   School as ProgramsIcon,
   Assessment as ReportsIcon,
   Help as SupportIcon,
-  Assignment as TaskIcon
-} from '@mui/icons-material';
+  Assignment as TaskIcon,
+  EventAvailable as CoachTime,
+} from "@mui/icons-material";
 import {
   Box,
   Collapse,
+  Divider,
   Drawer,
   IconButton,
   List,
@@ -28,11 +30,11 @@ import {
   ListItemIcon,
   ListItemText,
   Tooltip,
-  Typography
-} from '@mui/material';
-import { styled } from '@mui/material/styles';
-import { useNavigate } from 'react-router-dom';
-import { TentTree } from 'lucide-react';
+  Typography,
+} from "@mui/material";
+import { styled } from "@mui/material/styles";
+import { Link, useNavigate } from "react-router-dom";
+import { TentTree } from "lucide-react";
 
 const ModernSidebar = () => {
   const [openReports, setOpenReports] = useState(false);
@@ -41,78 +43,78 @@ const ModernSidebar = () => {
   const navigate = useNavigate();
 
   const iconColors = {
-    profile: '#FF6B6B',
-    dashboard: '#4ECDC4',
-    enquiries: '#4ECDC4',
-    kids: '#45B7D1',
-    attendance: '#FDCB6E',
-    leaves: '#6C5CE7',
-    invoices: '#FF8A5B',
-    nearbyCenter: '#2ECC71',
-    reports: '#9B59B6',
-    tasks: '#3498DB',
-    classSchedules: '#E67E22',
-    programs: '#1ABC9C',
-    support: '#E74C3C',
-    logout: '#95A5A6'
+    profile: "#FF6B6B",
+    dashboard: "#4ECDC4",
+    enquiries: "#4ECDC4",
+    kids: "#45B7D1",
+    attendance: "#FDCB6E",
+    leaves: "#6C5CE7",
+    invoices: "#FF8A5B",
+    nearbyCenter: "#2ECC71",
+    reports: "#9B59B6",
+    tasks: "#3498DB",
+    classSchedules: "#E67E22",
+    programs: "#1ABC9C",
+    support: "#E74C3C",
+    logout: "#95A5A6",
   };
 
   const StyledListItem = styled(ListItem)(({ theme }) => ({
     borderRadius: 8,
-    margin: '2px 0',
-    padding: '8px 16px',
-    display: 'flex',
-    alignItems: 'center',
-    transition: 'all 0.3s ease',
-    position: 'relative',
-    overflow: 'hidden',
+    margin: "2px 0",
+    padding: "8px 16px",
+    display: "flex",
+    alignItems: "center",
+    transition: "all 0.3s ease",
+    position: "relative",
+    overflow: "hidden",
     gap: 8,
-    '&::before': {
+    "&::before": {
       content: '""',
-      position: 'absolute',
+      position: "absolute",
       top: 0,
       left: 0,
       width: 0,
-      height: '100%',
-      backgroundColor: '#642b8f',
-      transition: 'width 0.3s ease',
-      zIndex: 0
+      height: "100%",
+      backgroundColor: "#642b8f",
+      transition: "width 0.3s ease",
+      zIndex: 0,
     },
-    '&:hover': {
-      '&::before': {
-        width: '100%'
+    "&:hover": {
+      "&::before": {
+        width: "100%",
       },
-      '& .MuiListItemIcon-root, & .MuiListItemText-primary': {
-        color: 'white',
-        zIndex: 1
+      "& .MuiListItemIcon-root, & .MuiListItemText-primary": {
+        color: "white",
+        zIndex: 1,
       },
-      '& .MuiListItemIcon-root svg': {
-        filter: 'brightness(200%)'
+      "& .MuiListItemIcon-root svg": {
+        filter: "brightness(200%)",
       },
-      boxShadow: theme.shadows[2]
+      boxShadow: theme.shadows[2],
     },
-    '& .MuiListItemIcon-root, & .MuiListItemText-primary': {
-      position: 'relative',
+    "& .MuiListItemIcon-root, & .MuiListItemText-primary": {
+      position: "relative",
       zIndex: 1,
-      transition: 'color 0.3s ease'
+      transition: "color 0.3s ease",
     },
-    '& .MuiListItemIcon-root': {
+    "& .MuiListItemIcon-root": {
       marginRight: 8,
-      minWidth: 'auto'
-    }
+      minWidth: "auto",
+    },
   }));
 
   const StyledDrawer = styled(Drawer)(() => ({
     width: isCollapsed ? 80 : 280,
     flexShrink: 0,
-    '& .MuiDrawer-paper': {
+    "& .MuiDrawer-paper": {
       width: isCollapsed ? 80 : 280,
-      boxSizing: 'border-box',
-      backgroundColor: 'white',
-      borderRight: 'none',
-      transition: 'width 0.3s ease',
-      overflow: 'hidden'
-    }
+      boxSizing: "border-box",
+      backgroundColor: "white",
+      borderRight: "none",
+      transition: "width 0.3s ease",
+      overflow: "hidden",
+    },
   }));
 
   const handleReportsClick = () => setOpenReports(!openReports);
@@ -120,140 +122,180 @@ const ModernSidebar = () => {
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
 
   const menuItems = [
-    { 
-      icon: <ProfileIcon />, 
-      text: 'Profile', 
-      color: iconColors.profile, 
-      path: '/centeradmin/profile'
+    // {
+    //   icon: <ProfileIcon />,
+    //   text: 'Profile',
+    //   color: iconColors.profile,
+    //   path: '/centeradmin/profile'
+    // },
+    {
+      icon: <DashboardIcon />,
+      text: "Dashboard",
+      color: iconColors.dashboard,
+      path: "/centeradmin/department/dashboard",
     },
-    { 
-      icon: <DashboardIcon />, 
-      text: 'Dashboard', 
-      color: iconColors.dashboard, 
-      path: '/centeradmin-dashboard'
+    {
+      icon: <ClassScheduleIcon />,
+      text: "Class Schedules",
+      color: iconColors.classSchedules,
+      path: "/centeradmin/department/class-schedule-list",
     },
-    { 
-      icon: <ClassScheduleIcon />, 
-      text: 'Class Schedules', 
-      color: iconColors.classSchedules, 
-      path: '/centeradmin/department/class-schedule-list'
+    {
+      icon: <DashboardIcon />,
+      text: "Enquiries",
+      color: iconColors.enquiries,
+      path: "/centeradmin-enquiry-list",
     },
-    { 
-      icon: <DashboardIcon />, 
-      text: 'Enquiries', 
-      color: iconColors.enquiries, 
-      path: '/centeradmin-enquiry-list'
+    {
+      icon: <KidsIcon />,
+      text: "Kids",
+      color: iconColors.kids,
+      path: "/centeradmin-kids",
     },
-    { 
-      icon: <KidsIcon />, 
-      text: 'Kids', 
-      color: iconColors.kids, 
-      path: '/centeradmin-kids'
+    {
+      icon: <CoachTime />,
+      text: "Coach Availability",
+      color: iconColors.coach,
+      path: "/centeradmin/department/coachAvailabilityTable",
     },
-    { 
-      icon: <AttendanceIcon />, 
-      text: 'Attendance', 
-      color: iconColors.attendance, 
-      path: '/centeradmin/department/attendance'
+    {
+      icon: <AttendanceIcon />,
+      text: "Attendance",
+      color: iconColors.attendance,
+      path: "/centeradmin/department/attendance",
     },
-    { 
-      icon: <LeavesIcon />, 
-      text: 'Leaves', 
-      color: iconColors.leaves, 
-      path: '/centeradmin/department/leaves'
+    {
+      icon: <LeavesIcon />,
+      text: "Leaves",
+      color: iconColors.leaves,
+      path: "/centeradmin/department/leaves",
     },
-    { 
-      icon: <InvoicesIcon />, 
-      text: 'Invoices', 
-      color: iconColors.invoices, 
-      path: '/centeradmin/invoice'
+    {
+      icon: <InvoicesIcon />,
+      text: "Invoices",
+      color: iconColors.invoices,
+      path: "/centeradmin/invoice",
     },
-    { 
-      icon: <NearbyIcon />, 
-      text: 'Nearby Center', 
-      color: iconColors.nearbyCenter, 
-      path: '#'
+    {
+      icon: <NearbyIcon />,
+      text: "Nearby Center",
+      color: iconColors.nearbyCenter,
+      path: "#",
     },
     {
       icon: <ReportsIcon />,
-      text: 'Reports',
+      text: "Reports",
       color: iconColors.reports,
-      
+
       subItems: [
-        { 
-          icon: <ReportsIcon />, 
-          text: 'Students Feedback', 
-          path: '/centeradmin/coachfeedback'
+        {
+          icon: <ReportsIcon />,
+          text: "Students Feedback",
+          path: "/centeradmin/coachfeedback",
         },
-        { 
-          icon: <ReportsIcon />, 
-          text: 'Student Attendance Report', 
-          path: '/centeradmin/studentreport'
-        }
+        {
+          icon: <ReportsIcon />,
+          text: "Student Attendance Report",
+          path: "/centeradmin/studentreport",
+        },
       ],
       open: openReports,
-      onClick: handleReportsClick
+      onClick: handleReportsClick,
     },
     {
       icon: <TaskIcon />,
-      text: 'Tasks',
+      text: "Tasks",
       color: iconColors.tasks,
-      
+
       subItems: [
-        { 
-          icon: <TaskIcon />, 
-          text: 'My Tasks', 
-          path: '/centeradmin/department/list-mytask'
+        {
+          icon: <TaskIcon />,
+          text: "My Tasks",
+          path: "/centeradmin/department/list-mytask",
         },
-        { 
-          icon: <TaskIcon />, 
-          text: 'Tasks Assigned By Me', 
-          path: '/centeradmin/department/list-task-assigned-me'
-        }
+        {
+          icon: <TaskIcon />,
+          text: "Tasks Assigned By Me",
+          path: "/centeradmin/department/list-task-assigned-me",
+        },
       ],
       open: openTasks,
-      onClick: handleTasksClick
+      onClick: handleTasksClick,
     },
 
-    { 
-      icon: <TentTree />, 
-      text: 'Holiday', 
-      color: iconColors.classSchedules, 
-      path: '/centreAdminHoliday'
+    {
+      icon: <TentTree />,
+      text: "Holiday",
+      color: iconColors.classSchedules,
+      path: "/centreAdminHoliday",
     },
-    { 
-      icon: <ProgramsIcon />, 
-      text: 'Programs', 
-      color: iconColors.programs, 
-      path: '#'
+    {
+      icon: <ProgramsIcon />,
+      text: "Programs",
+      color: iconColors.programs,
+      path: "#",
     },
-    { 
-      icon: <SupportIcon />, 
-      text: 'Support', 
-      color: iconColors.support, 
-      path: '/centeradmin-tasks/supports'
+    {
+      icon: <SupportIcon />,
+      text: "Support",
+      color: iconColors.support,
+      path: "/centeradmin-tasks/supports",
     },
-    { 
-      icon: <LogoutIcon />, 
-      text: 'Logout', 
-      color: iconColors.logout, 
-      path: '/'
-    }
+    {
+      icon: <LogoutIcon />,
+      text: "Logout",
+      color: iconColors.logout,
+      path: "/",
+    },
   ];
 
   return (
     <StyledDrawer variant="permanent">
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 2, px: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          py: 2,
+          px: 2,
+        }}
+      >
         {!isCollapsed && (
-          <Typography variant="h6" color="primary" fontWeight="bold">
-            School App
-          </Typography>
+          <Box display="flex" flexDirection="column" alignItems="center" mt={2}>
+            {/* Profile Icon with Link */}
+            <Link to="/centeradmin/profile" style={{ textDecoration: "none" }}>
+              <Box
+                sx={{
+                  width: 60,
+                  height: 60,
+                  backgroundColor: iconColors.profile || "primary.main",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  mb: 1,
+                }}
+              >
+                <ProfileIcon sx={{ color: "white", fontSize: 30 }} />
+              </Box>
+              {/* Name and Role */}
+              <Typography
+                variant="body2"
+                color="#642b8f"
+                fontWeight="bold"
+                textAlign="center"
+              >
+                Center Admin
+              </Typography>
+            </Link>
+            <Divider />
+          </Box>
         )}
         <IconButton onClick={toggleSidebar}>
           {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
         </IconButton>
       </Box>
-      <Box sx={{ overflow: 'auto' }}>
+      <Box sx={{ overflow: "auto" }}>
         <List disablePadding>
           {menuItems.map((item, index) => (
             <React.Fragment key={index}>
@@ -265,14 +307,14 @@ const ModernSidebar = () => {
                     navigate(item.path);
                   }}
                   sx={{
-                    justifyContent: isCollapsed ? 'center' : 'flex-start',
-                    paddingLeft: isCollapsed ? 0 : undefined
+                    justifyContent: isCollapsed ? "center" : "flex-start",
+                    paddingLeft: isCollapsed ? 0 : undefined,
                   }}
                 >
                   <ListItemIcon>
                     {React.cloneElement(item.icon, {
                       style: { color: item.color },
-                      fontSize: 'medium'
+                      fontSize: "medium",
                     })}
                   </ListItemIcon>
                   {!isCollapsed && (
@@ -281,12 +323,13 @@ const ModernSidebar = () => {
                         primary={item.text}
                         primaryTypographyProps={{
                           sx: {
-                            fontSize: '0.95rem',
-                            fontWeight: 500
-                          }
+                            fontSize: "0.95rem",
+                            fontWeight: 500,
+                          },
                         }}
                       />
-                      {item.subItems && (item.open ? <ExpandLess /> : <ExpandMore />)}
+                      {item.subItems &&
+                        (item.open ? <ExpandLess /> : <ExpandMore />)}
                     </>
                   )}
                 </StyledListItem>
@@ -300,22 +343,22 @@ const ModernSidebar = () => {
                         button
                         onClick={() => navigate(subItem.path)}
                         sx={{
-                          pl: 4
+                          pl: 4,
                         }}
                       >
                         <ListItemIcon>
                           {React.cloneElement(subItem.icon, {
                             style: { color: item.color },
-                            fontSize: 'small'
+                            fontSize: "small",
                           })}
                         </ListItemIcon>
                         <ListItemText
                           primary={subItem.text}
                           primaryTypographyProps={{
                             sx: {
-                              fontSize: '0.85rem',
-                              fontWeight: 400
-                            }
+                              fontSize: "0.85rem",
+                              fontWeight: 400,
+                            },
                           }}
                         />
                       </StyledListItem>

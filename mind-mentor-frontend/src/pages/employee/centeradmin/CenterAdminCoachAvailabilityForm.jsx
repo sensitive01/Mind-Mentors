@@ -1,8 +1,9 @@
-import ScheduleList from "../../../department-components/common-components/classtimetable/TimetableList";
+import CoachAvailabilityForm from "../../../department-components/common-components/coachavailability/CoachVailabilityForm";
+
 import Sidebar from "../../../department-components/centeradmin-components/layout/Sidebar";
 import Topbar from "./../../../component/parent-component/parent-dashboard/layout/Topbar";
 
-const CenterScheduleClass = () => {
+const CenterAdminCoachAvailabilityForm = () => {
   return (
     <div className="flex h-screen w-screen overflow-hidden">
       <div className="z-30 flex-shrink-0">
@@ -15,7 +16,7 @@ const CenterScheduleClass = () => {
         <div className="flex-1 overflow-hidden relative z-10">
           <div className="h-full w-full overflow-auto scrollbar-hide">
             <div className="min-w-full p-4">
-              <ScheduleList />
+              <CoachAvailabilityForm />
             </div>
           </div>
         </div>
@@ -24,4 +25,4 @@ const CenterScheduleClass = () => {
   );
 };
 
-export default CenterScheduleClass;
+export default CenterAdminCoachAvailabilityForm;

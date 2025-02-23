@@ -69,6 +69,15 @@ userRoute.get('/get-all-vouchers', userController.getAllVouchers);
 userRoute.post('/add-new-voucher', userController.addNewVoucher);
 
 
+userRoute.get('/get-physcical-center-data', userController.getPhysicalCenterData);
+userRoute.get('/get-individual-physcical-center-data/:centerId', userController.getIndividualPhysicalCenterData);
+userRoute.put('/update-individual-physcical-center-data/:centerId', userController.getIndividualPhysicalCenterData);
+
+
+userRoute.post('/save-physcical-center-data', userController.savePhysicalCenterData);
+
+
+
 
 
 

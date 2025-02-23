@@ -1,27 +1,65 @@
-import  { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import MultipleFileUpload from "../../../components/uploader/MultipleFileUpload";
-import { savePhysicalCenterData } from "../../../api/service/employee/EmployeeService";
+import {
+  getIndividualPhysicalCenterData,
+  updatePhysicalCenterData,
+  
+  // updatePhysicalCenterData,
+} from "../../../api/service/employee/EmployeeService";
 import { toast, ToastContainer } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
-const AddPhysicalCenterForm = ({  initialData = null }) => {
-  const navigate = useNavigate()
-  const [formData, setFormData] = useState(
-    initialData || {
-      centerName: "",
-      address: "",
-      city: "",
-      state: "",
-      pincode: "",
-      email: "",
-      phoneNumber: "",
-      photos: [],
-    }
-  );
+const EditPhysicalCenters = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    centerName: "",
+    address: "",
+    city: "",
+    state: "",
+    pincode: "",
+    email: "",
+    phoneNumber: "",
+    photos: [],
+  });
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingPincode, setIsLoadingPincode] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await getIndividualPhysicalCenterData(id);
+        console.log(response)
+        if (response.status===200) {
+          const centerData = response.data.data;
+          setFormData({
+            centerName: centerData.centerName || "",
+            address: centerData.address || "",
+            city: centerData.city || "",
+            state: centerData.state || "",
+            pincode: centerData.pincode || "",
+            email: centerData.email || "",
+            phoneNumber: centerData.phoneNumber || "",
+            photos: centerData.photos || [],
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching center data:", error);
+        toast.error("Failed to load center data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchData();
+    } else {
+      setIsLoading(false);
+    }
+  }, [id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -70,14 +108,13 @@ const AddPhysicalCenterForm = ({  initialData = null }) => {
     }
   }, [formData.pincode, fetchLocationByPincode]);
 
+  const handleFileUpload = (urls) => {
+    setFormData((prev) => ({
+      ...prev,
+      photos: urls,
+    }));
+  };
 
-const handleFileUpload = (urls) => {
-  console.log('Received URLs:', urls);
-  setFormData(prev => ({
-    ...prev,
-    photos: urls
-  }));
-};
   const validate = () => {
     const newErrors = {};
     if (!formData.centerName.trim())
@@ -91,16 +128,13 @@ const handleFileUpload = (urls) => {
       newErrors.email = "Invalid email format";
     if (!formData.phoneNumber.trim())
       newErrors.phoneNumber = "Phone number is required";
-
-
     if (formData.photos.length === 0) {
       newErrors.photos = "At least one photo is required";
     }
-
     return newErrors;
   };
 
-  const handleSubmit = async(e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = validate();
 
@@ -110,37 +144,42 @@ const handleFileUpload = (urls) => {
     }
 
     setIsSubmitting(true);
-
     console.log(formData)
 
     try {
-  
+      let response;
+      if (id) {
+        // Update existing center
+        response = await updatePhysicalCenterData(id, formData);
+        if (response.success) {
+          toast.success("Center updated successfully");
+        }
+      } 
+     
 
-
-      const response = await savePhysicalCenterData(formData);
-      console.log("Response",response)
-      if(response.status===201){
-        toast.success(response.data.message)
-        setTimeout(() => {
-          navigate("/super-admin/department/physical-centerlist")
-          
-        }, 1500);
-      }
-
-  
+      setTimeout(() => {
+        navigate("/super-admin/department/physical-centerlist");
+      }, 1500);
     } catch (error) {
       console.error("Error submitting form:", error);
+      toast.error(error.response?.data?.message || "An error occurred");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
       <h2 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-3">
-        {initialData ? "Edit Chess Center" : "Add New Chess Center"}
+        {id ? "Edit Chess Center" : "Add New Chess Center"}
       </h2>
 
       <form onSubmit={handleSubmit}>
@@ -198,7 +237,7 @@ const handleFileUpload = (urls) => {
 
         {/* Pincode, City, State in same line */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          {/* Pincode with auto-fetch */}
+          {/* Pincode */}
           <div>
             <label
               className="block text-gray-700 font-medium mb-2"
@@ -218,7 +257,7 @@ const handleFileUpload = (urls) => {
                   errors.pincode
                     ? "border-red-500 focus:ring-red-300"
                     : "border-gray-300 focus:ring-primary"
-                } ${isLoadingPincode ? "pr-10" : ""}`}
+                }`}
                 placeholder="560034"
               />
               {isLoadingPincode && (
@@ -250,7 +289,7 @@ const handleFileUpload = (urls) => {
             )}
           </div>
 
-          {/* City - Auto-populated */}
+          {/* City */}
           <div>
             <label
               className="block text-gray-700 font-medium mb-2"
@@ -277,7 +316,7 @@ const handleFileUpload = (urls) => {
             )}
           </div>
 
-          {/* State - Auto-populated */}
+          {/* State */}
           <div>
             <label
               className="block text-gray-700 font-medium mb-2"
@@ -360,22 +399,26 @@ const handleFileUpload = (urls) => {
           </div>
         </div>
 
+        {/* Photos Upload */}
+        <div className="mb-6">
+          <MultipleFileUpload
+            fieldName="Physical Center Photos"
+            name="photos"
+            onFileUpload={handleFileUpload}
+            initialFiles={formData.photos}
+          />
+          {errors.photos && (
+            <p className="text-red-500 text-sm mt-1">{errors.photos}</p>
+          )}
+        </div>
 
-
-        <MultipleFileUpload
-          fieldName="Physical Center Photos"
-          name="photos"
-          onFileUpload={handleFileUpload}
-
-         
-        />
-        
-
-        {/* Submit Button */}
+        {/* Submit Buttons */}
         <div className="mt-8 flex justify-end gap-4">
           <button
             type="button"
-            onClick={() => window.history.back()}
+            onClick={() =>
+              navigate("/super-admin/department/physical-centerlist")
+            }
             className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300"
           >
             Cancel
@@ -383,7 +426,7 @@ const handleFileUpload = (urls) => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary flex items-center justify-center min-w-[120px]"
+            className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary flex items-center justify-center min-w-[120px]"
           >
             {isSubmitting ? (
               <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
@@ -403,17 +446,13 @@ const handleFileUpload = (urls) => {
                 ></path>
               </svg>
             ) : null}
-            {isSubmitting
-              ? "Saving..."
-              : initialData
-              ? "Update Center"
-              : "Add Center"}
+            {isSubmitting ? "Saving..." : id ? "Update Center" : "Add Center"}
           </button>
         </div>
       </form>
-      <ToastContainer/>
+      <ToastContainer />
     </div>
   );
 };
 
-export default AddPhysicalCenterForm;
+export default EditPhysicalCenters;
