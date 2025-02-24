@@ -106,7 +106,7 @@ const EnrolmentKid = () => {
                 </div>
               </div>
             </div>
-
+{/* 
             <div className="bg-white rounded-lg shadow-sm mt-4 relative z-10">
               <h3 className="text-lg font-semibold text-gray-700 mb-4">
                 Intention of Parents
@@ -124,7 +124,7 @@ const EnrolmentKid = () => {
                   </option>
                 ))}
               </select>
-            </div>
+            </div> */}
 
             <div className="bg-white rounded-lg shadow-sm mt-4 relative z-10">
               <h3 className="text-lg font-semibold text-gray-700 mb-4">

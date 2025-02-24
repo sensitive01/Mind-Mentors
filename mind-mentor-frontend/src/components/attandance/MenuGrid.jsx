@@ -111,7 +111,7 @@ const MenuGrid = () => {
         {
           id: id,
           icon: <Video className="w-6 h-6 text-white" />,
-          title: "Live",
+          title: "Today Live Class",
           subtitle: "Class",
           bgColor: "bg-red-600",
           gradient: "from-red-600 to-red-700",
@@ -120,7 +120,7 @@ const MenuGrid = () => {
         {
           id: id,
           icon: <Calendar className="w-6 h-6 text-white" />,
-          title: "Class",
+          title: "Class Schedule",
           subtitle: "Schedules",
           bgColor: "bg-emerald-600",
           gradient: "from-emerald-600 to-emerald-700",

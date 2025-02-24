@@ -37,9 +37,9 @@ const AttendancePage = () => {
          
             <div className="flex-1 p-8">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-                <div className="bg-white rounded-lg shadow-sm p-4">
+                {/* <div className="bg-white rounded-lg shadow-sm p-4">
                   <AttendanceList />
-                </div>
+                </div> */}
 
                 <div className="bg-white rounded-lg shadow-sm p-4 lg:col-span-2">
                   <MenuGrid />
