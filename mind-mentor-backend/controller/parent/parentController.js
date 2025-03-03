@@ -646,11 +646,6 @@ const parentAddNewKid = async (req, res) => {
     const chessId = generateChessId();
     const kidPin = generateOTP();
 
-    if (!kidsName) {
-      return res
-        .status(400)
-        .json({ message: "Please provide all the required fields" });
-    }
 
     const newKid = new kidModel({
       kidsName,
