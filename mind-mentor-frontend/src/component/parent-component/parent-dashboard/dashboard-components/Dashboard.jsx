@@ -1,92 +1,171 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import boyAvatar from "../../../../assets/boyavatar.avif";
 import girlAvatar from "../../../../assets/girlavatar.jpg";
+import { getMyKidData } from "../../../../api/service/parent/ParentService";
 
 const ParentDashboard = () => {
+  const parentId = localStorage.getItem("parentId");
   const [selectedChild, setSelectedChild] = useState(0);
-  const children = [
-    {
-      id: 1,
-      name: "Alex",
-      avatar: boyAvatar,
-      classType: "chess", // Only chess class
-      attendance: {
-        total: 16,
-        attended: 9,
-        nextClass: "Today, 4:00 PM",
-      },
-      stats: {
-        level: "Beginner Knight",
-        progress: 65,
-        streak: 5,
-        totalGames: 24,
-        wins: 15,
-        timeSpent: "12h",
-        nextMilestone: "Learn castle move",
-      },
-      recentAchievements: [
-        {
-          title: "First Checkmate!",
-          date: "2 days ago",
-          icon: "♟️",
-          color: "bg-purple-100",
-        },
-        {
-          title: "5-day Practice Streak",
-          date: "Today",
-          icon: "🔥",
-          color: "bg-orange-100",
-        },
-        {
-          title: "Completed Pawn Lesson",
-          date: "Yesterday",
-          icon: "📚",
-          color: "bg-blue-100",
-        },
-      ],
-    },
-    {
-      id: 2,
-      name: "Sarah",
-      avatar: girlAvatar,
-      classType: "rubiks", // Only Rubik's cube class
-      attendance: {
-        total: 16,
-        attended: 12,
-        nextClass: "Tomorrow, 3:00 PM",
-      },
-      stats: {
-        level: "F2L Explorer",
-        progress: 75,
-        streak: 4,
-        avgTime: "1:45",
-        bestTime: "1:20",
-        nextMilestone: "Learn advanced F2L",
-      },
-      recentAchievements: [
-        {
-          title: "Sub 2-minute Solve",
-          date: "Today",
-          icon: "🎲",
-          color: "bg-blue-100",
-        },
-        {
-          title: "4-day Practice Streak",
-          date: "Today",
-          icon: "🔥",
-          color: "bg-orange-100",
-        },
-        {
-          title: "Mastered White Cross",
-          date: "Yesterday",
-          icon: "📚",
-          color: "bg-green-100",
-        },
-      ],
-    },
-  ];
+  const [childrenData, setChildrenData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const selectedChildData = children[selectedChild];
+  useEffect(() => {
+    const fetchMyKid = async () => {
+      try {
+        setLoading(true);
+        const response = await getMyKidData(parentId);
+        
+        if (response.status===200) {
+    
+          const transformedData = response.data.kidData.map(kid => {
+            // Get the first program (if exists)
+            const program = kid.selectedProgram && kid.selectedProgram.length > 0 
+              ? kid.selectedProgram[0] 
+              : { program: "Not selected", level: "Not assigned" };
+            
+            // Determine demo status
+            const demoStatus = kid.scheduleDemo?.status || "Pending";
+            
+            // Create default stats based on demo status
+            let stats = {};
+            let attendance = {};
+            let recentAchievements = [];
+            
+            if (demoStatus === "Completed") {
+              // Full dashboard data for completed demos
+              stats = {
+                level: program.level || "Beginner",
+                progress: 65,
+                streak: 5,
+                totalGames: program.program === "Chess" ? 24 : 0,
+                wins: program.program === "Chess" ? 15 : 0,
+                avgTime: program.program === "Rubik's Cube" ? "1:45" : "",
+                bestTime: program.program === "Rubik's Cube" ? "1:20" : "",
+                timeSpent: "12h",
+                nextMilestone: program.program === "Chess" ? "Learn castle move" : "Learn advanced F2L",
+              };
+              
+              attendance = {
+                total: 16,
+                attended: 9,
+                nextClass: "Today, 4:00 PM",
+              };
+              
+              recentAchievements = [
+                {
+                  title: program.program === "Chess" ? "First Checkmate!" : "Sub 2-minute Solve",
+                  date: "2 days ago",
+                  icon: program.program === "Chess" ? "♟️" : "🎲",
+                  color: "bg-purple-100",
+                },
+                {
+                  title: "5-day Practice Streak",
+                  date: "Today",
+                  icon: "🔥",
+                  color: "bg-orange-100",
+                },
+                {
+                  title: program.program === "Chess" ? "Completed Pawn Lesson" : "Mastered White Cross",
+                  date: "Yesterday",
+                  icon: "📚",
+                  color: "bg-blue-100",
+                },
+              ];
+            } else if (demoStatus === "Scheduled") {
+              // Limited data for scheduled demos
+              stats = {
+                level: program.level || "Beginner",
+                progress: 0,
+                streak: 0,
+                nextMilestone: "Attend first class",
+              };
+              
+              attendance = {
+                total: 0,
+                attended: 0,
+                nextClass: "Demo class (Scheduled)",
+              };
+              
+              recentAchievements = [
+                {
+                  title: "Demo Class Scheduled!",
+                  date: "Coming up",
+                  icon: "📅",
+                  color: "bg-green-100",
+                },
+              ];
+            } else {
+              // Minimal data for pending demos
+              stats = {
+                level: "Not started",
+                progress: 0,
+                streak: 0,
+                nextMilestone: "Schedule demo class",
+              };
+              
+              attendance = {
+                total: 0,
+                attended: 0,
+                nextClass: "Not scheduled yet",
+              };
+              
+              recentAchievements = [];
+            }
+            
+            return {
+              id: kid._id,
+              name: kid.kidsName,
+              avatar: kid.gender === "female" ? girlAvatar : boyAvatar,
+              program: program.program,
+              demoStatus,
+              attendance,
+              stats,
+              recentAchievements,
+            };
+          });
+          
+          setChildrenData(transformedData);
+        } else {
+          console.error("Error fetching kid data:", response.message);
+          setChildrenData([]);
+        }
+      } catch (error) {
+        console.error("Error fetching kid data:", error);
+        setChildrenData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchMyKid();
+  }, [parentId]);
+
+  // If no children data or loading, show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-4 md:p-6 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto mb-4"></div>
+          <p className="text-slate-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If no children data after loading, show empty state
+  if (childrenData.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-4 md:p-6 flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="text-5xl mb-4">👶</div>
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">No children found</h2>
+          <p className="text-slate-600">It looks like you haven't added any children to your account yet.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const selectedChildData = childrenData[selectedChild];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-4 md:p-6">
@@ -95,7 +174,7 @@ const ParentDashboard = () => {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <h1 className="text-3xl font-bold text-slate-800">Learning Dashboard</h1>
           <div className="flex gap-3">
-            {children.map((child, index) => (
+            {childrenData.map((child, index) => (
               <button
                 key={child.id}
                 onClick={() => setSelectedChild(index)}
@@ -112,35 +191,41 @@ const ParentDashboard = () => {
           </div>
         </div>
 
-        {/* Quick Stats with Attendance */}
+        {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-            <div className="text-sm text-slate-500">Class Type</div>
+            <div className="text-sm text-slate-500">Program</div>
             <div className="font-semibold text-slate-700 mt-1 flex items-center gap-2">
-              {selectedChildData.classType === "chess" ? (
+              {selectedChildData.program === "Chess" ? (
                 <>
-                  <span className="text-xl">♟️</span> Chess Class
+                  <span className="text-xl">♟️</span> Chess Program
+                </>
+              ) : selectedChildData.program === "Rubik's Cube" ? (
+                <>
+                  <span className="text-xl">🎲</span> Rubik's Cube Program
                 </>
               ) : (
                 <>
-                  <span className="text-xl">🎲</span> Rubik's Cube Class
+                  <span className="text-xl">❓</span> {selectedChildData.program || "Not Selected"}
                 </>
               )}
             </div>
           </div>
 
           <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-            <div className="text-sm text-slate-500">Class Attendance</div>
+            <div className="text-sm text-slate-500">Demo Status</div>
             <div className="font-semibold text-slate-700 mt-1">
-              {selectedChildData.attendance.attended}/{selectedChildData.attendance.total} Classes
-              <div className="mt-1 h-1.5 bg-slate-100 rounded-full">
-                <div
-                  className="h-full bg-indigo-500 rounded-full"
-                  style={{
-                    width: `${(selectedChildData.attendance.attended / selectedChildData.attendance.total) * 100}%`,
-                  }}
-                />
-              </div>
+              <span 
+                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  selectedChildData.demoStatus === "Completed" 
+                    ? "bg-green-100 text-green-800" 
+                    : selectedChildData.demoStatus === "Scheduled" 
+                    ? "bg-blue-100 text-blue-800" 
+                    : "bg-yellow-100 text-yellow-800"
+                }`}
+              >
+                {selectedChildData.demoStatus}
+              </span>
             </div>
           </div>
 
@@ -160,97 +245,239 @@ const ParentDashboard = () => {
         </div>
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Progress Section */}
-        <div className="lg:col-span-2">
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">
-                  {selectedChildData.classType === "chess" ? "♟️" : "🎲"}
-                </span>
-                <h3 className="text-lg font-semibold text-slate-800">
-                  Learning Progress
-                </h3>
-              </div>
-              {selectedChildData.classType === "chess" ? (
-                <span className="text-sm font-medium text-indigo-600">
-                  {selectedChildData.stats.wins} wins
-                </span>
-              ) : (
-                <span className="text-sm font-medium text-indigo-600">
-                  Best time: {selectedChildData.stats.bestTime}
-                </span>
-              )}
-            </div>
+      {/* Conditional Main Content based on Demo Status */}
+      {selectedChildData.demoStatus === "Pending" ? (
+        <DemoPendingView childData={selectedChildData} />
+      ) : selectedChildData.demoStatus === "Scheduled" ? (
+        <DemoScheduledView childData={selectedChildData} />
+      ) : (
+        <CompleteDashboardView childData={selectedChildData} />
+      )}
+    </div>
+  );
+};
 
-            <div className="space-y-6">
-              {/* Progress Bar */}
+// View for when demo is pending
+const DemoPendingView = ({ childData }) => (
+  <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 text-center py-12">
+    <div className="max-w-md mx-auto">
+      <div className="text-5xl mb-6">📅</div>
+      <h2 className="text-2xl font-bold text-slate-800 mb-3">Demo Class Not Scheduled</h2>
+      <p className="text-slate-600 mb-6">
+        The demo class for {childData.name} hasn't been scheduled yet. Once scheduled, you'll be able to see more details here.
+      </p>
+      <button className="px-6 py-3 bg-indigo-500 text-white rounded-lg font-medium hover:bg-indigo-600 transition-colors">
+        Schedule Demo Class
+      </button>
+    </div>
+  </div>
+);
+
+// View for when demo is scheduled but not completed
+const DemoScheduledView = ({ childData }) => (
+  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="lg:col-span-2">
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
+        <div className="flex items-center gap-3 mb-6">
+          <span className="text-3xl">📅</span>
+          <h3 className="text-lg font-semibold text-slate-800">
+            Upcoming Demo Class
+          </h3>
+        </div>
+
+        <div className="space-y-6">
+          <div className="bg-blue-50 rounded-lg p-4">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">🎉</span>
               <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm text-slate-600">Progress to next level</span>
-                  <span className="text-sm font-medium text-slate-700">
-                    {selectedChildData.stats.progress}%
-                  </span>
+                <div className="font-medium text-slate-800">
+                  Demo Class Scheduled!
                 </div>
-                <div className="h-2 bg-slate-100 rounded-full">
-                  <div
-                    className="h-full bg-indigo-500 rounded-full"
-                    style={{ width: `${selectedChildData.stats.progress}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Practice Streak */}
-              <div className="bg-orange-50 rounded-lg p-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">🔥</span>
-                  <div>
-                    <div className="font-medium text-slate-800">
-                      {selectedChildData.stats.streak} Day Streak!
-                    </div>
-                    <div className="text-sm text-slate-600">Keep practicing daily</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Next Milestone */}
-              <div className="bg-slate-50 rounded-lg p-4">
-                <div className="text-sm text-slate-600">Next milestone</div>
-                <div className="font-medium text-slate-800 mt-1">
-                  {selectedChildData.stats.nextMilestone}
-                </div>
+                <div className="text-sm text-slate-600">Get ready for your first class</div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Achievements Section */}
-        <div className="space-y-6">
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
-            <h3 className="text-lg font-semibold text-slate-800 mb-4">
-              Recent Achievements
-            </h3>
-            <div className="space-y-3">
-              {selectedChildData.recentAchievements.map((achievement, index) => (
-                <div
-                  key={index}
-                  className={`flex items-center gap-4 p-3 ${achievement.color} rounded-lg`}
-                >
-                  <span className="text-2xl">{achievement.icon}</span>
-                  <div className="flex-1">
-                    <div className="font-medium text-slate-800">{achievement.title}</div>
-                    <div className="text-sm text-slate-500">{achievement.date}</div>
-                  </div>
-                </div>
-              ))}
+          <div className="bg-slate-50 rounded-lg p-4">
+            <div className="text-sm text-slate-600">Program</div>
+            <div className="font-medium text-slate-800 mt-1">
+              {childData.program} - {childData.stats.level}
             </div>
           </div>
         </div>
       </div>
     </div>
-  );
-};
+
+    <div className="space-y-6">
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
+        <h3 className="text-lg font-semibold text-slate-800 mb-4">
+          What to Expect
+        </h3>
+        <div className="space-y-3">
+          {childData.program === "Chess" ? (
+            <>
+              <div className="flex items-center gap-4 p-3 bg-blue-50 rounded-lg">
+                <span className="text-2xl">♟️</span>
+                <div className="flex-1">
+                  <div className="font-medium text-slate-800">Basic Chess Rules</div>
+                  <div className="text-sm text-slate-500">Learn how pieces move</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 p-3 bg-purple-50 rounded-lg">
+                <span className="text-2xl">🏆</span>
+                <div className="flex-1">
+                  <div className="font-medium text-slate-800">First Game</div>
+                  <div className="text-sm text-slate-500">Play with an instructor</div>
+                </div>
+              </div>
+            </>
+          ) : childData.program === "Rubik's Cube" ? (
+            <>
+              <div className="flex items-center gap-4 p-3 bg-blue-50 rounded-lg">
+                <span className="text-2xl">🎲</span>
+                <div className="flex-1">
+                  <div className="font-medium text-slate-800">Cube Notation</div>
+                  <div className="text-sm text-slate-500">Learn basic movements</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 p-3 bg-purple-50 rounded-lg">
+                <span className="text-2xl">🔄</span>
+                <div className="flex-1">
+                  <div className="font-medium text-slate-800">First Layer</div>
+                  <div className="text-sm text-slate-500">Solving techniques</div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+              <span className="text-2xl">📝</span>
+              <div className="flex-1">
+                <div className="font-medium text-slate-800">Introduction</div>
+                <div className="text-sm text-slate-500">Program overview</div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// View for when demo is completed (full dashboard)
+const CompleteDashboardView = ({ childData }) => (
+  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    {/* Progress Section */}
+    <div className="lg:col-span-2">
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">
+              {childData.program === "Chess" ? "♟️" : "🎲"}
+            </span>
+            <h3 className="text-lg font-semibold text-slate-800">
+              Learning Progress
+            </h3>
+          </div>
+          {childData.program === "Chess" ? (
+            <span className="text-sm font-medium text-indigo-600">
+              {childData.stats.wins} wins
+            </span>
+          ) : (
+            <span className="text-sm font-medium text-indigo-600">
+              Best time: {childData.stats.bestTime}
+            </span>
+          )}
+        </div>
+
+        <div className="space-y-6">
+          {/* Progress Bar */}
+          <div>
+            <div className="flex justify-between mb-2">
+              <span className="text-sm text-slate-600">Progress to next level</span>
+              <span className="text-sm font-medium text-slate-700">
+                {childData.stats.progress}%
+              </span>
+            </div>
+            <div className="h-2 bg-slate-100 rounded-full">
+              <div
+                className="h-full bg-indigo-500 rounded-full"
+                style={{ width: `${childData.stats.progress}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Class Attendance */}
+          <div>
+            <div className="flex justify-between mb-2">
+              <span className="text-sm text-slate-600">Class Attendance</span>
+              <span className="text-sm font-medium text-slate-700">
+                {childData.attendance.attended}/{childData.attendance.total} Classes
+              </span>
+            </div>
+            <div className="h-2 bg-slate-100 rounded-full">
+              <div
+                className="h-full bg-indigo-500 rounded-full"
+                style={{
+                  width: `${(childData.attendance.attended / Math.max(childData.attendance.total, 1)) * 100}%`,
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Practice Streak */}
+          <div className="bg-orange-50 rounded-lg p-4">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">🔥</span>
+              <div>
+                <div className="font-medium text-slate-800">
+                  {childData.stats.streak} Day Streak!
+                </div>
+                <div className="text-sm text-slate-600">Keep practicing daily</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Next Milestone */}
+          <div className="bg-slate-50 rounded-lg p-4">
+            <div className="text-sm text-slate-600">Next milestone</div>
+            <div className="font-medium text-slate-800 mt-1">
+              {childData.stats.nextMilestone}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Achievements Section */}
+    <div className="space-y-6">
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
+        <h3 className="text-lg font-semibold text-slate-800 mb-4">
+          Recent Achievements
+        </h3>
+        <div className="space-y-3">
+          {childData.recentAchievements.length > 0 ? (
+            childData.recentAchievements.map((achievement, index) => (
+              <div
+                key={index}
+                className={`flex items-center gap-4 p-3 ${achievement.color} rounded-lg`}
+              >
+                <span className="text-2xl">{achievement.icon}</span>
+                <div className="flex-1">
+                  <div className="font-medium text-slate-800">{achievement.title}</div>
+                  <div className="text-sm text-slate-500">{achievement.date}</div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center p-6">
+              <div className="text-4xl mb-3">🏆</div>
+              <div className="text-slate-600">No achievements yet</div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 export default ParentDashboard;

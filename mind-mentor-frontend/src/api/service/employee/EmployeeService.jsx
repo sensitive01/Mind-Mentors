@@ -603,3 +603,18 @@ export const updatePhysicalCenterData = async (id,formData) => {
   );
   return response;
 };
+
+export const saveNewPackage = async (formData) => {
+  const response = await userInstance.post(
+    `/add-new-package-data`,{formData}
+  );
+  return response;
+};
+
+export const getPackageData = async () => {
+  const response = await userInstance.get(
+    `/get-package-data`
+  );
+  return response;
+};
+

@@ -74,6 +74,9 @@ const KidsLoginPage = () => {
           case "coach":
             navigate("/coach/department/dashboard");
             break;
+          case "hr":
+            navigate("/hr/department/employee-list");
+            break;
           default:
             navigate("/");
         }
@@ -84,7 +87,8 @@ const KidsLoginPage = () => {
       }
     } catch (error) {
       console.error("Error in operation department login:", error);
-      toast.error(error.response.data.message);    }
+      toast.error(error.response.data.message);
+    }
   };
 
   return (

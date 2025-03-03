@@ -22,10 +22,10 @@ const kidSchema = new mongoose.Schema(
     gender: {
       type: String,
     },
-    selectedProgram: {
+    selectedProgram: [{
       program: { type: String },
       level: { type: String },
-    },
+    }],
 
     intention: {
       type: String,

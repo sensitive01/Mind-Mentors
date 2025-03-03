@@ -304,3 +304,16 @@ export const parentBookDemoClassinProfile = async (formData, kidId) => {
     return err;
   }
 };
+
+export const getMyKidData = async (parentId) => {
+  try {
+   
+    const response = await parentInstance.get(
+      `/parent/get-my-kid-data/${parentId}`,
+ 
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};

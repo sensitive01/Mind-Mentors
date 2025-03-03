@@ -64,6 +64,10 @@ userRoute.delete('/chats/:id', userController.deleteChat);
 
 
 userRoute.post('/package', userController.insertPackage);
+userRoute.post('/add-new-package-data', userController.addNewPackageData);
+userRoute.get('/get-package-data', userController.getAllPackageData);
+
+
 
 userRoute.get('/get-all-vouchers', userController.getAllVouchers);
 userRoute.post('/add-new-voucher', userController.addNewVoucher);

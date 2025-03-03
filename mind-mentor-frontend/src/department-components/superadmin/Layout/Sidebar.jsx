@@ -93,24 +93,7 @@ const ModernSidebar = () => {
     logout: "#95A5A6",
     notifications: "#2980B9",
   };
-  // Function to lighten colors
-  const lightenColor = (color, amount = 0.5) => {
-    const hex = color.replace("#", "");
-    const num = parseInt(hex, 16);
-    const r = Math.min(
-      255,
-      Math.floor((num >> 16) + (255 - (num >> 16)) * amount)
-    );
-    const g = Math.min(
-      255,
-      Math.floor(((num >> 8) & 0x00ff) + (255 - ((num >> 8) & 0x00ff)) * amount)
-    );
-    const b = Math.min(
-      255,
-      Math.floor((num & 0x0000ff) + (255 - (num & 0x0000ff)) * amount)
-    );
-    return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
-  };
+
   // Styled components for enhanced interactivity
   const StyledListItem = styled(ListItem)(({ theme }) => ({
     borderRadius: 8,
@@ -190,12 +173,7 @@ const ModernSidebar = () => {
       link: "/super-admin/department/physical-centerlist",
     },
 
-    // {
-    //   icon: <EnquiriesIcon />,
-    //   text: "Enquiries",
-    //   color: iconColors.enquiries,
-    //   link: "/superadminEnquiries",
-    // },
+
     {
       icon: <EnquiriesIcon />,
       text: "Voucher_Discounts",
@@ -203,11 +181,20 @@ const ModernSidebar = () => {
       link: "/superadmin/department/discount-table",
     },
     {
+      icon: <EnquiriesIcon />,
+      text: "Package",
+      color: iconColors.enquiries,
+      link: "/superadmin/department/package-table",
+    },
+    {
       icon: <KidsIcon />,
       text: "Kids",
       color: iconColors.kids,
       link: "/superadminKids",
     },
+
+
+
     {
       icon: <ParentsIcon />,
       text: "Parents",

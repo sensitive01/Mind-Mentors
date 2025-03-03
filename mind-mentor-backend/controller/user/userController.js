@@ -1130,9 +1130,103 @@ const getIndividualPhysicalCenterData = async (req, res) => {
 };
 
 
+const generateUniquePackageId = async () => {
+  let isUnique = false;
+  let packageId;
+
+  while (!isUnique) {
+    const randomNum = Math.floor(100000 + Math.random() * 900000);
+    packageId = `MMPKG${randomNum}`;
+    const existingPackage = await Package.findOne({ packageId });
+    if (!existingPackage) {
+      isUnique = true;
+    }
+  }
+
+  return packageId;
+};
+
+const addNewPackageData = async (req, res) => {
+  try {
+    console.log("Welcome to add new package data", req.body);
+
+    const { formData } = req.body;
+    if (!formData) {
+      return res.status(400).json({ error: "Invalid request data" });
+    }
+
+    const {
+      type,
+      packageName,
+      description,
+      onlineClasses,
+      physicalClasses,
+      centerName,
+      centerId,
+      pricing,
+    } = formData;
+
+    const packageId = await generateUniquePackageId();
+
+    const newPackage = new Package({
+      packageId,
+      type,
+      packageName,
+      description,
+      onlineClasses,
+      physicalClasses,
+      centerName,
+      centerId,
+      pricing,
+    });
+
+    await newPackage.save();
+
+    return res.status(201).json({
+      message: "Package data added successfully",
+      data: newPackage,
+    });
+  } catch (err) {
+    console.error("Error in adding new package", err);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+
+const getAllPackageData = async (req, res) => {
+  try {
+    console.log("Welcome to get all package data");
+    
+    const packagesData = await Package.find();
+
+    if (!packagesData.length) {
+      return res.status(404).json({ message: "No packages found" });
+    }
+
+    return res.status(200).json({ message: "Packages retrieved successfully",  packagesData });
+  } catch (err) {
+    console.error("Error in getting the package", err);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 module.exports = {
+  getAllPackageData,
+  addNewPackageData,
   getIndividualPhysicalCenterData,
   getPhysicalCenterData,
   savePhysicalCenterData,

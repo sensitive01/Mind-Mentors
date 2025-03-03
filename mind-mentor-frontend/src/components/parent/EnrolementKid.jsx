@@ -49,14 +49,17 @@ const EnrolmentKid = () => {
   return (
     <div className="flex flex-col flex-grow justify-center items-center">
       <div className="flex items-center space-x-2">
-        <ArrowLeft className="text-xl text-primary" onClick={() => navigate(-1)} />
+        <ArrowLeft
+          className="text-xl text-primary cursor-pointer"
+          onClick={() => navigate(-1)}
+        />
         <h2 className="text-2xl font-bold text-primary">Add new champions</h2>
       </div>
 
       <div className="w-full p-4">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="bg-white rounded-lg border border-primary shadow-sm p-4 relative before:absolute before:inset-0 before:rounded-lg before:border before:border-transparent before:transition-all before:duration-300 hover:before:border-primary hover:before:scale-105">
-            <div className="bg-white rounded-lg shadow-sm relative z-10">
+          <div className="bg-white rounded-lg border border-primary shadow-sm p-4 transition-all duration-300 hover:shadow-md">
+            <div className="bg-white rounded-lg shadow-sm">
               <h3 className="text-lg font-semibold text-gray-700 mb-3">
                 Personal Information
               </h3>
@@ -79,7 +82,7 @@ const EnrolmentKid = () => {
                     Age
                   </label>
                   <input
-                    type="Number"
+                    type="number"
                     name="age"
                     value={formData.age}
                     onChange={handleChange}
@@ -106,8 +109,9 @@ const EnrolmentKid = () => {
                 </div>
               </div>
             </div>
-{/* 
-            <div className="bg-white rounded-lg shadow-sm mt-4 relative z-10">
+
+            {/* Uncomment if you want to include the Intentions section
+            <div className="bg-white rounded-lg shadow-sm mt-4">
               <h3 className="text-lg font-semibold text-gray-700 mb-4">
                 Intention of Parents
               </h3>
@@ -124,9 +128,10 @@ const EnrolmentKid = () => {
                   </option>
                 ))}
               </select>
-            </div> */}
+            </div>
+            */}
 
-            <div className="bg-white rounded-lg shadow-sm mt-4 relative z-10">
+            <div className="bg-white rounded-lg shadow-sm mt-4">
               <h3 className="text-lg font-semibold text-gray-700 mb-4">
                 School Information
               </h3>

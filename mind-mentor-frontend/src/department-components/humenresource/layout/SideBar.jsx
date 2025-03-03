@@ -121,14 +121,15 @@ import {
         icon: <DashboardIcon />,
         text: 'Dashboard',
         color: iconColors.dashboard,
-        link: '/coachDashboard',
+        link: '#',
       },
       {
-        icon: <ClassScheduleIcon />,
-        text: 'Class Schedules',
-        color: iconColors.classSchedules,
-        link: '/coachScheduleClass',
+        icon: <DashboardIcon />,
+        text: 'Employees',
+        color: iconColors.dashboard,
+        link: '/hr/department/employee-list',
       },
+     
       {
         icon: <TaskIcon />,
         text: 'Tasks',
@@ -153,24 +154,9 @@ import {
         color: iconColors.leaves,
         link: '/coach/department/leaves',
       },
-      {
-        icon: <InvoicesIcon />,
-        text: 'Invoices',
-        color: iconColors.invoices,
-        link: '/coachInvoices',
-      },    
+         
   
-      {
-        icon: <ReportsIcon />,
-        text: 'Reports',
-        color: iconColors.reports,
-        subItems: [
-          { icon: <ReportsIcon />, text: 'Students Feedback', link: '/coachAttandanceFeedback' },
-          { icon: <ReportsIcon />, text: 'Student Attendance Report', link: '/coachAttendanceReport' },
-        ],
-        open: openReports,
-        onClick: handleReportsClick,
-      },    
+       
       
       {
         icon: <SupportIcon />,
@@ -214,7 +200,7 @@ import {
               </Box>
               {/* Name and Role */}
               <Typography variant="body2" color="#642b8f" fontWeight="bold">
-                Coach
+                Humen Resource
               </Typography>
               <Divider/>
               {/* <Typography variant="body2" color="text.secondary">

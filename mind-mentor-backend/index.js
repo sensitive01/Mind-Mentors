@@ -13,6 +13,7 @@ const coachRoute = require("./routes/coach/CoachRoute");
 const serviceRoute = require("./routes/servicedelivery/serviceDeliveryRoute");
 const userRoute = require("./routes/superadmin/superAdminRoute");
 const zoomRoute = require("./routes/zoom/zoomRoute");
+const hrRoutes = require("./routes/hr/hrRoutes");
 const PORT = 3000;
 
 app.set("trust proxy", true);
@@ -66,6 +67,8 @@ app.use("/kid", kidRoute);
 app.use("/coach", coachRoute);
 app.use("/service", serviceRoute);
 app.use("/superadmin", userRoute);
+app.use("/hr", hrRoutes);
+
 app.use("/zoom/api", zoomRoute);
 
 app.post("/api/get-signature", (req, res) => {

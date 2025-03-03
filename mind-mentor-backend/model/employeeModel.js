@@ -5,15 +5,9 @@ const employeeSchema = new mongoose.Schema(
   {
     firstName: {
       type: String,
-
-      trim: true,
     },
     email: {
       type: String,
-
-      unique: true,
-      lowercase: true,
-      trim: true,
     },
     password: {
       type: String,
@@ -29,6 +23,13 @@ const employeeSchema = new mongoose.Schema(
       type: String,
       default: "Active",
     },
+    phoneNumber: { type: Number },
+    address: { type: String },
+    gender: { type: String },
+    isPasswordChanged: { type: Boolean, default: false },
+    centerName: { type: String, default: null },
+
+    centerId: { type: String, default: null },
   },
   {
     timestamps: true,

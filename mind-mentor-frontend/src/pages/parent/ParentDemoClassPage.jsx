@@ -15,21 +15,25 @@ const ParentDemoClassPage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {loading ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
-          <ChessLoader />
-        </div>
-      ) : (
-        <div className="flex h-screen">
-          <Sidebar />
-          <div className="flex-1">
-            <Topbar />
+    <div className="flex h-screen overflow-hidden bg-gray-50">
+    {loading ? (
+      <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+        <ChessLoader />
+      </div>
+    ) : (
+      <>
+        <Sidebar />
+
+        <div className="flex-1 flex flex-col h-full">
+          <Topbar />
+
+          <div className="flex-1 p-8">
             <DashboardDemoClass />
           </div>
         </div>
-      )}
-    </div>
+      </>
+    )}
+  </div>
   );
 };
 

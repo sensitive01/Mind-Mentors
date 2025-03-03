@@ -18,6 +18,7 @@ const NotesSection = require("../../../model/enquiryNoteSection");
 const sendMessage = require("../../../utils/sendMessage");
 const packageSchema = require("../../../model/packageDetails");
 const Voucher = require("../../../model/discount_voucher/voucherModel");
+const PhysicalCenters  = require("../../../model/physicalcenter/physicalCenterShema");
 
 // Email Verification
 
@@ -224,10 +225,175 @@ const updateEnquiryDetails = async (req, res) => {
   }
 };
 
+// const updateProspectData = async (req, res) => {
+//   try {
+//     console.log("..........................................");
+//     console.log("Prospects");
+//     const formattedDateTime = new Intl.DateTimeFormat("en-US", {
+//       dateStyle: "medium",
+//       timeStyle: "short",
+//     }).format(new Date());
+
+//     const { id } = req.params;
+//     const { empId } = req.body;
+
+//     const empData = await Employee.findOne(
+//       { _id: empId },
+//       { firstName: 1, department: 1 }
+//     );
+//     if (!empData) {
+//       return res.status(404).json({ message: "Employee not found" });
+//     }
+//     console.log("Employee Data", empData);
+
+//     const enquiryData = await OperationDept.findOne({ _id: id });
+//     if (!enquiryData) {
+//       return res.status(404).json({ message: "Enquiry data not found" });
+//     }
+//     console.log("Enquiry Data", enquiryData);
+
+//     console.log("..........................................");
+
+//     // 1. Handle Parent Registration
+//     let parentData = await parentSchema.findOne({
+//       parentMobile: enquiryData.whatsappNumber,
+//     });
+
+//     // If Parent doesn't exist, create a new one
+//     if (!parentData) {
+//       parentData = new parentSchema({
+//         parentName: enquiryData.parentFirstName,
+//         parentEmail: enquiryData.email,
+//         parentMobile: enquiryData.whatsappNumber,
+//         kids: [],
+//         type: "new",
+//         status: "Active",
+//       });
+
+//       await parentData.save();
+//     }
+//     console.log("parent data after move to prospects", parentData);
+
+//     // 2. Handle Kid Registration
+//     const chessId = generateChessId();
+//     const kidPin = generateOTP();
+
+//     // Create new Kid
+//     const newKid = new kidSchema({
+//       enqId: id,
+//       kidsName: enquiryData.kidFirstName,
+//       age: enquiryData.kidsAge,
+//       gender: enquiryData.kidsGender,
+//       schoolName: enquiryData.schoolName,
+//       address: enquiryData.address,
+//       pincode: enquiryData.pincode,
+//       parentId: parentData._id,
+//       selectedProgram: enquiryData.programs || "",
+//       chessId,
+//       kidPin,
+//     });
+
+//     await newKid.save();
+//     console.log("kids data after move to prospects", parentData);
+
+//     parentData.kids.push({ kidId: newKid._id });
+//     await parentData.save();
+
+//     enquiryData.kidId = newKid._id;
+//     await enquiryData.save();
+
+//     // 4. Update the Log in the Log Database
+//     if (enquiryData.logs) {
+//       console.log("insode the logs");
+//       const logUpdate = {
+//         employeeId: empId,
+//         employeeName: empData.firstName,
+//         action: `Enuiry data is moved to prospects by ${empData.firstName} in ${empData.department} department on ${formattedDateTime}`,
+
+//         updatedAt: new Date(),
+//       };
+
+//       const newLogs = await enquiryLogs.findByIdAndUpdate(
+//         { _id: enquiryData.logs },
+//         {
+//           $push: { logs: logUpdate },
+//         },
+//         { new: true }
+//       );
+
+//       console.log("new log updated", newLogs);
+//     }
+
+//     // 5. Create Log Entries for the Action
+//     const logs = [
+//       {
+//         employeeId: empId,
+//         employeeName: empData.firstName,
+
+//         action: `Enquiry moved to prospects by ${
+//           empData.name
+//         } on ${new Date().toLocaleString()}`,
+//         createdAt: new Date(),
+//       },
+//     ];
+
+//     if (parentData._id) {
+//       logs.push({
+//         employeeId: empId,
+//         employeeName: empData.firstName,
+//         comments: `Registered new parent with ID: ${parentData._id}`,
+//         action: "Parent Registration",
+//         createdAt: new Date(),
+//       });
+//     }
+
+//     if (newKid._id) {
+//       logs.push({
+//         employeeId: empId,
+//         employeeName: empData.firstName,
+//         comments: `Registered new kid with ID: ${newKid._id}`,
+//         action: "Kid Registration",
+//         createdAt: new Date(),
+//       });
+//     }
+
+//     // 6. Update the OperationDept Entry
+//     const updatedEntry = await OperationDept.findByIdAndUpdate(
+//       { _id: id },
+//       {
+//         $set: { enquiryField: "prospects" },
+//       },
+//       { new: true }
+//     );
+
+//     if (!updatedEntry) {
+//       return res.status(404).json({ message: "Prospect data not found" });
+//     }
+
+//     console.log("updatedEntry", updatedEntry);
+
+//     // Return Success Response
+//     res.status(200).json({
+//       success: true,
+//       message: "Prospect data updated successfully and moved to prospects",
+//       data: updatedEntry,
+//       parentData: parentData,
+//       kidData: newKid,
+//     });
+//   } catch (error) {
+//     console.error("Error updating prospect data", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Failed to update prospect data. Please try again later.",
+//     });
+//   }
+// };
+
 const updateProspectData = async (req, res) => {
   try {
     console.log("..........................................");
     console.log("Prospects");
+
     const formattedDateTime = new Intl.DateTimeFormat("en-US", {
       dateStyle: "medium",
       timeStyle: "short",
@@ -236,15 +402,14 @@ const updateProspectData = async (req, res) => {
     const { id } = req.params;
     const { empId } = req.body;
 
-    const empData = await Employee.findOne(
-      { _id: empId },
-      { firstName: 1, department: 1 }
-    );
+    // Fetch Employee Data
+    const empData = await Employee.findOne({ _id: empId }, { firstName: 1, department: 1 });
     if (!empData) {
       return res.status(404).json({ message: "Employee not found" });
     }
     console.log("Employee Data", empData);
 
+    // Fetch Enquiry Data
     const enquiryData = await OperationDept.findOne({ _id: id });
     if (!enquiryData) {
       return res.status(404).json({ message: "Enquiry data not found" });
@@ -254,12 +419,17 @@ const updateProspectData = async (req, res) => {
     console.log("..........................................");
 
     // 1. Handle Parent Registration
-    let parentData = await parentSchema.findOne({
-      parentMobile: enquiryData.whatsappNumber,
-    });
+    let parentData = await parentSchema.findOne({ parentMobile: enquiryData.whatsappNumber });
 
-    // If Parent doesn't exist, create a new one
-    if (!parentData) {
+    if (parentData) {
+      // Update existing parent data
+      parentData.parentName = enquiryData.parentFirstName || parentData.parentName;
+      parentData.parentEmail = enquiryData.email || parentData.parentEmail;
+      parentData.status = "Active"; // Ensure the status remains active
+      await parentData.save();
+      console.log("Updated Parent Data:", parentData);
+    } else {
+      // Create new parent
       parentData = new parentSchema({
         parentName: enquiryData.parentFirstName,
         parentEmail: enquiryData.email,
@@ -268,59 +438,71 @@ const updateProspectData = async (req, res) => {
         type: "new",
         status: "Active",
       });
-
       await parentData.save();
+      console.log("New Parent Created:", parentData);
     }
-    console.log("parent data after move to prospects", parentData);
 
     // 2. Handle Kid Registration
-    const chessId = generateChessId();
-    const kidPin = generateOTP();
+    let kidData = await kidSchema.findOne({ enqId: id });
 
-    // Create new Kid
-    const newKid = new kidSchema({
-      enqId: id,
-      kidsName: enquiryData.kidFirstName,
-      age: enquiryData.kidsAge,
-      gender: enquiryData.kidsGender,
-      schoolName: enquiryData.schoolName,
-      address: enquiryData.address,
-      pincode: enquiryData.pincode,
-      parentId: parentData._id,
-      selectedProgram: enquiryData.programs || "",
-      chessId,
-      kidPin,
-    });
+    if (kidData) {
+      // Update existing kid data
+      kidData.kidsName = enquiryData.kidFirstName || kidData.kidsName;
+      kidData.age = enquiryData.kidsAge || kidData.age;
+      kidData.gender = enquiryData.kidsGender || kidData.gender;
+      kidData.schoolName = enquiryData.schoolName || kidData.schoolName;
+      kidData.address = enquiryData.address || kidData.address;
+      kidData.pincode = enquiryData.pincode || kidData.pincode;
+      kidData.selectedProgram = enquiryData.programs || kidData.selectedProgram;
+      await kidData.save();
+      console.log("Updated Kid Data:", kidData);
+    } else {
+      // Create new kid
+      const chessId = generateChessId();
+      const kidPin = generateOTP();
 
-    await newKid.save();
-    console.log("kids data after move to prospects", parentData);
+      kidData = new kidSchema({
+        enqId: id,
+        kidsName: enquiryData.kidFirstName,
+        age: enquiryData.kidsAge,
+        gender: enquiryData.kidsGender,
+        schoolName: enquiryData.schoolName,
+        address: enquiryData.address,
+        pincode: enquiryData.pincode,
+        parentId: parentData._id,
+        selectedProgram: enquiryData.programs || "",
+        chessId,
+        kidPin,
+      });
 
-    parentData.kids.push({ kidId: newKid._id });
-    await parentData.save();
+      await kidData.save();
+      console.log("New Kid Created:", kidData);
 
-    enquiryData.kidId = newKid._id;
+      // Link Kid to Parent
+      parentData.kids.push({ kidId: kidData._id });
+      await parentData.save();
+    }
+
+    // 3. Link Kid to Enquiry Data
+    enquiryData.kidId = kidData._id;
     await enquiryData.save();
 
-    // 4. Update the Log in the Log Database
+    // 4. Update Logs in Log Database
     if (enquiryData.logs) {
-      console.log("insode the logs");
+      console.log("Inside logs update");
       const logUpdate = {
         employeeId: empId,
         employeeName: empData.firstName,
-        action: `Enuiry data is moved to prospects by ${empData.firstName} in ${empData.department} department on ${formattedDateTime}`,
-
+        action: `Enquiry moved to prospects by ${empData.firstName} in ${empData.department} department on ${formattedDateTime}`,
         updatedAt: new Date(),
       };
 
-      const newLogs = await enquiryLogs.findByIdAndUpdate(
+      await enquiryLogs.findByIdAndUpdate(
         { _id: enquiryData.logs },
-        {
-          $push: { logs: logUpdate },
-        },
+        { $push: { logs: logUpdate } },
         { new: true }
       );
-
-      console.log("new log updated", newLogs);
+      console.log("Logs updated successfully");
     }
 
     // 5. Create Log Entries for the Action
@@ -328,10 +510,7 @@ const updateProspectData = async (req, res) => {
       {
         employeeId: empId,
         employeeName: empData.firstName,
-
-        action: `Enquiry moved to prospects by ${
-          empData.name
-        } on ${new Date().toLocaleString()}`,
+        action: `Enquiry moved to prospects by ${empData.firstName} on ${new Date().toLocaleString()}`,
         createdAt: new Date(),
       },
     ];
@@ -340,17 +519,17 @@ const updateProspectData = async (req, res) => {
       logs.push({
         employeeId: empId,
         employeeName: empData.firstName,
-        comments: `Registered new parent with ID: ${parentData._id}`,
+        comments: `Registered/Updated parent with ID: ${parentData._id}`,
         action: "Parent Registration",
         createdAt: new Date(),
       });
     }
 
-    if (newKid._id) {
+    if (kidData._id) {
       logs.push({
         employeeId: empId,
         employeeName: empData.firstName,
-        comments: `Registered new kid with ID: ${newKid._id}`,
+        comments: `Registered/Updated kid with ID: ${kidData._id}`,
         action: "Kid Registration",
         createdAt: new Date(),
       });
@@ -359,9 +538,7 @@ const updateProspectData = async (req, res) => {
     // 6. Update the OperationDept Entry
     const updatedEntry = await OperationDept.findByIdAndUpdate(
       { _id: id },
-      {
-        $set: { enquiryField: "prospects" },
-      },
+      { $set: { enquiryField: "prospects" } },
       { new: true }
     );
 
@@ -369,15 +546,15 @@ const updateProspectData = async (req, res) => {
       return res.status(404).json({ message: "Prospect data not found" });
     }
 
-    console.log("updatedEntry", updatedEntry);
+    console.log("Updated Entry:", updatedEntry);
 
     // Return Success Response
     res.status(200).json({
       success: true,
       message: "Prospect data updated successfully and moved to prospects",
       data: updatedEntry,
-      parentData: parentData,
-      kidData: newKid,
+      parentData,
+      kidData,
     });
   } catch (error) {
     console.error("Error updating prospect data", error);
@@ -387,6 +564,15 @@ const updateProspectData = async (req, res) => {
     });
   }
 };
+
+
+
+
+
+
+
+
+
 
 const moveBackToEnquiry = async (req, res) => {
   try {
@@ -3062,6 +3248,9 @@ const getDiscountVouchers = async (req, res) => {
       return res.status(404).json({ message: "Enquiry not found" });
     }
 
+    const physicalCenters = await PhysicalCenters.find({},{centerName:1})
+    console.log("physicalCenters",physicalCenters)
+
     const discountData = await Voucher.find();
     const today = new Date();
     console.log("discountData",discountData)
@@ -3080,13 +3269,13 @@ const getDiscountVouchers = async (req, res) => {
     if (validVouchers.length === 0) {
       return res
         .status(200)
-        .json({ message: "No valid vouchers available", discount: 0 });
+        .json({ message: "No valid vouchers available", discount: 0 ,physicalCenters});
     }
     console.log("validVouchers",validVouchers)
 
     return res
       .status(200)
-      .json({ message: "Valid vouchers found", vouchers: validVouchers[0].value });
+      .json({ message: "Valid vouchers found", vouchers: validVouchers[0].value ,physicalCenters});
   } catch (err) {
     console.error("Error in getting the discount for new enquiry", err);
     res.status(500).json({ message: "Internal server error" });

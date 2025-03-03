@@ -266,6 +266,10 @@ import EditPhysicalCenterData from "./pages/employee/superadmin/EditPhysicalCent
 import CenterAdminCoachAvailabilityTable from "./pages/employee/centeradmin/CenterAdminCoachAvailabilityTable";
 import CenterAdminCoachAvailabilityForm from "./pages/employee/centeradmin/CenterAdminCoachAvailabilityForm";
 import CenterScheduleClassForm from "./pages/employee/centeradmin/CenterAdminClassSheduleForm";
+import EmployeeList from "./pages/employee/hr/EmployeeListPage";
+import AddEmployeeFormPage from "./pages/employee/hr/AddEmployeeFormPage";
+import SuperAdminPackageTableList from "./pages/employee/superadmin/package/SuperAdminPackageTableList";
+import SuperAdminAddPackageForm from "./pages/employee/superadmin/package/SuperAdminAddPackageForm";
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
 function App() {
@@ -532,6 +536,12 @@ function App() {
           <Route path="/centeradmin-tasks/support/add"  element={<CenterSupportPage />} /> 
           <Route path="/centeradmin-tasks/supportTrack"  element={<CenterMessageStusTrackPage />}/>
           <Route path="/centreAdminHoliday"  element={<CenterAdminHolidayPage />}/>
+
+
+          <Route path="/hr/department/add-employee-form"  element={<AddEmployeeFormPage />}/>
+          <Route path="/hr/department/employee-list"  element={<EmployeeList />}/>
+
+
           
            
           
@@ -539,10 +549,7 @@ function App() {
           <Route path="/super-admin/department/physical-centerlist" element={<PhysicalCenterListPage />}/>
           <Route path="/super-admin/department/add-physical-center" element={<AddPhysicalCenterFormPage />}/>
           <Route path="/super-admin/department/edit-physical-center/:id" element={<EditPhysicalCenterData />}/>
-          <Route path="/superadminEnquiries" element={<SuperadminEnquiries />}/>
-          <Route path="/superadminKids" element={<SuperadminKids />} />
           <Route path="/super-admin/department/dashboard" element={<SuperadminDashboard />}/>
-          <Route path="/superadminParents" element={<SuperadminParents />} />
           <Route path="/super-admin/department/list-mytask" element={<SuperadminMyTasks />} />
           <Route path="/super-admin/department/list-task-assigned-me" element={<SuperadminMyAssignTasksTable />} />
           <Route path="/super-admin/department/assign-new-task"  element={<SuperadminMyAssignTasks />}/>
@@ -551,11 +558,20 @@ function App() {
           <Route path="/super-admin/department/leaves/add" element={<SuperadminLeavesAdd />}/>
           <Route path="/super-admin/department/edit-leaves/:id"  element={<SuperadminLeavesAdd />} />
           <Route path="/super-admin/department/attendance" element={<SuperadminAttendance />}     />
-          <Route path="/superadminScheduleClass" element={<SuperadminScheduleClass />}/>       
           <Route path="/superadmin/department/discount-form" element={<DiscountFormPage />}/>  
           <Route path="/superadmin/department/discount-table" element={<VoucherTablePage />}/>
+
+          <Route path="/superadmin/department/package-table" element={<SuperAdminPackageTableList />}/>
+          <Route path="/superadmin/department/add-package-form" element={<SuperAdminAddPackageForm />}/>
+
+
+
+          <Route path="/superadminScheduleClass" element={<SuperadminScheduleClass />}/>       
           <Route path="/superadminRenewals" element={<SuperadminRenewal />} />
+          <Route path="/superadminParents" element={<SuperadminParents />} />
+          <Route path="/superadminEnquiries" element={<SuperadminEnquiries />}/>
           <Route path="/superadminInvoices" element={<SuperadminInvoice />} />
+          <Route path="/superadminKids" element={<SuperadminKids />} />
           <Route path="/chessKids/" element={<ChessKid />} />
           <Route path="/superadminFeedback" element={<SuperadminFeedback />} />
           <Route path="/superadminAttendanceReport"  element={<SuperadminAttendanceReport />} />

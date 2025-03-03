@@ -38,6 +38,9 @@ const packageSchema = new mongoose.Schema({
       type: Number,
     },
   },
+  centerId :{type:String},
+  centerName :{type:String}
+
 });
 
 const Package = mongoose.model("Package", packageSchema);
