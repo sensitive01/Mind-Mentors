@@ -659,6 +659,7 @@ const parentAddNewKid = async (req, res) => {
       chessId,
       kidPin,
     });
+    console.log(newKid)
 
     await newKid.save();
 
