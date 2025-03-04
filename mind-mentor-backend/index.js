@@ -1,10 +1,9 @@
 const express = require("express");
 const cors = require("cors");
-const app = express();
+const path = require("path");
 const cookieParser = require("cookie-parser");
 const crypto = require("crypto");
 
-// const { PORT } = require("./config/variables/variables");
 const dbConnect = require("./config/database/dbConnect");
 const parentRoute = require("./routes/parent/parentRoute");
 const operationRoute = require("./routes/employee/opertation-dept/operationDeptRoute");
@@ -14,7 +13,9 @@ const serviceRoute = require("./routes/servicedelivery/serviceDeliveryRoute");
 const userRoute = require("./routes/superadmin/superAdminRoute");
 const zoomRoute = require("./routes/zoom/zoomRoute");
 const hrRoutes = require("./routes/hr/hrRoutes");
+
 const PORT = 3000;
+const app = express();
 
 app.set("trust proxy", true);
 
@@ -28,7 +29,7 @@ const allowedOrigins = [
   "http://localhost:5173",
   "https://mind-mentors.vercel.app",
   "https://mind-mentors-vt11.vercel.app",
-  "https://bespoke-narwhal-295702.netlify.app"
+  "https://bespoke-narwhal-295702.netlify.app",
 ];
 
 const corsOptions = {
@@ -44,15 +45,13 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
 function generateSignature(apiKey, apiSecret, meetingNumber, role) {
   const timestamp = new Date().getTime() - 30000;
   const msg = Buffer.from(apiKey + meetingNumber + timestamp + role).toString(
     "base64"
   );
-  const hash = crypto
-    .createHmac("sha256", apiSecret)
-    .update(msg)
-    .digest("base64");
+  const hash = crypto.createHmac("sha256", apiSecret).update(msg).digest("base64");
   const signature = Buffer.from(
     `${apiKey}.${meetingNumber}.${timestamp}.${role}.${hash}`
   ).toString("base64");
@@ -89,6 +88,14 @@ app.post("/api/get-signature", (req, res) => {
   } catch (error) {
     res.status(500).json({ error: "Failed to generate signature" });
   }
+});
+
+// Serve the dist folder
+app.use(express.static(path.join(__dirname, "dist")));
+
+// Handle SPA (Single Page Application) fallback
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
 
 app.listen(PORT, () => {
