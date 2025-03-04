@@ -10,5 +10,5 @@ const LeaveSchema = new mongoose.Schema({
   empId: { type: String },
 
   status:{type:String,default:'pending'}
-});
+},{timestamps:true});
 module.exports = mongoose.model("leaves", LeaveSchema);

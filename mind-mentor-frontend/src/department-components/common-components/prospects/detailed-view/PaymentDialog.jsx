@@ -193,8 +193,8 @@ const PaymentDialog = ({ open, onClose, data, enqId }) => {
     const paymentData = {
       enqId,
       selectedPackage: selected.packageName,
-      onlineClasses: Number(onlineClasses),
-      offlineClasses: Number(offlineClasses),
+      onlineClasses: Number(onlineClasses)||Number(selected.onlineClasses),
+      offlineClasses: Number(offlineClasses)||Number(selected.physicalClasses),
       kidName: data?.kidName,
       kidId: data.kidId,
       whatsappNumber: data?.whatsappNumber,
@@ -211,6 +211,8 @@ const PaymentDialog = ({ open, onClose, data, enqId }) => {
     const baseUrl = window.location.origin;
     const link = `${baseUrl}/payment-details/${encodedData}`;
     const parentLink = `/payment-details/${encodedData}`;
+
+    console.log("encodedData",paymentData,"selected",selected)
 
     try {
       const response = await sendPaymentDetailsLink(parentLink, data._id);

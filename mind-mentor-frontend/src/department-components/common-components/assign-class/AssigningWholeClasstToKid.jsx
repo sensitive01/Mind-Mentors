@@ -1,8 +1,11 @@
+/* eslint-disable react/display-name */
+/* eslint-disable react/prop-types */
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { Calendar, Clock, Award, X, Trash2, ChevronDown } from "lucide-react";
 import {
   assignWholeClass,
   getActiveKidData,
+  getScheduledClassData,
 } from "../../../api/service/employee/serviceDeliveryService";
 import { useParams } from "react-router-dom";
 
@@ -251,6 +254,16 @@ const AssigningWholeClassToKid = () => {
 
     fetchKidData();
   }, [enqId]);
+
+  useEffect(()=>{
+    const fetchClassData = async()=>{
+      const response = await getScheduledClassData(enqId)
+      console.log(response)
+
+    }
+    fetchClassData()
+
+  },[])
 
   const formatDate = useCallback((date) => {
     const day = date.getDate().toString().padStart(2, "0");

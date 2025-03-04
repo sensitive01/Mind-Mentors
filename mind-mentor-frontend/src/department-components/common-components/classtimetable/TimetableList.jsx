@@ -183,7 +183,7 @@ const ScheduleKanban = () => {
   const handleAddKids = (e, classInfo) => {
     e.stopPropagation();
     console.log("Add kids for class:", classInfo);
-    navigate(`/serviceAssignClassToKid/${classInfo.id}`);
+    // navigate(`/serviceAssignClassToKid/${classInfo.id}`);
   };
 
   return (
@@ -214,7 +214,7 @@ const ScheduleKanban = () => {
             to="/centeradmin/department/create-time-table"
             color="primary"
           >
-            + Create Schedules
+            + Create Schedulesss
           </Button>
         </Box>
 

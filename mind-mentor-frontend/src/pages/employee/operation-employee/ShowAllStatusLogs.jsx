@@ -23,7 +23,7 @@ const ShowAllStatusLogs = () => {
               }
             }}
           >
-            <div className="min-w-full p-4">
+            <div className="min-w-full p-4 bg-gray-50">
               <CompleteStatusLogs />
             </div>
           </div>

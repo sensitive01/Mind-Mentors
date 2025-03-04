@@ -148,9 +148,9 @@ const NewTaskForm = () => {
           variant="contained"
             color="#642b8f"
             component={Link}
-            to={`/${department}/department/list-task-assigned-me`}
+            to={`/${department}/department/task-table`}
           >
-            View Assigned Task
+            View Task 
           </Button>
         </div>
 
@@ -169,10 +169,10 @@ const NewTaskForm = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} onReset={handleReset} className="p-8">
-          <div className="space-y-8">
+        <form onSubmit={handleSubmit} onReset={handleReset} className="p-6">
+          <div className="space-y-4">
 
-            <div className="space-y-4">
+            <div className="space-y-2">
               <label className="block text-sm font-medium text-[#642b8f]">
                 Kids Related To
               </label>
@@ -192,7 +192,7 @@ const NewTaskForm = () => {
             </div>
 
 
-            <div className="space-y-4">
+            <div className="space-y-2">
               <label className="block text-sm font-medium text-[#642b8f]">
                 Task
               </label>
@@ -207,7 +207,7 @@ const NewTaskForm = () => {
             </div>
 
             <div className="flex gap-4">
-              <div className="flex-1 space-y-4">
+              <div className="flex-1 space-y-2">
                 <label className="block text-sm font-medium text-[#642b8f]">
                   Task Date
                 </label>

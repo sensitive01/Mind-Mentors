@@ -240,7 +240,7 @@ const Enquiries = () => {
   return (
     <ThemeProvider theme={theme}>
       <Fade in={true}>
-        <Box sx={{ width: "100%", height: "100%", p: 3, ml: "auto" }}>
+        <Box sx={{ width: "100%", height: "100%", p: 2, ml: "auto" }}>
           <Paper
             elevation={0}
             sx={{

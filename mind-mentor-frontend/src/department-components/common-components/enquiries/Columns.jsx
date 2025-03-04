@@ -13,7 +13,7 @@ import {
   Button,
 } from "@mui/material";
 
-import { HistoryIcon } from "lucide-react";
+import { Bold, HistoryIcon } from "lucide-react";
 
 const columns = (
   theme,
@@ -25,19 +25,39 @@ const columns = (
 ) => [
   {
     field: "slNo",
-    headerName: "Sl No.",
-    width: 100,
+    headerName: "Sno",
+
+    width: 50,
     align: "center",
     headerAlign: "center",
     sortable: false, // Disable sorting for serial numbers
     filterable: false, // Disable filtering for serial numbers
+    renderHeader: () => <strong>Sno</strong>
   },
-
   {
     field: "parentFirstName",
-    headerName: "Parent  Name",
+    headerName: "Parent Name",
     width: 180,
     editable: true,
+    renderHeader: () => <strong>Parent Name</strong>,
+    renderCell: (params) => (
+      <Box sx={{ display: 'flex', flexDirection: 'column',marginTop:1}}>
+        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+          {params.value}
+        </Typography>
+        <Typography 
+          variant="caption" 
+          color="text.secondary"
+          sx={{ 
+            fontSize: '0.65rem', 
+            opacity: 0.9,
+            lineHeight: 1.5
+          }}
+        >
+          {params.row.createdOn}
+        </Typography>
+      </Box>
+    )
   },
 
   {
@@ -45,12 +65,17 @@ const columns = (
     headerName: "Kid Name",
     width: 180,
     editable: true,
+    renderHeader: () => <strong>Kid Name</strong>
+
   },
 
   {
     field: "contact",
     headerName: "Contact",
-    width: 180,
+
+    renderHeader: () => <strong>Contact</strong>,
+
+    width: 100,
     renderCell: (params) => (
       <Box sx={{ display: "flex", gap: 2,marginTop:"7px" }}>
         {params.row.whatsappNumber && (
@@ -62,9 +87,9 @@ const columns = (
               handleMessage(params.row.whatsappNumber);
             }}
             sx={{
-              color: "#8B5CF6", // Purple
+              color: "#00FF00", // Purple
               "&:hover": {
-                bgcolor: alpha("#8B5CF6", 0.1),
+                bgcolor: alpha("#00FF00", 0.1),
               },
             }}
           >
@@ -136,9 +161,9 @@ const columns = (
               }
             }}
             sx={{
-              color: "#8B5CF6", // Purple
+              color: "#00FF00", // Purple
               "&:hover": {
-                bgcolor: alpha("#8B5CF6", 0.1),
+                bgcolor: alpha("#00FF00", 0.1),
               },
             }}
           >
@@ -159,10 +184,34 @@ const columns = (
       </Box>
     ),
   },
+  {
+    field: "programs",
+    renderHeader: () => <strong>Programs</strong>,
+
+    width: 150,
+    renderCell: (params) => (
+      <Box in={true}>
+        {params.value.map((prog, index) => (
+          <Chip
+            key={index}
+            label={`${prog.program} (${prog.level})`}
+            size="small"
+            sx={{
+              bgcolor: alpha(theme.palette.primary.main, 0.1),
+              color: theme.palette.primary.main,
+              marginRight: 1,
+            }}
+          />
+        ))}
+      </Box>
+    ),
+  },
 
   {
     field: "lastNoteAction",
     headerName: "Status",
+    renderHeader: () => <strong>Status</strong>,
+
     width: 210,
     renderCell: (params) => {
       // Get the latest status or default value
@@ -219,26 +268,7 @@ const columns = (
             }}
           >
             {/* Status Icon */}
-            <Box
-              className="status-badge"
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                bgcolor: alpha(theme.palette.primary.main, 0.1),
-                borderRadius: "6px",
-                padding: "4px",
-                transition: "all 0.2s ease",
-              }}
-            >
-              <HistoryIcon
-                size={16}
-                className="history-icon"
-                style={{
-                  transition: "transform 0.2s ease",
-                }}
-              />
-            </Box>
+          
 
             {/* Status Text */}
             <Box sx={{ flex: 1 }}>
@@ -299,7 +329,9 @@ const columns = (
   {
     field: "enquiryType",
     headerName: "Type",
-    width: 150,
+    renderHeader: () => <strong>Type</strong>,
+
+    width: 120,
     renderCell: (params) => (
       <Fade in={true}>
         <Box
@@ -339,6 +371,8 @@ const columns = (
   {
     field: "moveToProspect",
     headerName: "Move to Prospects",
+    renderHeader: () => <strong>Move to Prospects</strong>,
+
     width: 170,
     renderCell: (params) => (
       <button
@@ -368,7 +402,8 @@ const columns = (
 
   {
     field: "disposition",
-    headerName: "Last Log",
+    renderHeader: () => <strong>Last Log</strong>,
+
     width: 150,
     renderCell: (params) => {
       // Get the latest status or default value
@@ -490,33 +525,8 @@ const columns = (
     },
   },
 
-  {
-    field: "createdAt",
-    headerName: "Created At",
-    width: 200,
-    valueFormatter: (params) => params.value,
-  },
 
-  {
-    field: "programs",
-    headerName: "Programs",
-    width: 250,
-    renderCell: (params) => (
-      <Box in={true}>
-        {params.value.map((prog, index) => (
-          <Chip
-            key={index}
-            label={`${prog.program} (${prog.level})`}
-            size="small"
-            sx={{
-              bgcolor: alpha(theme.palette.primary.main, 0.1),
-              color: theme.palette.primary.main,
-              marginRight: 1,
-            }}
-          />
-        ))}
-      </Box>
-    ),
-  },
+
+ 
 ];
 export default columns;

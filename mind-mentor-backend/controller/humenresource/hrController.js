@@ -5,7 +5,7 @@ const createNewEmployee = async (req, res) => {
     try {
         console.log("Welcome to create new employee", req.body);
 
-        const { firstName, email, phoneNumber, address, gender, department, role,centerName,centerId } = req.body.formData;
+        const { firstName, email, phoneNumber, address, gender, department, role,centerName,centerId,mode } = req.body.formData;
 
         const existingEmployee = await employeeModel.findOne({ email });
         if (existingEmployee) {
@@ -22,7 +22,8 @@ const createNewEmployee = async (req, res) => {
             role: role || "employee",
             password: "12345678",
             centerName,
-            centerId 
+            centerId,
+            mode
         });
 
         await newEmployee.save();

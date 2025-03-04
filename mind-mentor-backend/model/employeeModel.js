@@ -28,6 +28,7 @@ const employeeSchema = new mongoose.Schema(
     gender: { type: String },
     isPasswordChanged: { type: Boolean, default: false },
     centerName: { type: String, default: null },
+    mode:{type:String},
 
     centerId: { type: String, default: null },
   },

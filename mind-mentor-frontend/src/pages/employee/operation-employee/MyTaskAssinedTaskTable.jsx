@@ -13,7 +13,7 @@ const MyTaskAssinedTaskTable = () => {
         </div>
         <div className="flex-1 overflow-hidden relative z-10">
           <div className="h-full w-full overflow-auto scrollbar-hide">
-            <div className="min-w-full">
+            <div className="min-w-full bg-gray-50">
               <AssignAssignedTask />
             </div>
           </div>

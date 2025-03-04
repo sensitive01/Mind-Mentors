@@ -51,6 +51,7 @@ const ClassScheduleForm = () => {
       fromTime: "",
       toTime: "",
       isDemo: false,
+      mode:"online"
     },
   ]);
 
@@ -237,6 +238,8 @@ const ClassScheduleForm = () => {
         toTime: "",
         meetingLink: "",
         isDemo: false,
+        mode:"online"
+
       },
     ]);
   };
@@ -306,6 +309,8 @@ const ClassScheduleForm = () => {
         toTime: "",
         meetingLink: "",
         isDemo: false,
+        mode:"online"
+
       },
     ]);
   };

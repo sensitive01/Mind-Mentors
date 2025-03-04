@@ -548,6 +548,7 @@ const timeTableShedules = async (req, res) => {
           level: shedule.level,
           meetingLink: zoomLink,
           classType: shedule.isDemo ? "Demo" : "Class",
+          type:shedule.mode
         });
 
         return await newSchedule.save();
@@ -698,6 +699,20 @@ const displaySelectedClass = async (req, res) => {
 };
 
 
+const getScheduledClassData = async(req,res)=>{
+  try{
+    const {enqId} = req.params
+    const enqData = await operationDeptModel.findOne({ _id: enqId,payment:"Success",status:"Active"},{programs:1})
+    console.log("EnqId==>",enqData)
+    const classData = await ClassSchedule.find({},{day:1,classTime:1,coachName:1,coachId:1})
+    console.log("classData",classData)
+
+  }catch(err){
+    console.log("Error in getting the schedule")
+
+  }
+}
+
 
 
 module.exports = {
@@ -714,4 +729,5 @@ module.exports = {
   updateCoachAvailabilityData,
   deleteCoachAvailability,
   getAllActiveEnquiries,
+  getScheduledClassData
 };

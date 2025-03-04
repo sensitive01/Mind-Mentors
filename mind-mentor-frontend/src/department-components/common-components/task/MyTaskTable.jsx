@@ -309,6 +309,10 @@ const MyTaskTable = () => {
               pageSizeOptions={[5, 10, 25]}
               disableRowSelectionOnClick
               slots={{ toolbar: GridToolbar }}
+              onRowClick={(params) => {
+                const department = localStorage.getItem("department");
+                navigate(`/${department}/department/taskslogs/${params.row._id}`);
+              }}
               slotProps={{
                 toolbar: {
                   showQuickFilter: true,
@@ -316,25 +320,26 @@ const MyTaskTable = () => {
                 },
               }}
               sx={{
-                height: 500,
-                "& .MuiDataGrid-cell:focus": {
-                  outline: "none",
-                },
-                "& .MuiDataGrid-row:hover": {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.04),
-                },
-                "& .MuiDataGrid-columnHeader": {
-                  backgroundColor: "#642b8f",
-                  color: "white",
-                  fontWeight: 600,
-                },
-                "& .MuiCheckbox-root.Mui-checked": {
-                  color: "#FFFFFF",
-                },
-                "& .MuiDataGrid-columnHeader .MuiCheckbox-root": {
-                  color: "#FFFFFF",
-                },
-              }}
+                             height: 500,
+                             "& .MuiDataGrid-cell:focus": {
+                               outline: "none",
+                             },
+                             "& .MuiDataGrid-row:hover": {
+                               backgroundColor: alpha(theme.palette.primary.main, 0.04),
+                               cursor: 'pointer', // Add cursor pointer to indicate clickable rows
+                             },
+                             "& .MuiDataGrid-columnHeader": {
+                               backgroundColor: "#642b8f",
+                               color: "white",
+                               fontWeight: 600,
+                             },
+                             "& .MuiCheckbox-root.Mui-checked": {
+                               color: "#FFFFFF",
+                             },
+                             "& .MuiDataGrid-columnHeader .MuiCheckbox-root": {
+                               color: "#FFFFFF",
+                             },
+                           }}
             />
 
             <Dialog

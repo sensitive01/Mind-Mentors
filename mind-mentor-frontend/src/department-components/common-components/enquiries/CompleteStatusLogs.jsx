@@ -108,16 +108,11 @@ const CompleteStatusLogs = () => {
   const columns = [
     {
       field: "id",
-      headerName: "Sl. No",
+      headerName: "Sno",
       width: 80,
       minWidth: 80,
     },
-    {
-      field: "createdAt",
-      headerName: "Date",
-      width: 160,
-      minWidth: 160,
-    },
+
     {
       field: "enquiryStatus",
       headerName: "Enquiry Status",
@@ -154,8 +149,15 @@ const CompleteStatusLogs = () => {
       headerName: "Added By",
       width: 300,
       minWidth: 300,
+      renderCell: (params) => (
+        <Box>
+          <div>{params.value}</div> {/* Display "updatedBy" value */}
+          <div style={{ fontSize: "12px", color: "gray" }}>{params.row.createdAt}</div> {/* Display "createdAt" */}
+        </Box>
+      ),
     },
   ];
+  
 
   const theme = createTheme({
     palette: {
@@ -220,6 +222,7 @@ const CompleteStatusLogs = () => {
               height: 650,
               boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.05)",
               overflow: "hidden",
+              p:3
             }}
           >
             <Box
@@ -240,7 +243,7 @@ const CompleteStatusLogs = () => {
                   py: 1,
                 }}
               >
-                Add Notes
+                Update call status log
               </Button>
             </Box>
 

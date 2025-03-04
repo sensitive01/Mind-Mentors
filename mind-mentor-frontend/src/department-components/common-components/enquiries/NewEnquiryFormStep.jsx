@@ -273,7 +273,7 @@ const NewEnquiryFormStep = () => {
     switch (activeStep) {
       case 0:
         return (
-          <div className="space-y-8">
+          <div className="space-y-8 ">
             <div className="space-y-4">
               <h3 className="text-[#642b8f] font-semibold text-lg pb-2 border-b-2 border-[#f8a213]">
                 Parent Information
@@ -676,7 +676,7 @@ const NewEnquiryFormStep = () => {
   };
 
   return (
-    <div className="min-h-screen p-6">
+    <div className="min-h-screen p-6 bg-gray-50">
       <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-xl overflow-hidden">
         <div className="bg-gradient-to-r from-[#642b8f] to-[#aa88be] p-7 text-white flex justify-between items-center">
           <div>
@@ -690,12 +690,13 @@ const NewEnquiryFormStep = () => {
           <Button
             variant="contained"
             component={Link}
-            to="/operation/department/enquiry-list"
+            to="/operation/department/enrollment-data"
             sx={{
-              backgroundColor: "#642b8f",
-              color: "#fff", // Set text color for contrast
+              backgroundColor: "#ffff",
+              color: "#f8a213", // Set text color for contrast
               "&:hover": {
-                backgroundColor: "#501c6f", // Adjust the hover color if needed
+                backgroundColor: "#642b8f", // Adjust the hover color if needed
+                color:"#f8a213"
               },
             }}
           >

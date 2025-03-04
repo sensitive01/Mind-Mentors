@@ -11,7 +11,7 @@ import axios from "axios";
 import { useState, useEffect } from "react";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
-import { Link, useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   addNewEmployee,
   getAllPhysicalcenters,
@@ -28,6 +28,7 @@ const AddEmployeeForm = () => {
     role: "",
     centerId: "",
     centerName: "",
+    mode: "", // New state for mode
   });
 
   const [centers, setCenters] = useState([]);
@@ -45,22 +46,23 @@ const AddEmployeeForm = () => {
   }, []);
 
   useEffect(() => {
-    // Show center dropdown if department or role is "centeradmin"
+    // Show center dropdown if department or role is "centeradmin" or mode is "offline"
     if (
       formData.department === "centeradmin" ||
-      formData.role === "centeradmin"
+      formData.role === "centeradmin" ||
+      formData.mode === "offline"
     ) {
       setShowCenterDropdown(true);
     } else {
       setShowCenterDropdown(false);
-      // Clear center selection if not a center admin
+      // Clear center selection if not a center admin or offline mode
       setFormData((prev) => ({
         ...prev,
         centerId: "",
         centerName: "",
       }));
     }
-  }, [formData.department, formData.role]);
+  }, [formData.department, formData.role, formData.mode]);
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -98,6 +100,7 @@ const AddEmployeeForm = () => {
         gender: formData.gender,
         department: formData.department,
         role: formData.role,
+        mode: formData.mode, // Include mode in the submission
       };
 
       // Only include center data if it's selected
@@ -109,8 +112,8 @@ const AddEmployeeForm = () => {
       let response;
 
       response = await addNewEmployee(formDataToSubmit);
-      console.log("User updated:", response.data);
-      alert("User updated successfully!");
+      console.log("User  updated:", response.data);
+      alert("User  updated successfully!");
     } catch (error) {
       console.error(
         "Error:",
@@ -199,7 +202,6 @@ const AddEmployeeForm = () => {
                       handleInputChange("gender", e.target.value)
                     }
                     label="Gender"
-                    
                   >
                     <MenuItem value="" disabled>
                       <em>Select Gender</em>
@@ -253,7 +255,7 @@ const AddEmployeeForm = () => {
                 </FormControl>
               </div>
 
-              {/* Department and Role in one row */}
+              {/* Department, Mode, and Role in one row */}
               <div className="flex gap-4 mb-4">
                 <FormControl variant="outlined" className="flex-1" required>
                   <InputLabel id="department-label">Department</InputLabel>
@@ -274,6 +276,24 @@ const AddEmployeeForm = () => {
                         {dept}
                       </MenuItem>
                     ))}
+                  </Select>
+                </FormControl>
+
+                {/* Mode Dropdown */}
+                <FormControl variant="outlined" className="flex-1" required>
+                  <InputLabel id="mode-label">Mode</InputLabel>
+                  <Select
+                    labelId="mode-label"
+                    id="mode"
+                    value={formData.mode}
+                    onChange={(e) => handleInputChange("mode", e.target.value)}
+                    label="Mode"
+                  >
+                    <MenuItem value="" disabled>
+                      <em>Select Mode</em>
+                    </MenuItem>
+                    <MenuItem value="online">Online</MenuItem>
+                    <MenuItem value="offline">Offline</MenuItem>
                   </Select>
                 </FormControl>
 
@@ -378,6 +398,7 @@ const AddEmployeeForm = () => {
                   role: "",
                   centerId: "",
                   centerName: "",
+                  mode: "", // Reset mode
                 });
               }}
             >

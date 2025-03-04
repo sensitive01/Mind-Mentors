@@ -74,7 +74,7 @@ const KidsLoginPage = () => {
           case "coach":
             navigate("/coach/department/dashboard");
             break;
-          case "hr":
+          case "Humen Resource":
             navigate("/hr/department/employee-list");
             break;
           default:

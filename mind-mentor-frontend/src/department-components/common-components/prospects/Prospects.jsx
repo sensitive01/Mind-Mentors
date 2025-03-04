@@ -234,7 +234,7 @@ const Prospects = () => {
     <>
       <ThemeProvider theme={theme}>
         <Fade in={true}>
-          <Box sx={{ width: "100%", height: "100%", ml: "auto" }}>
+          <Box sx={{ width: "100%", height: "100%", ml: "auto",p:2 }}>
             <Paper
               elevation={0}
               sx={{

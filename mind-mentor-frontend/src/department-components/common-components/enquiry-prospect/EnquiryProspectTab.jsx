@@ -9,7 +9,7 @@ const EnquiryProspectTab = () => {
   const department = localStorage.getItem("department");
 
   return (
-    <div className="w-full h-full  rounded-lg shadow-sm">
+    <div className="w-full h-full bg-gray-100  rounded-lg shadow-sm">
       {/* Header Section */}
       <div className="flex justify-between  items-center px-6 py-4 border-b">
         <div className="flex space-x-4 ">
@@ -46,6 +46,7 @@ const EnquiryProspectTab = () => {
             backgroundColor: "#642b8f",
             "&:hover": {
               backgroundColor: "#4a1d6e",
+              color: "#f8a213",
             },
           }}
           component={Link}
@@ -54,8 +55,7 @@ const EnquiryProspectTab = () => {
           + New Enquiry Form
         </Button>
       </div>
-
-      {activeTab === "enquiry" ? <Enquiry /> : <Prospect />}
+      <div className="p-2">{activeTab === "enquiry" ? <Enquiry /> : <Prospect />}</div>
     </div>
   );
 };

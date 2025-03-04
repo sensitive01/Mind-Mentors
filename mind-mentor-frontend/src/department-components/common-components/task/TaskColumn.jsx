@@ -1,32 +1,91 @@
-// columns.js
-import HistoryIcon from "@mui/icons-material/History";
-import NoteAddIcon from "@mui/icons-material/NoteAdd";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import {
-  Box,
-  Chip,
-  Fade,
-  Grow,
-  IconButton,
-  MenuItem,
-  Select,
-  Zoom,
-} from "@mui/material";
-import { alpha } from "@mui/material/styles";
+import { Typography } from "@mui/material";
+import { Box, Fade, MenuItem, Select, Zoom } from "@mui/material";
 
-const columns = (
-  theme,
-  handleStatusToggle,
-  setViewDialog,
-  setNoteDialog,
-  setLogDialog,
-  navigate
-) => [
+const columns = (theme, handleStatusToggle) => [
   {
     field: "slNo",
-    headerName: "Sl No",
+    headerName: "Sno",
     width: 100,
     renderCell: (params) => params.value,
+  },
+  {
+    field: "task",
+    headerName: "Task",
+    width: 250,
+    editable: true,
+  },
+  {
+    field: "assignedBy",
+    headerName: "Assigned By",
+    width: 250,
+    editable: false,
+    renderCell: (params) => (
+      <Zoom in={true}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            gap: 0.5,
+            width: "100%",
+            height: "100%",
+          }}
+        >
+          <Typography variant="body2" sx={{ color: "black", textTransform: "none" }}>
+            {params.row.assignedBy.name}
+          </Typography>
+          {params.row.assignedBy && (
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: 200,
+                color: "black",
+                textTransform: "none",
+                margin: 0,
+              }}
+            >
+              department: {params.row.assignedBy.department}
+            </Typography>
+          )}
+        </Box>
+      </Zoom>
+    ),
+  },
+  {
+    field: "assignedToName",
+    headerName: "Assigned To",
+    width: 250,
+    renderCell: (params) => (
+      <Zoom in={true}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            gap: 0.5,
+            width: "100%",
+            height: "100%",
+          }}
+        >
+          <Typography variant="body2" sx={{ color: "black", textTransform: "none" }}>
+            {params.row.assignedToName}
+          </Typography>
+          {params.row.assignedTodepartment && (
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: 200,
+                color: "black",
+                textTransform: "none",
+                margin: 0,
+              }}
+            >
+              department: {params.row.assignedTodepartment}
+            </Typography>
+          )}
+        </Box>
+      </Zoom>
+    ),
   },
   {
     field: "createdAt",
@@ -41,43 +100,9 @@ const columns = (
     editable: true,
   },
   {
-    field: "task",
-    headerName: "Task",
-    width: 250,
-    editable: true,
-  },
-  {
-    field: "assignedBy",
-    headerName: "Assigned By",
-    width: 250,
-    editable: false,
-    valueGetter: (params) => {
-      const assignedBy = `${params.name} - ${params.email}`;
-
-      return `${assignedBy}`;
-    },
-  },
-  {
-    field: "assignedTo",
-    headerName: "Assigned Role",
-    width: 200,
-    renderCell: (params) => (
-      <Zoom in={true}>
-        <Chip
-          label={params.value}
-          size="small"
-          sx={{
-            bgcolor: alpha(theme.palette.primary.main, 0.1),
-            color: theme.palette.primary.main,
-          }}
-        />
-      </Zoom>
-    ),
-  },
-  {
     field: "status",
     headerName: "Task Status",
-    width: 180,
+    width: 150,
     renderCell: (params) => (
       <Fade in={true}>
         <Select
@@ -89,71 +114,30 @@ const columns = (
             backgroundColor: "#f4f4f4",
             borderRadius: "8px",
             fontSize: "0.875rem",
-            "& .MuiSelect-select": { padding: "4px 8px" },
+            color: "black",
+            "& .MuiSelect-select": {
+              padding: "8px 12px",
+              textTransform: "none",
+            },
           }}
         >
-          <MenuItem value="Pending">Pending</MenuItem>
-          <MenuItem value="In Progress">In Progress</MenuItem>
-          <MenuItem value="Completed">Completed</MenuItem>
-          <MenuItem value="InCompleted">InCompleted</MenuItem>
-          <MenuItem value="Reassigned">Reassigned</MenuItem>
+          <MenuItem value="Pending" sx={{ color: "black" }}>
+            Pending
+          </MenuItem>
+          <MenuItem value="In Progress" sx={{ color: "black" }}>
+            In Progress
+          </MenuItem>
+          <MenuItem value="Completed" sx={{ color: "black" }}>
+            Completed
+          </MenuItem>
+          <MenuItem value="InCompleted" sx={{ color: "black" }}>
+            InCompleted
+          </MenuItem>
+          <MenuItem value="Reassigned" sx={{ color: "black" }}>
+            Reassigned
+          </MenuItem>
         </Select>
       </Fade>
-    ),
-  },
-  {
-    field: "actions",
-    headerName: "Actions",
-    width: 200,
-    renderCell: (params) => (
-      <Box sx={{ display: "flex", gap: 1 }}>
-        <Grow in={true}>
-          <IconButton
-            size="small"
-            onClick={() => setViewDialog({ open: true, rowData: params.row })}
-            sx={{
-              color: "#F59E0B",
-              "&:hover": {
-                backgroundColor: alpha(theme.palette.primary.main, 0.1),
-              },
-            }}
-          >
-            <VisibilityIcon fontSize="small" />
-          </IconButton>
-        </Grow>
-        <Grow in={true}>
-          <IconButton
-            size="small"
-            onClick={() => setNoteDialog({ open: true, rowData: params.row })}
-            sx={{
-              color: "#642b8f",
-              "&:hover": {
-                backgroundColor: alpha(theme.palette.secondary.main, 0.1),
-              },
-            }}
-          >
-            <NoteAddIcon fontSize="small" />
-          </IconButton>
-        </Grow>
-        <Grow in={true}>
-          <IconButton
-            size="small"
-            onClick={() => {
-              setLogDialog({ open: true, rowData: params.row });
-              const department = localStorage.getItem("department");
-              navigate(`/${department}/department/taskslogs/${params.row._id}`);
-            }}
-            sx={{
-              color: "#000",
-              "&:hover": {
-                backgroundColor: alpha(theme.palette.info.main, 0.1),
-              },
-            }}
-          >
-            <HistoryIcon fontSize="small" />
-          </IconButton>
-        </Grow>
-      </Box>
     ),
   },
 ];

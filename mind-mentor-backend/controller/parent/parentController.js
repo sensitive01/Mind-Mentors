@@ -1291,6 +1291,11 @@ const savePaymentData = async (req, res) => {
 
     console.log("Payment data saved successfully", savedPayment);
 
+    const enqData = await operationDeptModel.updateOne(
+      { _id: enqId },
+      { $set: { "scheduleDemo.status": "Completed" } }
+    );
+    
     res
       .status(201)
       .json({ message: "Payment data saved successfully", data: savedPayment });

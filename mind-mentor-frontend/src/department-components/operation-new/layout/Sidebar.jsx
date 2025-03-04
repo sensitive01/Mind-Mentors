@@ -28,7 +28,7 @@ import {
   Typography,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { TentTree } from "lucide-react";
+import { RouteIcon, TentTree } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
@@ -57,16 +57,14 @@ const ModernSidebar = () => {
   }, [location.pathname]);
 
   const iconColors = {
-    profile: "#FF6B6B",
-    dashboard: "#4ECDC4",
-    leads: "#45B7D1",
-    attendance: "#FDCB6E",
-    tasks: "#6C5CE7",
-    schedule: "#FF8A5B",
-    leaves: "#2ECC71",
-    reports: "#9B59B6",
-    invoices: "#3498DB",
-    support: "#E74C3C",
+    profile: "#642b8f",
+    dashboard: "#642b8f",
+    leads: "#642b8f",
+    attendance: "#642b8f",
+    tasks: "#642b8f",
+    schedule: "#642b8f",
+    invoices: "#642b8f",
+    support: "#642b8f",
   };
 
   const StyledListItem = styled(ListItem)(({ theme, active }) => ({
@@ -92,7 +90,7 @@ const ModernSidebar = () => {
         color: "white",
       },
       "&:hover": {
-        backgroundColor: "#642b8f", // Fixed the typo here (was "white")
+        backgroundColor: "#642b8f",
       },
     }),
 
@@ -111,7 +109,7 @@ const ModernSidebar = () => {
     },
 
     "& .MuiListItemText-primary": {
-      color: active ? "#ffffff" : theme.palette.text.primary, // Added active state color check
+      color: active ? "#ffffff" : theme.palette.text.primary,
       fontWeight: active ? 600 : 400,
       transition: "all 0.3s ease",
     },
@@ -132,6 +130,14 @@ const ModernSidebar = () => {
       borderRight: "1px solid rgba(0, 0, 0, 0.12)",
       transition: "width 0.3s ease",
       overflowX: "hidden",
+      overflowY: "auto", // Ensures vertical scrolling
+      // Hide scrollbar for Chrome, Safari and Opera
+      "&::-webkit-scrollbar": {
+        display: "none",
+      },
+      // Hide scrollbar for IE, Edge and Firefox
+      "-ms-overflow-style": "none",  // IE and Edge
+      "scrollbar-width": "none",  // Firefox
     },
   }));
 
@@ -169,13 +175,13 @@ const ModernSidebar = () => {
     {
       icon: <EventNote />,
       text: "Leaves",
-      color: iconColors.leaves,
+      color: iconColors.schedule,
       link: "/operation/department/leaves",
     },
     {
       icon: <Assessment />,
       text: "Reports",
-      color: iconColors.reports,
+      color: iconColors.schedule,
       subItems: [
         {
           text: "Student Attendance",
@@ -197,13 +203,12 @@ const ModernSidebar = () => {
     },
     {
       icon: <TentTree />,
-
       text: "Holidays",
       color: iconColors.invoices,
       link: "/operation/department/holidays",
     },
     {
-      icon: <HelpOutline />,
+      icon: <RouteIcon  />,
       text: "Walk Through",
       color: iconColors.support,
       link: "/operation/department/walk-through",
@@ -303,7 +308,7 @@ const ModernSidebar = () => {
                 alignItems: "center",
                 justifyContent: "center",
                 boxShadow: 2,
-                cursor: "pointer", // Added cursor pointer
+                cursor: "pointer",
                 "&:hover": {
                   opacity: 0.9,
                 },

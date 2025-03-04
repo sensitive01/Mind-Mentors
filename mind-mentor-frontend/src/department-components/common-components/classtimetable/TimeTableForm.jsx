@@ -1,610 +1,613 @@
 import React, { useEffect, useState } from "react";
 import {
-  Box,
-  CardContent,
-  CardHeader,
-  Typography,
-  Grid,
-  Chip,
-  Modal,
-  ThemeProvider,
-  Backdrop,
-  Fade,
-  IconButton,
   Button,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Grid,
+  IconButton,
+  Switch,
+  FormControlLabel,
+  TextField,
 } from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
 import {
-  AccessTime as TimeIcon,
-  Person as TeacherIcon,
-  People as StudentsIcon,
-  School as SubjectIcon,
-  Close as CloseIcon,
-  EventSeat as LevelIcon,
-  CalendarToday as DayIcon,
-  PersonAdd as AddStudentIcon,
-  EventBusy as NoScheduleIcon,
-} from "@mui/icons-material";
-import { Link, useNavigate } from "react-router-dom";
-import { getClassShedules } from "../../../api/service/employee/serviceDeliveryService";
-import {
-  AnimatedCard,
-  ClassCard,
-  customColors,
-  DetailRow,
-  IconText,
-  ModalContent,
-  theme,
-} from "../../coach/Layout/customStyle";
+  getCoachAvailabilityData,
+  sheduleTimeTable,
+} from "../../../api/service/employee/serviceDeliveryService";
+import { toast, ToastContainer } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
-const NoScheduleCard = ({ day }) => (
-  <ClassCard
-    elevation={2}
-    sx={{
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: 3,
-      backgroundColor: "rgba(100, 43, 143, 0.05)",
-      border: "2px dashed rgba(100, 43, 143, 0.2)",
-      opacity: 1,
-      transform: "translateY(0)",
-      mb: 2,
-      minHeight: "150px",
-    }}
-  >
-    <NoScheduleIcon
-      sx={{
-        fontSize: 40,
-        color: customColors.primary,
-        opacity: 0.5,
-        mb: 2,
-      }}
-    />
-    <Typography
-      variant="body1"
-      sx={{
-        color: customColors.primary,
-        textAlign: "center",
-        fontWeight: 500,
-      }}
-    >
-      No classes scheduled for {day}
-    </Typography>
-    <Typography
-      variant="body2"
-      sx={{
-        color: customColors.secondary,
-        textAlign: "center",
-        mt: 1,
-      }}
-    >
-      Click "Create Schedules" to add a class
-    </Typography>
-  </ClassCard>
-);
+const programs = [
+  { name: "Chess", levels: ["Beginner", "Intermediate", "Advanced"] },
+  { name: "Rubiks Cube", levels: ["Beginner", "Intermediate", "Advanced"] },
+  { name: "Math", levels: ["Beginner", "Intermediate", "Advanced"] },
+];
 
-const ScheduleKanban = () => {
-  const [scheduleData, setScheduleData] = useState({});
-  const [selectedClass, setSelectedClass] = useState(null);
-  const [selectedDay, setSelectedDay] = useState(null);
-  const [modalOpen, setModalOpen] = useState(false);
+// Map day names to their index in the week (0 = Sunday, 1 = Monday, etc.)
+const dayToIndex = {
+  "Sunday": 0,
+  "Monday": 1,
+  "Tuesday": 2,
+  "Wednesday": 3,
+  "Thursday": 4,
+  "Friday": 5,
+  "Saturday": 6
+};
+
+const ClassScheduleForm = () => {
   const navigate = useNavigate();
+  const empId = localStorage.getItem("empId");
+  const [availabilityData, setAvailabilityData] = useState([]);
+  const [schedules, setSchedules] = useState([
+    {
+      day: "",
+      date: "",
+      coachId: "",
+      coachName: "",
+      program: "",
+      level: "",
+      fromTime: "",
+      toTime: "",
+      isDemo: false,
+      mode:"offline"
 
-  const parseTime = (timeString) => {
-    const [time, period] = timeString.split(" ");
-    let [hours, minutes] = time.split(":").map(Number);
-
-    if (period === "PM" && hours !== 12) {
-      hours += 12;
-    }
-    if (period === "AM" && hours === 12) {
-      hours = 0;
-    }
-
-    return hours * 60 + minutes;
-  };
+    },
+  ]);
 
   useEffect(() => {
-    const fetchAllClassSchedules = async () => {
+    const fetchAvailableData = async () => {
       try {
-        const response = await getClassShedules();
-        console.log(response);
-
-        const transformedData = response.reduce((acc, classItem) => {
-          if (!acc[classItem.day]) {
-            acc[classItem.day] = [];
-          }
-
-          acc[classItem.day] = [
-            ...acc[classItem.day],
-            {
-              id: classItem._id,
-              time: classItem.classTime,
-              subject: classItem.program,
-              teacher: classItem.coachName,
-              students: classItem.selectedStudents.length || 0,
-              level: classItem.level,
-              classType: classItem.classType,
-              status: classItem.status,
-              meetingLink: classItem.meetingLink,
-            },
-          ];
-
-          return acc;
-        }, {});
-
-        const days = [
-          "Monday",
-          "Tuesday",
-          "Wednesday",
-          "Thursday",
-          "Friday",
-          "Saturday",
-          "Sunday",
-        ];
-
-        const orderedData = days.reduce((acc, day) => {
-          if (transformedData[day] && transformedData[day].length > 0) {
-            acc[day] = transformedData[day].sort((a, b) => {
-              return parseTime(a.time) - parseTime(b.time);
-            });
-          } else {
-            acc[day] = [];
-          }
-          return acc;
-        }, {});
-
-        setScheduleData(orderedData);
+        const response = await getCoachAvailabilityData();
+        console.log("CoachAvialbility", response);
+        setAvailabilityData(response.data.availableDays);
       } catch (error) {
-        console.error("Error fetching class schedules:", error);
-        setScheduleData({});
+        console.error("Error fetching availability data:", error);
+        toast.error("Failed to fetch coach availability");
       }
     };
-
-    fetchAllClassSchedules();
+    fetchAvailableData();
   }, []);
 
-  const handleCardClick = (classInfo, day) => {
-    setSelectedClass(classInfo);
-    setSelectedDay(day);
-    setModalOpen(true);
+
+  const getNextDayDate = (dayName) => {
+    const today = new Date();
+    const todayIndex = today.getDay();
+    const targetIndex = dayToIndex[dayName];
+    
+
+    let daysUntilTarget = targetIndex - todayIndex;
+    if (daysUntilTarget <= 0) {
+    
+      daysUntilTarget += 7;
+    }
+    
+
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() + daysUntilTarget);
+    
+  
+    return `${targetDate.getDate().toString().padStart(2, '0')}-${
+      (targetDate.getMonth() + 1).toString().padStart(2, '0')}-${
+      targetDate.getFullYear()}`;
   };
 
-  const handleCloseModal = () => {
-    setModalOpen(false);
-    setSelectedClass(null);
-    setSelectedDay(null);
+  const coaches = [
+    ...new Set(
+      availabilityData.map((item) => ({
+        id: item.coachId,
+        name: item.coachName,
+      }))
+    ),
+  ].filter(
+    (coach, index, self) => index === self.findIndex((c) => c.id === coach.id)
+  );
+
+
+  const generateTimeOptions = (startTime, endTime) => {
+    const times = [];
+    let currentTime = new Date(`2024-01-01T${startTime}`);
+    const endTimeDate = new Date(`2024-01-01T${endTime}`);
+
+    while (currentTime <= endTimeDate) {
+      times.push(
+        currentTime.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        })
+      );
+      currentTime.setMinutes(currentTime.getMinutes() + 15);
+    }
+    return times;
   };
 
-  const handleAddKids = (e, classInfo) => {
-    e.stopPropagation();
-    console.log("Add kids for class:", classInfo);
-    navigate(`/serviceAssignClassToKid/${classInfo.id}`);
+  const timeToMinutes = (timeStr) => {
+    if (!timeStr) return null;
+    try {
+      const [hours, minutes] = timeStr.split(":").map(Number);
+      return hours * 60 + minutes;
+    } catch (error) {
+      return null;
+    }
+  };
+
+  const validateTimeSlot = (schedule, fromTime, toTime) => {
+    if (!schedule.coachName || !schedule.program || !schedule.day) {
+      return true;
+    }
+
+    const timeSlots = getTimeSlots(
+      schedule.coachName,
+      schedule.program,
+      schedule.day
+    );
+    if (!timeSlots.length) return false;
+
+    const selectedStart = timeToMinutes(fromTime);
+    const selectedEnd = timeToMinutes(toTime);
+
+    if (!selectedStart || !selectedEnd) return true;
+
+    return timeSlots.some((slot) => {
+      const slotStart = timeToMinutes(slot.fromTime);
+      const slotEnd = timeToMinutes(slot.toTime);
+      return selectedStart >= slotStart && selectedEnd <= slotEnd;
+    });
+  };
+
+  const handleScheduleChange = (index, field, value) => {
+    const newSchedules = [...schedules];
+    const currentSchedule = { ...newSchedules[index] };
+
+    if (field === "coachName") {
+      const selectedCoach = coaches.find((coach) => coach.name === value);
+      if (selectedCoach) {
+        currentSchedule.coachName = selectedCoach.name;
+        currentSchedule.coachId = selectedCoach.id;
+      }
+    } else if (field === "day") {
+      currentSchedule[field] = value;
+  
+      if (value) {
+        currentSchedule.date = getNextDayDate(value);
+      }
+    } else {
+      currentSchedule[field] = value;
+    }
+
+    if (field === "fromTime" || field === "toTime") {
+      const isValid = validateTimeSlot(
+        currentSchedule,
+        field === "fromTime" ? value : currentSchedule.fromTime,
+        field === "toTime" ? value : currentSchedule.toTime
+      );
+
+      if (!isValid && currentSchedule.fromTime && currentSchedule.toTime) {
+        toast.error("Selected time slot is not within coach's available hours");
+        return;
+      }
+    }
+
+    newSchedules[index] = currentSchedule;
+    setSchedules(newSchedules);
+  };
+
+  const getProgramsForCoach = (coachName) => {
+    return [
+      ...new Set(
+        availabilityData
+          .filter((item) => item.coachName === coachName)
+          .map((item) => item.program)
+      ),
+    ];
+  };
+
+  const getDaysForCoachProgram = (coachName, program) => {
+    return [
+      ...new Set(
+        availabilityData
+          .filter(
+            (item) => item.coachName === coachName && item.program === program
+          )
+          .map((item) => item.day)
+      ),
+    ];
+  };
+
+  const getTimeSlots = (coachName, program, day) => {
+    return availabilityData.filter(
+      (item) =>
+        item.coachName === coachName &&
+        item.program === program &&
+        item.day === day
+    );
+  };
+
+  const addSchedule = () => {
+    setSchedules([
+      ...schedules,
+      {
+        day: "",
+        date: "",
+        coachId: "",
+        coachName: "",
+        program: "",
+        level: "",
+        fromTime: "",
+        toTime: "",
+        meetingLink: "",
+        isDemo: false,
+        mode:"offline"
+
+      },
+    ]);
+  };
+
+  const removeSchedule = (indexToRemove) => {
+    setSchedules(schedules.filter((_, index) => index !== indexToRemove));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const isValid = schedules.every((schedule) => {
+      if (
+        !schedule.coachName ||
+        !schedule.program ||
+        !schedule.level ||
+        !schedule.day ||
+        !schedule.fromTime ||
+        !schedule.toTime
+      ) {
+        toast.error("Please fill in all required fields");
+        return false;
+      }
+
+      const isTimeValid = validateTimeSlot(
+        schedule,
+        schedule.fromTime,
+        schedule.toTime
+      );
+
+      if (!isTimeValid) {
+        toast.error(
+          `Invalid time slot selected for ${schedule.coachName}'s schedule`
+        );
+        return false;
+      }
+
+      return true;
+    });
+
+    if (!isValid) return;
+
+    try {
+      const response = await sheduleTimeTable(empId, schedules);
+      if (response.status === 201) {
+        toast.success(response.data.message);
+        setTimeout(() => {
+          navigate("/service-delivery/department/class-shedules");
+        }, 1500);
+      }
+    } catch (error) {
+      toast.error("Failed to submit schedules");
+      console.error("Submission error:", error);
+    }
+  };
+
+  const handleReset = () => {
+    setSchedules([
+      {
+        day: "",
+        date: "",
+        coachId: "",
+        coachName: "",
+        program: "",
+        level: "",
+        fromTime: "",
+        toTime: "",
+        meetingLink: "",
+        isDemo: false,
+        mode:"offline"
+
+      },
+    ]);
+  };
+
+  const getAvailableTimeRange = (schedule) => {
+    if (!schedule.coachName || !schedule.program || !schedule.day) {
+      return {
+        min: "00:00",
+        max: "23:59",
+        options: generateTimeOptions("00:00", "23:59"),
+      };
+    }
+
+    const timeSlots = getTimeSlots(
+      schedule.coachName,
+      schedule.program,
+      schedule.day
+    );
+    if (!timeSlots.length)
+      return {
+        min: "00:00",
+        max: "23:59",
+        options: generateTimeOptions("00:00", "23:59"),
+      };
+
+    const fromTimes = timeSlots.map((slot) => slot.fromTime);
+    const toTimes = timeSlots.map((slot) => slot.toTime);
+    const min = fromTimes.sort()[0];
+    const max = toTimes.sort()[toTimes.length - 1];
+
+    return {
+      min,
+      max,
+      options: generateTimeOptions(min, max),
+    };
   };
 
   return (
-    <ThemeProvider theme={theme}>
-      <Box
-        sx={{
-          p: 3,
-          bgcolor: customColors.background,
-          minHeight: "100vh",
-          background: `linear-gradient(45deg, ${customColors.background} 0%, #ffffff 100%)`,
-        }}
-      >
-        <Box
-          mb={3}
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-        >
-          <Typography
-            variant="h5"
-            sx={{ color: "text.primary", fontWeight: 600 }}
-          >
-            Class Schedules
-          </Typography>
-          <Button
-            variant="contained"
-            component={Link}
-            to="/serviceClassShedule"
-            color="primary"
-          >
-            + Create Schedules
-          </Button>
-        </Box>
+    <div className="min-h-screen p-6">
+      <div className="max-w-7xl mx-auto bg-white border shadow-xl">
+        <div className="bg-gradient-to-r from-[#642b8f] to-[#aa88be] p-8 border-white rounded-xl text-white">
+          <h2 className="text-3xl font-bold mb-2">Class Schedule Form</h2>
+          <p className="text-sm opacity-90">Enter class schedule details</p>
+        </div>
 
-        <Grid
-          container
-          spacing={3}
-          sx={{
-            flexWrap: "nowrap",
-            overflowX: "auto",
-            pb: 2,
-          }}
-        >
-          {Object.entries(scheduleData).map(([day, classes]) => (
-            <Grid
-              item
-              xs={12 / 7}
-              key={day}
-              sx={{ minWidth: "300px", maxHeight: "calc(100vh - 200px)" }}
-            >
-              <AnimatedCard
-                sx={{
-                  height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-              >
-                <CardHeader
-                  title={day}
-                  sx={{
-                    bgcolor: customColors.primary,
-                    color: "#ffffff",
-                    flexShrink: 0,
-                    "& .MuiCardHeader-title": {
-                      fontWeight: "bold",
-                      textAlign: "center",
-                      fontSize: "1.2rem",
-                    },
-                  }}
-                />
-                <CardContent
-                  sx={{
-                    flexGrow: 1,
-                    overflow: "auto",
-                    "&::-webkit-scrollbar": {
-                      width: "8px",
-                    },
-                    "&::-webkit-scrollbar-track": {
-                      background: "#f1f1f1",
-                      borderRadius: "4px",
-                    },
-                    "&::-webkit-scrollbar-thumb": {
-                      background: customColors.primary,
-                      borderRadius: "4px",
-                      "&:hover": {
-                        background: customColors.secondary,
-                      },
-                    },
-                    padding: "16px",
-                    "&:last-child": {
-                      paddingBottom: "16px",
-                    },
-                  }}
+        <form onSubmit={handleSubmit} onReset={handleReset} className="p-8">
+          {schedules.map((schedule, index) => {
+            const timeRange = getAvailableTimeRange(schedule);
+
+            return (
+              <React.Fragment key={index}>
+                <Grid
+                  container
+                  spacing={2}
+                  className="mb-4 p-4 border rounded-lg"
+                  alignItems="center"
                 >
-                  {classes.length > 0 ? (
-                    classes.map((classItem, index) => (
-                      <ClassCard
-                        key={`${day}-${index}`}
-                        elevation={2}
-                        onClick={() => handleCardClick(classItem, day)}
-                        sx={{
-                          opacity: 1,
-                          transform: "translateY(0)",
-                          mb: 2,
-                          "&:last-child": {
-                            mb: 0,
-                          },
-                        }}
+                  <Grid item xs={12} sm={4}>
+                    <FormControl fullWidth>
+                      <InputLabel>Coach</InputLabel>
+                      <Select
+                        value={schedule.coachName}
+                        label="Coach"
+                        onChange={(e) =>
+                          handleScheduleChange(
+                            index,
+                            "coachName",
+                            e.target.value
+                          )
+                        }
                       >
-                        <IconText>
-                          <TimeIcon sx={{ color: customColors.primary }} />
-                          <Typography
-                            variant="body1"
-                            sx={{ color: customColors.primary }}
-                          >
-                            {classItem.time}
-                          </Typography>
-                        </IconText>
+                        {coaches.map((coach) => (
+                          <MenuItem key={coach.id} value={coach.name}>
+                            {coach.name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
 
-                        <IconText>
-                          <SubjectIcon sx={{ color: customColors.secondary }} />
-                          <Typography
-                            variant="h6"
-                            component="h2"
-                            sx={{
-                              color: customColors.primary,
-                              fontWeight: "bold",
-                            }}
-                          >
-                            {classItem.subject}
-                          </Typography>
-                        </IconText>
-
-                        <IconText>
-                          <TeacherIcon sx={{ color: customColors.accent }} />
-                          <Typography
-                            variant="body2"
-                            sx={{ color: customColors.accent }}
-                          >
-                            {classItem.teacher}
-                          </Typography>
-                        </IconText>
-
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            width: "100%",
-                          }}
-                        >
-                          <IconText>
-                            <StudentsIcon
-                              sx={{ color: customColors.highlight }}
-                            />
-                            <Chip
-                              label={`${classItem.students} students`}
-                              size="small"
-                              sx={{
-                                borderColor: customColors.primary,
-                                color: customColors.primary,
-                                "&:hover": {
-                                  backgroundColor: "rgba(100, 43, 143, 0.1)",
-                                },
-                              }}
-                              variant="outlined"
-                            />
-                          </IconText>
-
-                          {classItem.classType === "Class" && (
-                            <IconButton
-                              onClick={(e) => handleAddKids(e, classItem)}
-                              sx={{
-                                color: customColors.primary,
-                                "&:hover": {
-                                  backgroundColor: `${customColors.primary}20`,
-                                },
-                              }}
-                            >
-                              <AddStudentIcon />
-                            </IconButton>
+                  <Grid item xs={12} sm={3}>
+                    <FormControl fullWidth>
+                      <InputLabel>Program</InputLabel>
+                      <Select
+                        value={schedule.program}
+                        label="Program"
+                        disabled={!schedule.coachName}
+                        onChange={(e) =>
+                          handleScheduleChange(index, "program", e.target.value)
+                        }
+                      >
+                        {schedule.coachName &&
+                          getProgramsForCoach(schedule.coachName).map(
+                            (program) => (
+                              <MenuItem key={program} value={program}>
+                                {program}
+                              </MenuItem>
+                            )
                           )}
-                        </Box>
-                      </ClassCard>
-                    ))
-                  ) : (
-                    <NoScheduleCard day={day} />
-                  )}
-                </CardContent>
-              </AnimatedCard>
-            </Grid>
-          ))}
-        </Grid>
+                      </Select>
+                    </FormControl>
+                  </Grid>
 
-        <Modal
-          open={modalOpen}
-          onClose={handleCloseModal}
-          closeAfterTransition
-          BackdropComponent={Backdrop}
-          BackdropProps={{
-            timeout: 500,
-            sx: {
-              backgroundColor: "rgba(100, 43, 143, 0.4)",
-            },
-          }}
-        >
-          <Fade in={modalOpen}>
-            <ModalContent
+                  <Grid item xs={12} sm={3}>
+                    <FormControl fullWidth>
+                      <InputLabel>Level</InputLabel>
+                      <Select
+                        value={schedule.level}
+                        label="Level"
+                        disabled={!schedule.program}
+                        onChange={(e) =>
+                          handleScheduleChange(index, "level", e.target.value)
+                        }
+                      >
+                        {schedule.program &&
+                          programs
+                            .find((p) => p.name === schedule.program)
+                            ?.levels.map((level) => (
+                              <MenuItem key={level} value={level}>
+                                {level}
+                              </MenuItem>
+                            ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+
+                  <Grid
+                    item
+                    xs={12}
+                    sm={1}
+                    container
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={schedule.isDemo}
+                          onChange={(e) =>
+                            handleScheduleChange(
+                              index,
+                              "isDemo",
+                              e.target.checked
+                            )
+                          }
+                          color="primary"
+                        />
+                      }
+                      label={schedule.isDemo ? "Demo" : "Class"}
+                      labelPlacement="start"
+                    />
+                  </Grid>
+                </Grid>
+
+                <Grid
+                  container
+                  spacing={2}
+                  className="mb-8 p-4 border rounded-lg"
+                  alignItems="center"
+                >
+                  <Grid item xs={12} sm={3}>
+                    <FormControl fullWidth>
+                      <InputLabel>Day</InputLabel>
+                      <Select
+                        value={schedule.day}
+                        label="Day"
+                        disabled={!schedule.coachName || !schedule.program}
+                        onChange={(e) =>
+                          handleScheduleChange(index, "day", e.target.value)
+                        }
+                      >
+                        {schedule.coachName &&
+                          schedule.program &&
+                          getDaysForCoachProgram(
+                            schedule.coachName,
+                            schedule.program
+                          ).map((day) => (
+                            <MenuItem key={day} value={day}>
+                              {day}
+                            </MenuItem>
+                          ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  
+                  {/* Date field - read-only, automatically calculated */}
+                  <Grid item xs={12} sm={2}>
+                    <TextField
+                      fullWidth
+                      label="Date"
+                      value={schedule.date || ""}
+                      InputProps={{
+                        readOnly: true,
+                      }}
+                      variant="outlined"
+                      multiline
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} sm={2}>
+                    <FormControl fullWidth>
+                      <InputLabel>Start Time</InputLabel>
+                      <Select
+                        value={schedule.fromTime}
+                        label="Start Time"
+                        onChange={(e) =>
+                          handleScheduleChange(
+                            index,
+                            "fromTime",
+                            e.target.value
+                          )
+                        }
+                      >
+                        {timeRange.options.map((time) => (
+                          <MenuItem key={time} value={time}>
+                            {time}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+
+                  <Grid item xs={12} sm={2}>
+                    <FormControl fullWidth>
+                      <InputLabel>End Time</InputLabel>
+                      <Select
+                        value={schedule.toTime}
+                        label="End Time"
+                        onChange={(e) =>
+                          handleScheduleChange(index, "toTime", e.target.value)
+                        }
+                      >
+                        {timeRange.options
+                          .filter((time) => time > schedule.fromTime)
+                          .map((time) => (
+                            <MenuItem key={time} value={time}>
+                              {time}
+                            </MenuItem>
+                          ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+
+                  {/* Remove Schedule Button */}
+                  {schedules.length > 1 && (
+                    <Grid item xs={12} sm={1}>
+                      <IconButton
+                        onClick={() => removeSchedule(index)}
+                        color="error"
+                        size="medium"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Grid>
+                  )}
+                </Grid>
+              </React.Fragment>
+            );
+          })}
+
+          {/* Form Action Buttons */}
+          <div className="flex justify-center gap-4 mt-6">
+            <Button onClick={addSchedule} variant="outlined" color="secondary">
+              Add Another Schedule
+            </Button>
+            <Button
               sx={{
-                maxHeight: "80vh",
-                overflowY: "auto",
-                "&::-webkit-scrollbar": {
-                  width: "8px",
-                },
-                "&::-webkit-scrollbar-thumb": {
-                  backgroundColor: customColors.primary,
-                  borderRadius: "4px",
+                backgroundColor: "#642b8f",
+                "&:hover": {
+                  backgroundColor: "#53197a", // Optional: Slightly darker shade for hover effect
                 },
               }}
+              type="submit"
+              variant="contained"
+              color="primary"
             >
-              {selectedClass && (
-                <>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
+              Submit Schedules
+            </Button>
 
-                      // position: "sticky",
-                      top: 0,
-                      backgroundColor: "white",
-                      zIndex: 10,
-                    }}
-                  >
-                    <Typography
-                      variant="h4"
-                      component="h2"
-                      sx={{
-                        color: customColors.primary,
-                        fontWeight: "bold",
-                        margin: 0,
-                      }}
-                    >
-                      Class Details
-                    </Typography>
-                    <IconButton
-                      onClick={handleCloseModal}
-                      sx={{
-                        color: customColors.primary,
-                        "&:hover": {
-                          backgroundColor: `${customColors.primary}20`,
-                        },
-                      }}
-                    >
-                      <CloseIcon />
-                    </IconButton>
-                  </Box>
-
-                  <DetailRow>
-                    <DayIcon
-                      sx={{ color: customColors.primary, fontSize: 28 }}
-                    />
-                    <Typography
-                      variant="h6"
-                      sx={{ color: customColors.primary }}
-                    >
-                      {selectedDay}
-                    </Typography>
-                  </DetailRow>
-
-                  <DetailRow>
-                    <SubjectIcon
-                      sx={{ color: customColors.secondary, fontSize: 28 }}
-                    />
-                    <Box>
-                      <Typography
-                        variant="h6"
-                        sx={{ color: customColors.primary }}
-                      >
-                        {selectedClass.subject}
-                      </Typography>
-                    </Box>
-                  </DetailRow>
-
-                  <DetailRow>
-                    <TimeIcon
-                      sx={{ color: customColors.accent, fontSize: 28 }}
-                    />
-                    <Typography
-                      variant="h6"
-                      sx={{ color: customColors.accent }}
-                    >
-                      {selectedClass.time}
-                    </Typography>
-                  </DetailRow>
-
-                  <DetailRow>
-                    <TeacherIcon
-                      sx={{ color: customColors.highlight, fontSize: 28 }}
-                    />
-                    <Box>
-                      <Typography
-                        variant="body1"
-                        sx={{ color: customColors.primary }}
-                      >
-                        Instructor
-                      </Typography>
-                      <Typography
-                        variant="h6"
-                        sx={{ color: customColors.highlight }}
-                      >
-                        {selectedClass.teacher}
-                      </Typography>
-                    </Box>
-                  </DetailRow>
-                  <DetailRow>
-                    <StudentsIcon
-                      sx={{ color: customColors.secondary, fontSize: 28 }}
-                    />
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        width: "100%", // Ensure the row takes full width
-                      }}
-                    >
-                      <Box>
-                        <Typography
-                          variant="body1"
-                          sx={{ color: customColors.primary }}
-                        >
-                          Class Size
-                        </Typography>
-                        <Typography
-                          variant="h6"
-                          sx={{ color: customColors.secondary }}
-                        >
-                          {selectedClass?.students} Students
-                        </Typography>
-                      </Box>
-                      <Button
-                        variant="outlined"
-                        color="primary"
-                        onClick={() => {
-                          navigate(
-                            `/employeeAssignDemoClass/${selectedClass.id}`
-                          );
-                        }}
-                        disabled={selectedClass.status !== "Scheduled"} // Disable button based on condition
-                        sx={{
-                          height: "fit-content",
-                          backgroundColor:
-                            selectedClass.status !== "Scheduled"
-                              ? "#cccccc"
-                              : "#642b8f", // Grey out if disabled
-                          color:
-                            selectedClass.status !== "Scheduled"
-                              ? "black"
-                              : "white", // Adjust text color
-                          "&:hover": {
-                            backgroundColor:
-                              selectedClass.status !== "Scheduled"
-                                ? "#cccccc"
-                                : "#0056b3", // Maintain hover color for active button
-                          },
-                        }}
-                      >
-                        Add kids
-                      </Button>
-                    </Box>
-                  </DetailRow>
-
-                  {selectedClass.level && selectedClass.level !== "N/A" && (
-                    <DetailRow>
-                      <LevelIcon
-                        sx={{ color: customColors.accent, fontSize: 28 }}
-                      />
-                      <Box>
-                        <Typography
-                          variant="body1"
-                          sx={{ color: customColors.primary }}
-                        >
-                          Level
-                        </Typography>
-                        <Typography
-                          variant="h6"
-                          sx={{ color: customColors.accent }}
-                        >
-                          {selectedClass.level}
-                        </Typography>
-                      </Box>
-                    </DetailRow>
-                  )}
-
-                  {selectedClass.classType && (
-                    <DetailRow>
-                      <Typography
-                        variant="body1"
-                        sx={{ color: customColors.primary }}
-                      >
-                        Class Type: {selectedClass.classType}
-                      </Typography>
-                    </DetailRow>
-                  )}
-
-                  {selectedClass.status && (
-                    <DetailRow>
-                      <Typography
-                        variant="body1"
-                        sx={{ color: customColors.primary }}
-                      >
-                        Status: {selectedClass.status}
-                      </Typography>
-                    </DetailRow>
-                  )}
-                </>
-              )}
-            </ModalContent>
-          </Fade>
-        </Modal>
-      </Box>
-    </ThemeProvider>
+            <Button type="reset" variant="outlined" color="error">
+              Reset Form
+            </Button>
+          </div>
+        </form>
+      </div>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        closeOnClick
+        pauseOnHover
+        draggable
+        pauseOnFocusLoss
+      />
+    </div>
   );
 };
 
-export default ScheduleKanban;
+export default ClassScheduleForm;

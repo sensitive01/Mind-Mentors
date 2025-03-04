@@ -96,3 +96,9 @@ export const dispaySelectedClass = async (enqId) => {
   const response = await serviceInstance.get(`/service/display-selected-class/${enqId}`);
   return response;
 };
+
+
+export const getScheduledClassData = async (enqId) => {
+  const response = await serviceInstance.get(`/service/get-all-scheduled-class-data/${enqId}`);
+  return response;
+};

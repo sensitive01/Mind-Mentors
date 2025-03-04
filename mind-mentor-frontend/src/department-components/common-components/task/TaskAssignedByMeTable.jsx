@@ -11,14 +11,11 @@ import {
   Grid,
   Paper,
   Slide,
-  TextField,
+
   ThemeProvider,
   Typography,
 } from "@mui/material";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
-import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
+
 import { alpha } from "@mui/material/styles";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { useEffect, useState } from "react";
@@ -153,6 +150,7 @@ const TaskAssignedByMeTable = () => {
           createdAt: task.createdAt, 
           updatedAt: task.updatedAt, 
           assignedBy: task.assignedBy,
+          assignedToDepartment: task.assignedTodepartment,
         }));
         setRows(formattedData);
 
@@ -217,60 +215,7 @@ const TaskAssignedByMeTable = () => {
       console.error("Error updating task status:", error);
     }
   };
-  const handleNoteSave = async () => {
-    if (noteDialog.rowData) {
-      try {
-        const { id } = noteDialog.rowData; 
-        const { noteText, enquiryStage } = noteDialog;
-       
-        if (!enquiryStage || !noteText) {
-          console.error("Enquiry Stage and Note Text are required.");
-          return;
-        }
-     
-        const empId = localStorage.getItem("empId");
-        if (!empId) {
-          console.error("Employee ID (empId) is missing.");
-          return;
-        }
-   
-        const payload = {
-          enquiryStageTag: enquiryStage,
-          addNoteTo: "parent", 
-          notes: noteText,
-          addedBy: empId, 
-        };
-       
-        console.log("Payload to be sent:", payload);
-     
-        const data = await addNotesToTasks(id, payload);
-  
-        if (data.success) {
-          console.log("Note added successfully:", data);
-     
-          setRows(
-            rows.map((row) =>
-              row.id === id
-                ? { ...row, notes: [...(row.notes || []), payload] }
-                : row
-            )
-          );
-      
-          setNoteDialog({
-            open: false,
-            rowData: null,
-            noteText: "",
-            enquiryStage: "",
-            notesTo: "",
-          });
-        } else {
-          console.error("Failed to add note:", data.message);
-        }
-      } catch (error) {
-        console.error("Error adding note:", error.message);
-      }
-    }
-  };
+
   console.log("row", rows);
   return (
     <ThemeProvider theme={theme}>
@@ -301,6 +246,10 @@ const TaskAssignedByMeTable = () => {
               onPaginationModelChange={setPaginationModel}
               pageSizeOptions={[5, 10, 25]}
               disableRowSelectionOnClick
+              onRowClick={(params) => {
+                const department = localStorage.getItem("department");
+                navigate(`/${department}/department/taskslogs/${params.row._id}`);
+              }}
               slots={{ toolbar: GridToolbar }}
               slotProps={{
                 toolbar: {
@@ -315,6 +264,7 @@ const TaskAssignedByMeTable = () => {
                 },
                 "& .MuiDataGrid-row:hover": {
                   backgroundColor: alpha(theme.palette.primary.main, 0.04),
+                  cursor: 'pointer', // Add cursor pointer to indicate clickable rows
                 },
                 "& .MuiDataGrid-columnHeader": {
                   backgroundColor: "#642b8f",
@@ -367,124 +317,7 @@ const TaskAssignedByMeTable = () => {
               </DialogActions>
             </Dialog>
     
-            <Dialog
-              open={noteDialog.open}
-              onClose={() =>
-                setNoteDialog({
-                  open: false,
-                  rowData: null,
-                  noteText: "",
-                  enquiryStage: "",
-                  notesTo: "",
-                  parents: "",
-                })
-              }
-              maxWidth="sm"
-              fullWidth
-              TransitionComponent={Slide}
-              TransitionProps={{ direction: "up" }}
-              BackdropProps={{
-                sx: {
-                  backgroundColor: "rgba(0, 0, 0, 0.5)", 
-                  backdropFilter: "blur(4px)", 
-                },
-              }}
-            >
-              <DialogTitle
-                sx={{
-                  color: "#ffffff",
-                  fontWeight: 600,
-                  background: "linear-gradient(to right, #642b8f, #aa88be)", 
-                }}
-              >
-                Add Note
-              </DialogTitle>
-              <Divider />
-              <DialogContent>
-             
-                <FormControl fullWidth sx={{ mt: 2 }}>
-                  <InputLabel>Enquiry Stage</InputLabel>
-                  <Select
-                    value={noteDialog.enquiryStage}
-                    onChange={(e) =>
-                      setNoteDialog((prev) => ({
-                        ...prev,
-                        enquiryStage: e.target.value,
-                      }))
-                    }
-                    label="Enquiry Stage"
-                  >
-                    <MenuItem value="New">New</MenuItem>
-                    <MenuItem value="Follow-Up">Follow-Up</MenuItem>
-                    <MenuItem value="Closed">Closed</MenuItem>
-                    <MenuItem value="Converted">Converted</MenuItem>
-                  </Select>
-                </FormControl>
-               
-                <TextField
-                  label="Notes To"
-                  value={noteDialog.notesTo}
-                  onChange={(e) =>
-                    setNoteDialog((prev) => ({
-                      ...prev,
-                      notesTo: e.target.value,
-                    }))
-                  }
-                  fullWidth
-                  sx={{ mt: 2 }}
-                />
-                <TextField
-                  label="Note"
-                  value={noteDialog.noteText}
-                  onChange={(e) =>
-                    setNoteDialog((prev) => ({
-                      ...prev,
-                      noteText: e.target.value,
-                    }))
-                  }
-                  multiline
-                  rows={4}
-                  fullWidth
-                  sx={{ mt: 1 }}
-                />
-              </DialogContent>
-              <Divider sx={{ borderColor: "#aa88be" }} />
-              <DialogActions sx={{ p: 2.5 }}>
-                <Button
-                  onClick={handleNoteSave}
-                  variant="contained"
-                  class="px-8 py-3 bg-[#642b8f] text-white rounded-lg font-medium hover:bg-[#aa88be] transition-colors shadow-lg hover:shadow-xl"
-                  sx={{
-                    bgcolor: "primary.main",
-                    "&:hover": {
-                      bgcolor: "primary.dark",
-                    },
-                  }}
-                >
-                  Save Note
-                </Button>
-                <Button
-                  class="px-8 py-3 bg-white border-2 border-[#642b8f] text-[#642b8f] rounded-lg font-medium hover:bg-[#efe8f0] transition-colors"
-                  onClick={() =>
-                    setNoteDialog({
-                      open: false,
-                      rowData: null,
-                      noteText: "",
-                      enquiryStage: "",
-                      notesTo: "",
-                    })
-                  }
-                  variant="outlined"
-                  sx={{
-                    color: "text.primary",
-                    borderColor: "divider",
-                  }}
-                  type="reset"
-                >
-                  Cancel
-                </Button>
-              </DialogActions>
-            </Dialog>
+          
           </Paper>
         </Box>
       </Fade>

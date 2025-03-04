@@ -12,6 +12,8 @@ serviceRoute.get("/get-coach-availabledata-table",serviceController.getCoachAvai
 serviceRoute.get("/get-class-student-data/:classId", serviceController.getClassAndStudentsData);
 serviceRoute.get("/get-active-kid-class-data/:enqId", serviceController.getActiveKidAndClassData);
 serviceRoute.get("/display-selected-class/:enqId", serviceController.displaySelectedClass);
+serviceRoute.get("/get-all-scheduled-class-data/:enqId", serviceController.getScheduledClassData);
+
 
 
 

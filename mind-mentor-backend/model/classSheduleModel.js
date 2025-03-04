@@ -51,6 +51,7 @@ const classScheduleSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  type:{type:String},
   selectedStudents:[{
     kidId:{type:String},
     chessKid:{type:String},

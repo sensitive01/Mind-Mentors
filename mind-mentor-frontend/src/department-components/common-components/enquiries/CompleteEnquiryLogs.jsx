@@ -240,7 +240,7 @@ const CompleteEnquiryLogs = () => {
               >
                 Enquiry Logs ({rows.length} entries)
               </Typography>
-              <Button
+              {/* <Button
                 variant="contained"
                 onClick={handleOpenNoteDialog}
                 sx={{
@@ -254,7 +254,7 @@ const CompleteEnquiryLogs = () => {
                 }}
               >
                 Add Note
-              </Button>
+              </Button> */}
             </Box>
             <Box sx={{ height: 500, width: "100%" }}>
               <DataGrid

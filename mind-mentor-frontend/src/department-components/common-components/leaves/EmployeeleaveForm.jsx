@@ -87,7 +87,8 @@ const EmployeeLeaveForm = () => {
         }
       } else {
         const createResponse = await createLeave(leavePayload);
-        if (createResponse.success) {
+        console.log("createResponse",createResponse)
+        if (createResponse.status===201) {
           navigate(`/${department}/department/leaves`);
         }
       }

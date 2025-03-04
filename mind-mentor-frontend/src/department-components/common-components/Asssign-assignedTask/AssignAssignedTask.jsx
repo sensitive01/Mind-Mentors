@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import { Button } from "@mui/material";
 import { Link } from "react-router-dom";
-import MyTaskTable from "../task/MyTaskTable"
-import TaskAssignedByMeTable from "../task/TaskAssignedByMeTable"
-
+import MyTaskTable from "../task/MyTaskTable";
+import TaskAssignedByMeTable from "../task/TaskAssignedByMeTable";
 
 const AssignAssignedTask = () => {
   const [activeTab, setActiveTab] = useState("myTask");
@@ -22,7 +21,7 @@ const AssignAssignedTask = () => {
             }`}
             onClick={() => setActiveTab("myTask")}
           >
-            MyTaskTable
+            Tasks Assigned To Me
             {activeTab === "myTask" && (
               <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#642b8f]" />
             )}
@@ -52,11 +51,12 @@ const AssignAssignedTask = () => {
           component={Link}
           to={`/${department}/department/assign-new-task`}
         >
-          + Assign New Task
+          + Add New Task
         </Button>
       </div>
-
-      {activeTab === "myTask" ? <MyTaskTable /> : <TaskAssignedByMeTable />}
+      <div className="bg-gray-50">
+        {activeTab === "myTask" ? <MyTaskTable /> : <TaskAssignedByMeTable />}
+      </div>
     </div>
   );
 };

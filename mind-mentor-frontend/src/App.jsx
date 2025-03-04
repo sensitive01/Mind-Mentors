@@ -270,6 +270,7 @@ import EmployeeList from "./pages/employee/hr/EmployeeListPage";
 import AddEmployeeFormPage from "./pages/employee/hr/AddEmployeeFormPage";
 import SuperAdminPackageTableList from "./pages/employee/superadmin/package/SuperAdminPackageTableList";
 import SuperAdminAddPackageForm from "./pages/employee/superadmin/package/SuperAdminAddPackageForm";
+import LiveClassPage from "./pages/parent/LiveClassPage";
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
 function App() {
@@ -332,6 +333,8 @@ function App() {
           <Route path="/parent/walkthrough-video" element={<WalkThroughPage />} />
           <Route path="/parent/add-kid-availability/:kidId"  element={<AddKidAvailabilityPage />}  />
           <Route path="/parent/payment-page/payment-details/:encodedData" element={<ParentPaymentPage />}/>
+          <Route path="/parent/kid/live-class/:kidId" element={<LiveClassPage />}/>
+
             
             
 

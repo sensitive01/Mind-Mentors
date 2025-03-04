@@ -130,38 +130,65 @@ const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog) => [
         "No Proof"
       ),
   },
+  { field: "createdAt", headerName: "Created At", width: 180 },
 ];
 
-const DetailView = ({ data }) => (
-  <Grid container spacing={3} sx={{ p: 2 }}>
-    {Object.entries(data).map(
-      ([key, value]) =>
-        key !== "id" && (
-          <Grid item xs={12} sm={6} md={6} key={key}>
-            <Box
-              sx={{
-                p: 2,
-                borderRadius: 2,
-                bgcolor: alpha(theme.palette.primary.main, 0.04),
-                height: "100%",
-              }}
+const DetailView = ({ data }) => {
+  // Function to format date
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  // Specific fields to display
+  const fieldsToShow = [
+    { key: 'employeeName', label: 'Employee Name' },
+    { key: 'leaveType', label: 'Leave Type' },
+    { key: 'leaveStartDate', label: 'Leave Start Date' },
+    { key: 'leaveEndDate', label: 'Leave End Date' },
+    { key: 'notes', label: 'Notes' },
+    { key: 'proof', label: 'Proof' },
+    { key: 'createdAt', label: 'Created At' }
+  ];
+
+  return (
+    <Grid container spacing={3} sx={{ p: 2 }}>
+      {fieldsToShow.map((field) => (
+        <Grid item xs={12} sm={6} md={6} key={field.key}>
+          <Box
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              bgcolor: alpha(theme.palette.primary.main, 0.04),
+              height: "100%",
+            }}
+          >
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ mb: 1, display: "block" }}
             >
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ mb: 1, display: "block" }}
-              >
-                {key.replace(/([A-Z])/g, " $1").toUpperCase()}
-              </Typography>
-              <Typography variant="body1" color="text.primary">
-                {value || "N/A"}
-              </Typography>
-            </Box>
-          </Grid>
-        )
-    )}
-  </Grid>
-);
+              {field.label}
+            </Typography>
+            <Typography variant="body1" color="text.primary">
+              {field.key === 'createdAt' 
+                ? formatDate(data[field.key])
+                : (data[field.key] || 'N/A')}
+            </Typography>
+          </Box>
+        </Grid>
+      ))}
+    </Grid>
+  );
+};
 
 const EmployeeLeaveManagement = () => {
   const navigate = useNavigate();
@@ -365,33 +392,39 @@ const EmployeeLeaveManagement = () => {
 
           {/* View Dialog */}
           <Dialog
-            open={viewDialog.open}
-            onClose={() => setViewDialog({ open: false, rowData: null })}
-            maxWidth="md"
-            fullWidth
-          >
-            <DialogTitle
-              sx={{
-                background: "linear-gradient(#6366F1, #818CF8)",
-                color: "#ffffff",
-                fontWeight: 600,
-              }}
-            >
-              Leave Request Details
-            </DialogTitle>
-            <DialogContent>
-              <DetailView data={viewDialog.rowData || {}} />
-            </DialogContent>
-            <DialogActions>
-              <Button
-                onClick={() => setViewDialog({ open: false, rowData: null })}
-                variant="outlined"
-                sx={{ color: "#f8a213", borderColor: "#f8a213" }}
-              >
-                Close
-              </Button>
-            </DialogActions>
-          </Dialog>
+  open={viewDialog.open}
+  onClose={() => setViewDialog({ open: false, rowData: null })}
+  maxWidth="md"
+  fullWidth
+>
+  <DialogTitle
+    sx={{
+      background: "linear-gradient(#642b8f, #642b8f)",
+      color: "#ffffff",
+      fontWeight: 600,
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingRight: "24px !important",
+    }}
+  >
+    Leave Request Details
+    <Button
+      onClick={() => setViewDialog({ open: false, rowData: null })}
+      variant="outlined"
+      sx={{ 
+        color: "#f8a213", 
+        borderColor: "#f8a213",
+        marginLeft: 2
+      }}
+    >
+      Close
+    </Button>
+  </DialogTitle>
+  <DialogContent>
+    <DetailView data={viewDialog.rowData || {}} />
+  </DialogContent>
+</Dialog>
 
           {/* Notes Dialog */}
           <Dialog

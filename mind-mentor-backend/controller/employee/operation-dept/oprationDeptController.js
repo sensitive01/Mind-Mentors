@@ -1783,6 +1783,7 @@ const getMyLeaveData = async (req, res) => {
           "en-US"
         ),
         leaveEndDate: new Date(leave.leaveEndDate).toLocaleDateString("en-US"),
+        createdAt:new Date(leave.createdAt).toLocaleDateString("en-US")
       }));
 
       res.status(200).json({
@@ -1909,6 +1910,8 @@ const createTask = async (req, res) => {
     }
 
     const assigningEmployee = await Employee.findById(empId);
+    console.log("assigningEmployee",assigningEmployee)
+    const assignedToEmployee = await Employee.findOne({email:assignedTo})
     if (!assigningEmployee) {
       return res.status(404).json({ message: "Assigning employee not found" });
     }
@@ -1922,8 +1925,11 @@ const createTask = async (req, res) => {
         id: empId,
         name: `${assigningEmployee.firstName}`,
         email: assigningEmployee.email,
+        department:assigningEmployee.department
       },
       assignedTo,
+      assignedToName:assignedToEmployee.firstName,
+      assignedTodepartment:assignedToEmployee.department
     });
 
     // Log the activity
@@ -2165,7 +2171,6 @@ const assignTaskToOthers = async (req, res) => {
     });
 
     // Log the tasks if needed for debugging
-    console.log(tasks);
 
     // Format date and time to dd/mm/yy HH:mm
     const formatDateTime = (date) => {

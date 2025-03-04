@@ -33,18 +33,22 @@ const TaskSchema = new mongoose.Schema(
       email: {
         type: String, // Storing the employee's email
       },
+      department:{type:String},
     },
     assignedTo: {
       type: String,
     },
+    assignedTodepartment:{type: String},
     status: {
       type: String,
       default: "Pending",
     },
+    assignedToName:{type:String},
     statusUpdatedBy: {
       id: { type: mongoose.Schema.Types.ObjectId, ref: "Employee" },
       name: { type: String,    },
       email: { type: String,    },
+      department:{ type: String, }
     },
     notes: [NoteSchema], // Embedding NoteSchema
   },

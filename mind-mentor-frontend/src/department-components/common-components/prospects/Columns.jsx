@@ -23,19 +23,42 @@ const columns = (
 ) => [
   {
     field: "slNo",
-    headerName: "Sl No.",
-    width: 100,
+    headerName: "Sno",
+
+    width: 50,
     align: "center",
     headerAlign: "center",
     sortable: false, // Disable sorting for serial numbers
     filterable: false, // Disable filtering for serial numbers
+    renderHeader: () => <strong>Sno</strong>,
   },
 
   {
     field: "parentFirstName",
-    headerName: "Parent  Name",
+    headerName: "Parent Name",
     width: 180,
     editable: true,
+    renderHeader: () => <strong>Parent Name</strong>,
+    renderCell: (params) => (
+      <Box
+        sx={{ display: "flex", flexDirection: "column", marginTop: 1 }}
+      >
+        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+          {params.value}
+        </Typography>
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{
+            fontSize: "0.65rem",
+            opacity: 0.9,
+            lineHeight: 1.5,
+          }}
+        >
+          {params.row.createdOn}
+        </Typography>
+      </Box>
+    ),
   },
 
   {
@@ -43,25 +66,29 @@ const columns = (
     headerName: "Kid Name",
     width: 180,
     editable: true,
+    renderHeader: () => <strong>Kid Name</strong>,
   },
 
   {
     field: "contact",
     headerName: "Contact",
-    width: 180,
+
+    renderHeader: () => <strong>Contact</strong>,
+
     renderCell: (params) => (
       <Box sx={{ display: "flex", gap: 2, marginTop: "7px" }}>
         {params.row.whatsappNumber && (
           <IconButton
             size="small"
-            onClick={(e) => {
+            onClick={async (e) => {
               e.stopPropagation();
-              console.log("WhatsApp:", params.row.whatsappNumber);
+
+              // handleMessage(params.row.whatsappNumber);
             }}
             sx={{
-              color: "#8B5CF6", // Purple
+              color: "#00FF00", // Purple
               "&:hover": {
-                bgcolor: alpha("#8B5CF6", 0.1),
+                bgcolor: alpha("#00FF00", 0.1),
               },
             }}
           >
@@ -70,46 +97,32 @@ const columns = (
             </svg>
           </IconButton>
         )}
-        {/* {params.row.email && (
-          <IconButton
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation();
-              console.log("Email:", params.row.email);
-            }}
-            sx={{
-              color: "#8B5CF6", // Purple
-              "&:hover": {
-                bgcolor: alpha("#8B5CF6", 0.1),
-              },
-            }}
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-              <polyline points="22,6 12,13 2,6" />
-            </svg>
-          </IconButton>
-        )} */}
+
         {params.row.contactNumber && (
           <IconButton
             size="small"
-            onClick={(e) => {
+            onClick={async (e) => {
               e.stopPropagation();
-              console.log("Contact Number:", params.row.contactNumber);
+              try {
+                const response = await fetch("/api/call-contact", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    contactNumber: params.row.contactNumber,
+                  }),
+                });
+                const data = await response.json();
+                console.log("Call API response:", data);
+              } catch (error) {
+                console.error("Error calling contact:", error);
+              }
             }}
             sx={{
-              color: "#8B5CF6", // Purple
+              color: "#00FF00", // Purple
               "&:hover": {
-                bgcolor: alpha("#8B5CF6", 0.1),
+                bgcolor: alpha("#00FF00", 0.1),
               },
             }}
           >
@@ -131,14 +144,38 @@ const columns = (
     ),
   },
   {
+    field: "programs",
+    renderHeader: () => <strong>Programs</strong>,
+
+    width: 150,
+    renderCell: (params) => (
+      <Box in={true}>
+        {params.value.map((prog, index) => (
+          <Chip
+            key={index}
+            label={`${prog.program} (${prog.level})`}
+            size="small"
+            sx={{
+              bgcolor: alpha(theme.palette.primary.main, 0.1),
+              color: theme.palette.primary.main,
+              marginRight: 1,
+            }}
+          />
+        ))}
+      </Box>
+    ),
+  },
+
+  {
     field: "lastNoteAction",
     headerName: "Status",
+    renderHeader: () => <strong>Status</strong>,
+
     width: 210,
     renderCell: (params) => {
       // Get the latest status or default value
       const lastStatus = params.row.lastNoteAction || "No Status";
       const date = params.row.createdOn || "N/A";
-
       return (
         <Tooltip title={lastStatus} arrow>
           <Box
@@ -190,26 +227,6 @@ const columns = (
             }}
           >
             {/* Status Icon */}
-            <Box
-              className="status-badge"
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                bgcolor: alpha(theme.palette.primary.main, 0.1),
-                borderRadius: "6px",
-                padding: "4px",
-                transition: "all 0.2s ease",
-              }}
-            >
-              <HistoryIcon
-                size={16}
-                className="history-icon"
-                style={{
-                  transition: "transform 0.2s ease",
-                }}
-              />
-            </Box>
 
             {/* Status Text */}
             <Box sx={{ flex: 1 }}>
@@ -270,6 +287,8 @@ const columns = (
   {
     field: "enquiryType",
     headerName: "Type",
+    renderHeader: () => <strong>Type</strong>,
+
     width: 150,
     renderCell: (params) => (
       <Fade in={true}>
@@ -310,6 +329,8 @@ const columns = (
   {
     field: "moveToProspect",
     headerName: "Move to Enquiry",
+    renderHeader: () => <strong>Move to Enquiry</strong>,
+
     width: 150,
     renderCell: (params) => {
       const isWarmStatus = params.row.enquiryType === "warm"; // Assuming "status" is the field name
@@ -339,6 +360,8 @@ const columns = (
   {
     field: "disposition",
     headerName: "Last Log",
+    renderHeader: () => <strong>Last Log</strong>,
+
     width: 150,
     renderCell: (params) => {
       // Get the latest status or default value
@@ -460,77 +483,6 @@ const columns = (
     },
   },
 
-  {
-    field: "createdAt",
-    headerName: "Created At",
-    width: 200,
-    valueFormatter: (params) => params.value,
-  },
-  {
-    field: "programs",
-    headerName: "Programs",
-    width: 250,
-    renderCell: (params) => (
-      <Box in={true}>
-        {params.value.map((prog, index) => (
-          <Chip
-            key={index}
-            label={`${prog.program} (${prog.level})`}
-            size="small"
-            sx={{
-              bgcolor: alpha(theme.palette.primary.main, 0.1),
-              color: theme.palette.primary.main,
-              marginRight: 1,
-            }}
-          />
-        ))}
-      </Box>
-    ),
-  },
-  // {
-  //   field: "kidsAge",
-  //   headerName: "Kid Age",
-  //   type: "number",
-  //   width: 100,
-  //   editable: true,
-  // },
-  // {
-  //   field: "kidsGender",
-  //   headerName: "Kid Gender",
-  //   width: 120,
-  //   editable: true,
-  // },
 
-  // {
-  //   field: "message",
-  //   headerName: "Message",
-  //   width: 250,
-  //   editable: true,
-  // },
-  // {
-  //   field: "source",
-  //   headerName: "Source",
-  //   width: 150,
-  //   editable: true,
-  // },
-
-  // {
-  //   field: "schoolName",
-  //   headerName: "School Name",
-  //   width: 200,
-  //   editable: true,
-  // },
-  // {
-  //   field: "address",
-  //   headerName: "Address",
-  //   width: 250,
-  //   editable: true,
-  // },
-  // {
-  //   field: "schoolPincode",
-  //   headerName: "School Pincode",
-  //   width: 150,
-  //   editable: true,
-  // },
 ];
 export default columns;
