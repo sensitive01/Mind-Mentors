@@ -29,7 +29,8 @@ const allowedOrigins = [
   "http://localhost:5173",
   "https://mind-mentors.vercel.app",
   "https://mind-mentors-vt11.vercel.app",
-  "https://bespoke-narwhal-295702.netlify.app",
+  "http://54.206.67.84", 
+  ,
 ];
 
 const corsOptions = {
