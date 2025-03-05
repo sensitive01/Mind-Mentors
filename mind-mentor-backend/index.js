@@ -30,8 +30,9 @@ const allowedOrigins = [
   "https://mind-mentors.vercel.app",
   "https://mind-mentors-vt11.vercel.app",
   "http://3.104.84.126:3000",
-  "http://3.104.84.126"
-  
+  "http://3.104.84.126",
+  "https://3.104.84.126:3000",
+  "https://3.104.84.126",
 ];
 
 const corsOptions = {
@@ -53,7 +54,10 @@ function generateSignature(apiKey, apiSecret, meetingNumber, role) {
   const msg = Buffer.from(apiKey + meetingNumber + timestamp + role).toString(
     "base64"
   );
-  const hash = crypto.createHmac("sha256", apiSecret).update(msg).digest("base64");
+  const hash = crypto
+    .createHmac("sha256", apiSecret)
+    .update(msg)
+    .digest("base64");
   const signature = Buffer.from(
     `${apiKey}.${meetingNumber}.${timestamp}.${role}.${hash}`
   ).toString("base64");
