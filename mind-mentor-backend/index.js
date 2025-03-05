@@ -29,8 +29,9 @@ const allowedOrigins = [
   "http://localhost:5173",
   "https://mind-mentors.vercel.app",
   "https://mind-mentors-vt11.vercel.app",
-  "http://54.206.67.84", 
-  ,
+  "http://3.104.84.126:3000",
+  "http://3.104.84.126"
+  
 ];
 
 const corsOptions = {
