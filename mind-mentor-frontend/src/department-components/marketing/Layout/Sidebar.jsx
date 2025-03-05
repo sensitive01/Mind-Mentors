@@ -43,19 +43,19 @@ const ModernSidebar = () => {
 
   // Vibrant color palette for icons
   const iconColors = {
-    profile: "#FF6B6B",
-    dashboard: "#4ECDC4",
-    kids: "#45B7D1",
-    attendance: "#FDCB6E",
-    leaves: "#6C5CE7",
-    invoices: "#FF8A5B",
-    nearbyCenter: "#2ECC71",
-    reports: "#9B59B6",
-    tasks: "#3498DB",
-    classSchedules: "#E67E22",
-    programs: "#1ABC9C",
-    support: "#E74C3C",
-    logout: "#95A5A6",
+    profile: "#642b8f",
+    dashboard: "#642b8f",
+    kids: "#642b8f",
+    attendance: "#642b8f",
+    leaves: "#642b8f",
+    invoices: "#642b8f",
+    nearbyCenter: "#642b8f",
+    reports: "#642b8f",
+    tasks: "#642b8f",
+    classSchedules: "#642b8f",
+    programs: "#642b8f",
+    support: "#642b8f",
+    logout: "#642b8f",
   };
   // Function to lighten colors
   const lightenColor = (color, amount = 0.5) => {
@@ -142,7 +142,7 @@ const ModernSidebar = () => {
       icon: <DashboardIcon />,
       text: "Dashboard",
       color: iconColors.dashboard,
-      link: "/marketingDashboard",
+      link: "/marketing/department/dashboard",
     },
     {
       icon: <InvoicesIcon />,
@@ -162,24 +162,30 @@ const ModernSidebar = () => {
       color: iconColors.attendance,
       link: "/marketing/department/attendance",
     },
+    // {
+    //   icon: <ReportsIcon />,
+    //   text: "Tasks",
+    //   color: iconColors.reports,
+    //   subItems: [
+    //     {
+    //       icon: <ReportsIcon />,
+    //       text: "My Task",
+    //       link: "/marketing/department/list-mytask",
+    //     },
+    //     {
+    //       icon: <ReportsIcon />,
+    //       text: "Task Assigned By me",
+    //       link: "/marketing/department/list-task-assigned-me",
+    //     },
+    //   ],
+    //   open: openReports,
+    //   onClick: handleReportsClick,
+    // },
     {
-      icon: <ReportsIcon />,
+      icon: <TaskIcon />,
       text: "Tasks",
-      color: iconColors.reports,
-      subItems: [
-        {
-          icon: <ReportsIcon />,
-          text: "My Task",
-          link: "/marketing/department/list-mytask",
-        },
-        {
-          icon: <ReportsIcon />,
-          text: "Task Assigned By me",
-          link: "/marketing/department/list-task-assigned-me",
-        },
-      ],
-      open: openReports,
-      onClick: handleReportsClick,
+      color: iconColors.tasks,
+      link: "/marketing/department/task-table",
     },
     {
       icon: <LeavesIcon />,
@@ -190,7 +196,7 @@ const ModernSidebar = () => {
     {
       icon: <TentTree />,
       text: "Holidays",
-      color: iconColors.renewals,
+      color: iconColors.attendance,
       link: "/marketing-associate/holidays",
     },
 

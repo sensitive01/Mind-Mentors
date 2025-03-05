@@ -1,4 +1,4 @@
-import MyTaskTable from "../../../department-components/common-components/task/MyTaskTable";
+import MyTaskTable from "../../../department-components/common-components/Asssign-assignedTask/AssignAssignedTask";
 import Sidebar from "../../../department-components/centeradmin-components/layout/Sidebar";
 import Topbar from "./../../../component/parent-component/parent-dashboard/layout/Topbar";
 

@@ -142,7 +142,7 @@ import RenewalMyTasks from "./pages/employee/renewalassociate/RenewalMyTasks";
 import RenewalParents from "./pages/employee/renewalassociate/RenewalParents";
 import RenewalProfile from "./pages/employee/renewalassociate/RenewalProfile";
 import RenewalPrograms from "./pages/employee/renewalassociate/RenewalPrograms";
-// import RenewalReferal from "./pages/employee/renewalassociate/RenewalReferal";
+import RenewalReferal from "./pages/employee/renewalassociate/RenewalReferal";
 import RenewalRenewal from "./pages/employee/renewalassociate/RenewalRenewal";
 import RenewalScheduleClass from "./pages/employee/renewalassociate/RenewalScheduleClass";
 import RenewalSupport from "./pages/employee/renewalassociate/RenewalSupport";
@@ -401,7 +401,7 @@ function App() {
           <Route path="/service-delivery/department/leaves/add" element={<ServiceLeavesAdd />}  />
           <Route path="/service-delivery/department/edit-leaves/:id" element={<ServiceLeavesAdd />} />
           <Route path="/service-delivery/department/list-task-assigned-me" element={<ServiceMyAssignTasksTable />}/>
-          <Route path="/service-delivery/department/list-mytask" element={<ServiceMyTasks />}/>           
+          <Route path="/service-delivery/department/task-table" element={<ServiceMyTasks />}/>           
           <Route path="/service-delivery/department/assign-new-task" element={<ServiceMyAssignTasks />}/>
           <Route path="/service-delivery/department/taskslogs/:id" element={<ServiceTaskLogs />} />
           <Route path="/service-delivery/department/attendance" element={<ServiceAttendance />}  />
@@ -435,7 +435,7 @@ function App() {
           <Route path="/renewal/department/leaves"  element={<RenewalLeaves />} />
           <Route path="/renewal/department/leaves/add" element={<RenewalLeavesAdd />}/>
           <Route path="/renewal/department/edit-leaves/:id"   element={<RenewalLeavesAdd />} />
-          <Route path="/renewal/department/list-mytask"  element={<RenewalMyTasks />}/>
+          <Route path="/renewal/department/task-table"  element={<RenewalMyTasks />}/>
           <Route path="/renewal/department/list-task-assigned-me" element={<RenewalMyAssignTasksTable />} />
           <Route path="/renewal/department/assign-new-task" element={<RenewalMyAssignTasks />} />
           <Route path="/renewal/department/taskslogs/:id" element={<RenewalTaskLogs />} />
@@ -455,7 +455,7 @@ function App() {
           
            
           {/* <Route path="/renewalLogin" element={<RenewalLogin />} /> */}
-          {/* <Route path="/renewalReferrals" element={<RenewalReferal />} /> */}
+          <Route path="/renewalReferrals" element={<RenewalReferal />} />
 
 
           <Route path="/coachProfile" element={<CoachProfile />} />
@@ -463,7 +463,7 @@ function App() {
           <Route path="/coach/department/leaves" element={<CoachLeaves />} />
           <Route path="/coach/department/leaves/add" element={<CoachLeavesAdd />}/>
           <Route path="/coach/department/edit-leaves/:id" element={<CoachLeavesAdd />} />
-          <Route path="/coach/department/list-mytask" element={<CoachMyTasks />}/>
+          <Route path="/coach/department/task-table" element={<CoachMyTasks />}/>
           <Route path="/coach/department/list-task-assigned-me" element={<CoachMyAssignTasksTable />} />
           <Route path="/coach/department/assign-new-task" element={<CoachMyAssignTasks />} />
           <Route path="/coach/department/taskslogs/:id"  element={<CoachTaskLogs />} />
@@ -488,7 +488,7 @@ function App() {
           <Route path="/marketing/department/leaves"  element={<MarketingLeaves />} />
           <Route path="/marketing/department/leaves/add" element={<MarketingLeavesAdd />} />
           <Route path="/marketing/department/edit-leaves/:id"  element={<MarketingLeavesAdd />}/>
-          <Route path="/marketing/department/list-mytask"  element={<MarketingMyTaskPage />}/>
+          <Route path="/marketing/department/task-table"  element={<MarketingMyTaskPage />}/>
           <Route path="/marketing/department/list-task-assigned-me"  element={<MarketingAssignedTaskTable />}/>
           <Route path="/marketing/department/assign-new-task" element={<MarketingNewTaskForm />}/>
           <Route path="/marketing/department/taskslogs/:id"  element={<MarketingTaskLogs />}/>
@@ -519,7 +519,7 @@ function App() {
           <Route path="/centeradmin/department/coachAvailabilityTable" element={<CenterAdminCoachAvailabilityTable />}/>   
           <Route path="/centeradmin/department/coachAvailabilityform" element={<CenterAdminCoachAvailabilityForm />}/>
           <Route path="/centeradmin/department/edit-leaves/:id" element={<CenterLeaveFormPage />}/>
-          <Route path="/centeradmin/department/list-mytask" element={<CenterTasksPage />}/>         
+          <Route path="/centeradmin/department/task-table" element={<CenterTasksPage />}/>         
           <Route path="/centeradmin/department/list-task-assigned-me" element={<CenterAssigneTasksPage />} />       
           <Route path="/centeradmin/department/assign-new-task" element={<CenterTaskAssignByMePage />}   />
           <Route path="/centeradmin/department/taskslogs/:id" element={<CenterAdminTaskLogs />} />
@@ -553,7 +553,7 @@ function App() {
           <Route path="/super-admin/department/add-physical-center" element={<AddPhysicalCenterFormPage />}/>
           <Route path="/super-admin/department/edit-physical-center/:id" element={<EditPhysicalCenterData />}/>
           <Route path="/super-admin/department/dashboard" element={<SuperadminDashboard />}/>
-          <Route path="/super-admin/department/list-mytask" element={<SuperadminMyTasks />} />
+          <Route path="/super-admin/department/task-table" element={<SuperadminMyTasks />} />
           <Route path="/super-admin/department/list-task-assigned-me" element={<SuperadminMyAssignTasksTable />} />
           <Route path="/super-admin/department/assign-new-task"  element={<SuperadminMyAssignTasks />}/>
           <Route path="/super-admin/department/taskslogs/:id" element={<SuperAdminTaskAllLogs />}/>

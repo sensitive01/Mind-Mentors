@@ -43,20 +43,20 @@ const ModernSidebar = () => {
   const navigate = useNavigate();
 
   const iconColors = {
-    profile: "#FF6B6B",
-    dashboard: "#4ECDC4",
-    enquiries: "#4ECDC4",
-    kids: "#45B7D1",
-    attendance: "#FDCB6E",
-    leaves: "#6C5CE7",
-    invoices: "#FF8A5B",
-    nearbyCenter: "#2ECC71",
-    reports: "#9B59B6",
-    tasks: "#3498DB",
-    classSchedules: "#E67E22",
-    programs: "#1ABC9C",
-    support: "#E74C3C",
-    logout: "#95A5A6",
+    profile: "#642b8f",
+    dashboard: "#642b8f",
+    enquiries: "#642b8f",
+    kids: "#642b8f",
+    attendance: "#642b8f",
+    leaves: "#642b8f",
+    invoices: "#642b8f",
+    nearbyCenter: "#642b8f",
+    reports: "#642b8f",
+    tasks: "#642b8f",
+    classSchedules: "#642b8f",
+    programs: "#642b8f",
+    support: "#642b8f",
+    logout: "#642b8f",
   };
 
   const StyledListItem = styled(ListItem)(({ theme }) => ({
@@ -155,7 +155,7 @@ const ModernSidebar = () => {
     {
       icon: <CoachTime />,
       text: "Coach Availability",
-      color: iconColors.coach,
+      color: iconColors.attendance,
       path: "/centeradmin/department/coachAvailabilityTable",
     },
     {
@@ -202,25 +202,31 @@ const ModernSidebar = () => {
       open: openReports,
       onClick: handleReportsClick,
     },
+    // {
+    //   icon: <TaskIcon />,
+    //   text: "Tasks",
+    //   color: iconColors.tasks,
+
+    //   subItems: [
+    //     {
+    //       icon: <TaskIcon />,
+    //       text: "My Tasks",
+    //       path: "/centeradmin/department/list-mytask",
+    //     },
+    //     {
+    //       icon: <TaskIcon />,
+    //       text: "Tasks Assigned By Me",
+    //       path: "/centeradmin/department/list-task-assigned-me",
+    //     },
+    //   ],
+    //   open: openTasks,
+    //   onClick: handleTasksClick,
+    // },
     {
       icon: <TaskIcon />,
-      text: "Tasks",
+      text: "Task",
       color: iconColors.tasks,
-
-      subItems: [
-        {
-          icon: <TaskIcon />,
-          text: "My Tasks",
-          path: "/centeradmin/department/list-mytask",
-        },
-        {
-          icon: <TaskIcon />,
-          text: "Tasks Assigned By Me",
-          path: "/centeradmin/department/list-task-assigned-me",
-        },
-      ],
-      open: openTasks,
-      onClick: handleTasksClick,
+      path: "/centeradmin/department/task-table",
     },
 
     {
