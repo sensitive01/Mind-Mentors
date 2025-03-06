@@ -24,6 +24,7 @@ const ParentKidsRegistration = () => {
     schoolName:regFormData.schoolName|| "",
     address:regFormData.address|| "",
     pincode:regFormData.pincode|| "",
+    enqId:state.enqId||""
   });
   const [isCooldown, setIsCooldown] = useState(false);
 

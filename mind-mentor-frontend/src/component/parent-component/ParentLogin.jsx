@@ -34,6 +34,7 @@ const ParentLogin = () => {
 
     try {
       const parentLoginResponse = await parentLogin(formattedNumber);
+      console.log("parentLoginResponse",parentLoginResponse)
       if (parentLoginResponse.status === 200 || parentLoginResponse.status === 201) {
         toast.success(parentLoginResponse?.data?.message);
         setTimeout(() => {

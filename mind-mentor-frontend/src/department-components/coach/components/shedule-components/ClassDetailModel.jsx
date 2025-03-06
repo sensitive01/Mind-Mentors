@@ -27,6 +27,8 @@ const ClassDetailsModal = ({
 }) => {
   if (!selectedClass) return null;
 
+  console.log("selectedClass", selectedClass);
+
   return (
     <Modal
       open={modalOpen}
@@ -154,7 +156,7 @@ const ClassDetailsModal = ({
               <StudentsIcon
                 sx={{ color: customColors.secondary, fontSize: 28 }}
               />
-              <Box sx={{ ml: 2 }}>
+              <Box sx={{ ml: 2, width: "100%" }}>
                 <Typography
                   variant="body1"
                   sx={{
@@ -162,11 +164,34 @@ const ClassDetailsModal = ({
                     mb: 0.5,
                   }}
                 >
-                  Class Size
+                  Students
                 </Typography>
-                <Typography variant="h6" sx={{ color: customColors.secondary }}>
-                  {selectedClass.students} Students
-                </Typography>
+                {selectedClass.selectedStudents &&
+                selectedClass.selectedStudents.length > 0 ? (
+                  <Box
+                    sx={{
+                      maxHeight: "200px",
+                      overflowY: "auto",
+                      border: `1px solid ${customColors.secondary}20`,
+                      borderRadius: 2,
+                      p: 2,
+                    }}
+                  >
+                    {selectedClass.selectedStudents.map((student, index) => (
+                      <span key={index}>
+                        {index > 0 && ", "}
+                        {student.kidName}
+                      </span>
+                    ))}
+                  </Box>
+                ) : (
+                  <Typography
+                    variant="body2"
+                    sx={{ color: customColors.secondary }}
+                  >
+                    No students enrolled
+                  </Typography>
+                )}
               </Box>
             </DetailRow>
 

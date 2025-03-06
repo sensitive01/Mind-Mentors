@@ -1,50 +1,23 @@
 import { useEffect, useState } from "react";
-import { Calendar, Clock, User, Book, ChevronRight, MapPin } from "lucide-react";
+import {
+  Calendar,
+  Clock,
+  User,
+  Book,
+  ChevronRight,
+  MapPin,
+} from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getDemoSheduleClass } from "../../../../api/service/employee/EmployeeService";
 import { toast, ToastContainer } from "react-toastify";
 import { parentBookDemoClassinProfile } from "../../../../api/service/parent/ParentService";
-
-// Dummy data for physical centers
-const physicalCenters = [
-  {
-    _id: "pc1",
-    centerName: "MindMentorz Chess Academy",
-    address: "123 Chess Street, Jayanagar",
-    slots: [
-      { day: "Monday", times: ["9:00 AM", "2:00 PM", "4:00 PM"] },
-      { day: "Wednesday", times: ["10:00 AM", "3:00 PM", "5:00 PM"] },
-    ],
-    coachName: "Anand Kumar"
-  },
-  {
-    _id: "pc2",
-    centerName: "Royal Chess Club",
-    address: "456 Game Avenue, Indiranagar",
-    slots: [
-      { day: "Tuesday", times: ["9:30 AM", "2:30 PM", "4:30 PM"] },
-      { day: "Thursday", times: ["10:30 AM", "3:30 PM", "5:30 PM"] },
-    ],
-    coachName: "Vishal Sharma"
-  },
-  {
-    _id: "pc3",
-    centerName: "Elite Chess Center",
-    address: "789 Master Road, Koramangala",
-    slots: [
-      { day: "Friday", times: ["9:00 AM", "2:00 PM", "4:00 PM"] },
-      { day: "Saturday", times: ["10:00 AM", "3:00 PM", "5:00 PM"] },
-    ],
-    coachName: "Rajesh Patel"
-  }
-];
 
 const SheduleDemoClass = () => {
   const { id } = useParams();
   const [formData, setFormData] = useState({
     program: "",
     programLevel: "",
-    classMode: "online" // default to online
+    classMode: "online", // default to online
   });
   const [availableSlots, setAvailableSlots] = useState([]);
   const [selectedSlot, setSelectedSlot] = useState(null);
@@ -59,25 +32,9 @@ const SheduleDemoClass = () => {
         setAvailableSlots(response.data.scheduleData);
       } catch (error) {
         console.error("Error fetching demo classes:", error);
-        // Set some dummy data for demonstration
-        setAvailableSlots([
-          {
-            _id: "1",
-            day: "Monday",
-            classTime: "10:00 AM",
-            coachName: "John Doe",
-            program: "Chess",
-            level: "Beginner"
-          },
-          {
-            _id: "2",
-            day: "Wednesday",
-            classTime: "2:00 PM",
-            coachName: "Jane Smith",
-            program: "Chess",
-            level: "Intermediate"
-          }
-        ]);
+        toast.error(
+          "Failed to load available classes. Please try again later."
+        );
       }
     };
     fetchDemoClass();
@@ -94,8 +51,50 @@ const SheduleDemoClass = () => {
     return availableSlots.filter(
       (slot) =>
         slot.program === formData.program &&
-        slot.level === formData.programLevel
+        slot.level === formData.programLevel &&
+        slot.type === "online"
     );
+  };
+
+  const getMatchingCenters = () => {
+    // Group offline classes by coach and create a center-like structure
+    const offlineSlots = availableSlots.filter(
+      (slot) =>
+        slot.program === formData.program &&
+        slot.level === formData.programLevel &&
+        slot.type === "offline"
+    );
+
+    // Group slots by coach
+    const groupedByCoach = {};
+    offlineSlots.forEach((slot) => {
+      if (!groupedByCoach[slot.coachId]) {
+        groupedByCoach[slot.coachId] = {
+          _id: slot.coachId,
+          centerName: `Mind Mentorz - ${slot.program}`,
+          address: "Visit our center for the demo class",
+          coachName: slot.coachName,
+          slots: [],
+        };
+      }
+
+      // Check if day already exists in slots
+      const daySlot = groupedByCoach[slot.coachId].slots.find(
+        (s) => s.day === slot.day
+      );
+      if (daySlot) {
+        daySlot.times.push(slot.classTime);
+        daySlot.slotIds[slot.classTime] = slot._id;
+      } else {
+        groupedByCoach[slot.coachId].slots.push({
+          day: slot.day,
+          times: [slot.classTime],
+          slotIds: { [slot.classTime]: slot._id },
+        });
+      }
+    });
+
+    return Object.values(groupedByCoach);
   };
 
   const handleSubmit = async (e) => {
@@ -106,7 +105,10 @@ const SheduleDemoClass = () => {
       return;
     }
 
-    if (formData.classMode === "physical" && (!selectedCenter || !selectedCenterSlot)) {
+    if (
+      formData.classMode === "physical" &&
+      (!selectedCenter || !selectedCenterSlot)
+    ) {
       toast.error("Please select a center and time slot");
       return;
     }
@@ -116,29 +118,38 @@ const SheduleDemoClass = () => {
       return;
     }
 
+    // Find the schedule ID for offline classes
+    let scheduleId = selectedSlot?._id;
+    if (formData.classMode === "physical" && selectedCenterSlot) {
+      const centerId = selectedCenter._id;
+      const { day, time } = selectedCenterSlot;
+      const centerData = getMatchingCenters().find(
+        (center) => center._id === centerId
+      );
+      const daySlot = centerData?.slots.find((slot) => slot.day === day);
+      scheduleId = daySlot?.slotIds[time];
+    }
+
     const submitData = {
       programs: [
         {
           program: formData.program,
           programLevel: formData.programLevel,
-          classMode: formData.classMode,
-          centerDetails: formData.classMode === "physical" ? {
-            centerId: selectedCenter?._id,
-            slotTime: selectedCenterSlot
-          } : null
+          classMode: formData.classMode === "online" ? "online" : "offline",
         },
       ],
-      scheduleId: selectedSlot?._id,
-      hasSchedule: !!selectedSlot || !!selectedCenterSlot,
+      scheduleId: scheduleId,
+      hasSchedule: !!scheduleId,
     };
 
     try {
       const response = await parentBookDemoClassinProfile(submitData, id);
-      if (response.status === 201) {
-        toast.success("Registration successful! Your demo class has been scheduled.");
-        localStorage.setItem("parentId", response?.data?.parentId);
+      if (response.status === 200) {
+        toast.success(
+          " Your demo class has been re-scheduled."
+        );
         setTimeout(() => {
-          navigate("/parent/dashboard");
+          navigate("/parent/kid");
         }, 1500);
       }
     } catch (error) {
@@ -186,7 +197,9 @@ const SheduleDemoClass = () => {
                 </label>
                 <select
                   value={formData.programLevel}
-                  onChange={(e) => handleInputChange("programLevel", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("programLevel", e.target.value)
+                  }
                   className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white shadow-sm"
                   required
                 >
@@ -207,7 +220,9 @@ const SheduleDemoClass = () => {
                       name="classMode"
                       value="online"
                       checked={formData.classMode === "online"}
-                      onChange={(e) => handleInputChange("classMode", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("classMode", e.target.value)
+                      }
                       className="w-4 h-4 text-purple-600"
                     />
                     <span>Online Class</span>
@@ -218,7 +233,9 @@ const SheduleDemoClass = () => {
                       name="classMode"
                       value="physical"
                       checked={formData.classMode === "physical"}
-                      onChange={(e) => handleInputChange("classMode", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("classMode", e.target.value)
+                      }
                       className="w-4 h-4 text-purple-600"
                     />
                     <span>Physical Center</span>
@@ -246,7 +263,9 @@ const SheduleDemoClass = () => {
                               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <div className="flex items-center">
                                   <Calendar className="w-5 h-5 text-primary mr-2 flex-shrink-0" />
-                                  <span className="font-medium">{slot.day}</span>
+                                  <span className="font-medium">
+                                    {slot.day}
+                                  </span>
                                 </div>
                                 <div className="flex items-center">
                                   <Clock className="w-5 h-5 text-primary mr-2 flex-shrink-0" />
@@ -263,9 +282,9 @@ const SheduleDemoClass = () => {
                           <div className="text-center p-8 bg-gray-50 rounded-lg border border-gray-200">
                             <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                             <p className="text-gray-600">
-                              No scheduled online demo classes available for this program and
-                              level. Register anyway, and our team will contact you to
-                              schedule your demo class.
+                              No scheduled online demo classes available for
+                              this program and level. Register anyway, and our
+                              team will contact you to schedule your demo class.
                             </p>
                           </div>
                         )}
@@ -279,69 +298,95 @@ const SheduleDemoClass = () => {
                     </h4>
                     <div className="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                       <div className="grid gap-4">
-                        {physicalCenters.map((center) => (
-                          <div key={center._id} className="border rounded-lg p-4">
+                        {getMatchingCenters().length > 0 ? (
+                          getMatchingCenters().map((center) => (
                             <div
-                              onClick={() => {
-                                setSelectedCenter(center);
-                                setSelectedCenterSlot(null);
-                              }}
-                              className={`cursor-pointer ${
-                                selectedCenter?._id === center._id
-                                  ? "text-purple-600"
-                                  : "text-gray-800"
-                              }`}
+                              key={center._id}
+                              className="border rounded-lg p-4"
                             >
-                              <div className="flex items-start gap-2 mb-2">
-                                <MapPin className="w-5 h-5 flex-shrink-0 mt-1" />
-                                <div>
-                                  <h5 className="font-medium">{center.centerName}</h5>
-                                  <p className="text-sm text-gray-600">{center.address}</p>
+                              <div
+                                onClick={() => {
+                                  setSelectedCenter(center);
+                                  setSelectedCenterSlot(null);
+                                }}
+                                className={`cursor-pointer ${
+                                  selectedCenter?._id === center._id
+                                    ? "text-purple-600"
+                                    : "text-gray-800"
+                                }`}
+                              >
+                                <div className="flex items-start gap-2 mb-2">
+                                  <MapPin className="w-5 h-5 flex-shrink-0 mt-1" />
+                                  <div>
+                                    <h5 className="font-medium">
+                                      {center.centerName}
+                                    </h5>
+                                    <p className="text-sm text-gray-600">
+                                      {center.address}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                  <User className="w-4 h-4" />
+                                  <span>Coach {center.coachName}</span>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2 text-sm text-gray-600">
-                                <User className="w-4 h-4" />
-                                <span>Coach {center.coachName}</span>
-                              </div>
-                            </div>
 
-                            {selectedCenter?._id === center._id && (
-                              <div className="mt-4 pl-4 border-t pt-4">
-                                <h6 className="text-sm font-medium mb-2">Available Slots:</h6>
-                                <div className="grid grid-cols-2 gap-4">
-                                  {center.slots.map((slot, idx) => (
-                                    <div key={idx} className="space-y-2">
-                                      <div className="flex items-center gap-2 text-sm">
-                                        <Calendar className="w-4 h-4" />
-                                        <span className="font-medium">{slot.day}</span>
+                              {selectedCenter?._id === center._id && (
+                                <div className="mt-4 pl-4 border-t pt-4">
+                                  <h6 className="text-sm font-medium mb-2">
+                                    Available Slots:
+                                  </h6>
+                                  <div className="grid grid-cols-2 gap-4">
+                                    {center.slots.map((slot, idx) => (
+                                      <div key={idx} className="space-y-2">
+                                        <div className="flex items-center gap-2 text-sm">
+                                          <Calendar className="w-4 h-4" />
+                                          <span className="font-medium">
+                                            {slot.day}
+                                          </span>
+                                        </div>
+                                        <div className="grid gap-2">
+                                          {slot.times.map((time, timeIdx) => (
+                                            <button
+                                              key={timeIdx}
+                                              type="button"
+                                              onClick={() =>
+                                                setSelectedCenterSlot({
+                                                  day: slot.day,
+                                                  time: time,
+                                                })
+                                              }
+                                              className={`px-3 py-1 text-sm rounded ${
+                                                selectedCenterSlot?.day ===
+                                                  slot.day &&
+                                                selectedCenterSlot?.time ===
+                                                  time
+                                                  ? "bg-purple-100 text-purple-700"
+                                                  : "bg-gray-100 hover:bg-gray-200"
+                                              }`}
+                                            >
+                                              {time}
+                                            </button>
+                                          ))}
+                                        </div>
                                       </div>
-                                      <div className="grid gap-2">
-                                        {slot.times.map((time, timeIdx) => (
-                                          <button
-                                            key={timeIdx}
-                                            type="button"
-                                            onClick={() => setSelectedCenterSlot({
-                                              day: slot.day,
-                                              time: time
-                                            })}
-                                            className={`px-3 py-1 text-sm rounded ${
-                                              selectedCenterSlot?.day === slot.day &&
-                                              selectedCenterSlot?.time === time
-                                                ? "bg-purple-100 text-purple-700"
-                                                : "bg-gray-100 hover:bg-gray-200"
-                                            }`}
-                                          >
-                                            {time}
-                                          </button>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  ))}
+                                    ))}
+                                  </div>
                                 </div>
-                              </div>
-                            )}
+                              )}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center p-8 bg-gray-50 rounded-lg border border-gray-200">
+                            <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                            <p className="text-gray-600">
+                              No physical centers available for this program and
+                              level. Please try the online option or register
+                              anyway, and our team will contact you.
+                            </p>
                           </div>
-                        ))}
+                        )}
                       </div>
                     </div>
                   </div>
