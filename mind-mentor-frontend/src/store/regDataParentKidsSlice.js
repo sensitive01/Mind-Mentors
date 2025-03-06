@@ -13,7 +13,8 @@ const initialState = {
   address: '',
   pincode: '',
   programs: [],
-  usePredefineSlot:false
+  usePredefineSlot:false,
+  enqId:""
 };
 
 const regDataParentKidsSlice = createSlice({

@@ -1,6 +1,6 @@
 import AttendanceCalendar from "../../../department-components/common-components/attandance/AttendanceDashboard";
 
-import Sidebar from "../../../department-components/renewalassociate/Layout/Sidebar";
+import Sidebar from "../../../department-components/servicedelivery/Layout/Sidebar";
 import Topbar from "../../../component/parent-component/parent-dashboard/layout/Topbar";
 
 const DashboardPage = () => {
@@ -14,7 +14,7 @@ const DashboardPage = () => {
           <Topbar />
         </div>
         <div className="flex-1 overflow-hidden relative z-10">
-          <div className="h-full overflow-y-auto scrollbar-hide">
+          <div className="h-full overflow-y-auto scrollbar-hide bg-gray-50">
             <AttendanceCalendar />
           </div>
         </div>

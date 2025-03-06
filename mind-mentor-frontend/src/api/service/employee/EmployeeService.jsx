@@ -618,3 +618,9 @@ export const getPackageData = async () => {
   return response;
 };
 
+export const getAllParentData = async () => {
+  const response = await userInstance.get(
+    `/get-all-parent-data`
+  );
+  return response;
+};

@@ -13,7 +13,7 @@ const PhysicalCenterListPage = () => {
           <Topbar />
         </div>
         <div className="flex-1 overflow-hidden relative z-10">
-          <div className="h-full overflow-y-auto scrollbar-hide">
+          <div className="h-full overflow-y-auto bg-gray-50 scrollbar-hide">
             <PhysicalCenterList />
           </div>
         </div>

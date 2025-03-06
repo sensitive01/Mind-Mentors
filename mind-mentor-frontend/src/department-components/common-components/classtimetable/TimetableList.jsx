@@ -214,7 +214,7 @@ const ScheduleKanban = () => {
             to="/centeradmin/department/create-time-table"
             color="primary"
           >
-            + Create Schedulesss
+            + Create Schedule
           </Button>
         </Box>
 

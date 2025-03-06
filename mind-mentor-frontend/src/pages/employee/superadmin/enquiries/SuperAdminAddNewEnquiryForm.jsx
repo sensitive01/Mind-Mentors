@@ -1,9 +1,7 @@
-import PackageForm from "../../../../department-components/common-components/package/PackageForm";
-
-import Topbar from '../../../../component/parent-component/parent-dashboard/layout/Topbar';
+import NewEnquiryFormStep from "../../../../department-components/common-components/enquiries/NewEnquiryFormStep";
+import Topbar from "../../../../component/parent-component/parent-dashboard/layout/Topbar";
 import Sidebar from "../../../../department-components/superadmin/Layout/Sidebar";
-
-const SuperAdminAddPackageForm = () => {
+const SuperAdminAddNewEnquiryForm = () => {
   return (
     <div className="flex h-screen w-screen overflow-hidden">
       <div className="z-30">
@@ -15,7 +13,7 @@ const SuperAdminAddPackageForm = () => {
         </div>
         <div className="flex-1 overflow-hidden relative z-10">
           <div className="h-full overflow-y-auto scrollbar-hide bg-gray-50">
-            <PackageForm />
+            <NewEnquiryFormStep />
           </div>
         </div>
       </div>
@@ -23,5 +21,4 @@ const SuperAdminAddPackageForm = () => {
   );
 };
 
-
-export default SuperAdminAddPackageForm;
+export default SuperAdminAddNewEnquiryForm;

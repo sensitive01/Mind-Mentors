@@ -56,16 +56,72 @@ import {
   Typography,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { MenuIcon } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 
 const ModernSidebar = () => {
+  const location = useLocation();
   const [openReports, setOpenReports] = useState(false);
+  const [openClass, setOpenClass] = useState(false);
   const [openTasks, setOpenTasks] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [openCRM, setOpenCRM] = useState(false);
   const [openEmployees, setOpenEmployees] = useState(false);
+  const [openEnquiries, setOpenEnquiries] = useState(false);
   const [openParticipants, setOpenParticipants] = useState(false);
+  const [openTournaments, setOpenTournaments] = useState(false);
+  const [activeItem, setActiveItem] = useState("");
+
+  useEffect(() => {
+    // Set active item based on current path
+    setActiveItem(location.pathname);
+
+    // Open appropriate submenu when navigating directly to a subpage
+    const currentPath = location.pathname;
+
+    if (
+      currentPath.includes("/super-admin/department/parents-data") ||
+      currentPath.includes("/super-admin/department/kids-data") ||
+      currentPath.includes("/superadminRenewals") ||
+      currentPath.includes("/enquiries")
+    ) {
+      setOpenEnquiries(true);
+    }
+
+    if (
+      currentPath.includes("/super-admin/department/employees") ||
+      currentPath.includes("/coaches") ||
+      currentPath.includes("/physical-centerlist") ||
+      currentPath.includes("/superadminAttendance") ||
+      currentPath.includes("/allowdeduct") ||
+      currentPath.includes("/payroll")
+    ) {
+      setOpenEmployees(true);
+    }
+
+    if (
+      currentPath.includes("/superadminFeedback") ||
+      currentPath.includes("/superadminAttendanceReport")
+    ) {
+      setOpenReports(true);
+    }
+
+    if (
+      currentPath.includes("/tournaments") ||
+      currentPath.includes("/participents")
+    ) {
+      setOpenTournaments(true);
+    }
+
+    if (
+      currentPath.includes("/superadminFeedback") ||
+      currentPath.includes("/superadminAttendanceReport") ||
+      currentPath.includes("/class-schedules")
+    ) {
+      setOpenClass(true);
+    }
+  }, [location]);
 
   // Enhanced color palette with more distinct colors
   const iconColors = {
@@ -95,7 +151,7 @@ const ModernSidebar = () => {
   };
 
   // Styled components for enhanced interactivity
-  const StyledListItem = styled(ListItem)(({ theme }) => ({
+  const StyledListItem = styled(ListItem)(({ theme, isActive }) => ({
     borderRadius: 8,
     margin: "2px 0",
     padding: "8px 16px",
@@ -105,14 +161,15 @@ const ModernSidebar = () => {
     position: "relative",
     overflow: "hidden",
     gap: 8,
+    backgroundColor: isActive ? "rgba(100, 43, 143, 0.1)" : "transparent",
     "&::before": {
       content: '""',
       position: "absolute",
       top: 0,
       left: 0,
-      width: 0,
+      width: isActive ? "100%" : 0,
       height: "100%",
-      backgroundColor: "#642b8f",
+      backgroundColor: isActive ? "rgba(100, 43, 143, 0.2)" : "#642b8f",
       transition: "width 0.3s ease",
       zIndex: 0,
     },
@@ -121,11 +178,11 @@ const ModernSidebar = () => {
         width: "100%",
       },
       "& .MuiListItemIcon-root, & .MuiListItemText-primary": {
-        color: "white",
+        color: isActive ? "#642b8f" : "white",
         zIndex: 1,
       },
       "& .MuiListItemIcon-root svg": {
-        filter: "brightness(200%)", // Alternative way to lighten icons
+        filter: isActive ? "none" : "brightness(200%)",
       },
       boxShadow: theme.shadows[2],
     },
@@ -133,12 +190,23 @@ const ModernSidebar = () => {
       position: "relative",
       zIndex: 1,
       transition: "color 0.3s ease",
+      color: isActive ? "#642b8f" : "inherit",
     },
     "& .MuiListItemIcon-root": {
       marginRight: 8,
       minWidth: "auto",
     },
+    "& .MuiListItemIcon-root svg": {
+      color: isActive ? "#642b8f" : "inherit",
+    },
+    ...(isActive && {
+      fontWeight: "bold",
+      "& .MuiListItemText-primary": {
+        fontWeight: "bold",
+      },
+    }),
   }));
+
   const StyledDrawer = styled(Drawer)(() => ({
     width: isCollapsed ? 80 : 280,
     flexShrink: 0,
@@ -151,13 +219,30 @@ const ModernSidebar = () => {
       overflow: "hidden",
     },
   }));
+
   // Event handlers for toggling submenus
   const handleReportsClick = () => setOpenReports(!openReports);
+  const handleClassClick = () => setOpenClass(!openClass);
   const handleTasksClick = () => setOpenTasks(!openTasks);
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
   const handleCRMClick = () => setOpenCRM(!openCRM);
   const handleEmployeesClick = () => setOpenEmployees(!openEmployees);
-  const handleParticipantsClick = () => setOpenParticipants(!openParticipants);
+  const handleEnquiriesClick = () => setOpenEnquiries(!openEnquiries);
+  const handleTournamentsClick = () => setOpenTournaments(!openTournaments);
+
+  // Check if a menu item is currently active
+  const isItemActive = (link, subItems) => {
+    if (link && activeItem === link) {
+      return true;
+    }
+
+    // If this item has subitems, check if any of them are active
+    if (subItems) {
+      return subItems.some((subItem) => activeItem === subItem.link);
+    }
+
+    return false;
+  };
 
   const menuItems = [
     {
@@ -167,72 +252,76 @@ const ModernSidebar = () => {
       link: "/super-admin/department/dashboard",
     },
     {
-      icon: <DashboardIcon />,
-      text: "Physical Centers",
-      color: iconColors.dashboard,
-      link: "/super-admin/department/physical-centerlist",
-    },
-
-
-    {
       icon: <EnquiriesIcon />,
-      text: "Voucher_Discounts",
+      text: "Enquiries",
       color: iconColors.enquiries,
-      link: "/superadmin/department/discount-table",
-    },
-    {
-      icon: <EnquiriesIcon />,
-      text: "Package",
-      color: iconColors.enquiries,
-      link: "/superadmin/department/package-table",
-    },
-    {
-      icon: <KidsIcon />,
-      text: "Kids",
-      color: iconColors.kids,
-      link: "/superadminKids",
-    },
-
-
-
-    {
-      icon: <ParentsIcon />,
-      text: "Parents",
-      color: iconColors.parents,
-      link: "/superadminParents",
-    },
-    // {
-    //   icon: <TasksIcon />,
-    //   text: "Tasks",
-    //   color: iconColors.tasks,
-    //   subItems: [
-    //     { icon: <TasksIcon />, text: "My Tasks", link: "/super-admin/department/list-mytask" },
-    //     {
-    //       icon: <TasksIcon />,
-    //       text: "Tasks Assigned By Me",
-    //       link: "/super-admin/department/list-task-assigned-me",
-    //     },
-    //   ],
-    //   open: openTasks,
-    //   onClick: handleTasksClick,
-    // },
+      subItems: [
+        { icon: <EnquiriesIcon />, text: "Enquiry Data", link: "/super-admin/department/enrollment-data" },
+        { icon: <ParentsIcon />, text: "Parents", link: "/super-admin/department/parents-data" },
+        { icon: <KidsIcon />, text: "Kids", link: "/super-admin/department/kids-data" },
         {
-          icon: <TasksIcon />,
-          text: "Task",
-          color: iconColors.tasks,
-          link: "/super-admin/department/task-table",
+          icon: <RenewalsIcon />,
+          text: "Renewals",
+          link: "/superadminRenewals",
         },
+      ],
+      open: openEnquiries,
+      onClick: handleEnquiriesClick,
+    },
+
     {
-      icon: <LeavesIcon />,
-      text: "Leaves",
-      color: iconColors.users,
-      link: "/super-admin/department/leaves",
+      icon: <EmployeesIcon />,
+      text: "Employees",
+      color: iconColors.employees,
+      subItems: [
+        { icon: <EmployeesIcon />, text: "Employee Data", link: "/super-admin/department/employees" },
+        // { icon: <EmployeesIcon />, text: "Coach Data", link: "/coaches" },
+        {
+          icon: <DashboardIcon />,
+          text: "Physical Centers",
+          link: "/super-admin/department/physical-centerlist",
+        },
+        {
+          icon: <RenewalsIcon />,
+          text: "Attendance",
+          link: "/superadminAttendance",
+        },
+        {
+          icon: <ExpensesIcon />,
+          text: "Allowances / Deductions",
+          link: "/super-admin/department/allowdeduct",
+        },
+        { icon: <TasksIcon />, text: "Task", link: "/super-admin/department/task-table" },
+        { icon: <LeavesIcon />, text: "Leaves", link: "/super-admin/department/leaves" },
+
+
+      ],
+      open: openEmployees,
+      onClick: handleEmployeesClick,
     },
     {
-      icon: <RenewalsIcon />,
-      text: "Renewals",
-      color: iconColors.attendance,
-      link: "/superadminRenewals",
+      icon: <ClassScheduleIcon />,
+      text: "Class",
+      color: iconColors.reports,
+      subItems: [
+        {
+          icon: <ClassScheduleIcon />,
+          text: "Class Schedules",
+          link: "/super-admin/department/class-timetable-list",
+        },
+        {
+          icon: <ReportsIcon />,
+          text: "Voucher_Discounts",
+          link: "/superadmin/department/discount-table",
+        },
+        {
+          icon: <ReportsIcon />,
+          text: "Class / Kit Package",
+          link: "/superadmin/department/package-table",
+        },
+      ],
+      open: openClass,
+      onClick: handleClassClick,
     },
     {
       icon: <InvoicesIcon />,
@@ -284,57 +373,35 @@ const ModernSidebar = () => {
       link: "/notifications",
     },
     {
-      icon: <EmployeesIcon />,
-      text: "Employees",
-      color: iconColors.employees,
-      subItems: [
-        { icon: <EmployeesIcon />, text: "Master Data", link: "/employees" },
-        {
-          icon: <RenewalsIcon />,
-          text: "Attendance",
-          link: "/superadminAttendance",
-        },
-        {
-          icon: <ExpensesIcon />,
-          text: "Allowances / Deductions",
-          link: "/allowdeduct",
-        },
-        { icon: <TransactionsIcon />, text: "Payroll", link: "/payroll" },
-      ],
-      open: openEmployees,
-      onClick: handleEmployeesClick,
-    },
-    {
       icon: <DocumentsIcon />,
       text: "Documents",
       color: iconColors.documents,
       link: "/documents",
     },
-    {
-      icon: <UsersIcon />,
-      text: "Users",
-      color: iconColors.users,
-      link: "/users",
-    },
+    // {
+    //   icon: <UsersIcon />,
+    //   text: "Users",
+    //   color: iconColors.users,
+    //   link: "/users",
+    // },
     {
       icon: <TournamentsIcon />,
       text: "Tournaments",
-      color: iconColors.users,
-      link: "/tournaments",
-    },
-    {
-      icon: <ClassScheduleIcon />,
-      text: "Class Schedules",
-      color: iconColors.classSchedules,
-      link: "/superadminScheduleClass",
-    },
-    {
-      icon: <ParticipantsIcon />,
-      text: "Participants",
-      color: iconColors.participants,
-      link: "/participents",
-      open: openParticipants,
-      onClick: handleParticipantsClick,
+      color: iconColors.reports,
+      subItems: [
+        {
+          icon: <TournamentsIcon />,
+          text: "Tournaments",
+          link: "/tournaments",
+        },
+        {
+          icon: <ParticipantsIcon />,
+          text: "Tournament Participants",
+          link: "/participents",
+        },
+      ],
+      open: openTournaments,
+      onClick: handleTournamentsClick,
     },
     {
       icon: <HolidayIcon />,
@@ -359,13 +426,9 @@ const ModernSidebar = () => {
       color: iconColors.transactions,
       link: "/transactions",
     },
-    {
-      icon: <LogoutIcon />,
-      text: "Logout",
-      color: iconColors.logout,
-      link: "/",
-    },
+    
   ];
+
   return (
     <StyledDrawer variant="permanent">
       <Box
@@ -405,26 +468,72 @@ const ModernSidebar = () => {
                 Super Admin
               </Typography>
             </Link>
-            <Divider />
+            <Divider sx={{ width: "100%", my: 2 }} />
           </Box>
         )}
         <IconButton onClick={toggleSidebar}>
-          {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
+          <MenuIcon />
         </IconButton>
       </Box>
-      <Box sx={{ overflow: "auto" }}>
+      <Box
+        sx={{
+          overflow: "auto",
+          "&::-webkit-scrollbar": {
+            display: "none",
+          },
+          scrollbarWidth: "none" /* Firefox */,
+          msOverflowStyle: "none" /* IE and Edge */,
+        }}
+      >
         <List disablePadding>
-          {menuItems.map((item, index) => (
-            <React.Fragment key={index}>
-              <Tooltip title={item.text} placement="right">
-                {item.link ? (
-                  <Link
-                    to={item.link}
-                    style={{ textDecoration: "none", color: "inherit" }}
-                  >
+          {menuItems.map((item, index) => {
+            const isActive = isItemActive(item.link, item.subItems);
+
+            return (
+              <React.Fragment key={index}>
+                <Tooltip title={item.text} placement="right">
+                  {item.link ? (
+                    <Link
+                      to={item.link}
+                      style={{ textDecoration: "none", color: "inherit" }}
+                    >
+                      <StyledListItem
+                        button
+                        onClick={item.onClick || undefined}
+                        isActive={isActive}
+                        sx={{
+                          justifyContent: isCollapsed ? "center" : "flex-start",
+                          paddingLeft: isCollapsed ? 0 : undefined,
+                        }}
+                      >
+                        <ListItemIcon>
+                          {React.cloneElement(item.icon, {
+                            style: { color: isActive ? "#642b8f" : item.color },
+                            fontSize: "medium",
+                          })}
+                        </ListItemIcon>
+                        {!isCollapsed && (
+                          <>
+                            <ListItemText
+                              primary={item.text}
+                              primaryTypographyProps={{
+                                sx: {
+                                  fontSize: "0.95rem",
+                                  fontWeight: isActive ? 700 : 500,
+                                },
+                              }}
+                            />
+                            {item.subItems &&
+                              (item.open ? <ExpandLess /> : <ExpandMore />)}
+                          </>
+                        )}
+                      </StyledListItem>
+                    </Link>
+                  ) : (
                     <StyledListItem
                       button
                       onClick={item.onClick || undefined}
+                      isActive={isActive}
                       sx={{
                         justifyContent: isCollapsed ? "center" : "flex-start",
                         paddingLeft: isCollapsed ? 0 : undefined,
@@ -432,7 +541,7 @@ const ModernSidebar = () => {
                     >
                       <ListItemIcon>
                         {React.cloneElement(item.icon, {
-                          style: { color: item.color },
+                          style: { color: isActive ? "#642b8f" : item.color },
                           fontSize: "medium",
                         })}
                       </ListItemIcon>
@@ -443,7 +552,7 @@ const ModernSidebar = () => {
                             primaryTypographyProps={{
                               sx: {
                                 fontSize: "0.95rem",
-                                fontWeight: 500,
+                                fontWeight: isActive ? 700 : 500,
                               },
                             }}
                           />
@@ -452,473 +561,60 @@ const ModernSidebar = () => {
                         </>
                       )}
                     </StyledListItem>
-                  </Link>
-                ) : (
-                  <StyledListItem
-                    button
-                    onClick={item.onClick || undefined}
-                    sx={{
-                      justifyContent: isCollapsed ? "center" : "flex-start",
-                      paddingLeft: isCollapsed ? 0 : undefined,
-                    }}
-                  >
-                    <ListItemIcon>
-                      {React.cloneElement(item.icon, {
-                        style: { color: item.color },
-                        fontSize: "medium",
+                  )}
+                </Tooltip>
+                {!isCollapsed && item.subItems && (
+                  <Collapse in={item.open} timeout="auto" unmountOnExit>
+                    <List component="div" disablePadding>
+                      {item.subItems.map((subItem, subIndex) => {
+                        const isSubItemActive = activeItem === subItem.link;
+
+                        return (
+                          <Link
+                            key={subIndex}
+                            to={subItem.link}
+                            style={{ textDecoration: "none", color: "inherit" }}
+                          >
+                            <StyledListItem
+                              button
+                              isActive={isSubItemActive}
+                              sx={{
+                                pl: 4,
+                              }}
+                            >
+                              <ListItemIcon>
+                                {React.cloneElement(subItem.icon, {
+                                  style: {
+                                    color: isSubItemActive
+                                      ? "#642b8f"
+                                      : item.color,
+                                  },
+                                  fontSize: "small",
+                                })}
+                              </ListItemIcon>
+                              <ListItemText
+                                primary={subItem.text}
+                                primaryTypographyProps={{
+                                  sx: {
+                                    fontSize: "0.9rem",
+                                    fontWeight: isSubItemActive ? 700 : 400,
+                                  },
+                                }}
+                              />
+                            </StyledListItem>
+                          </Link>
+                        );
                       })}
-                    </ListItemIcon>
-                    {!isCollapsed && (
-                      <>
-                        <ListItemText
-                          primary={item.text}
-                          primaryTypographyProps={{
-                            sx: {
-                              fontSize: "0.95rem",
-                              fontWeight: 500,
-                            },
-                          }}
-                        />
-                        {item.subItems &&
-                          (item.open ? <ExpandLess /> : <ExpandMore />)}
-                      </>
-                    )}
-                  </StyledListItem>
+                    </List>
+                  </Collapse>
                 )}
-              </Tooltip>
-              {!isCollapsed && item.subItems && (
-                <Collapse in={item.open} timeout="auto" unmountOnExit>
-                  <List component="div" disablePadding>
-                    {item.subItems.map((subItem, subIndex) => (
-                      <Link
-                        key={subIndex}
-                        to={subItem.link}
-                        style={{ textDecoration: "none", color: "inherit" }}
-                      >
-                        <StyledListItem
-                          button
-                          sx={{
-                            pl: 4,
-                          }}
-                        >
-                          <ListItemIcon>
-                            {React.cloneElement(subItem.icon, {
-                              style: { color: item.color },
-                              fontSize: "small",
-                            })}
-                          </ListItemIcon>
-                          <ListItemText
-                            primary={subItem.text}
-                            primaryTypographyProps={{
-                              sx: {
-                                fontSize: "0.9rem",
-                              },
-                            }}
-                          />
-                        </StyledListItem>
-                      </Link>
-                    ))}
-                  </List>
-                </Collapse>
-              )}
-            </React.Fragment>
-          ))}
+              </React.Fragment>
+            );
+          })}
         </List>
       </Box>
     </StyledDrawer>
   );
 };
+
 export default ModernSidebar;
-
-// import {
-// AssignmentOutlined as AttendanceIcon,
-// ChevronLeft,
-// ChevronRight,
-// Schedule as ClassScheduleIcon,
-// Dashboard as DashboardIcon,
-// ExpandLess,
-// ExpandMore,
-// Receipt as InvoicesIcon,
-// Group as KidsIcon,
-// EventNote as LeavesIcon,
-// Logout as LogoutIcon,
-// Person as ProfileIcon,
-// Assessment as ReportsIcon,
-// Help as SupportIcon,
-// Assignment as TaskIcon
-// } from '@mui/icons-material';
-// import {
-//   Box,
-//   Collapse,
-//   Divider,
-//   Drawer,
-//   IconButton,
-//   List,
-//   ListItem,
-//   ListItemIcon,
-//   ListItemText,
-//   Tooltip,
-//   Typography
-// } from '@mui/material';
-// import { styled } from '@mui/material/styles';
-// import React, { useState } from 'react';
-// import { Link } from 'react-router-dom';
-import { User } from "lucide-react";
-
-// const ModernSidebar = () => {
-//   const [openReports, setOpenReports] = useState(false);
-//   const [openTasks, setOpenTasks] = useState(false);
-//   const [isCollapsed, setIsCollapsed] = useState(false);
-//   const [openCRM, setOpenCRMS] = useState(false);
-
-//   // Vibrant color palette for icons
-//   const iconColors = {
-//     profile: '#FF6B6B',
-//     dashboard: '#4ECDC4',
-//     kids: '#45B7D1',
-//     attendance: '#FDCB6E',
-//     leaves: '#6C5CE7',
-//     invoices: '#FF8A5B',
-//     nearbyCenter: '#2ECC71',
-//     reports: '#9B59B6',
-//     tasks: '#3498DB',
-//     classSchedules: '#E67E22',
-//     programs: '#1ABC9C',
-//     support: '#E74C3C',
-//     logout: '#95A5A6'
-//   };
-//   // Function to lighten colors
-//   const lightenColor = (color, amount = 0.5) => {
-//     const hex = color.replace('#', '');
-//     const num = parseInt(hex, 16);
-//     const r = Math.min(255, Math.floor((num >> 16) + (255 - (num >> 16)) * amount));
-//     const g = Math.min(255, Math.floor(((num >> 8) & 0x00FF) + (255 - ((num >> 8) & 0x00FF)) * amount));
-//     const b = Math.min(255, Math.floor((num & 0x0000FF) + (255 - (num & 0x0000FF)) * amount));
-//     return `#${(r << 16 | g << 8 | b).toString(16).padStart(6, '0')}`;
-//   };
-//   // Styled components for enhanced interactivity
-//   const StyledListItem = styled(ListItem)(({ theme }) => ({
-//     borderRadius: 8,
-//     margin: '2px 0',
-//     padding: '8px 16px',
-//     display: 'flex',
-//     alignItems: 'center',
-//     transition: 'all 0.3s ease',
-//     position: 'relative',
-//     overflow: 'hidden',
-//     gap: 8,
-//     '&::before': {
-//       content: '""',
-//       position: 'absolute',
-//       top: 0,
-//       left: 0,
-//       width: 0,
-//       height: '100%',
-//       backgroundColor: '#642b8f',
-//       transition: 'width 0.3s ease',
-//       zIndex: 0
-//     },
-//     '&:hover': {
-//       '&::before': {
-//         width: '100%'
-//       },
-//       '& .MuiListItemIcon-root, & .MuiListItemText-primary': {
-//         color: 'white',
-//         zIndex: 1
-//       },
-//       '& .MuiListItemIcon-root svg': {
-//         filter: 'brightness(200%)' // Alternative way to lighten icons
-//       },
-//       boxShadow: theme.shadows[2]
-//     },
-//     '& .MuiListItemIcon-root, & .MuiListItemText-primary': {
-//       position: 'relative',
-//       zIndex: 1,
-//       transition: 'color 0.3s ease'
-//     },
-//     '& .MuiListItemIcon-root': {
-//       marginRight: 8,
-//       minWidth: 'auto'
-//     }
-//   }));
-//   const StyledDrawer = styled(Drawer)(() => ({
-//     width: isCollapsed ? 80 : 280,
-//     flexShrink: 0,
-//     '& .MuiDrawer-paper': {
-//       width: isCollapsed ? 80 : 280,
-//       boxSizing: 'border-box',
-//       backgroundColor: 'white',
-//       borderRight: 'none',
-//       transition: 'width 0.3s ease',
-//       overflow: 'hidden'
-//     }
-//   }));
-//   const handleReportsClick = () => setOpenReports(!openReports);
-//   const handleTasksClick = () => setOpenTasks(!openTasks);
-//   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
-//   const handleCRMClick = () => setOpenCRMS(!openCRM);
-
-//   const menuItems = [
-//     {
-//       icon: <ProfileIcon />,
-//       text: 'Profile',
-//       color: iconColors.profile,
-//       subItems: [
-//         { icon: <ProfileIcon />, text: 'View Profile', link: '/viewProfile' },
-//       ],
-//     },
-//     {
-//       icon: <DashboardIcon />,
-//       text: 'Dashboard',
-//       color: iconColors.dashboard,
-//       link: '/renewalDashboard',
-//     },
-//     {
-//       icon: <ReportsIcon />,
-//       text: 'CRM',
-//       color: iconColors.crm,
-//       subItems: [
-//         { icon: <ReportsIcon />, text: 'Referrals', link: '/renewalReferrals' },
-//         { icon: <ReportsIcon />, text: 'Others', link: '/renewalOthers' },
-//       ],
-//       open: openCRM,
-//       onClick: handleCRMClick,
-//     },
-//     {
-//       icon: <KidsIcon />,
-//       text: 'Kids',
-//       color: iconColors.kids,
-//       link: '/renewalKids',
-//     },
-//     {
-//       icon: <ProfileIcon />,
-//       text: 'Parents',
-//       color: iconColors.parents,
-//       link: '/renewalParents',
-//     },
-//     {
-//       icon: <AttendanceIcon />,
-//       text: 'Attendance',
-//       color: iconColors.attendance,
-//       link: '/renewalAttendance',
-//     },
-//     {
-//       icon: <LeavesIcon />,
-//       text: 'Leaves',
-//       color: iconColors.leaves,
-//       link: '/renewalLeaves',
-//     },
-//     {
-//       icon: <InvoicesIcon />,
-//       text: 'Invoices',
-//       color: iconColors.invoices,
-//       link: '/renewalInvoices',
-//     },
-//     {
-//       icon: <ReportsIcon />,
-//       text: 'Renewals',
-//       color: iconColors.renewals,
-//       link: '/renewalRenewals',
-//     },
-//     {
-//       icon: <ReportsIcon />,
-//       text: 'Reports',
-//       color: iconColors.reports,
-//       subItems: [
-//         { icon: <ReportsIcon />, text: 'Students Feedback', link: '/renewalFeedback' },
-//         { icon: <ReportsIcon />, text: 'Student Attendance Report', link: '/renewalAttendanceReport' },
-//       ],
-//       open: openReports,
-//       onClick: handleReportsClick,
-//     },
-
-//     {
-//       icon: <TaskIcon />,
-//       text: 'Tasks',
-//       color: iconColors.tasks,
-//       subItems: [
-//         { icon: <TaskIcon />, text: 'My Tasks', link: '/renewalMyTasks' },
-//         { icon: <TaskIcon />, text: 'Tasks Assigned By Me', link: '/renewalAssignedTasks' },
-//       ],
-//       open: openTasks,
-//       onClick: handleTasksClick,
-//     },
-//     {
-//       icon: <ClassScheduleIcon />,
-//       text: 'Class Schedules',
-//       color: iconColors.classSchedules,
-//       link: '/renewalScheduleClass',
-//     },
-//     {
-//       icon: <SupportIcon />,
-//       text: 'Support',
-//       color: iconColors.support,
-//       link: '/renewalSupport',
-//     },
-//     {
-//       icon: <LogoutIcon />,
-//       text: 'Logout',
-//       color: iconColors.logout,
-//       link: '/',
-//     },
-//   ];
-
-//   return (
-//     <StyledDrawer variant="permanent">
-//       <Box sx={{
-//         display: 'flex',
-//         alignItems: 'center',
-//         justifyContent: 'space-between',
-//         py: 2,
-//         px: 2
-//       }}>
-//         {!isCollapsed && (
-//           <Box display="flex" flexDirection="column" alignItems="center" mt={2}>
-//             {/* Profile Icon */}
-//             <Box
-//               sx={{
-//                 width: 60,
-//                 height: 60,
-//                 backgroundColor: iconColors.profile || 'primary.main',
-//                 borderRadius: '50%',
-//                 display: 'flex',
-//                 alignItems: 'center',
-//                 justifyContent: 'center',
-//                 mb: 1,
-//               }}
-//             >
-//               <ProfileIcon sx={{ color: 'white', fontSize: 30 }} />
-//             </Box>
-//             {/* Name and Role */}
-//             <Typography variant="body2" color="#642b8f" fontWeight="bold">
-//               Renewal Associate  Manager
-//             </Typography>
-//             <Divider/>
-//             {/* <Typography variant="body2" color="text.secondary">
-//               mindmentorz
-//             </Typography> */}
-//           </Box>
-//         )}
-//         <IconButton onClick={toggleSidebar}>
-//           {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
-//         </IconButton>
-//       </Box>
-//       <Box sx={{ overflow: 'auto' }}>
-//         <List disablePadding>
-//           {menuItems.map((item, index) => (
-//             <React.Fragment key={index}>
-//               <Tooltip title={item.text} placement="right">
-//                 {item.link ? (
-//                   <Link
-//                     to={item.link}
-//                     style={{ textDecoration: 'none', color: 'inherit' }}
-//                   >
-//                     <StyledListItem
-//                       button
-//                       onClick={item.onClick || undefined}
-//                       sx={{
-//                         justifyContent: isCollapsed ? 'center' : 'flex-start',
-//                         paddingLeft: isCollapsed ? 0 : undefined,
-//                       }}
-//                     >
-//                       <ListItemIcon>
-//                         {React.cloneElement(item.icon, {
-//                           style: { color: item.color },
-//                           fontSize: 'medium'
-//                         })}
-//                       </ListItemIcon>
-//                       {!isCollapsed && (
-//                         <>
-//                           <ListItemText
-//                             primary={item.text}
-//                             primaryTypographyProps={{
-//                               sx: {
-//                                 fontSize: '0.95rem',
-//                                 fontWeight: 500
-//                               }
-//                             }}
-//                           />
-//                           {item.subItems && (
-//                             item.open ? <ExpandLess /> : <ExpandMore />
-//                           )}
-//                         </>
-//                       )}
-//                     </StyledListItem>
-//                   </Link>
-//                 ) : (
-//                   <StyledListItem
-//                     button
-//                     onClick={item.onClick || undefined}
-//                     sx={{
-//                       justifyContent: isCollapsed ? 'center' : 'flex-start',
-//                       paddingLeft: isCollapsed ? 0 : undefined,
-//                     }}
-//                   >
-//                     <ListItemIcon>
-//                       {React.cloneElement(item.icon, {
-//                         style: { color: item.color },
-//                         fontSize: 'medium'
-//                       })}
-//                     </ListItemIcon>
-//                     {!isCollapsed && (
-//                       <>
-//                         <ListItemText
-//                           primary={item.text}
-//                           primaryTypographyProps={{
-//                             sx: {
-//                               fontSize: '0.95rem',
-//                               fontWeight: 500
-//                             }
-//                           }}
-//                         />
-//                         {item.subItems && (
-//                           item.open ? <ExpandLess /> : <ExpandMore />
-//                         )}
-//                       </>
-//                     )}
-//                   </StyledListItem>
-//                 )}
-//               </Tooltip>
-//               {!isCollapsed && item.subItems && (
-//                 <Collapse in={item.open} timeout="auto" unmountOnExit>
-//                   <List component="div" disablePadding>
-//                     {item.subItems.map((subItem, subIndex) => (
-//                       <Link
-//                         key={subIndex}
-//                         to={subItem.link}
-//                         style={{ textDecoration: 'none', color: 'inherit' }}
-//                       >
-//                         <StyledListItem
-//                           button
-//                           sx={{
-//                             pl: 4,
-//                           }}
-//                         >
-//                           <ListItemIcon>
-//                             {React.cloneElement(subItem.icon, {
-//                               style: { color: item.color },
-//                               fontSize: 'small'
-//                             })}
-//                           </ListItemIcon>
-//                           <ListItemText
-//                             primary={subItem.text}
-//                             primaryTypographyProps={{
-//                               sx: {
-//                                 fontSize: '0.9rem'
-//                               }
-//                             }}
-//                           />
-//                         </StyledListItem>
-//                       </Link>
-//                     ))}
-//                   </List>
-//                 </Collapse>
-//               )}
-//             </React.Fragment>
-//           ))}
-//         </List>
-//       </Box>
-//     </StyledDrawer>
-//   );
-// };
-// export default ModernSidebar;

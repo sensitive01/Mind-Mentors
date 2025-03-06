@@ -4,17 +4,23 @@ import Sidebar from "../../../department-components/superadmin/Layout/Sidebar";
 
 const ListingEnquiries = () => {
   return (
-    <div className="flex min-h-screen bg-white">
-      <div className="fixed inset-y-0 left-0 z-50 w-64">
-        <Sidebar />
+    <div className="flex h-screen w-screen overflow-hidden">
+    <div className="z-30 flex-shrink-0">
+      <Sidebar />
+    </div>
+    <div className="flex-1 flex flex-col relative min-w-0">
+      <div className="sticky top-0 z-20">
+        <Topbar />
       </div>
-
-      {/* Main Content Area */}
-      <div className="flex-1 ml-64 mr-4 p-4 overflow-x-hidden">
-        <Topbar/>
-        <LeavesTable />
+      <div className="flex-1 overflow-hidden relative z-10">
+        <div className="h-full w-full overflow-auto scrollbar-hide bg-gray-50">
+          <div className="min-w-full p-4">
+            <LeavesTable />
+          </div>
+        </div>
       </div>
     </div>
+  </div>
   );
 };
 

@@ -27,13 +27,13 @@ const programs = [
 
 // Map day names to their index in the week (0 = Sunday, 1 = Monday, etc.)
 const dayToIndex = {
-  "Sunday": 0,
-  "Monday": 1,
-  "Tuesday": 2,
-  "Wednesday": 3,
-  "Thursday": 4,
-  "Friday": 5,
-  "Saturday": 6
+  Sunday: 0,
+  Monday: 1,
+  Tuesday: 2,
+  Wednesday: 3,
+  Thursday: 4,
+  Friday: 5,
+  Saturday: 6,
 };
 
 const ClassScheduleForm = () => {
@@ -51,7 +51,7 @@ const ClassScheduleForm = () => {
       fromTime: "",
       toTime: "",
       isDemo: false,
-      mode:"online"
+      mode: "online",
     },
   ]);
 
@@ -69,27 +69,24 @@ const ClassScheduleForm = () => {
     fetchAvailableData();
   }, []);
 
-
   const getNextDayDate = (dayName) => {
     const today = new Date();
     const todayIndex = today.getDay();
     const targetIndex = dayToIndex[dayName];
-    
 
     let daysUntilTarget = targetIndex - todayIndex;
     if (daysUntilTarget <= 0) {
-    
       daysUntilTarget += 7;
     }
-    
 
     const targetDate = new Date(today);
     targetDate.setDate(today.getDate() + daysUntilTarget);
-    
-  
-    return `${targetDate.getDate().toString().padStart(2, '0')}-${
-      (targetDate.getMonth() + 1).toString().padStart(2, '0')}-${
-      targetDate.getFullYear()}`;
+
+    return `${targetDate.getDate().toString().padStart(2, "0")}-${(
+      targetDate.getMonth() + 1
+    )
+      .toString()
+      .padStart(2, "0")}-${targetDate.getFullYear()}`;
   };
 
   const coaches = [
@@ -102,7 +99,6 @@ const ClassScheduleForm = () => {
   ].filter(
     (coach, index, self) => index === self.findIndex((c) => c.id === coach.id)
   );
-
 
   const generateTimeOptions = (startTime, endTime) => {
     const times = [];
@@ -168,7 +164,7 @@ const ClassScheduleForm = () => {
       }
     } else if (field === "day") {
       currentSchedule[field] = value;
-  
+
       if (value) {
         currentSchedule.date = getNextDayDate(value);
       }
@@ -238,8 +234,7 @@ const ClassScheduleForm = () => {
         toTime: "",
         meetingLink: "",
         isDemo: false,
-        mode:"online"
-
+        mode: "online",
       },
     ]);
   };
@@ -309,8 +304,7 @@ const ClassScheduleForm = () => {
         toTime: "",
         meetingLink: "",
         isDemo: false,
-        mode:"online"
-
+        mode: "online",
       },
     ]);
   };
@@ -495,7 +489,7 @@ const ClassScheduleForm = () => {
                       </Select>
                     </FormControl>
                   </Grid>
-                  
+
                   {/* Date field - read-only, automatically calculated */}
                   <Grid item xs={12} sm={2}>
                     <TextField
@@ -604,6 +598,7 @@ const ClassScheduleForm = () => {
         pauseOnHover
         draggable
         pauseOnFocusLoss
+        style={{ marginTop: "60px" }} 
       />
     </div>
   );

@@ -71,7 +71,7 @@ const ParentOtpPage = () => {
             );
             navigate("/parent/dashboard");
           } else {
-            navigate("/parent/registration", { state });
+            navigate("/parent/registration", { state:state });
           }
         }, 1500);
       } else {

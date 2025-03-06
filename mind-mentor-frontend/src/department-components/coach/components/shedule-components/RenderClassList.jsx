@@ -74,7 +74,7 @@ const RenderClassList = ({
 
   const handleAttendanceClick = (e, classItem) => {
     e.stopPropagation();
-    navigate(`/coachAttendanceFeedback/${classItem._id}`);
+    navigate(`/coachAttandanceFeedback/${classItem._id}`);
   };
 
   const handleCloseMeeting = () => {

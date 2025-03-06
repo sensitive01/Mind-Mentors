@@ -6,8 +6,8 @@ import {
   Typography,
 } from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
-import React, { useEffect, useState } from "react";
-import { getKidData } from "../../../api/service/employee/EmployeeService";
+import  { useEffect, useState } from "react";
+import { getAllParentData } from "../../../api/service/employee/EmployeeService";
 
 const theme = createTheme({
   palette: {
@@ -40,45 +40,45 @@ const theme = createTheme({
   },
 });
 
-// Updated columns to include new fields
+// Updated columns for parent data
 const columns = [
-  { field: "chessId", headerName: "ChessKid ID", width: 150 },
-  { field: "kidsName", headerName: "Name", width: 180 },
-  { field: "age", headerName: "Age", width: 60 },
-  { field: "gender", headerName: "Gender", width: 100 },
-  { field: "intention", headerName: "Intention", width: 150 },
-  { field: "schoolName", headerName: "School Name", width: 180 },
-  // { field: 'address', headerName: 'Address', width: 200 },
-  { field: "parentMobile", headerName: "Parent Mobile", width: 180 },
-  { field: "createdAt", headerName: "Created At", width: 200 },
-  // { field: 'updatedAt', headerName: 'Updated At', width: 180 },
+  { field: "sno", headerName: "Sno", width: 50 },
+
+  { field: "parentName", headerName: "Parent Name", width: 180 },
+  { field: "parentEmail", headerName: "Email", width: 220 },
+  { field: "parentMobile", headerName: "Mobile", width: 150 },
+  { field: "numberOfKids", headerName: "Number of Kids", width: 130 },
+  { field: "role", headerName: "Role", width: 100 },
+  { field: "status", headerName: "Status", width: 100 },
+  { field: "type", headerName: "Type", width: 100 },
+  { field: "createdAt", headerName: "Created At", width: 180 },
 ];
 
-const KidsTable = () => {
+const ParentTable = () => {
   const [rows, setRows] = useState([]);
 
   useEffect(() => {
-    const fetchKidsData = async () => {
-      const response = await getKidData();
-      console.log("kids data", response);
+    const fetchParentData = async () => {
+      const response = await getAllParentData();
+      console.log("parent data", response);
 
       // Map the response to the format expected by DataGrid
-      const formattedData = response.map((kid) => ({
-        id: kid._id, // DataGrid requires an 'id' field
-        chessId: kid.chessId,
-        kidsName: kid.kidsName,
-        age: kid.age,
-        gender: kid.gender,
-        intention: kid.intention,
-        schoolName: kid.schoolName,
-        // address: kid.address,
-        parentMobile: kid.parentData ? kid.parentData.parentMobile : "N/A", // Check if parentData exists
-        createdAt: new Date(kid.createdAt).toLocaleDateString(), // Format date as needed
+      const formattedData = response.data.parentData.map((parent,index) => ({
+        sno:index+1,
+        id: parent._id, // DataGrid requires an 'id' field
+        parentName: parent.parentName,
+        parentEmail: parent.parentEmail,
+        parentMobile: parent.parentMobile,
+        numberOfKids: parent.kids ? parent.kids.length : 0,
+        role: parent.role,
+        status: parent.status,
+        type: parent.type,
+        createdAt: new Date(parent.createdAt).toLocaleDateString(), // Format date as needed
       }));
 
       setRows(formattedData);
     };
-    fetchKidsData();
+    fetchParentData();
   }, []);
 
   return (
@@ -103,7 +103,7 @@ const KidsTable = () => {
               mb: 3,
             }}
           >
-            Parent data
+            Parent Data
           </Typography>
           <DataGrid
             rows={rows}
@@ -125,7 +125,7 @@ const KidsTable = () => {
                 backgroundColor: theme.palette.action.hover,
               },
               "& .MuiDataGrid-columnHeader": {
-                backgroundColor: "#642b8f", // Corrected this line
+                backgroundColor: "#642b8f",
                 color: "white",
                 fontWeight: 600,
               },
@@ -143,4 +143,4 @@ const KidsTable = () => {
   );
 };
 
-export default KidsTable;
+export default ParentTable;

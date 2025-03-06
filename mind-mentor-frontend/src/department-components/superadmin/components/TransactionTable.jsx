@@ -45,7 +45,7 @@ const transactionColumns = [
   { field: "transactionType", headerName: "Transaction Type", width: 150 },
   { field: "amount", headerName: "Amount", width: 150 },
   { field: "status", headerName: "Status", width: 150 },
-  { field: "date", headerName: "Date", width: 180 },
+  { field: "date", headerName: "Date", flex: 1 },
 ];
 
 const transactionData = [

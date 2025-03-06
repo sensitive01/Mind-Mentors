@@ -1,7 +1,8 @@
-import RenewalsTable from "../../../department-components/renewalassociate/components/RenewalsTable";
-import Topbar from '../../../component/parent-component/parent-dashboard/layout/Topbar';
-import Sidebar from "../../../department-components/superadmin/Layout/Sidebar";
-const ListingEnquiries = () => {
+import CompleteStatusLogs from "../../../../department-components/common-components/enquiries/CompleteStatusLogs";
+import Topbar from "../../../../component/parent-component/parent-dashboard/layout/Topbar";
+import Sidebar from "../../../../department-components/superadmin/Layout/Sidebar";
+
+const SuperAdminAllStatusLogs = () => {
   return (
     <div className="flex h-screen w-screen overflow-hidden">
       <div className="z-30 flex-shrink-0">
@@ -14,7 +15,7 @@ const ListingEnquiries = () => {
         <div className="flex-1 overflow-hidden relative z-10">
           <div className="h-full w-full overflow-auto scrollbar-hide bg-gray-50">
             <div className="min-w-full p-4">
-              <RenewalsTable />
+              <CompleteStatusLogs />
             </div>
           </div>
         </div>
@@ -22,5 +23,4 @@ const ListingEnquiries = () => {
     </div>
   );
 };
-
-export default ListingEnquiries;
+export default SuperAdminAllStatusLogs;

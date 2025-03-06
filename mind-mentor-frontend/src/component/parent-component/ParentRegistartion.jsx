@@ -21,6 +21,7 @@ const ParentRegistration = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { state } = useLocation();
+  console.log("state-->",state)
   const { phoneNumber } = state || {};
   const { currentStep, nextStep } = useContext(StepperContext);
   const regFormData = useSelector((state) => state.formData);
@@ -32,6 +33,7 @@ const ParentRegistration = () => {
     name: regFormData.name || "",
     childName: regFormData.childName || "",
     isMobileWhatsapp: regFormData.isMobileWhatsapp || true,
+    enqId:state.data.enqId
   });
   
   const [country, setCountry] = useState("in");

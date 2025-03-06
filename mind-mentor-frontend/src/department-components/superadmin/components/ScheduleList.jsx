@@ -196,7 +196,7 @@ const ScheduleKanban = () => {
           background: `linear-gradient(45deg, ${customColors.background} 0%, #ffffff 100%)`,
         }}
       >
-        <Box
+        {/* <Box
           mb={3}
           display="flex"
           justifyContent="space-between"
@@ -216,7 +216,7 @@ const ScheduleKanban = () => {
           >
             + Create Schedules
           </Button>
-        </Box>
+        </Box> */}
 
         <Grid
           container

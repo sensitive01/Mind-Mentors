@@ -4,22 +4,16 @@ import {
   Typography,
   ThemeProvider,
   Fade,
-  Button,
   Tabs,
   Tab,
+  Grid,
 } from "@mui/material";
 import {
   PlayCircleOutline as LiveIcon,
   ScheduleOutlined as UpcomingIcon,
   CheckCircleOutline as ConductedIcon,
 } from "@mui/icons-material";
-import { Link } from "react-router-dom";
 import { getMyClassData } from "../../../api/service/employee/coachService";
-// import { customColors, theme } from "../Layout/customStyle";
-// import RenderClassList from "./shedule-components/RenderClassList";
-// import UpcomingClasses from "./shedule-components/UpcommingClasses";
-// import ClassDetailsModal from "./shedule-components/ClassDetailModel";
-
 import { customColors, theme } from "../Layout/customStyle";
 import RenderClassList from "./shedule-components/RenderClassList";
 import UpcomingClasses from "./shedule-components/UpcommingClasses";
@@ -40,10 +34,7 @@ const TabPanel = ({ children, value, index, ...other }) => (
           backgroundColor: "background.paper",
           borderRadius: 2,
           boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-          margin: "16px 0",
-          border: "1px solid",
-          borderColor: "divider",
-          minHeight: "200px",
+          minHeight: "500px",
           "& > *": {
             animation: "fadeIn 0.5s ease-in-out",
           },
@@ -120,7 +111,6 @@ const ScheduleKanban = () => {
     const currentDay = today.toLocaleDateString("en-US", { weekday: "long" });
     const currentTime = today.getHours() * 60 + today.getMinutes();
     const classTime = parseTime(classItem.classTime);
-    console.log(Math.abs(currentTime - classTime));
 
     return (
       classItem.day == currentDay && Math.abs(currentTime - classTime) <= 120
@@ -235,59 +225,134 @@ const ScheduleKanban = () => {
             background: `linear-gradient(45deg, ${customColors.background} 0%, #ffffff 100%)`,
           }}
         >
-          <Box
-            mb={3}
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
+          <Typography
+            variant="h5"
+            gutterBottom
+            sx={{
+              color: "text.primary",
+              fontWeight: 600,
+              mb: 3,
+              textAlign: "center",
+            }}
           >
-            <Typography
-              variant="h5"
-              gutterBottom
-              sx={{ color: "text.primary", fontWeight: 600, mb: 3 }}
+            Class Schedules
+          </Typography>
+
+          <Grid container spacing={3}>
+            <Grid
+              item
+              xs={12}
+              md={2}
+              sx={{
+                borderRight: "1px solid",
+                borderColor: "divider",
+                pr: 2,
+              }}
             >
-              Class Schedules
-            </Typography>
-           
-          </Box>
+              <Tabs
+                value={currentTab}
+                onChange={handleTabChange}
+                orientation="vertical"
+                variant="fullWidth"
+                sx={{
+                  "& .MuiTab-root": {
+                    justifyContent: "flex-start",
+                    alignItems: "center",
+                    textTransform: "none",
+                    color: customColors.primary,
+                    "&.Mui-selected": {
+                      color: customColors.secondary,
+                      fontWeight: "bold",
+                    },
+                  },
+                  "& .MuiTabs-indicator": {
+                    left: 0,
+                    right: "auto",
+                    backgroundColor: customColors.secondary,
+                  },
+                }}
+              >
+                <Tab
+                  icon={<ConductedIcon />}
+                  label="Conducted Classes"
+                  iconPosition="start"
+                />
+                <Tab
+                  icon={<LiveIcon />}
+                  label="Live Classes"
+                  iconPosition="start"
+                />
+                <Tab
+                  icon={<UpcomingIcon />}
+                  label="Upcoming Classes"
+                  iconPosition="start"
+                />
+              </Tabs>
+            </Grid>
 
-          <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
-            <Tabs value={currentTab} onChange={handleTabChange} centered>
-              <Tab
-                icon={<ConductedIcon />}
-                label="Conducted"
-                iconPosition="start"
-              />
-              <Tab icon={<LiveIcon />} label="Live" iconPosition="start" />
-              <Tab
-                icon={<UpcomingIcon />}
-                label="Upcoming"
-                iconPosition="start"
-              />
-            </Tabs>
-          </Box>
+            <Grid item xs={12} md={10}>
+              <TabPanel value={currentTab} index={0}>
+                {conductedClasses.length > 0 ? (
+                  <RenderClassList
+                    classes={conductedClasses}
+                    handleCardClick={handleCardClick}
+                  />
+                ) : (
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      textAlign: "center",
+                      color: customColors.primary,
+                      mt: 5,
+                    }}
+                  >
+                    No Conducted Classes Found
+                  </Typography>
+                )}
+              </TabPanel>
 
-          <TabPanel value={currentTab} index={0}>
-            <RenderClassList
-              classes={conductedClasses}
-              handleCardClick={handleCardClick}
-            />
-          </TabPanel>
+              <TabPanel value={currentTab} index={1}>
+                {liveClasses.length > 0 ? (
+                  <RenderClassList
+                    classes={liveClasses}
+                    handleCardClick={handleCardClick}
+                    isLiveTab
+                  />
+                ) : (
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      textAlign: "center",
+                      color: customColors.primary,
+                      mt: 5,
+                    }}
+                  >
+                    No Live Classes Right Now
+                  </Typography>
+                )}
+              </TabPanel>
 
-          <TabPanel value={currentTab} index={1}>
-            <RenderClassList
-              classes={liveClasses}
-              handleCardClick={handleCardClick}
-              isLiveTab
-            />
-          </TabPanel>
-
-          <TabPanel value={currentTab} index={2}>
-            <UpcomingClasses
-              upcomingClasses={upcomingClasses}
-              handleCardClick={handleCardClick}
-            />
-          </TabPanel>
+              <TabPanel value={currentTab} index={2}>
+                {Object.keys(upcomingClasses).length > 0 ? (
+                  <UpcomingClasses
+                    upcomingClasses={upcomingClasses}
+                    handleCardClick={handleCardClick}
+                  />
+                ) : (
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      textAlign: "center",
+                      color: customColors.primary,
+                      mt: 5,
+                    }}
+                  >
+                    No Upcoming Classes
+                  </Typography>
+                )}
+              </TabPanel>
+            </Grid>
+          </Grid>
 
           <ClassDetailsModal
             modalOpen={modalOpen}

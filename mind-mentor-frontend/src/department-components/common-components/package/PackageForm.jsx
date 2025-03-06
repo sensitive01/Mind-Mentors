@@ -27,8 +27,9 @@ const PackageForm = () => {
     const fetchPhysicalCenterName = async () => {
       try {
         const response = await getAllPhysicalcenters();
-        if (response.success && response.physicalCenter) {
-          setPhysicalCenters(response.physicalCenter);
+        console.log("response",response)
+        if (response.status===200 ) {
+          setPhysicalCenters(response.data.physicalCenter);
         }
       } catch (err) {
         console.log(err);

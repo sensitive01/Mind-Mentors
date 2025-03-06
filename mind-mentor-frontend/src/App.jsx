@@ -271,6 +271,11 @@ import AddEmployeeFormPage from "./pages/employee/hr/AddEmployeeFormPage";
 import SuperAdminPackageTableList from "./pages/employee/superadmin/package/SuperAdminPackageTableList";
 import SuperAdminAddPackageForm from "./pages/employee/superadmin/package/SuperAdminAddPackageForm";
 import LiveClassPage from "./pages/parent/LiveClassPage";
+import SuperAdminEnquiryProspectsTab from "./pages/employee/superadmin/enquiries/SuperAdminEnquiryProspectsTab";
+import SuperAdminAddNewEnquiryForm from "./pages/employee/superadmin/enquiries/SuperAdminAddNewEnquiryForm";
+import SuperAdminAllEnquiryLogs from "./pages/employee/superadmin/enquiries/SuperAdminAllEnquiryLogs";
+import SuperAdminAllStatusLogs from "./pages/employee/superadmin/enquiries/SuperAdminAllStatusLogs";
+import SuperAdminAssignNewClass from "./pages/employee/superadmin/classShedules/SuperAdminAssignNewClass";
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
 function App() {
@@ -397,19 +402,21 @@ function App() {
 
           <Route path="/service-delivery/department/serviceProfile" element={<ServiceProfile />} />
           <Route path="/service-delivery/department/dashboard" element={<ServiceDashboard />}/>
+          <Route path="/service-delivery/department/active-kid-data"  element={<ServiceActiveKidData />}/>
+          <Route path="/service-delivery/department/coachAvailabilityTable" element={<CoachAvailabilityTablePage />}/>     
+          <Route path="/service-delivery/department/coachAvailabilityForm" element={<CoachAvailabilityFormPage />}/>
+          <Route path="/service-delivery/department/class-shedules/" element={<ServiceScheduleClass />} /> 
+          <Route path="/service-delivery/department/assign-class-students" element={<ServiceDelivaryClassShedulePage />}/>
+          <Route path="/service-delivery/department/task-table" element={<ServiceMyTasks />}/>           
+          <Route path="/service-delivery/department/attendance" element={<ServiceAttendance />}  />
           <Route path="/service-delivery/department/leaves" element={<ServiceLeaves />}/>
+
           <Route path="/service-delivery/department/leaves/add" element={<ServiceLeavesAdd />}  />
           <Route path="/service-delivery/department/edit-leaves/:id" element={<ServiceLeavesAdd />} />
           <Route path="/service-delivery/department/list-task-assigned-me" element={<ServiceMyAssignTasksTable />}/>
-          <Route path="/service-delivery/department/task-table" element={<ServiceMyTasks />}/>           
           <Route path="/service-delivery/department/assign-new-task" element={<ServiceMyAssignTasks />}/>
           <Route path="/service-delivery/department/taskslogs/:id" element={<ServiceTaskLogs />} />
-          <Route path="/service-delivery/department/attendance" element={<ServiceAttendance />}  />
-          <Route path="/service-delivery/department/class-shedules/" element={<ServiceScheduleClass />} /> 
-          <Route path="/service-delivery/department/assign-class-students" element={<ServiceDelivaryClassShedulePage />}/>
           <Route path="/service-delivery/department/serviceAssignClassToKid/:id" element={<AssignClassToKid />}/>
-          <Route path="/service-delivery/department/coachAvailabilityTable" element={<CoachAvailabilityTablePage />}/>     
-          <Route path="/service-delivery/department/active-kid-data"  element={<ServiceActiveKidData />}/>
           <Route path="/service-delivery/department/assign-multiple-class" element={<AssignMulipleClassPage />}/>
           <Route path="/service-delivery/department/assign-whole-plan-class/:enqId"  element={<AssignWholeClassToKidPage />} />
           <Route path="/serviceInvoice" element={<ServiceInvoice />} />
@@ -419,7 +426,6 @@ function App() {
           <Route path="/serviceSupport/" element={<ServiceSupportRequest />} />    
           <Route path="/servicekids" element={<ServiceKids />} />
           <Route path="/servicePrograms" element={<ServicePrograms />} />
-          <Route path="/coachAvailabilityForm" element={<CoachAvailabilityFormPage />}/>
           <Route path="/service-delivary/holidays"  element={<ServiceDelivaryHolidayPage />} />
           <Route path="/service-delivary/completeEnquiryLogs/:id"   element={<ServiceCompleteEnquiryLogs />}/>
           <Route path="/serviceMessageStatus/"  element={<ServiceMessageStusTrackPage />} />
@@ -548,11 +554,24 @@ function App() {
           
            
           
+          <Route path="/super-admin/department/dashboard" element={<SuperadminDashboard />}/>
+          <Route path="/super-admin/department/enrollment-data" element={<SuperAdminEnquiryProspectsTab />}/>
+          <Route path="/super-admin/department/show-complete-enquiry-logs/:id"   element={<SuperAdminAllEnquiryLogs />}   />
+          <Route path="/super-admin/department/show-complete-status-logs/:id" element={<SuperAdminAllStatusLogs />}   />
+          <Route path="/super-admin/department/enquiry-form"  element={<SuperAdminAddNewEnquiryForm />}  />
+          <Route path="/super-admin/department/schedule-demo-class-list-individually/:enqId/:isSheduled" element={<SuperAdminAssignNewClass/>}/>
+          <Route path="/super-admin/department/parents-data" element={<SuperadminParents />} />
+          <Route path="/super-admin/department/kids-data" element={<SuperadminKids />} />
+          <Route path="/super-admin/department/class-timetable-list" element={<SuperadminScheduleClass />}/> 
+          <Route path="/super-admin/department/employees" element={<EmployeeTable />} />
+          <Route path="/super-admin/department/allowdeduct" element={<AllowDeductTable />} />
+
+      
+
 
           <Route path="/super-admin/department/physical-centerlist" element={<PhysicalCenterListPage />}/>
           <Route path="/super-admin/department/add-physical-center" element={<AddPhysicalCenterFormPage />}/>
           <Route path="/super-admin/department/edit-physical-center/:id" element={<EditPhysicalCenterData />}/>
-          <Route path="/super-admin/department/dashboard" element={<SuperadminDashboard />}/>
           <Route path="/super-admin/department/task-table" element={<SuperadminMyTasks />} />
           <Route path="/super-admin/department/list-task-assigned-me" element={<SuperadminMyAssignTasksTable />} />
           <Route path="/super-admin/department/assign-new-task"  element={<SuperadminMyAssignTasks />}/>
@@ -563,28 +582,22 @@ function App() {
           <Route path="/super-admin/department/attendance" element={<SuperadminAttendance />}     />
           <Route path="/superadmin/department/discount-form" element={<DiscountFormPage />}/>  
           <Route path="/superadmin/department/discount-table" element={<VoucherTablePage />}/>
-
           <Route path="/superadmin/department/package-table" element={<SuperAdminPackageTableList />}/>
           <Route path="/superadmin/department/add-package-form" element={<SuperAdminAddPackageForm />}/>
 
 
 
-          <Route path="/superadminScheduleClass" element={<SuperadminScheduleClass />}/>       
           <Route path="/superadminRenewals" element={<SuperadminRenewal />} />
-          <Route path="/superadminParents" element={<SuperadminParents />} />
           <Route path="/superadminEnquiries" element={<SuperadminEnquiries />}/>
           <Route path="/superadminInvoices" element={<SuperadminInvoice />} />
-          <Route path="/superadminKids" element={<SuperadminKids />} />
           <Route path="/chessKids/" element={<ChessKid />} />
           <Route path="/superadminFeedback" element={<SuperadminFeedback />} />
           <Route path="/superadminAttendanceReport"  element={<SuperadminAttendanceReport />} />
           <Route path="/superadminPrograms" element={<SuperadminPrograms />} />
           <Route path="/superadminSupport/"  element={<SuperadminSupportRequest />} />
           <Route path="/notifications" element={<NotificationTable />} />
-          <Route path="/employees/" element={<EmployeeTable />} />
           <Route path="/employee/add" element={<EmployeeForm />} />
           <Route path="/superadminAttendance" element={<SuperadminAttendance />} />
-          <Route path="/allowdeduct/" element={<AllowDeductTable />} />
           <Route path="/payroll/" element={<Payroll />} />
           <Route path="/documents/" element={<DocumentsTable />} />
           <Route path="/users/" element={<UsersTable />} />

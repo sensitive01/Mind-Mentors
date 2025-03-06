@@ -12,7 +12,6 @@ import {
   Typography,
 } from "@mui/material";
 import { DataGrid, GridActionsCellItem, GridToolbar } from "@mui/x-data-grid";
-import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -66,6 +65,7 @@ const EmployeeMasterList = () => {
           // Adjust if response is directly the array
           setRows(
             response.map((employee, index) => ({
+              sno: index + 1,
               id: employee._id, // Use _id as the unique identifier
               ...employee, // Spread the other properties
             }))
@@ -93,7 +93,7 @@ const EmployeeMasterList = () => {
     }
 
     try {
-      const response = await deleteEmployee(id); // Call the service function to delete the user
+      await deleteEmployee(id); // Call the service function to delete the user
 
       // Update the UI only if the delete operation was successful
       setRows(rows.filter((row) => row.id !== id));
@@ -114,35 +114,47 @@ const EmployeeMasterList = () => {
 
   const columns = [
     {
+      field: "sno",
+      headerName: "Sno",
+      flex: 0.5,
+      minWidth: 50,
+    },
+    {
       field: "firstName",
       headerName: "First Name",
-      flex: 150,
+      flex: 1,
+      minWidth: 120,
     },
     {
       field: "lastName",
       headerName: "Last Name",
-      flex: 150,
+      flex: 1,
+      minWidth: 120,
     },
     {
       field: "email",
       headerName: "Email",
-      flex: 250,
+      flex: 1.5,
+      minWidth: 200,
     },
     {
       field: "department",
       headerName: "Department",
-      flex: 150,
+      flex: 1,
+      minWidth: 120,
     },
     {
       field: "employmentType",
       headerName: "Employment Type",
-      flex: 150,
+      flex: 1,
+      minWidth: 150,
     },
     {
       field: "actions",
       type: "actions",
       headerName: "Actions",
-      flex: 450,
+      flex: 1,
+      minWidth: 150,
       getActions: (params) => [
         <GridActionsCellItem
           icon={<Visibility />}
@@ -172,8 +184,10 @@ const EmployeeMasterList = () => {
             p: 3,
             backgroundColor: "background.paper",
             borderRadius: 3,
-            height: 650,
             boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.05)",
+            display: "flex",
+            flexDirection: "column",
+            height: "calc(100vh - 100px)", // Dynamic height calculation
           }}
         >
           <Box
@@ -185,7 +199,7 @@ const EmployeeMasterList = () => {
             <Typography
               variant="h5"
               gutterBottom
-              sx={{ color: "#642b8f", fontWeight: 600, mb: 3 }}
+              sx={{ color: "#642b8f", fontWeight: 600, mb: 0 }}
             >
               Employee Master Data
             </Typography>
@@ -198,39 +212,47 @@ const EmployeeMasterList = () => {
               + Add Employee
             </Button>
           </Box>
-          <DataGrid
-            rows={rows}
-            columns={columns}
-            autoHeight
-            disableRowSelectionOnClick
-            slots={{ toolbar: GridToolbar }}
-            slotProps={{
-              toolbar: {
-                showQuickFilter: true,
-                quickFilterProps: { debounceMs: 500 },
-              },
-            }}
-            sx={{
-              height: 500, // Fixed height for the table
-              "& .Mui DataGrid-cell:focus": {
-                outline: "none",
-              },
-              "& .MuiDataGrid-row:hover": {
-                backgroundColor: theme.palette.action.hover,
-              },
-              "& .MuiDataGrid-columnHeader": {
-                backgroundColor: "#642b8f",
-                color: "white",
-                fontWeight: 600,
-              },
-              "& .MuiCheckbox-root.Mui-checked": {
-                color: "#FFFFFF",
-              },
-              "& .MuiDataGrid-columnHeader .MuiCheckbox-root": {
-                color: "#FFFFFF",
-              },
-            }}
-          />
+          <Box sx={{ flexGrow: 1, width: "100%", overflow: "hidden" }}>
+            <DataGrid
+              rows={rows}
+              columns={columns}
+              disableRowSelectionOnClick
+              slots={{ toolbar: GridToolbar }}
+              slotProps={{
+                toolbar: {
+                  showQuickFilter: true,
+                  quickFilterProps: { debounceMs: 500 },
+                },
+              }}
+              sx={{
+                border: "none",
+                "& .MuiDataGrid-cell:focus": {
+                  outline: "none",
+                },
+                "& .MuiDataGrid-row:hover": {
+                  backgroundColor: theme.palette.action.hover,
+                },
+                "& .MuiDataGrid-columnHeader": {
+                  backgroundColor: "#642b8f",
+                  color: "white",
+                  fontWeight: 600,
+                },
+                "& .MuiCheckbox-root.Mui-checked": {
+                  color: "#FFFFFF",
+                },
+                "& .MuiDataGrid-columnHeader .MuiCheckbox-root": {
+                  color: "#FFFFFF",
+                },
+              }}
+              pagination
+              pageSizeOptions={[10, 25, 50]}
+              initialState={{
+                pagination: {
+                  paginationModel: { pageSize: 10 },
+                },
+              }}
+            />
+          </Box>
         </Paper>
 
         {/* View Employee Dialog */}

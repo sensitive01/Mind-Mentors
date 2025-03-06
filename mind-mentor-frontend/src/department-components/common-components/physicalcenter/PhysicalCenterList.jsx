@@ -78,7 +78,7 @@ const ChessCenterCard = ({ center, onDelete }) => {
 
       <div className="p-5">
         <div className="border-b pb-4">
-          <h2 className="text-xl font-bold text-gray-800 mb-2">
+          <h2 className="text-xl font-bold text-primary mb-2">
             {center.centerName}
           </h2>
         </div>

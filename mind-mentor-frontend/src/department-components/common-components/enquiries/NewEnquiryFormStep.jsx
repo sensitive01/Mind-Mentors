@@ -10,6 +10,7 @@ import { operationDeptInstance } from "../../../api/axios/operationDeptInstance"
 const NewEnquiryFormStep = () => {
   const navigate = useNavigate();
   const empId = localStorage.getItem("empId");
+  const department = localStorage.getItem("department")
   const { id } = useParams();
   const [activeStep, setActiveStep] = useState(0);
   const [enquiryId, setEnquiryId] = useState(id || null);
@@ -197,7 +198,7 @@ const NewEnquiryFormStep = () => {
 
       toast.success("Enquiry submitted successfully!");
       setTimeout(() => {
-        navigate("/operation/department/enquiry-list");
+        navigate(`/${department}/department/enrollment-data`);
       }, 1500);
     } catch (error) {
       console.error("Error submitting enquiry:", error);
