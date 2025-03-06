@@ -33,14 +33,30 @@ import {
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { TentTree } from "lucide-react";
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
 const ModernSidebar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [openReports, setOpenReports] = useState(false);
   const [openTasks, setOpenTasks] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [activePath, setActivePath] = useState("");
+
+  // Set the active path whenever location changes
+  useEffect(() => {
+    setActivePath(location.pathname);
+
+    // Open Reports submenu if current path is in the reports section
+    if (
+      location.pathname.includes("Feedback") ||
+      location.pathname.includes("AttendanceReport")
+    ) {
+      setOpenReports(true);
+    }
+  }, [location]);
+
   // Vibrant color palette for icons
   const iconColors = {
     profile: "#642b8f",
@@ -59,7 +75,7 @@ const ModernSidebar = () => {
     coach: "#642b8f",
   };
 
-  const StyledListItem = styled(ListItem)(({ theme }) => ({
+  const StyledListItem = styled(ListItem)(({ theme, active }) => ({
     borderRadius: 8,
     margin: "2px 0",
     padding: "8px 16px",
@@ -74,7 +90,7 @@ const ModernSidebar = () => {
       position: "absolute",
       top: 0,
       left: 0,
-      width: 0,
+      width: active ? "100%" : 0,
       height: "100%",
       backgroundColor: "#642b8f",
       transition: "width 0.3s ease",
@@ -97,12 +113,18 @@ const ModernSidebar = () => {
       position: "relative",
       zIndex: 1,
       transition: "color 0.3s ease",
+      color: active ? "white" : "inherit",
     },
     "& .MuiListItemIcon-root": {
       marginRight: 8,
       minWidth: "auto",
     },
+    "& .MuiListItemIcon-root svg": {
+      filter: active ? "brightness(200%)" : "none",
+    },
+    boxShadow: active ? theme.shadows[2] : "none",
   }));
+
   const StyledDrawer = styled(Drawer)(() => ({
     width: isCollapsed ? 80 : 280,
     flexShrink: 0,
@@ -115,9 +137,21 @@ const ModernSidebar = () => {
       overflow: "hidden",
     },
   }));
+
+  const ScrollableBox = styled(Box)({
+    overflow: "auto",
+    "&::-webkit-scrollbar": {
+      display: "none",
+    },
+    scrollbarWidth: "none",
+    msOverflowStyle: "none",
+    height: "calc(100vh - 120px)",
+  });
+
   const handleReportsClick = () => setOpenReports(!openReports);
   const handleTasksClick = () => setOpenTasks(!openTasks);
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
+
   const menuItems = [
     {
       icon: <DashboardIcon />,
@@ -143,25 +177,7 @@ const ModernSidebar = () => {
       color: iconColors.classSchedules,
       link: "/service-delivery/department/class-shedules",
     },
-    // {
-    //   icon: <TaskIcon />,
-    //   text: "Tasks",
-    //   color: iconColors.tasks,
-    //   subItems: [
-    //     {
-    //       icon: <TaskIcon />,
-    //       text: "My Tasks",
-    //       link: "/service-delivery/department/list-mytask",
-    //     },
-    //     {
-    //       icon: <TaskIcon />,
-    //       text: "Tasks Assigned By Me",
-    //       link: "/service-delivery/department/list-task-assigned-me",
-    //     },
-    //   ],
-    //   open: openTasks,
-    //   onClick: handleTasksClick,
-    // },
+
     {
       icon: <TaskIcon />,
       text: "Tasks",
@@ -180,12 +196,7 @@ const ModernSidebar = () => {
       color: iconColors.leaves,
       link: "/service-delivery/department/leaves",
     },
-    // {
-    //   icon: <KidsIcon />,
-    //   text: 'Kids',
-    //   color: iconColors.kids,
-    //   link: '/servicekids',
-    // },
+
     {
       icon: <TentTree />,
       text: "Holidays",
@@ -242,6 +253,7 @@ const ModernSidebar = () => {
       link: "/",
     },
   ];
+
   return (
     <StyledDrawer variant="permanent">
       <Box
@@ -296,7 +308,7 @@ const ModernSidebar = () => {
           </Box>
         )}
         <IconButton
-          onClick={() => setIsCollapsed(!isCollapsed)}
+          onClick={toggleSidebar}
           sx={{
             bgcolor: "#642b8f",
             color: "white",
@@ -308,18 +320,62 @@ const ModernSidebar = () => {
           {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
         </IconButton>
       </Box>
-      <Box sx={{ overflow: "auto" }}>
+      <ScrollableBox>
         <List disablePadding>
-          {menuItems.map((item, index) => (
-            <React.Fragment key={index}>
-              <Tooltip title={item.text} placement="right">
-                {item.link ? (
-                  <Link
-                    to={item.link}
-                    style={{ textDecoration: "none", color: "inherit" }}
-                  >
+          {menuItems.map((item, index) => {
+            // Check if this menu item is active
+            const isActive =
+              item.link === activePath ||
+              (item.subItems &&
+                item.subItems.some((subItem) => subItem.link === activePath));
+
+            return (
+              <React.Fragment key={index}>
+                <Tooltip title={item.text} placement="right">
+                  {item.link ? (
+                    <Link
+                      to={item.link}
+                      style={{ textDecoration: "none", color: "inherit" }}
+                    >
+                      <StyledListItem
+                        button
+                        active={item.link === activePath ? 1 : 0}
+                        onClick={item.onClick || undefined}
+                        sx={{
+                          justifyContent: isCollapsed ? "center" : "flex-start",
+                          paddingLeft: isCollapsed ? 0 : undefined,
+                        }}
+                      >
+                        <ListItemIcon>
+                          {React.cloneElement(item.icon, {
+                            style: {
+                              color:
+                                item.link === activePath ? "white" : item.color,
+                            },
+                            fontSize: "medium",
+                          })}
+                        </ListItemIcon>
+                        {!isCollapsed && (
+                          <>
+                            <ListItemText
+                              primary={item.text}
+                              primaryTypographyProps={{
+                                sx: {
+                                  fontSize: "0.95rem",
+                                  fontWeight: 500,
+                                },
+                              }}
+                            />
+                            {item.subItems &&
+                              (item.open ? <ExpandLess /> : <ExpandMore />)}
+                          </>
+                        )}
+                      </StyledListItem>
+                    </Link>
+                  ) : (
                     <StyledListItem
                       button
+                      active={isActive ? 1 : 0}
                       onClick={item.onClick || undefined}
                       sx={{
                         justifyContent: isCollapsed ? "center" : "flex-start",
@@ -328,7 +384,7 @@ const ModernSidebar = () => {
                     >
                       <ListItemIcon>
                         {React.cloneElement(item.icon, {
-                          style: { color: item.color },
+                          style: { color: isActive ? "white" : item.color },
                           fontSize: "medium",
                         })}
                       </ListItemIcon>
@@ -348,80 +404,56 @@ const ModernSidebar = () => {
                         </>
                       )}
                     </StyledListItem>
-                  </Link>
-                ) : (
-                  <StyledListItem
-                    button
-                    onClick={item.onClick || undefined}
-                    sx={{
-                      justifyContent: isCollapsed ? "center" : "flex-start",
-                      paddingLeft: isCollapsed ? 0 : undefined,
-                    }}
-                  >
-                    <ListItemIcon>
-                      {React.cloneElement(item.icon, {
-                        style: { color: item.color },
-                        fontSize: "medium",
-                      })}
-                    </ListItemIcon>
-                    {!isCollapsed && (
-                      <>
-                        <ListItemText
-                          primary={item.text}
-                          primaryTypographyProps={{
-                            sx: {
-                              fontSize: "0.95rem",
-                              fontWeight: 500,
-                            },
-                          }}
-                        />
-                        {item.subItems &&
-                          (item.open ? <ExpandLess /> : <ExpandMore />)}
-                      </>
-                    )}
-                  </StyledListItem>
-                )}
-              </Tooltip>
-              {!isCollapsed && item.subItems && (
-                <Collapse in={item.open} timeout="auto" unmountOnExit>
-                  <List component="div" disablePadding>
-                    {item.subItems.map((subItem, subIndex) => (
-                      <Link
-                        key={subIndex}
-                        to={subItem.link}
-                        style={{ textDecoration: "none", color: "inherit" }}
-                      >
-                        <StyledListItem
-                          button
-                          sx={{
-                            pl: 4,
-                          }}
+                  )}
+                </Tooltip>
+                {!isCollapsed && item.subItems && (
+                  <Collapse in={item.open} timeout="auto" unmountOnExit>
+                    <List component="div" disablePadding>
+                      {item.subItems.map((subItem, subIndex) => (
+                        <Link
+                          key={subIndex}
+                          to={subItem.link}
+                          style={{ textDecoration: "none", color: "inherit" }}
                         >
-                          <ListItemIcon>
-                            {React.cloneElement(subItem.icon, {
-                              style: { color: item.color },
-                              fontSize: "small",
-                            })}
-                          </ListItemIcon>
-                          <ListItemText
-                            primary={subItem.text}
-                            primaryTypographyProps={{
-                              sx: {
-                                fontSize: "0.9rem",
-                              },
+                          <StyledListItem
+                            button
+                            active={subItem.link === activePath ? 1 : 0}
+                            sx={{
+                              pl: 4,
                             }}
-                          />
-                        </StyledListItem>
-                      </Link>
-                    ))}
-                  </List>
-                </Collapse>
-              )}
-            </React.Fragment>
-          ))}
+                          >
+                            <ListItemIcon>
+                              {React.cloneElement(subItem.icon, {
+                                style: {
+                                  color:
+                                    subItem.link === activePath
+                                      ? "white"
+                                      : item.color,
+                                },
+                                fontSize: "small",
+                              })}
+                            </ListItemIcon>
+                            <ListItemText
+                              primary={subItem.text}
+                              primaryTypographyProps={{
+                                sx: {
+                                  fontSize: "0.9rem",
+                                },
+                              }}
+                            />
+                          </StyledListItem>
+                        </Link>
+                      ))}
+                    </List>
+                  </Collapse>
+                )}
+              </React.Fragment>
+            );
+          })}
         </List>
-      </Box>
+      </ScrollableBox>
     </StyledDrawer>
   );
 };
+
 export default ModernSidebar;

@@ -244,7 +244,7 @@ const CoachAvailabilityTable = () => {
               variant="contained"
               color="primary"
               component={Link}
-              to="/coachAvailabilityForm"
+              to="/service-delivery/department/coachAvailabilityForm"
             >
               + Add Availability
             </Button>

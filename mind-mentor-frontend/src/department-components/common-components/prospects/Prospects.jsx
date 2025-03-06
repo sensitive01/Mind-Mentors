@@ -221,7 +221,7 @@ const Prospects = () => {
 
   const handleShowLogs = (id) => {
     console.log("Handle logs ", id);
-    navigate(`/operation/department/show-complete-enquiry-logs/${id}`);
+    navigate(`/${department}/department/show-complete-enquiry-logs/${id}`);
   };
 
   const handleShowStatus = (id) => {
@@ -513,7 +513,7 @@ const Prospects = () => {
           </DialogActions>
         </Dialog>
       </ThemeProvider>
-      {/* <TaskAssignmentOverlay
+      <TaskAssignmentOverlay
         isOpen={isTaskOverlayOpen}
         onClose={() => setIsTaskOverlayOpen(false)}
         sx={{
@@ -526,7 +526,7 @@ const Prospects = () => {
           id={enqId}
           onClose={() => setIsTaskOverlayOpen(false)}
         />
-      </TaskAssignmentOverlay> */}
+      </TaskAssignmentOverlay>
     </>
   );
 };

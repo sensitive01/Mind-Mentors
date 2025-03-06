@@ -80,6 +80,9 @@ userRoute.put('/update-individual-physcical-center-data/:centerId', userControll
 
 userRoute.post('/save-physcical-center-data', userController.savePhysicalCenterData);
 
+userRoute.get('/get-all-parent-data', userController.getAllParentData);
+
+
 
 
 

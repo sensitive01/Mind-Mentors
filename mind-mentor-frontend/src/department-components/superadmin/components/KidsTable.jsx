@@ -42,16 +42,16 @@ const theme = createTheme({
 
 // Updated columns to include new fields
 const columns = [
+  { field: "sno", headerName: "Sno", width: 50 },
+
   { field: "chessId", headerName: "ChessKid ID", width: 150 },
   { field: "kidsName", headerName: "Name", width: 180 },
   { field: "age", headerName: "Age", width: 60 },
   { field: "gender", headerName: "Gender", width: 100 },
   { field: "intention", headerName: "Intention", width: 150 },
   { field: "schoolName", headerName: "School Name", width: 180 },
-  // { field: 'address', headerName: 'Address', width: 200 },
   { field: "parentMobile", headerName: "Parent Mobile", width: 180 },
   { field: "createdAt", headerName: "Created At", width: 200 },
-  // { field: 'updatedAt', headerName: 'Updated At', width: 180 },
 ];
 
 const KidsTable = () => {
@@ -63,7 +63,8 @@ const KidsTable = () => {
       console.log("kids data", response);
 
       // Map the response to the format expected by DataGrid
-      const formattedData = response.map((kid) => ({
+      const formattedData = response.map((kid,index) => ({
+        sno: index + 1,
         id: kid._id, // DataGrid requires an 'id' field
         chessId: kid.chessId,
         kidsName: kid.kidsName,

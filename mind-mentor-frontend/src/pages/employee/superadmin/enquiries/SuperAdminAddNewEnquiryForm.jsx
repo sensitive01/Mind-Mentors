@@ -1,9 +1,7 @@
-import AttendanceCalendar from "../../../department-components/common-components/attandance/AttendanceDashboard";
-
-import Sidebar from "../../../department-components/servicedelivery/Layout/Sidebar";
-import Topbar from "../../../component/parent-component/parent-dashboard/layout/Topbar";
-
-const DashboardPage = () => {
+import NewEnquiryFormStep from "../../../../department-components/common-components/enquiries/NewEnquiryFormStep";
+import Topbar from "../../../../component/parent-component/parent-dashboard/layout/Topbar";
+import Sidebar from "../../../../department-components/superadmin/Layout/Sidebar";
+const SuperAdminAddNewEnquiryForm = () => {
   return (
     <div className="flex h-screen w-screen overflow-hidden">
       <div className="z-30">
@@ -15,7 +13,7 @@ const DashboardPage = () => {
         </div>
         <div className="flex-1 overflow-hidden relative z-10">
           <div className="h-full overflow-y-auto scrollbar-hide bg-gray-50">
-            <AttendanceCalendar />
+            <NewEnquiryFormStep />
           </div>
         </div>
       </div>
@@ -23,4 +21,4 @@ const DashboardPage = () => {
   );
 };
 
-export default DashboardPage;
+export default SuperAdminAddNewEnquiryForm;

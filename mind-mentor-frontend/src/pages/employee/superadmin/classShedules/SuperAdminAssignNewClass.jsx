@@ -1,9 +1,7 @@
-
-import ActiveEnquiry from "../../../department-components/common-components/enrolled-kids-SD/ActiveEnquiry";
-import Sidebar from "../../../department-components/servicedelivery/Layout/Sidebar";
-import Topbar from './../../../component/parent-component/parent-dashboard/layout/Topbar';
-
-const ServiceActiveKidData = () => {
+import AssignDemoClassIndividually from "../../../../department-components/common-components/prospects/AssignIndividualDemoClass";
+import Topbar from "../../../../component/parent-component/parent-dashboard/layout/Topbar";
+import Sidebar from "../../../../department-components/superadmin/Layout/Sidebar";
+const SuperAdminAssignNewClass = () => {
   return (
     <div className="flex h-screen w-screen overflow-hidden">
       <div className="z-30 flex-shrink-0">
@@ -16,7 +14,7 @@ const ServiceActiveKidData = () => {
         <div className="flex-1 overflow-hidden relative z-10">
           <div className="h-full w-full overflow-auto scrollbar-hide bg-gray-50">
             <div className="min-w-full p-4">
-              <ActiveEnquiry />
+              <AssignDemoClassIndividually />
             </div>
           </div>
         </div>
@@ -25,4 +23,4 @@ const ServiceActiveKidData = () => {
   );
 };
 
-export default ServiceActiveKidData;
+export default SuperAdminAssignNewClass;

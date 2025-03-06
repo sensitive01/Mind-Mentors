@@ -26,6 +26,7 @@ import AlertDialogBox from "../alertDialog/AlertDialogBox"
 const AssignDemoClass = () => {
   const navigate = useNavigate();
   const empId = localStorage.getItem("empId");
+  const department = localStorage.getItem("department")
   const { enqId, isSheduled } = useParams();
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [classData, setClassData] = useState([]);
@@ -134,7 +135,7 @@ const AssignDemoClass = () => {
                 : "Demo class scheduled successfully"
             );
             setTimeout(
-              () => navigate("/operation/department/enrollment-data"),
+              () => navigate(`/${department}/department/enrollment-data`),
               1500
             );
           }
@@ -162,7 +163,7 @@ const AssignDemoClass = () => {
           if (response.status === 200) {
             toast.success("Demo class cancelled successfully");
             setTimeout(
-              () => navigate("/operation/department/enrollment-data"),
+              () => navigate(`/${department}/department/enrollment-data`),
               1500
             );
           }

@@ -4,21 +4,9 @@ import {
   Box,
   Grid,
   Typography,
-  Button,
-  TextField,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Card,
-  IconButton,
-  MenuItem,
-  Select,
-  InputLabel,
-  FormControl,
+ 
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
-import { Trash2, Plus } from "lucide-react";
 import { updateEnquiry } from "../../../../api/service/employee/EmployeeService";
 import { useNavigate } from "react-router-dom";
 import {
@@ -70,6 +58,9 @@ const SectionTitle = ({ children }) => (
 
 const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
   const navigate = useNavigate();
+  const department  = localStorage.getItem("department")
+  
+
 
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [formData, setFormData] = useState(data);
@@ -220,7 +211,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                           <button
                             onClick={() =>
                               navigate(
-                                `/operation/department/schedule-demo-class-list-individually/${data._id}/false`
+                                `/${department}/department/schedule-demo-class-list-individually/${data._id}/false`
                               )
                             }
                             className="w-full px-3 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:border-primary/80 hover:text-white transition-all duration-800 text-sm font-medium rounded-md shadow-2xl"
@@ -232,7 +223,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                             <button
                               onClick={() =>
                                 navigate(
-                                  `/operation/department/schedule-demo-class-list-individually/${data._id}/true`
+                                  `/${department}/department/schedule-demo-class-list-individually/${data._id}/true`
                                 )
                               }
                               className="w-full px-2 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:text-white  hover:border-primary/80 transition-all duration-200 text-sm font-medium rounded-md shadow-sm"

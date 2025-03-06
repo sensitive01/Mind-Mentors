@@ -31,6 +31,7 @@ import {
 
 const CompleteStatusLogs = () => {
   const empId = localStorage.getItem("empId");
+  const department = localStorage.getItem("department")
   const navigate = useNavigate();
 
   const { id } = useParams();
@@ -98,7 +99,7 @@ const CompleteStatusLogs = () => {
         disposition: noteDialog.disposition,
       });
       if (response.status) {
-        navigate("/operation/department/enrollment-data");
+        navigate(`/${department}/department/enrollment-data`);
       }
     } catch (error) {
       console.error("Error saving note:", error);
