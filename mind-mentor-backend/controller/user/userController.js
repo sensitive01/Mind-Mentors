@@ -8,6 +8,7 @@ const app = express();
 const upload = multer(); // You can configure storage options if needed
 const bcrypt = require("bcryptjs");
 const Voucher = require("../../model/discount_voucher/voucherModel");
+const parentModel = require("../../model/parentModel")
 const {
   Tournament,
   Notification,
@@ -1212,6 +1213,25 @@ const getAllPackageData = async (req, res) => {
 
 
 
+const getAllParentData = async (req, res) => {
+  try {
+    const parentData = await parentModel.find(); 
+
+    if (!parentData || parentData.length === 0) {
+      return res.status(404).json({ success: false, message: "No parent data found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Parent data retrieved successfully",
+      parentData,
+    });
+
+  } catch (err) {
+    console.error("Error in getting the parent data", err);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
 
 
 
@@ -1225,6 +1245,7 @@ const getAllPackageData = async (req, res) => {
 
 
 module.exports = {
+  getAllParentData,
   getAllPackageData,
   addNewPackageData,
   getIndividualPhysicalCenterData,

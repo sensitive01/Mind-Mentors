@@ -2,12 +2,10 @@ const mongoose = require("mongoose");
 
 const classScheduleSchema = new mongoose.Schema({
   scheduledBy: {
-    // Fixed typo in "sheduledBy"
     name: {
       type: String,
     },
     id: {
-      // Fixed typo in "id" type
       type: String,
     },
     department: {
@@ -18,7 +16,7 @@ const classScheduleSchema = new mongoose.Schema({
   day: {
     type: String,
   },
-  classDate:{type:Date},
+  classDate: { type: Date },
   classTime: {
     type: String,
   },
@@ -51,13 +49,17 @@ const classScheduleSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-  type:{type:String},
-  selectedStudents:[{
-    kidId:{type:String},
-    chessKid:{type:String},
-    kidName:{type:String},
-    status:{type:String,default:"Sheduled"}
-  }]
+  type: { type: String },
+  centerName:{type:String},
+  centerId:{type:String},
+  selectedStudents: [
+    {
+      kidId: { type: String },
+      chessKid: { type: String },
+      kidName: { type: String },
+      status: { type: String, default: "Sheduled" },
+    },
+  ],
 });
 
 const ClassSchedule = mongoose.model("ClassSchedule", classScheduleSchema);
