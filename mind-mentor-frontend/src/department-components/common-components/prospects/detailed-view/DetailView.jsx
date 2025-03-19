@@ -1,13 +1,12 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useState } from "react";
-import {
-  Box,
-  Grid,
-  Typography,
- 
-} from "@mui/material";
+import { Box, Grid, Typography } from "@mui/material";
 import { alpha } from "@mui/material/styles";
-import { updateEnquiry } from "../../../../api/service/employee/EmployeeService";
+import {
+  fetchThePhysicalCenters,
+  savepaymentInfoOperation,
+  updateEnquiry,
+} from "../../../../api/service/employee/EmployeeService";
 import { useNavigate } from "react-router-dom";
 import {
   formatEmail,
@@ -16,6 +15,11 @@ import {
 import PaymentDialog from "./PaymentDialog";
 import EditDialogBox from "./edit/EditDialogBox";
 import PaymentVerification from "./PaymentVerification";
+import Swal from "sweetalert2";
+
+const RAZORPAY_KEY = import.meta.env.VITE_RAZORPAY_KEY_ID;
+import logo from "../../../../assets/mindmentorz.png";
+import { savepaymentInfo } from "../../../../api/service/parent/ParentService";
 
 const DetailCard = ({ title, value }) => (
   <Box
@@ -58,19 +62,29 @@ const SectionTitle = ({ children }) => (
 
 const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
   const navigate = useNavigate();
-  const department  = localStorage.getItem("department")
-  
-
+  const department = localStorage.getItem("department");
 
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [formData, setFormData] = useState(data);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [physicalCenter, setPhysicalCenter] = useState([]);
   const [verifyPaymentDialogOpen, setIsVerifyPaymentDialogOpen] =
     useState(false);
 
   useEffect(() => {
     setFormData(data);
   }, [data]);
+
+  useEffect(() => {
+    const fetchAllCenters = async () => {
+      const response = await fetchThePhysicalCenters();
+      console.log(response);
+      if (response.status === 200) {
+        setPhysicalCenter(response.data.centerData);
+      }
+    };
+    fetchAllCenters();
+  }, []);
 
   const handleCloseEdit = () => {
     setIsEditOpen(false);
@@ -88,6 +102,133 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
       onEditSave(response.data);
     }
     handleCloseEdit();
+  };
+
+  const handleUpdatePayment = async (link) => {
+    try {
+      console.log(link);
+
+      const cleanUrl = link?.replace("/payment-details/", "") || "";
+      if (!cleanUrl) return null;
+
+      const parsedData = JSON.parse(atob(cleanUrl));
+      console.log("parsedData", parsedData);
+
+      const paymentData = {
+        enqId: parsedData.enqId || null,
+        kidId: parsedData.kidId,
+        kidName: parsedData.kidName,
+        amount: parsedData.totalAmount,
+        classDetails: {
+          name:
+            parsedData.selectionType === "class"
+              ? `${parsedData.selectedCenter} - ${parsedData.selectedClass}`
+              : parsedData.kitItem,
+          coach: "Not Specified",
+          day: parsedData.selectedClass || "Not Specified",
+          classType: parsedData.selectedPackage,
+          numberOfClasses: parsedData.offlineClasses + parsedData.onlineClasses,
+          centerId: parsedData.centerId,
+          centerName: parsedData.centerName,
+          classMode:parsedData.classMode
+        },
+        whatsappNumber: parsedData.whatsappNumber,
+        selectionType: parsedData.selectionType,
+        kitItem: parsedData.kitItem,
+        baseAmount: parsedData.baseAmount,
+        gstAmount: parsedData.gstAmount,
+        programs: parsedData.programs,
+        offlineClasses: parsedData.offlineClasses,
+        onlineClasses: parsedData.onlineClasses,
+        selectedCenter: parsedData.selectedCenter,
+        selectedClass: parsedData.selectedClass,
+        selectedPackage: parsedData.selectedPackage,
+      };
+
+      console.log("paymentData", paymentData);
+
+      const amountInPaise = Math.round(paymentData.amount * 100);
+      console.log(amountInPaise);
+
+      const options = {
+        key: RAZORPAY_KEY,
+        amount: amountInPaise,
+        currency: "INR",
+        name: "MindMentorz",
+        description:
+          paymentData.selectionType === "class"
+            ? "Class Payment"
+            : `Kit Payment - ${paymentData.kitItem}`,
+        image: logo,
+        handler: async (response) => {
+          try {
+            console.log("Response", response);
+            const { razorpay_payment_id } = response;
+
+            const savepayment = await savepaymentInfoOperation(
+              {
+                ...paymentData,
+                razorpay_payment_id: razorpay_payment_id,
+              },
+              razorpay_payment_id
+            );
+            console.log("Payment save response:", savepayment);
+
+            if (savepayment.status === 201) {
+              Swal.fire({
+                title: "Payment Done Successfully",
+                icon: "success",
+                confirmButtonText: "OK",
+              }).then(() => {
+                navigate(`/${department}/department/enrollment-data`);
+              });
+            } else {
+              Swal.fire({
+                title: "Payment Success, but failed to record!",
+                text: "Please contact support.",
+                icon: "warning",
+                confirmButtonText: "OK",
+              });
+            }
+          } catch (err) {
+            console.error(
+              "Error in verifying payment or updating status:",
+              err
+            );
+            Swal.fire({
+              title: "Payment Success, but an error occurred!",
+              text: "Please contact support.",
+              icon: "error",
+              confirmButtonText: "OK",
+            });
+          }
+        },
+        theme: {
+          color: "#3399cc",
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+
+      razorpay.on("payment.failed", (response) => {
+        Swal.fire({
+          title: "Payment Failed",
+          text: `Reason: ${response.error.description}`,
+          icon: "error",
+          confirmButtonText: "Retry",
+        });
+      });
+
+      razorpay.open();
+    } catch (error) {
+      console.error("Error in fetching order URL:", error);
+      Swal.fire({
+        title: "Error",
+        text: "Unable to initiate payment. Please try again later.",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    }
   };
 
   if (!data) return null;
@@ -238,44 +379,52 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                 </Grid>
               )}
 
-              <Grid item xs={12} md={3} style={{ overflow: "visible" }}>
-                <DetailCard
-                  title={
-                    data.payment === "Pending"
-                      ? "MAKE PAYMENT"
-                      : "UPDATE PAYMENT STATUS"
-                  }
-                  value={
-                    <div className="flex flex-col gap-1 w-full">
-                      {data.payment === "Pending" ? (
-                        <button
-                          onClick={() => setIsPaymentDialogOpen(true)}
-                          className="w-full px-2 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:text-white hover:border-primary/80 transition-all duration-200 text-sm font-medium rounded-md shadow-sm"
-                        >
-                          Payment
-                        </button>
-                      ) : (
-                        <>
-                        <button
-                          onClick={() => setIsVerifyPaymentDialogOpen(true)}
-                          className="w-full px-2 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:text-white hover:border-primary/80 transition-all duration-200 text-sm font-medium rounded-md shadow-sm"
-                        >
-                          Update Payment Status
-                        </button>
-                        <button
-                          onClick={() => setIsVerifyPaymentDialogOpen(true)}
-                          className="w-full px-2 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:text-white hover:border-primary/80 transition-all duration-200 text-sm font-medium rounded-md shadow-sm"
-                        >
-                          Resend Payment Link
-                        </button>
-
-                        </>
-                        
-                      )}
-                    </div>
-                  }
-                />
-              </Grid>
+              {(data.payment === "Pending" || data.payment === "Requested") && (
+                <Grid item xs={12} md={3} style={{ overflow: "visible" }}>
+                  <DetailCard
+                    title={
+                      data.payment === "Pending"
+                        ? "CHOOSE CLASS PACKAGE"
+                        : "UPDATE PAYMENT STATUS"
+                    }
+                    value={
+                      <div className="flex flex-col gap-1 w-full">
+                        {data.payment === "Pending" ? (
+                          <button
+                            onClick={() => setIsPaymentDialogOpen(true)}
+                            className="w-full px-2 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:text-white hover:border-primary/80 transition-all duration-200 text-sm font-medium rounded-md shadow-sm"
+                          >
+                            Choose class package
+                          </button>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => setIsVerifyPaymentDialogOpen(true)}
+                              className="w-full px-2 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:text-white hover:border-primary/80 transition-all duration-200 text-sm font-medium rounded-md shadow-sm"
+                            >
+                              Update
+                            </button>
+                            <button
+                              onClick={() => setIsVerifyPaymentDialogOpen(true)}
+                              className="w-full px-2 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:text-white hover:border-primary/80 transition-all duration-200 text-sm font-medium rounded-md shadow-sm"
+                            >
+                              Resend Payment Link
+                            </button>
+                            <button
+                              onClick={() =>
+                                handleUpdatePayment(data.paymentLink)
+                              }
+                              className="w-full px-2 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:text-white hover:border-primary/80 transition-all duration-200 text-sm font-medium rounded-md shadow-sm"
+                            >
+                              Pay Now
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    }
+                  />
+                </Grid>
+              )}
             </Grid>
           </Grid>
 
@@ -363,6 +512,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
         data={data.paymentLink}
         open={verifyPaymentDialogOpen}
         onCancel={() => setIsVerifyPaymentDialogOpen(false)}
+        physicalCenter={physicalCenter}
       />
     </Box>
   );

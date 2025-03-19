@@ -530,9 +530,9 @@ export const assignTaskForSpecificKid = async (id) => {
 };
 
 
-export const sendPaymentDetailsLink = async (link,enqId) => {
+export const sendPaymentDetailsLink = async (paymentData,enqId,link) => {
   const response = await operationDeptInstance.post(
-    `/send-payment-link/${enqId}`,{link}
+    `/send-payment-package-data/${enqId}`,{paymentData,link}
   );
   return response;
 };
@@ -621,6 +621,43 @@ export const getPackageData = async () => {
 export const getAllParentData = async () => {
   const response = await userInstance.get(
     `/get-all-parent-data`
+  );
+  return response;
+};
+
+
+export const savepaymentInfoOperation = async (paymentData,transactionId) => {
+  const response = await operationDeptInstance.post(
+    `/department-paynow-option`,{paymentData,transactionId}
+  );
+  return response;
+};
+
+export const fetchThePhysicalCenters = async () => {
+  const response = await operationDeptInstance.get(
+    `/get-the-physical-center-name`
+  );
+  return response;
+};
+
+export const sendPaymentUpdations = async (data) => {
+  const response = await operationDeptInstance.post(
+    `/update-payment-data`,{data}
+  );
+  return response;
+};
+
+export const makeCallToParent = async (mobile) => {
+  const response = await operationDeptInstance.post(
+    `/make-a-call-to-parent`,{mobile}
+  );
+  return response;
+};
+
+
+export const getEmployeeData = async (empId) => {
+  const response = await operationDeptInstance.get(
+    `/get-employee-data/${empId}`
   );
   return response;
 };

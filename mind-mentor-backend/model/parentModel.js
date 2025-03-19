@@ -7,7 +7,7 @@ const parentSchema = new mongoose.Schema(
       trim: true,
     },
     parentEmail: {
-      type: String,   
+      type: String,
       lowercase: true,
       // unique: true,
       trim: true,
@@ -20,25 +20,33 @@ const parentSchema = new mongoose.Schema(
     parentPin: {
       type: Number,
     },
-    kids: [{
-      kidId: {
-        type: mongoose.Schema.Types.ObjectId, 
-      }
-    }],
+    kids: [
+      {
+        kidId: {
+          type: mongoose.Schema.Types.ObjectId,
+        },
+      },
+    ],
     role: {
       type: String,
       default: "parent",
     },
     status: {
       type: String,
-      default: "Pending"
+      default: "Pending",
     },
-    type:{
-        type:String,
-        default:"new"
-
+    type: {
+      type: String,
+      default: "new",
     },
-    paymentLink:{type:String}
+    payment: [
+      {
+        enqId: { type: String },
+        paymentId: { type: String },
+        patmentStatus: { type: String, default: "Pending" },
+      },
+    ],
+    paymentLink: { type: String },
   },
   {
     timestamps: true,

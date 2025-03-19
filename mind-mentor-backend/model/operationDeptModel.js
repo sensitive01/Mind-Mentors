@@ -58,7 +58,7 @@ const operationDeptSchema = new mongoose.Schema(
     scheduleDemo: {
       status: {
         type: String,
-        enum: ["Pending", "Scheduled", "Conducted", "Cancelled"],
+        enum: ["Pending", "Scheduled", "Conducted", "Cancelled","Completed"],
         default: "Pending",
       },
       sheduledDay: { type: String },

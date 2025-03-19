@@ -29,6 +29,7 @@ import { toast } from "react-toastify";
 import TaskAssignmentOverlay from "./detailed-view/SlideDialog";
 import EnquiryRelatedTaskComponent from "../prospects/enquiry-task/EnquiryRelatedTaskComponent";
 import { fechAllActiveEnrolledEnquiry } from "../../../api/service/employee/serviceDeliveryService";
+import {updateEnquiryStatus} from "../.././../api/service/employee/EmployeeService"
 
 const theme = createTheme({
   palette: {
@@ -106,6 +107,10 @@ const Prospects = () => {
   });
   const [isTaskOverlayOpen, setIsTaskOverlayOpen] = useState(false);
   const [enqId, setEnqId] = useState();
+  const [whatsappDialog, setWhatsappDialog] = useState({
+    open: false,
+    phoneNumber: null
+  });
 
   useEffect(() => {
     const loadLeaves = async () => {
@@ -183,46 +188,96 @@ const Prospects = () => {
     console.error("Row update error:", error);
   };
 
-  const handleMoveBackToEnquiry = async (id) => {
-    const student = rows.find((row) => row._id === id);
-    if (!student) return;
 
-    setConfirmDialog({
+  const handleMessage = (phoneNumber) => {
+    setWhatsappDialog({
       open: true,
-      studentName: student.kidFirstName,
-      onConfirm: async () => {
-        try {
-          const response = await handleMoveToEnquiry(id, empId);
-          if (response.status === 200 || response.success) {
-            // Update the local state to reflect the change
-            setRows(rows.filter((row) => row._id !== id));
-
-            toast.success(
-              `Successfully moved ${student.kidFirstName} to enquiry`
-            );
-          } else {
-            toast.error(`Failed to move ${student.kidFirstName} to enquiry`);
-          }
-        } catch (error) {
-          console.error("Error moving to enquiry:", error);
-          toast.error(
-            `Failed to move ${student.kidFirstName} to enquiry: ${error.message}`
-          );
-        } finally {
-          setConfirmDialog({ open: false, studentName: "", onConfirm: null });
-        }
-      },
+      phoneNumber
     });
   };
 
   const handleShowLogs = (id) => {
     console.log("Handle logs ", id);
-    navigate(`/operation/department/show-complete-enquiry-logs/${id}`);
+    navigate(`/${department}/department/show-complete-enquiry-logs/${id}`);
   };
 
   const handleShowStatus = (id) => {
     console.log("Handle logs ", id);
     navigate(`/${department}/department/show-complete-status-logs/${id}`);
+  };
+
+  const WhatsAppDialog = ({ open, phoneNumber, onClose }) => {
+    if (!phoneNumber) return null;
+    
+    const widgetUrl = `${import.meta.env.VITE_MSGKART_MESSAGE_WIDGET}&customerNumber=${phoneNumber}`;
+    
+    return (
+      <Slide 
+        direction="left" 
+        in={open} 
+        mountOnEnter 
+        unmountOnExit
+      >
+        <Paper
+          elevation={8}
+          sx={{
+            position: 'fixed',
+            right: 2, 
+            top: '12%',
+            transform: 'translateY(-50%)',
+            width: "580px",
+            height: '550px', 
+            zIndex: 1300,
+            display: 'flex',
+            flexDirection: 'column',
+            borderRadius: '12px 0 0 12px',
+            overflow: 'hidden',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+          }}
+        >
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            background: 'linear-gradient(#642b8f, #aa88be)',
+            color: 'white',
+            padding: '12px 16px',
+            minHeight: '56px',
+            boxSizing: 'border-box',
+            m: 0
+          }}>
+            <Typography variant="h6" sx={{ fontWeight: 500 }}>
+              WhatsApp Chat
+            </Typography>
+            <IconButton 
+              onClick={onClose}
+              sx={{ color: 'white' }}
+              size="small"
+            >
+              <X size={20} />
+            </IconButton>
+          </Box>
+          <Box sx={{ 
+            p: 0,
+            height: 'calc(100% - 56px)', 
+            overflow: 'hidden' 
+          }}>
+            <iframe
+              src={widgetUrl}
+              style={{
+                width: '100%',
+                height: '100%',
+                border: 'none',
+                display: 'block'
+              }}
+              frameBorder="0"
+              allowFullScreen
+              title="WhatsApp Chat"
+            />
+          </Box>
+        </Paper>
+      </Slide>
+    );
   };
 
   return (
@@ -245,11 +300,9 @@ const Prospects = () => {
                 columns={columns(
                   theme,
                   handleStatusToggle,
-                  setViewDialog,
-
-                  handleMoveBackToEnquiry,
                   handleShowLogs,
-                  handleShowStatus
+                  handleShowStatus,
+                  handleMessage
                 )}
                 paginationModel={paginationModel}
                 onPaginationModelChange={setPaginationModel}
@@ -527,6 +580,11 @@ const Prospects = () => {
           onClose={() => setIsTaskOverlayOpen(false)}
         />
       </TaskAssignmentOverlay>
+      <WhatsAppDialog
+        open={whatsappDialog.open}
+        phoneNumber={whatsappDialog.phoneNumber}
+        onClose={() => setWhatsappDialog({ open: false, phoneNumber: null })}
+      />
     </>
   );
 };

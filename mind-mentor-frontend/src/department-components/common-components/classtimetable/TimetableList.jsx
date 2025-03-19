@@ -88,6 +88,7 @@ const NoScheduleCard = ({ day }) => (
 );
 
 const ScheduleKanban = () => {
+  const department = localStorage.getItem("department")
   const [scheduleData, setScheduleData] = useState({});
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedDay, setSelectedDay] = useState(null);
@@ -111,7 +112,7 @@ const ScheduleKanban = () => {
   useEffect(() => {
     const fetchAllClassSchedules = async () => {
       try {
-        const response = await getClassShedules();
+        const response = await getClassShedules(department);
         console.log(response);
 
         const transformedData = response.reduce((acc, classItem) => {

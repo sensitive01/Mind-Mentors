@@ -25,6 +25,10 @@ operationRoute.get("/specific-kid-assign-task/:id", operationController.specific
 operationRoute.get("/fetch-all-status-logs/:id", operationController.fetchAllStatusLogs);
 operationRoute.get("/get-package-data", operationController.getPackageData);
 operationRoute.get("/get-discount-vouchers/:enqId", operationController.getDiscountVouchers);
+operationRoute.get("/get-the-physical-center-name", operationController.getThePhysicalCenterName);
+operationRoute.get("/get-employee-data/:empId", operationController.getEmployeeData);
+
+
 
 
 operationRoute.post("/email-verification",operationController.operationEmailVerification);
@@ -32,7 +36,14 @@ operationRoute.post("/password-verification",operationController.operationPasswo
 operationRoute.post("/enquiry-form", operationController.enquiryFormData);
 operationRoute.post("/shedule-demo-class/:id", operationController.scheduleDemoClass);
 operationRoute.post("/save-demo-class/:empId", operationController.saveDemoClassData);
-operationRoute.post("/send-payment-link/:enqId", operationController.sendPaymentLink);
+operationRoute.post("/send-payment-package-data/:enqId", operationController.savePaymentData);
+operationRoute.post("/department-paynow-option", operationController.departmentPayNowOption);
+operationRoute.post("/update-payment-data", operationController.updatePaymentData);
+operationRoute.post("/make-a-call-to-parent", operationController.makeaCallToParent);
+
+
+
+
 
 
 

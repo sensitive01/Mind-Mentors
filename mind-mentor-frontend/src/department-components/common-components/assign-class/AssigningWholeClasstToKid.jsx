@@ -1,5 +1,4 @@
 /* eslint-disable react/display-name */
-/* eslint-disable react/prop-types */
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { Calendar, Clock, Award, X, Trash2, ChevronDown } from "lucide-react";
 import {
@@ -71,11 +70,18 @@ const ClassSelectionDropdown = React.memo(
           onClick={onToggle}
           className="w-full bg-white border rounded-lg p-3 text-left hover:border-blue-500 transition-all flex items-center justify-between shadow-sm"
         >
-          <span className="text-gray-700">
-            {selectedClasses.length === 0
-              ? "Select Classes"
-              : `${selectedClasses.length} Classes Selected`}
-          </span>
+          <div className="flex items-center gap-2">
+            {selectedClasses.length === 0 ? (
+              <span className="text-gray-500">Select Classes</span>
+            ) : (
+              <>
+                <span className="bg-primary text-white text-xs font-medium px-2 py-1 rounded-full">
+                  {selectedClasses.length}
+                </span>
+                <span className="text-gray-700 font-medium">Classes Selected</span>
+              </>
+            )}
+          </div>
           <ChevronDown
             className={`w-5 h-5 text-gray-400 transition-transform ${
               isOpen ? "rotate-180" : ""
@@ -84,19 +90,56 @@ const ClassSelectionDropdown = React.memo(
         </button>
 
         {isOpen && (
-          <div className="absolute z-10 mt-2 w-full bg-white rounded-lg shadow-lg border">
-            <div className="p-3">
-              {availableClasses.map((classItem) => (
-                <ClassOption
-                  key={classItem.id}
-                  classItem={classItem}
-                  isSelected={selectedClasses.some(
-                    (c) => c.id === classItem.id
-                  )}
-                  onSelect={() => onClassSelection(classItem)}
-                />
-              ))}
+          <div className="absolute z-10 mt-2 w-full bg-white rounded-lg shadow-lg border max-h-96 overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b p-3 flex justify-between items-center">
+              <h4 className="font-medium text-gray-700">Available Classes</h4>
+              {selectedClasses.length > 0 && (
+                <button 
+                  onClick={() => selectedClasses.forEach(c => onClassSelection(c))}
+                  className="text-xs text-red-500 hover:text-red-700 transition-colors"
+                >
+                  Clear All
+                </button>
+              )}
             </div>
+            
+            <div className="p-3">
+              {availableClasses.length === 0 ? (
+                <div className="text-center py-6 text-gray-500">
+                  No classes available
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-4 text-xs text-gray-500 mb-2 px-2">
+                    <div className="col-span-1">Day</div>
+                    <div className="col-span-1">Time</div>
+                    <div className="col-span-1">Coach</div>
+                    <div className="col-span-1">Type</div>
+                  </div>
+                  {availableClasses.map((classItem) => (
+                    <ClassOption
+                      key={classItem._id}
+                      classItem={classItem}
+                      isSelected={selectedClasses.some(
+                        (c) => c._id === classItem._id
+                      )}
+                      onSelect={() => onClassSelection(classItem)}
+                    />
+                  ))}
+                </>
+              )}
+            </div>
+            
+            {selectedClasses.length > 0 && (
+              <div className="sticky bottom-0 bg-white border-t p-3 flex justify-end">
+                <button
+                  onClick={onToggle}
+                  className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors"
+                >
+                  Done
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -106,7 +149,9 @@ const ClassSelectionDropdown = React.memo(
 
 const ClassOption = React.memo(({ classItem, isSelected, onSelect }) => (
   <div
-    className="flex items-center hover:bg-gray-50 p-2 rounded-lg cursor-pointer mb-2 last:mb-0"
+    className={`flex items-center hover:bg-gray-50 p-2 rounded-lg cursor-pointer mb-2 last:mb-0 ${
+      isSelected ? "bg-blue-50 border border-blue-100" : ""
+    }`}
     onClick={onSelect}
   >
     <input
@@ -116,19 +161,21 @@ const ClassOption = React.memo(({ classItem, isSelected, onSelect }) => (
       className="w-4 h-4 text-primary rounded border-gray-300 mr-3"
       onClick={(e) => e.stopPropagation()}
     />
-    <div className="flex-1 flex items-center justify-between">
-      <div className="flex items-center gap-4">
-        <span className="font-medium text-gray-800 w-20">{classItem.day}</span>
-        <div className="flex items-center gap-2">
-          <Clock className="w-4 h-4 text-gray-400" />
-          <span className="text-gray-600">{classItem.startTime}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Award className="w-4 h-4 text-gray-400" />
-          <span className="text-gray-600">{classItem.coach}</span>
-        </div>
+    <div className="flex-1 grid grid-cols-4 items-center">
+      <span className="font-medium text-gray-800">{classItem.day}</span>
+      <div className="flex items-center gap-1">
+        <Clock className="w-3 h-3 text-gray-400" />
+        <span className="text-gray-600 text-sm">{classItem.classTime}</span>
       </div>
-      <StatusBadge type={classItem.type} />
+      <div className="flex items-center gap-1">
+        <Award className="w-3 h-3 text-gray-400" />
+        <span className="text-gray-600 text-sm truncate" title={classItem.coachName}>
+          {classItem.coachName}
+        </span>
+      </div>
+      <div className="flex justify-end">
+        <StatusBadge type={classItem.type} />
+      </div>
     </div>
   </div>
 ));
@@ -172,11 +219,11 @@ const ClassCard = React.memo(({ session, onSessionAction }) => (
         </div>
         <div className="flex items-center gap-2 text-gray-600">
           <Clock className="w-4 h-4 text-gray-400" />
-          <span className="text-sm">{session.startTime}</span>
+          <span className="text-sm">{session.classTime}</span>
         </div>
         <div className="flex items-center gap-2 text-gray-600">
           <Award className="w-4 h-4 text-gray-400" />
-          <span className="text-sm">{session.coach}</span>
+          <span className="text-sm">{session.coachName}</span>
         </div>
       </div>
     </div>
@@ -186,6 +233,7 @@ const ClassCard = React.memo(({ session, onSessionAction }) => (
 const AssigningWholeClassToKid = () => {
   const { enqId } = useParams();
   const [kidData, setKidData] = useState(null);
+  const [availableClasses, setAvailableClasses] = useState([]);
   const [selectedClasses, setSelectedClasses] = useState([]);
   const [generatedSchedule, setGeneratedSchedule] = useState([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -198,47 +246,6 @@ const AssigningWholeClassToKid = () => {
   const [selectedSession, setSelectedSession] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
-
-  const availableClasses = useMemo(
-    () => [
-      {
-        id: 1,
-        day: "Monday",
-        startTime: "10:00 AM",
-        coach: "Puja",
-        type: "online",
-      },
-      {
-        id: 2,
-        day: "Wednesday",
-        startTime: "11:00 AM",
-        coach: "Puja",
-        type: "offline",
-      },
-      {
-        id: 3,
-        day: "Friday",
-        startTime: "05:00 PM",
-        coach: "Jayram",
-        type: "online",
-      },
-      {
-        id: 4,
-        day: "Saturday",
-        startTime: "09:00 AM",
-        coach: "Jayram",
-        type: "offline",
-      },
-      {
-        id: 5,
-        day: "Tuesday",
-        startTime: "04:00 PM",
-        coach: "Ravi",
-        type: "online",
-      },
-    ],
-    []
-  );
 
   useEffect(() => {
     const fetchKidData = async () => {
@@ -255,15 +262,36 @@ const AssigningWholeClassToKid = () => {
     fetchKidData();
   }, [enqId]);
 
-  useEffect(()=>{
-    const fetchClassData = async()=>{
-      const response = await getScheduledClassData(enqId)
-      console.log(response)
+  useEffect(() => {
+    const fetchClassData = async () => {
+      try {
+        const response = await getScheduledClassData(enqId);
 
+        // Filter classes based on the package's class mode
+        if (response.status === 200) {
+          let filteredClasses = response.data.classData;
+
+          if (kidData.classDetails.classMode === "online") {
+            filteredClasses = response.data.classData.filter(
+              (cls) => cls.type === "online"
+            );
+          } else if (kidData.classDetails.classMode === "offline") {
+            filteredClasses = response.data.classData.filter(
+              (cls) => cls.type === "offline"
+            );
+          }
+
+          setAvailableClasses(filteredClasses);
+        }
+      } catch (error) {
+        console.error("Error fetching class data:", error);
+      }
+    };
+
+    if (kidData) {
+      fetchClassData();
     }
-    fetchClassData()
-
-  },[])
+  }, [enqId, kidData]);
 
   const formatDate = useCallback((date) => {
     const day = date.getDate().toString().padStart(2, "0");
@@ -276,34 +304,36 @@ const AssigningWholeClassToKid = () => {
     (classes, lastDate = new Date()) => {
       if (!classes.length || !kidData?.classDetails) return [];
 
-      const { onlineClasses, offlineClasses, numberOfClasses } =
-        kidData.classDetails;
+      const { numberOfClasses, classMode } = kidData.classDetails;
       let schedule = [];
       let currentDate = new Date(lastDate);
       let currentIndex = 0;
 
-      const addSession = (type, count) => {
-        const classItem = classes[currentIndex % classes.length];
+      const addSession = (classItem, count) => {
+        // Ensure we're only adding classes that match the required type
         schedule.push({
           ...classItem,
-          sessionId: `${classItem.id}-${type}-${count}`,
+          sessionId: `${classItem._id}-${count}`,
           sessionNumber: schedule.length + 1,
-          type,
           classDate: new Date(currentDate),
           formattedDate: formatDate(currentDate),
           status: "scheduled",
         });
-        currentDate = new Date(currentDate.getTime() + 2 * 24 * 60 * 60 * 1000);
+
+        // Move to next date (add days based on the class's day)
+        const daysToAdd = 7; // Default to weekly sessions
+        currentDate = new Date(
+          currentDate.getTime() + daysToAdd * 24 * 60 * 60 * 1000
+        );
         currentIndex++;
       };
 
-      if (onlineClasses && offlineClasses) {
-        for (let i = 0; i < onlineClasses; i++) addSession("online", i);
-        for (let i = 0; i < offlineClasses; i++) addSession("offline", i);
-      } else if (numberOfClasses) {
-        for (let i = 0; i < numberOfClasses; i++) {
-          addSession(classes[currentIndex % classes.length].type, i);
-        }
+      // Generate sessions for the required number of classes
+      const totalClasses = numberOfClasses || 8; // Default to 8 if not specified
+
+      for (let i = 0; i < totalClasses; i++) {
+        const classItem = classes[currentIndex % classes.length];
+        addSession(classItem, i);
       }
 
       return schedule.sort((a, b) => a.classDate - b.classDate);
@@ -313,9 +343,9 @@ const AssigningWholeClassToKid = () => {
 
   const handleClassSelection = useCallback((classItem) => {
     setSelectedClasses((prev) => {
-      const isSelected = prev.some((c) => c.id === classItem.id);
+      const isSelected = prev.some((c) => c._id === classItem._id);
       const updated = isSelected
-        ? prev.filter((c) => c.id !== classItem.id)
+        ? prev.filter((c) => c._id !== classItem._id)
         : [...prev, classItem];
       return updated;
     });
@@ -390,16 +420,11 @@ const AssigningWholeClassToKid = () => {
               label="Class Details"
               value={
                 <div className="space-y-1">
-                  {kidData.classDetails?.onlineClasses && (
-                    <p>Online Classes: {kidData.classDetails.onlineClasses}</p>
-                  )}
-                  {kidData.classDetails?.offlineClasses && (
-                    <p>
-                      Offline Classes: {kidData.classDetails.offlineClasses}
-                    </p>
-                  )}
                   {kidData.classDetails?.numberOfClasses && (
                     <p>Total Classes: {kidData.classDetails.numberOfClasses}</p>
+                  )}
+                  {kidData.classDetails?.classMode && (
+                    <p>Class Mode: {kidData.classDetails.classMode}</p>
                   )}
                 </div>
               }
@@ -528,7 +553,7 @@ const AssigningWholeClassToKid = () => {
               <select
                 onChange={(e) => {
                   const selected = availableClasses.find(
-                    (c) => c.id === parseInt(e.target.value)
+                    (c) => c._id === e.target.value
                   );
                   setSelectedTimeSlot(selected);
                 }}
@@ -536,8 +561,8 @@ const AssigningWholeClassToKid = () => {
               >
                 <option value="">Select Class</option>
                 {availableClasses.map((classItem) => (
-                  <option key={classItem.id} value={classItem.id}>
-                    {`${classItem.day} - ${classItem.startTime} (${classItem.coach})`}
+                  <option key={classItem._id} value={classItem._id}>
+                    {`${classItem.day} - ${classItem.classTime} (${classItem.coachName})`}
                   </option>
                 ))}
               </select>

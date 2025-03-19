@@ -13,7 +13,7 @@ const axios = require("axios");
 const jwt = require("jsonwebtoken");
 const { generateZoomMeeting } = require("../../utils/generateZoomLink");
 const classPaymentModel = require("../../model/classPaymentModel");
-const SelectedClass = require("../../model/wholeClassAssignedModel")
+const SelectedClass = require("../../model/wholeClassAssignedModel");
 
 // const ZOOM_CLIENT_ID = "ChkFppFRmmzbQKT6jiQlA";
 
@@ -154,8 +154,19 @@ const getAllActiveEnquiries = async (req, res) => {
 const getClassShedules = async (req, res) => {
   try {
     console.log("Welcome to class schedules");
-    const classData = await ClassSchedule.find();
-    console.log(classData);
+    const { department } = req.query;
+    let type;
+    if (department == "centeradmin") {
+      type = "offline";
+    } else if (
+      department == "operation" ||
+      department == "service-delivary"
+    ) {
+      type = "online";
+    } else {
+      type = "";
+    }
+    const classData = await ClassSchedule.find({ type: type });
 
     res.status(200).json({
       success: true,
@@ -548,7 +559,7 @@ const timeTableShedules = async (req, res) => {
           level: shedule.level,
           meetingLink: zoomLink,
           classType: shedule.isDemo ? "Demo" : "Class",
-          type:shedule.mode
+          type: shedule.mode,
         });
 
         return await newSchedule.save();
@@ -566,7 +577,7 @@ const timeTableShedules = async (req, res) => {
       .json({ message: "Internal server error", error: err.message });
   }
 };
-const moment = require('moment');  // Import moment.js for date formatting
+const moment = require("moment"); // Import moment.js for date formatting
 
 const getActiveKidAndClassData = async (req, res) => {
   try {
@@ -579,7 +590,7 @@ const getActiveKidAndClassData = async (req, res) => {
     if (!paymentClassData) {
       return res.status(404).json({
         success: false,
-        message: 'No payment data found for the provided enquiry ID.',
+        message: "No payment data found for the provided enquiry ID.",
       });
     }
 
@@ -610,17 +621,24 @@ const getActiveKidAndClassData = async (req, res) => {
       selectedPackage: classDetails.selectedPackage,
       classType: classDetails.classType,
       day: classDetails.day,
+      classMode:classDetails.classMode
     };
 
     // Format dates using moment.js
-    const formattedTimestamp = moment(paymentClassData.timestamp).format('YYYY-MM-DD HH:mm:ss');
-    const formattedCreatedAt = moment(paymentClassData.createdAt).format('DD-MM-YY');
-    const formattedUpdatedAt = moment(paymentClassData.updatedAt).format('YYYY-MM-DD HH:mm:ss');
+    const formattedTimestamp = moment(paymentClassData.timestamp).format(
+      "YYYY-MM-DD HH:mm:ss"
+    );
+    const formattedCreatedAt = moment(paymentClassData.createdAt).format(
+      "DD-MM-YY"
+    );
+    const formattedUpdatedAt = moment(paymentClassData.updatedAt).format(
+      "YYYY-MM-DD HH:mm:ss"
+    );
 
     // Send the response with the necessary class details along with other info
     return res.status(200).json({
       success: true,
-      message: 'Active class data fetched successfully',
+      message: "Active class data fetched successfully",
       data: {
         kidName: paymentClassData.kidName,
         kitItem: paymentClassData.kitItem,
@@ -629,33 +647,40 @@ const getActiveKidAndClassData = async (req, res) => {
         parentId: paymentClassData.parentId,
         enqId: paymentClassData.enqId,
         classDetails: classData,
-     
       },
     });
   } catch (err) {
     console.log("Error in getting the active enquiry", err);
     return res.status(500).json({
       success: false,
-      message: 'Server error while fetching the data',
+      message: "Server error while fetching the data",
       error: err.message,
     });
   }
 };
 
-
 const assignWholeClass = async (req, res) => {
   try {
     console.log("Req.body", req.body);
-    
+
     const { submissionData } = req.body; // Extract submissionData
 
     if (!submissionData) {
       return res.status(400).json({ success: false, message: "Invalid data" });
     }
 
-    const { studentId, studentName, selectedClasses, generatedSchedule, cancelledSessions } = submissionData;
-    const enqData = await operationDeptModel.findOne({_id:studentId,payment:"Success",status:"Active"},{kidId:1})
-    console.log("EnqId==>",enqData)
+    const {
+      studentId,
+      studentName,
+      selectedClasses,
+      generatedSchedule,
+      cancelledSessions,
+    } = submissionData;
+    const enqData = await operationDeptModel.findOne(
+      { _id: studentId, payment: "Success", status: "Active" },
+      { kidId: 1 }
+    );
+    console.log("EnqId==>", enqData);
 
     if (!studentId || !studentName || !Array.isArray(selectedClasses)) {
       return res.status(400).json({ success: false, message: "Invalid data" });
@@ -667,52 +692,90 @@ const assignWholeClass = async (req, res) => {
     console.log("Generated Schedule:", generatedSchedule);
     console.log("Cancelled Sessions:", cancelledSessions);
 
-    const newClassSelection = new SelectedClass({ kidId:enqData.kidId, studentName, selectedClasses,generatedSchedule,cancelledSessions,enqId:studentId });
+    const newClassSelection = new SelectedClass({
+      kidId: enqData.kidId,
+      studentName,
+      selectedClasses,
+      generatedSchedule,
+      cancelledSessions,
+      enqId: studentId,
+    });
     await newClassSelection.save();
 
-    res.status(201).json({ success: true, message: "Classes saved successfully" });
+    res
+      .status(201)
+      .json({ success: true, message: "Classes saved successfully" });
   } catch (error) {
     console.error("Error saving selected classes:", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
-
 const displaySelectedClass = async (req, res) => {
   try {
     const { enqId } = req.params;
 
     const selectedClass = await SelectedClass.findOne(
-      { enqId: enqId }, 
-      { generatedSchedule: 1, _id: 0 ,studentName:1} // Only return the `generatedSchedule` field
+      { enqId: enqId },
+      { generatedSchedule: 1, _id: 0, studentName: 1 } // Only return the `generatedSchedule` field
     );
 
     if (!selectedClass) {
-      return res.status(404).json({ message: "No schedule found for the given ID" });
+      return res
+        .status(404)
+        .json({ message: "No schedule found for the given ID" });
     }
 
-    res.status(200).json({ message: "Selected class retrieved successfully", data: selectedClass.generatedSchedule,kidName:selectedClass.studentName });
+    res
+      .status(200)
+      .json({
+        message: "Selected class retrieved successfully",
+        data: selectedClass.generatedSchedule,
+        kidName: selectedClass.studentName,
+      });
   } catch (err) {
     console.error("Error in displaying the selected class", err);
-    res.status(500).json({ message: "Internal Server Error", error: err.message });
+    res
+      .status(500)
+      .json({ message: "Internal Server Error", error: err.message });
   }
 };
 
+const getScheduledClassData = async (req, res) => {
+  try {
+    const { enqId } = req.params;
 
-const getScheduledClassData = async(req,res)=>{
-  try{
-    const {enqId} = req.params
-    const enqData = await operationDeptModel.findOne({ _id: enqId,payment:"Success",status:"Active"},{programs:1})
-    console.log("EnqId==>",enqData)
-    const classData = await ClassSchedule.find({},{day:1,classTime:1,coachName:1,coachId:1})
-    console.log("classData",classData)
+    // Fetch enrollment data
+    const enqData = await operationDeptModel.findOne(
+      { _id: enqId, payment: "Success", status: "Active" },
+      { programs: 1 }
+    );
 
-  }catch(err){
-    console.log("Error in getting the schedule")
+    if (!enqData) {
+      return res.status(404).json({ message: "Enrollment data not found" });
+    }
 
+    console.log("EnqId==>", enqData);
+
+    // Fetch class schedule data
+    const classData = await ClassSchedule.find(
+      {},
+      { day: 1, classTime: 1, coachName: 1, coachId: 1,type:1 }
+    );
+
+    console.log("classData", classData);
+
+    // Send response to client
+    res.status(200).json({
+      enrollment: enqData,
+       classData,
+    });
+
+  } catch (err) {
+    console.error("Error in getting the schedule", err);
+    res.status(500).json({ message: "Internal Server Error", error: err.message });
   }
-}
-
+};
 
 
 module.exports = {
@@ -729,5 +792,5 @@ module.exports = {
   updateCoachAvailabilityData,
   deleteCoachAvailability,
   getAllActiveEnquiries,
-  getScheduledClassData
+  getScheduledClassData,
 };

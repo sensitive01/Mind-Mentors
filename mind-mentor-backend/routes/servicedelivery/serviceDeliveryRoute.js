@@ -5,7 +5,6 @@ const serviceController = require('../../controller/servicedelivery/seviceContro
 
 
 serviceRoute.get("/get-active-enquiry-data",serviceController.getAllActiveEnquiries)
-
 serviceRoute.get("/get-class-shedule",serviceController.getClassShedules)
 serviceRoute.get("/get-coach-data",serviceController.getCoachData)
 serviceRoute.get("/get-coach-availabledata-table",serviceController.getCoachAvailableDays)
@@ -21,7 +20,6 @@ serviceRoute.get("/get-all-scheduled-class-data/:enqId", serviceController.getSc
 serviceRoute.post("/save-class-shedule/:id",serviceController.timeTableShedules)
 serviceRoute.post("/save-coach-availabledays",serviceController.saveCoachAvailableDays)
 serviceRoute.post("/save-class-data/:empId", serviceController.saveClassData);
-
 serviceRoute.post("/assign-whole-class", serviceController.assignWholeClass);
 
 

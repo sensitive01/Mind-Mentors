@@ -18,7 +18,9 @@ const NotesSection = require("../../../model/enquiryNoteSection");
 const sendMessage = require("../../../utils/sendMessage");
 const packageSchema = require("../../../model/packageDetails");
 const Voucher = require("../../../model/discount_voucher/voucherModel");
-const PhysicalCenters  = require("../../../model/physicalcenter/physicalCenterShema");
+const PhysicalCenters = require("../../../model/physicalcenter/physicalCenterShema");
+const classPaymentModel = require("../../../model/classPaymentModel");
+const { CALLING_API } = require("../../../config/variables/variables");
 
 // Email Verification
 
@@ -403,7 +405,10 @@ const updateProspectData = async (req, res) => {
     const { empId } = req.body;
 
     // Fetch Employee Data
-    const empData = await Employee.findOne({ _id: empId }, { firstName: 1, department: 1 });
+    const empData = await Employee.findOne(
+      { _id: empId },
+      { firstName: 1, department: 1 }
+    );
     if (!empData) {
       return res.status(404).json({ message: "Employee not found" });
     }
@@ -419,11 +424,14 @@ const updateProspectData = async (req, res) => {
     console.log("..........................................");
 
     // 1. Handle Parent Registration
-    let parentData = await parentSchema.findOne({ parentMobile: enquiryData.whatsappNumber });
+    let parentData = await parentSchema.findOne({
+      parentMobile: enquiryData.whatsappNumber,
+    });
 
     if (parentData) {
       // Update existing parent data
-      parentData.parentName = enquiryData.parentFirstName || parentData.parentName;
+      parentData.parentName =
+        enquiryData.parentFirstName || parentData.parentName;
       parentData.parentEmail = enquiryData.email || parentData.parentEmail;
       parentData.status = "Active"; // Ensure the status remains active
       await parentData.save();
@@ -510,7 +518,9 @@ const updateProspectData = async (req, res) => {
       {
         employeeId: empId,
         employeeName: empData.firstName,
-        action: `Enquiry moved to prospects by ${empData.firstName} on ${new Date().toLocaleString()}`,
+        action: `Enquiry moved to prospects by ${
+          empData.firstName
+        } on ${new Date().toLocaleString()}`,
         createdAt: new Date(),
       },
     ];
@@ -564,15 +574,6 @@ const updateProspectData = async (req, res) => {
     });
   }
 };
-
-
-
-
-
-
-
-
-
 
 const moveBackToEnquiry = async (req, res) => {
   try {
@@ -1783,7 +1784,7 @@ const getMyLeaveData = async (req, res) => {
           "en-US"
         ),
         leaveEndDate: new Date(leave.leaveEndDate).toLocaleDateString("en-US"),
-        createdAt:new Date(leave.createdAt).toLocaleDateString("en-US")
+        createdAt: new Date(leave.createdAt).toLocaleDateString("en-US"),
       }));
 
       res.status(200).json({
@@ -1910,8 +1911,8 @@ const createTask = async (req, res) => {
     }
 
     const assigningEmployee = await Employee.findById(empId);
-    console.log("assigningEmployee",assigningEmployee)
-    const assignedToEmployee = await Employee.findOne({email:assignedTo})
+    console.log("assigningEmployee", assigningEmployee);
+    const assignedToEmployee = await Employee.findOne({ email: assignedTo });
     if (!assigningEmployee) {
       return res.status(404).json({ message: "Assigning employee not found" });
     }
@@ -1925,11 +1926,11 @@ const createTask = async (req, res) => {
         id: empId,
         name: `${assigningEmployee.firstName}`,
         email: assigningEmployee.email,
-        department:assigningEmployee.department
+        department: assigningEmployee.department,
       },
       assignedTo,
-      assignedToName:assignedToEmployee.firstName,
-      assignedTodepartment:assignedToEmployee.department
+      assignedToName: assignedToEmployee.firstName,
+      assignedTodepartment: assignedToEmployee.department,
     });
 
     // Log the activity
@@ -3181,12 +3182,12 @@ const fetchAllStatusLogs = async (req, res) => {
   }
 };
 
-const sendPaymentLink = async (req, res) => {
+const savePaymentData = async (req, res) => {
   try {
     console.log("Welcome to send the payment link", req.body);
 
     const { enqId } = req.params;
-    const { link } = req.body;
+    const { paymentData, link } = req.body;
 
     // Fetch the kid data
     const enqData = await OperationDept.findOne(
@@ -3202,12 +3203,11 @@ const sendPaymentLink = async (req, res) => {
     // Fetch the parent data
     const parentData = await parentSchema.findOne(
       { _id: kidData.parentId },
-      { parentMobile: 1, paymentLink: 1 }
+      { parentMobile: 1, paymentStatus: 1 }
     );
     if (!parentData) {
       return res.status(404).json({ message: "Parent data not found" });
     }
-    console.log("Parent data", parentData);
 
     // Update the parent's payment link
     const updatedParent = await parentSchema.findByIdAndUpdate(
@@ -3228,6 +3228,106 @@ const sendPaymentLink = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+// const savePaymentData = async (req, res) => {
+//   try {
+//     console.log("Welcome to send the payment link", req.body);
+
+//     const { enqId } = req.params;
+//     const { paymentData,link } = req.body;
+
+//     // Fetch the kid data
+//     const enqData = await OperationDept.findOne(
+//       { _id: enqId },
+//       { payment: 1, logs: 1 }
+//     );
+//     const kidData = await kidSchema.findOne({ enqId: enqId }, { parentId: 1 });
+
+//     if (!kidData) {
+//       return res.status(404).json({ message: "Kid data not found" });
+//     }
+//     console.log("Kid data", kidData);
+
+//     // Fetch the parent data
+//     const parentData = await parentSchema.findOne(
+//       { _id: kidData.parentId },
+//       { parentMobile: 1, paymentStatus: 1 }
+//     );
+
+//     if (!parentData) {
+//       return res.status(404).json({ message: "Parent data not found" });
+//     }
+
+//     // Extract payment details
+//     const {
+//       kidId,
+//       kidName,
+//       whatsappNumber,
+//       selectionType,
+//       classDetails,
+//       kitItem,
+//       baseAmount,
+//       gstAmount,
+//       totalAmount,
+//       offlineClasses,
+//       onlineClasses,
+//       centerName,
+//       centerId,
+//       selectedClass,
+//       selectedPackage,
+//       amount,
+//       packageId
+//     } = paymentData;
+
+//     const paymentRecord = new classPaymentModel({
+//       amount: totalAmount,
+//       classDetails: {
+//         packageId,
+//         centerId: centerId || null,
+//         centerName: centerName || null,
+//         selectedClass,
+//         selectedPackage,
+//         classType: classDetails?.classType,
+//         day: classDetails?.day,
+//         numberOfClasses: classDetails?.numberOfClasses,
+//         offlineClasses,
+//         onlineClasses,
+//       },
+//       enqId,
+//       kidId,
+//       kidName,
+//       kitItem,
+//       selectionType,
+//       baseAmount,
+//       gstAmount,
+//       totalAmount: amount,
+//       whatsappNumber,
+//       parentId: parentData._id,
+//       timestamp: Date.now(),
+//     });
+
+//     const savedPayment = await paymentRecord.save();
+//     console.log("Payment data saved successfully", savedPayment);
+
+//       const updatedParent = await parentSchema.findByIdAndUpdate(
+//       kidData.parentId,
+//       { $set: { paymentLink: link } },
+//       { new: true } // Return the updated document
+//     );
+//     console.log("Updated parent data", updatedParent);
+
+//     // Update the kid's payment status
+//     enqData.payment = "Requested";
+//     enqData.paymentLink = link;
+//     await enqData.save(); // Make sure you save the kidData after modifying the payment field
+
+//     res.status(200).json({ message: "Payment link sent successfully" });
+
+//   } catch (err) {
+//     console.error("Error in sending the payment link", err);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// };
 
 const getPackageData = async (req, res) => {
   try {
@@ -3253,12 +3353,12 @@ const getDiscountVouchers = async (req, res) => {
       return res.status(404).json({ message: "Enquiry not found" });
     }
 
-    const physicalCenters = await PhysicalCenters.find({},{centerName:1})
-    console.log("physicalCenters",physicalCenters)
+    const physicalCenters = await PhysicalCenters.find({}, { centerName: 1 });
+    console.log("physicalCenters", physicalCenters);
 
     const discountData = await Voucher.find();
     const today = new Date();
-    console.log("discountData",discountData)
+    console.log("discountData", discountData);
 
     const validVouchers = discountData.filter((voucher) => {
       const isUserValid = voucher.condition === "new user" && enqData.isNewUser;
@@ -3274,24 +3374,308 @@ const getDiscountVouchers = async (req, res) => {
     if (validVouchers.length === 0) {
       return res
         .status(200)
-        .json({ message: "No valid vouchers available", discount: 0 ,physicalCenters});
+        .json({
+          message: "No valid vouchers available",
+          discount: 0,
+          physicalCenters,
+        });
     }
-    console.log("validVouchers",validVouchers)
+    console.log("validVouchers", validVouchers);
 
     return res
       .status(200)
-      .json({ message: "Valid vouchers found", vouchers: validVouchers[0].value ,physicalCenters});
+      .json({
+        message: "Valid vouchers found",
+        vouchers: validVouchers[0].value,
+        physicalCenters,
+      });
   } catch (err) {
     console.error("Error in getting the discount for new enquiry", err);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
+const departmentPayNowOption = async (req, res) => {
+  try {
+    console.log("Welcome to making the department payment option", req.body);
+    const { paymentData } = req.body;
+
+    const { enqId, kidId, transactionId } = paymentData;
+    console.log(enqId, kidId);
+
+    // Fetch parent data
+    const parentData = await kidSchema.findOne({ _id: kidId }, { parentId: 1 });
+
+    if (!parentData) {
+      return res.status(400).json({ message: "Invalid kidId" });
+    }
+
+    // Update statuses
+    await Promise.all([
+      parentSchema.findByIdAndUpdate(parentData.parentId, { $set: { status: "Active" } }),
+      kidSchema.findByIdAndUpdate(kidId, { $set: { status: "Active" } }),
+      OperationDept.findByIdAndUpdate(enqId, {
+        $set: { status: "Active", payment: "Success", isNewUser: false },
+      }),
+    ]);
+
+    // Destructure paymentData
+    const {
+      kidName,
+      whatsappNumber,
+      selectionType,
+      classDetails,
+      kitItem,
+      baseAmount,
+      gstAmount,
+      totalAmount,
+      offlineClasses,
+      onlineClasses,
+      selectedCenter,
+      selectedClass,
+      selectedPackage,
+      amount,
+    } = paymentData;
+
+    // Create and save payment record
+    const paymentRecord = new classPaymentModel({
+      amount: totalAmount,
+      classDetails: {
+        selectedCenter,
+        selectedClass,
+        selectedPackage,
+        classType: classDetails.classType,
+        day: classDetails.day,
+        numberOfClasses: classDetails.numberOfClasses,
+        offlineClasses,
+        onlineClasses,
+        classMode:classDetails.classMode,
+      },
+      enqId,
+      kidId,
+      kidName,
+      kitItem,
+      selectionType,
+      baseAmount,
+      gstAmount,
+      totalAmount: amount,
+      whatsappNumber,
+      parentId: parentData.parentId,
+      raz_transaction_id: transactionId,
+      paymentStatus:"Success",
+      timestamp: Date.now(),
+    });
+
+    const savedPayment = await paymentRecord.save();
+    console.log("Payment data saved successfully", savedPayment);
+
+    // Update enquiry status
+    await OperationDept.updateOne(
+      { _id: enqId },
+      { $set: { "scheduleDemo.status": "Completed" } }
+    );
+
+    res.status(201).json({
+      message: "Payment data saved successfully",
+      data: savedPayment,
+    });
+
+  } catch (err) {
+    console.error("Error in making the department payments", err);
+    res.status(500).json({ message: "Internal server error", error: err.message });
+  }
+};
+
+
+
+const getThePhysicalCenterName = async (req, res) => {
+  try {
+    console.log("Welcome to the physical center");
+
+    const centerData = await PhysicalCenters.find({}, { centerId: 1, centerName: 1 });
+
+    if (!centerData || centerData.length === 0) {
+      return res.status(404).json({ message: "No physical centers found" });
+    }
+
+    console.log("CenterData", centerData);
+
+    res.status(200).json({
+      message: "Physical centers retrieved successfully",
+     centerData,
+    });
+
+  } catch (err) {
+    console.error("Error in getting the physical center name", err);
+    res.status(500).json({ message: "Internal server error", error: err.message });
+  }
+};
+
+
+const updatePaymentData = async (req, res) => {
+  try {
+    console.log("Welcome to update the payments", req.body);
+    const { data } = req.body;
+    const { originalData } = data;
+
+    if (!originalData) {
+      return res.status(400).json({ message: "Invalid payment data" });
+    }
+
+    const { enqId, kidId, transactionId } = originalData;
+    console.log(enqId, kidId);
+
+    // Fetch parent data
+    const parentData = await kidSchema.findOne({ _id: kidId }, { parentId: 1 });
+
+    if (!parentData) {
+      return res.status(400).json({ message: "Invalid kidId" });
+    }
+
+    // Update statuses
+    await Promise.all([
+      parentSchema.findByIdAndUpdate(parentData.parentId, { $set: { status: "Active" } }),
+      kidSchema.findByIdAndUpdate(kidId, { $set: { status: "Active" } }),
+      OperationDept.findByIdAndUpdate(enqId, {
+        $set: { status: "Active", payment: "Success", isNewUser: false },
+      }),
+    ]);
+
+    // Destructure required fields
+    const {
+      packageId,
+      selectedPackage,
+      onlineClasses,
+      offlineClasses,
+      classMode,
+      centerId,
+      centerName,
+      baseAmount,
+      discountAmount,
+      gstAmount,
+      totalAmount,
+      kidName,
+      whatsappNumber,
+      customAmount,
+      kitItems,
+      programs,
+    } = originalData;
+
+    // Create and save payment record
+    const paymentRecord = new classPaymentModel({
+      amount: totalAmount,
+      classDetails: {
+        packageId,
+        centerId,
+        centerName,
+        selectedPackage,
+        classType: originalData.classType || "", // Ensure field exists
+        day: originalData.day || "",
+        numberOfClasses: onlineClasses + offlineClasses,
+        offlineClasses,
+        onlineClasses,
+      },
+      enqId,
+      kidId,
+      kidName,
+      kitItem: kitItems.length > 0 ? kitItems.join(", ") : "",
+      kitItems,
+      classMode,
+      selectionType: data.selectionType,
+      baseAmount,
+      gstAmount,
+      totalAmount,
+      discountAmount,
+      customAmount,
+      whatsappNumber,
+      parentId: parentData.parentId,
+      raz_transaction_id: transactionId || "N/A", // Handle null transactionId
+      paymentStatus: "Success",
+      paymentMode: data.paymentMode || "online",
+      programs,
+      timestamp: Date.now(),
+    });
+
+    const savedPayment = await paymentRecord.save();
+    console.log("Payment data saved successfully", savedPayment);
+
+    // Update enquiry status
+    await OperationDept.updateOne(
+      { _id: enqId },
+      { $set: { "scheduleDemo.status": "Completed" } }
+    );
+
+    res.status(201).json({
+      message: "Payment data saved successfully",
+      data: savedPayment,
+    });
+  } catch (err) {
+    console.error("Error in updating payment data:", err);
+    res.status(500).json({ message: "Internal server error", error: err.message });
+  }
+};
+
+
+const makeaCallToParent = async(req,res)=>{
+  try {
+    const { mobile } = req.body;
+    
+    // Make the request to the external API
+    const response = await fetch(
+      `${CALLING_API}=${mobile}`,
+      { method: 'POST' }
+    );
+    
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error('Error calling external API:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+
+}
+
+
+
+const getEmployeeData = async (req, res) => {
+  try {
+    const { empId } = req.params;
+    const employeeData = await Employee.findOne({ _id: empId });
+
+    if (!employeeData) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+
+    console.log("Employee data in the sidebar is", employeeData);
+    res.status(200).json(employeeData);
+
+  } catch (err) {
+    console.error("Error in getting the employee data in the sidebar", err);
+    res.status(500).json({ message: "Internal server error", error: err.message });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
 module.exports = {
+  getEmployeeData,
+  makeaCallToParent,
+  updatePaymentData,
+  getThePhysicalCenterName,
+  departmentPayNowOption,
   fetchAllStatusLogs,
   getPackageData,
   getDiscountVouchers,
-
   operationEmailVerification,
   operationPasswordVerification,
   enquiryFormData,
@@ -3344,5 +3728,5 @@ module.exports = {
   getSheduledDemoClassDataOfKid,
   cancelDemoClassForKid,
   rescheduleDemoClass,
-  sendPaymentLink,
+  savePaymentData,
 };

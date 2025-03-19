@@ -12,6 +12,89 @@ const classPaymentModel = require("../../model/classPaymentModel");
 const notificationSchema = require("../../model/notification/notificationSchema");
 const wholeClassModel = require("../../model/wholeClassAssignedModel");
 
+
+
+const parentSubmitEnquiryForm = async(req,res)=>{
+  try {
+    const {
+        childAge,
+        childName,
+        email,
+        experience,
+        parentMobile,
+        parentName,
+        program
+    } = req.body;
+
+
+    if (!childName || !parentName || !parentMobile || !program) {
+        return res.status(400).json({ message: "Missing required fields" });
+    }
+
+
+    const [kidFirstName, kidLastName] = childName.split(" ");
+    const [parentFirstName, parentLastName] = parentName.split(" ");
+   
+
+    const newEnquiry = new operationDeptModel({
+        parentFirstName,
+        parentLastName: parentLastName || "", 
+        kidFirstName,
+        kidLastName: kidLastName || "",
+        contactNumber: parentMobile,
+        whatsappNumber: parentMobile,
+        isSameAsContact: true, 
+        email,
+        kidsAge: parseInt(childAge, 10), 
+        programs: [{ program, level: experience }], 
+        enquiryStatus: "Pending",
+        enquiryType: "cold",
+        status: "Pending",
+        isNewUser: true,
+    });
+
+   
+    await newEnquiry.save();
+
+    const logEntry = {
+      enqId: newEnquiry._id,
+      logs: [
+        {
+          employeeId: "",
+          employeeName: "",
+          comment: "Enquiry form submission",
+          action: `Enquiry form submitted by parent: ${parentFirstName}  on ${new Date().toLocaleString()}`,
+          createdAt: new Date(),
+        },
+      ],
+    };
+    const logData = await enquiryLogs.create(logEntry);
+    newEnquiry.logs = logData._id;
+    await newEnquiry.save();
+
+    
+
+    return res.status(201).json({ message: "Enquiry saved successfully", data: newEnquiry });
+
+} catch (error) {
+    console.error("Error saving enquiry:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
+}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const parentLogin = async (req, res) => {
   try {
     console.log("Welcome to parent login", req.body);
@@ -1221,6 +1304,8 @@ const savePaymentData = async (req, res) => {
       whatsappNumber,
       parentId,
       raz_transaction_id: transactionId,
+      paymentStatus:"Success",
+
       timestamp: Date.now(), // Assuming timestamp is not provided in paymentData
     });
 
@@ -1430,6 +1515,7 @@ const getMyKidData = async (req, res) => {
 };
 
 module.exports = {
+  parentSubmitEnquiryForm,
   getMyKidData,
   getKidEnquiryStatus,
   getParentKidData,

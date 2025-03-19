@@ -17,8 +17,8 @@ const PackageForm = () => {
     centerName: "",
     centerId: "",
     pricing: {
-      amount: 0,
-      tax: 0,
+      amount: "",  // Changed from 0 to empty string to allow placeholder
+      tax: "",     // Changed from 0 to empty string for tax percentage
       total: 0,
     },
   });
@@ -27,8 +27,8 @@ const PackageForm = () => {
     const fetchPhysicalCenterName = async () => {
       try {
         const response = await getAllPhysicalcenters();
-        console.log("response",response)
-        if (response.status===200 ) {
+        console.log("response", response);
+        if (response.status === 200) {
           setPhysicalCenters(response.data.physicalCenter);
         }
       } catch (err) {
@@ -44,20 +44,34 @@ const PackageForm = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    if (name === "amount" || name === "tax") {
-      // Calculate total automatically when amount or tax changes
-      const pricingData = {
-        ...formData.pricing,
-        [name]: parseFloat(value) || 0,
-      };
-
-      const total = pricingData.amount + pricingData.tax;
+    if (name === "amount") {
+      // When amount changes, recalculate total based on amount and tax percentage
+      const amount = parseFloat(value) || 0;
+      const taxPercentage = parseFloat(formData.pricing.tax) || 0;
+      const taxAmount = (amount * taxPercentage) / 100;
+      const total = amount + taxAmount;
 
       setFormData((prevData) => ({
         ...prevData,
         pricing: {
-          ...pricingData,
-          total,
+          ...prevData.pricing,
+          amount: value, // Keep as string to allow empty field
+          total: total,
+        },
+      }));
+    } else if (name === "tax") {
+      // When tax percentage changes, recalculate total
+      const amount = parseFloat(formData.pricing.amount) || 0;
+      const taxPercentage = parseFloat(value) || 0;
+      const taxAmount = (amount * taxPercentage) / 100;
+      const total = amount + taxAmount;
+
+      setFormData((prevData) => ({
+        ...prevData,
+        pricing: {
+          ...prevData.pricing,
+          tax: value, // Keep as string to allow empty field
+          total: total,
         },
       }));
     } else if (name.includes("pricing.")) {
@@ -67,7 +81,7 @@ const PackageForm = () => {
         ...prevData,
         pricing: {
           ...prevData.pricing,
-          [pricingField]: parseFloat(value) || 0,
+          [pricingField]: value,
         },
       }));
     } else if (name === "centerSelection") {
@@ -108,11 +122,22 @@ const PackageForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form Data:", formData);
+    
+    // Ensure we send numbers in the final submission
+    const submissionData = {
+      ...formData,
+      pricing: {
+        amount: parseFloat(formData.pricing.amount) || 0,
+        tax: parseFloat(formData.pricing.tax) || 0,
+        total: parseFloat(formData.pricing.total) || 0,
+      }
+    };
+    
+    console.log("Form Data:", submissionData);
 
     try {
-      const response = await saveNewPackage(formData)
-      console.log(response)
+      const response = await saveNewPackage(submissionData);
+      console.log(response);
       
       if (response.status === 201) {
         toast.success(response.data.message);
@@ -141,8 +166,6 @@ const PackageForm = () => {
         <form className="p-8" onSubmit={handleSubmit}>
           <div className="space-y-8">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              
-
               <TextField
                 select
                 label="Type"
@@ -224,25 +247,26 @@ const PackageForm = () => {
                 value={formData.pricing.amount}
                 onChange={handleChange}
                 fullWidth
+                placeholder="Enter amount"
                 InputProps={{ inputProps: { min: 0 } }}
               />
 
               <TextField
-                label="Tax"
+                label="Tax (%)"
                 name="tax"
                 type="number"
                 value={formData.pricing.tax}
                 onChange={handleChange}
                 fullWidth
-                InputProps={{ inputProps: { min: 0 } }}
+                placeholder="Enter tax percentage"
+                InputProps={{ inputProps: { min: 0, max: 100 } }}
               />
 
               <TextField
                 label="Total"
-                name="total"
+                name="pricing.total"
                 type="number"
                 value={formData.pricing.total}
-                onChange={handleChange}
                 fullWidth
                 InputProps={{
                   readOnly: true,

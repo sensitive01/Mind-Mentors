@@ -10,10 +10,11 @@ import {
   IconButton,
   Tooltip,
   Typography,
-  Button,
 } from "@mui/material";
 
 import { Bold, HistoryIcon } from "lucide-react";
+import toast from "react-hot-toast";
+import { makeCallToParent } from "../../../api/service/employee/EmployeeService";
 
 const columns = (
   theme,
@@ -32,7 +33,7 @@ const columns = (
     headerAlign: "center",
     sortable: false, // Disable sorting for serial numbers
     filterable: false, // Disable filtering for serial numbers
-    renderHeader: () => <strong>Sno</strong>
+    renderHeader: () => <strong>Sno</strong>,
   },
   {
     field: "parentFirstName",
@@ -41,23 +42,23 @@ const columns = (
     editable: true,
     renderHeader: () => <strong>Parent Name</strong>,
     renderCell: (params) => (
-      <Box sx={{ display: 'flex', flexDirection: 'column',marginTop:1}}>
+      <Box sx={{ display: "flex", flexDirection: "column", marginTop: 1 }}>
         <Typography variant="body2" sx={{ fontWeight: 500 }}>
           {params.value}
         </Typography>
-        <Typography 
-          variant="caption" 
+        <Typography
+          variant="caption"
           color="text.secondary"
-          sx={{ 
-            fontSize: '0.65rem', 
+          sx={{
+            fontSize: "0.65rem",
             opacity: 0.9,
-            lineHeight: 1.5
+            lineHeight: 1.5,
           }}
         >
-          {params.row.createdOn}
+          {params.row.createdAt}
         </Typography>
       </Box>
-    )
+    ),
   },
 
   {
@@ -65,8 +66,7 @@ const columns = (
     headerName: "Kid Name",
     width: 180,
     editable: true,
-    renderHeader: () => <strong>Kid Name</strong>
-
+    renderHeader: () => <strong>Kid Name</strong>,
   },
 
   {
@@ -77,7 +77,7 @@ const columns = (
 
     width: 100,
     renderCell: (params) => (
-      <Box sx={{ display: "flex", gap: 2,marginTop:"7px" }}>
+      <Box sx={{ display: "flex", gap: 2, marginTop: "7px" }}>
         {params.row.whatsappNumber && (
           <IconButton
             size="small"
@@ -98,66 +98,25 @@ const columns = (
             </svg>
           </IconButton>
         )}
-        {/* {params.row.email && (
-          <IconButton
-            size="small"
-            onClick={async (e) => {
-              e.stopPropagation();
-              try {
-                const response = await fetch("/api/send-email", {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({ email: params.row.email }),
-                });
-                const data = await response.json();
-                console.log("Email API response:", data);
-              } catch (error) {
-                console.error("Error sending email:", error);
-              }
-            }}
-            sx={{
-              color: "#8B5CF6", // Purple
-              "&:hover": {
-                bgcolor: alpha("#8B5CF6", 0.1),
-              },
-            }}
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-              <polyline points="22,6 12,13 2,6" />
-            </svg>
-          </IconButton>
-        )} */}
+
         {params.row.contactNumber && (
           <IconButton
             size="small"
             onClick={async (e) => {
               e.stopPropagation();
+              const contactNumber = params.row.contactNumber;
               try {
-                const response = await fetch("/api/call-contact", {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({
-                    contactNumber: params.row.contactNumber,
-                  }),
-                });
-                const data = await response.json();
-                console.log("Call API response:", data);
+                // Using the existing makeCall function from your imported utils/secretApi
+                const response = await makeCallToParent(contactNumber);
+
+                if (response.success) {
+                  toast.success("Call initiated successfully!");
+                } else {
+                  toast.error("Failed to initiate call");
+                }
               } catch (error) {
                 console.error("Error calling contact:", error);
+                toast.error("Failed to initiate call");
               }
             }}
             sx={{
@@ -184,6 +143,7 @@ const columns = (
       </Box>
     ),
   },
+
   {
     field: "programs",
     renderHeader: () => <strong>Programs</strong>,
@@ -268,7 +228,6 @@ const columns = (
             }}
           >
             {/* Status Icon */}
-          
 
             {/* Status Text */}
             <Box sx={{ flex: 1 }}>
@@ -524,9 +483,5 @@ const columns = (
       );
     },
   },
-
-
-
- 
 ];
 export default columns;

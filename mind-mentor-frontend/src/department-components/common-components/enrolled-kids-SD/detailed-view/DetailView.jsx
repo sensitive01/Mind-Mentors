@@ -4,18 +4,7 @@ import {
   Box,
   Grid,
   Typography,
-  Button,
-  TextField,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Card,
-  IconButton,
-  MenuItem,
-  Select,
-  InputLabel,
-  FormControl,
+
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import { Trash2, Plus } from "lucide-react";
@@ -68,6 +57,7 @@ const SectionTitle = ({ children }) => (
 
 const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
   const navigate = useNavigate();
+  const department = localStorage.getItem("department")
 
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [formData, setFormData] = useState(data);
@@ -202,7 +192,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                         <button
                           onClick={() =>
                             navigate(
-                              `/service-delivery/department/assign-whole-plan-class/${data._id}`
+                              `/${department}/department/assign-whole-plan-class/${data._id}`
                             )
                           }
                           className="w-full px-2 py-2 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:border-primary/80 hover:text-white transition-all duration-800 text-sm font-medium rounded-md shadow-2xl"
@@ -223,7 +213,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                         <button
                           onClick={() =>
                             navigate(
-                              `/service-delivery/department/display-whole-selectedClass/${data._id}`
+                              `/${department}/department/display-whole-selectedClass/${data._id}`
                             )
                           }
                           className="w-full px-2 py-2 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:border-primary/80 hover:text-white transition-all duration-800 text-sm font-medium rounded-md shadow-2xl"

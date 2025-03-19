@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   AssignmentOutlined as AttendanceIcon,
   ChevronLeft,
@@ -18,6 +18,7 @@ import {
   Help as SupportIcon,
   Assignment as TaskIcon,
   EventAvailable as CoachTime,
+  Email as EmailIcon,
 } from "@mui/icons-material";
 import {
   Box,
@@ -31,15 +32,25 @@ import {
   ListItemText,
   Tooltip,
   Typography,
+  Avatar,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { Link, useNavigate } from "react-router-dom";
 import { TentTree } from "lucide-react";
+import { getEmployeeData } from "../../../api/service/employee/EmployeeService";
 
 const ModernSidebar = () => {
+  const empId = localStorage.getItem("empId");
+
   const [openReports, setOpenReports] = useState(false);
   const [openTasks, setOpenTasks] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [empData, setEmpData] = useState({
+    firstName: "",
+    department: "",
+    role: "",
+    email: "",
+  });
   const navigate = useNavigate();
 
   const iconColors = {
@@ -121,13 +132,18 @@ const ModernSidebar = () => {
   const handleTasksClick = () => setOpenTasks(!openTasks);
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
 
+  useEffect(() => {
+    const fetchEmployee = async () => {
+      const response = await getEmployeeData(empId);
+      console.log("Response", response.data);
+      if (response.status == 200) {
+        setEmpData(response.data);
+      }
+    };
+    fetchEmployee();
+  }, []);
+
   const menuItems = [
-    // {
-    //   icon: <ProfileIcon />,
-    //   text: 'Profile',
-    //   color: iconColors.profile,
-    //   path: '/centeradmin/profile'
-    // },
     {
       icon: <DashboardIcon />,
       text: "Dashboard",
@@ -186,7 +202,6 @@ const ModernSidebar = () => {
       icon: <ReportsIcon />,
       text: "Reports",
       color: iconColors.reports,
-
       subItems: [
         {
           icon: <ReportsIcon />,
@@ -202,33 +217,12 @@ const ModernSidebar = () => {
       open: openReports,
       onClick: handleReportsClick,
     },
-    // {
-    //   icon: <TaskIcon />,
-    //   text: "Tasks",
-    //   color: iconColors.tasks,
-
-    //   subItems: [
-    //     {
-    //       icon: <TaskIcon />,
-    //       text: "My Tasks",
-    //       path: "/centeradmin/department/list-mytask",
-    //     },
-    //     {
-    //       icon: <TaskIcon />,
-    //       text: "Tasks Assigned By Me",
-    //       path: "/centeradmin/department/list-task-assigned-me",
-    //     },
-    //   ],
-    //   open: openTasks,
-    //   onClick: handleTasksClick,
-    // },
     {
       icon: <TaskIcon />,
       text: "Task",
       color: iconColors.tasks,
       path: "/centeradmin/department/task-table",
     },
-
     {
       icon: <TentTree />,
       text: "Holiday",
@@ -255,6 +249,11 @@ const ModernSidebar = () => {
     },
   ];
 
+  // Get first letter of name for avatar
+  const getInitials = (name) => {
+    return name ? name.charAt(0).toUpperCase() : "U";
+  };
+
   return (
     <StyledDrawer variant="permanent">
       <Box
@@ -267,40 +266,130 @@ const ModernSidebar = () => {
         }}
       >
         {!isCollapsed && (
-          <Box display="flex" flexDirection="column" alignItems="center" mt={2}>
+          <Box
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            width="100%"
+            mt={2}
+          >
             {/* Profile Icon with Link */}
-            <Link to="/centeradmin/profile" style={{ textDecoration: "none" }}>
+            <Link
+              to="/centeradmin/profile"
+              style={{ textDecoration: "none", width: "100%" }}
+            >
               <Box
                 sx={{
-                  width: 60,
-                  height: 60,
-                  backgroundColor: iconColors.profile || "primary.main",
-                  borderRadius: "50%",
                   display: "flex",
+                  flexDirection: "column",
                   alignItems: "center",
-                  justifyContent: "center",
-                  mb: 1,
+                  width: "100%",
                 }}
               >
-                <ProfileIcon sx={{ color: "white", fontSize: 30 }} />
+                <Avatar
+                  sx={{
+                    width: 60,
+                    height: 60,
+                    bgcolor: iconColors.profile,
+                    fontSize: 24,
+                    fontWeight: "bold",
+                    mb: 1,
+                  }}
+                >
+                  {getInitials(empData.firstName)}
+                </Avatar>
+
+                <Typography
+                  variant="body1"
+                  color="#642b8f"
+                  fontWeight="bold"
+                  textAlign="center"
+                  noWrap
+                  sx={{ maxWidth: "100%" }}
+                >
+                  {empData?.firstName || "Loading..."}
+                </Typography>
+
+                <Box sx={{ mt: 1, width: "100%" }}>
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 0.5 }}>
+                    <EmailIcon
+                      sx={{ color: "#642b8f", fontSize: 16, mr: 0.5 }}
+                    />
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      noWrap
+                      sx={{ maxWidth: "190px" }}
+                    >
+                      {empData?.email || "Loading..."}
+                    </Typography>
+                  </Box>
+
+                  <Box
+                    sx={{ display: "flex", justifyContent: "center", gap: 1 }}
+                  >
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        bgcolor: "#f0e6f7",
+                        color: "#642b8f",
+                        px: 1,
+                        py: 0.5,
+                        borderRadius: 1,
+                        display: "inline-block",
+                      }}
+                    >
+                      {empData?.department || "Loading..."}
+                    </Typography>
+
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        bgcolor: "#f0e6f7",
+                        color: "#642b8f",
+                        px: 1,
+                        py: 0.5,
+                        borderRadius: 1,
+                        display: "inline-block",
+                      }}
+                    >
+                      {empData.role || "Loading..."}
+                    </Typography>
+                  </Box>
+                </Box>
               </Box>
-              {/* Name and Role */}
-              <Typography
-                variant="body2"
-                color="#642b8f"
-                fontWeight="bold"
-                textAlign="center"
-              >
-                Center Admin
-              </Typography>
             </Link>
-            <Divider />
+            <Divider sx={{ width: "100%", my: 2 }} />
           </Box>
         )}
-        <IconButton onClick={toggleSidebar}>
+        <IconButton
+          onClick={toggleSidebar}
+          sx={{ mr: isCollapsed ? "auto" : 0 }}
+        >
           {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
         </IconButton>
       </Box>
+
+      {isCollapsed && (
+        <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+          <Tooltip title={empData.firstName || "Profile"} placement="right">
+            <Avatar
+              component={Link}
+              to="/centeradmin/profile"
+              sx={{
+                width: 40,
+                height: 40,
+                bgcolor: iconColors.profile,
+                fontSize: 18,
+                cursor: "pointer",
+              }}
+            >
+              {getInitials(empData.firstName)}
+            </Avatar>
+          </Tooltip>
+        </Box>
+      )}
+
       <Box sx={{ overflow: "auto" }}>
         <List disablePadding>
           {menuItems.map((item, index) => (
@@ -310,7 +399,7 @@ const ModernSidebar = () => {
                   button
                   onClick={() => {
                     if (item.onClick) item.onClick();
-                    navigate(item.path);
+                    else if (item.path) navigate(item.path);
                   }}
                   sx={{
                     justifyContent: isCollapsed ? "center" : "flex-start",

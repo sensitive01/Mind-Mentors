@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MindMentorz Registration</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            padding: 30px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            color: #6a1b9a;
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+        .subheading {
+            color: #9c27b0;
+            font-size: 16px;
+            margin-top: 0;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            color: #333;
+            box-sizing: border-box;
+        }
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236a1b9a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #9c27b0;
+            box-shadow: 0 0 0 2px rgba(156, 39, 176, 0.2);
+        }
+        .btn {
+            background-color: #6a1b9a;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 14px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #4a148c;
+        }
+        .divider {
+            height: 1px;
+            background-color: #e0e0e0;
+            margin: 30px 0;
+        }
+        .section-title {
+            color: #6a1b9a;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .required::after {
+            content: " *";
+            color: #d32f2f;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+        .message {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 6px;
+            text-align: center;
+            display: none;
+        }
+        .success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">MindMentorz</div>
+            <p class="subheading">Chess & Rubik's Cube Training Programs</p>
+        </div>
+
+        <div id="successMessage" class="message success">
+            Registration submitted successfully!
+        </div>
+        
+        <div id="errorMessage" class="message error">
+            There was an error submitting your registration. Please try again.
+        </div>
+
+        <form id="registrationForm">
+            <div class="section-title">Parent Information</div>
+            
+            <div class="form-group">
+                <label for="parentName" class="required">Parent's Full Name</label>
+                <input type="text" id="parentName" name="parentName" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="parentMobile" class="required">Mobile Number</label>
+                <input type="tel" id="parentMobile" name="parentMobile" placeholder="+91 XXXXX XXXXX" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" placeholder="example@email.com">
+            </div>
+            
+            <div class="divider"></div>
+            
+            <div class="section-title">Child Information</div>
+            
+            <div class="form-group">
+                <label for="childName" class="required">Child's Full Name</label>
+                <input type="text" id="childName" name="childName" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="childAge" class="required">Child's Age</label>
+                <input type="number" id="childAge" name="childAge" min="4" max="18" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="program" class="required">Interested Program</label>
+                <select id="program" name="program" required>
+                    <option value="" selected disabled>-- Select Program --</option>
+                    <option value="Chess">Chess Training</option>
+                    <option value="Rubiks">Rubik's Cube Training</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="experience">Level</label>
+                <select id="experience" name="experience">
+                    <option value="">Choose One</option>
+                    <option value="Beginner">Beginner</option>
+                    <option value="Intermediate">Intermediate</option>
+                    <option value="Advanced">Advanced</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="btn">Submit Registration</button>
+        </form>
+        
+        <div class="footer">
+            <p>For any queries, please contact us at info@mindmentorz.com</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('registrationForm');
+            const successMessage = document.getElementById('successMessage');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+                
+                // Collect form data
+                const formData = {
+                    parentName: document.getElementById('parentName').value,
+                    parentMobile: document.getElementById('parentMobile').value,
+                    email: document.getElementById('email').value,
+                    childName: document.getElementById('childName').value,
+                    childAge: document.getElementById('childAge').value,
+                    program: document.getElementById('program').value,
+                    experience: document.getElementById('experience').value
+                };
+                
+                // Log data to console
+                console.log('Form Submission Data:', formData);
+                
+                // Make API call to submit the data
+                submitFormData(formData);
+            });
+            
+            function submitFormData(data) {
+                // Replace 'YOUR_API_ENDPOINT' with your actual API endpoint
+                const apiUrl = 'http://localhost:3000/parent/parent-submit-enquiry-form';                
+                fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(responseData => {
+                    // Log the API response
+                    console.log('API Response:', responseData);
+                    
+                    // Show success message
+                    successMessage.style.display = 'block';
+                    errorMessage.style.display = 'none';
+                    
+                    // Reset form
+                    form.reset();
+                    
+                    // Hide success message after 5 seconds
+                    setTimeout(() => {
+                        successMessage.style.display = 'none';
+                    }, 5000);
+                })
+                .catch(error => {
+                    // Log error
+                    console.error('API Error:', error);
+                    
+                    // Show error message
+                    errorMessage.style.display = 'block';
+                    successMessage.style.display = 'none';
+                    
+                    // Hide error message after 5 seconds
+                    setTimeout(() => {
+                        errorMessage.style.display = 'none';
+                    }, 5000);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

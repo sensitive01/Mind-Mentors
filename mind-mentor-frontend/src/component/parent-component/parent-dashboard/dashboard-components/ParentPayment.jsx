@@ -17,7 +17,7 @@ const ParentPayment = () => {
 
   const decodePaymentData = (encodedData) => {
     try {
-      // Replace URL-safe characters and add padding
+  
       const sanitizedData = encodedData
         .replace(/-/g, "+")
         .replace(/_/g, "/")
@@ -27,21 +27,22 @@ const ParentPayment = () => {
       const parsedData = JSON.parse(decodedString);
       console.log("parsedData", parsedData);
 
-      // Transform the decoded data to match the expected format for Razorpay
       return {
-        enqId: parsedData.enqId || null, // Ensure enqId is included
+        enqId: parsedData.enqId || null, 
         kidId: parsedData.kidId,
         kidName: parsedData.kidName,
-        amount: parsedData.totalAmount, // Use total amount including GST
+        amount: parsedData.totalAmount,
         classDetails: {
           name:
             parsedData.selectionType === "class"
               ? `${parsedData.selectedCenter} - ${parsedData.selectedClass}`
               : parsedData.kitItem,
-          coach: "Not Specified", // You may want to add coach information if available
+          coach: "Not Specified", 
           day: parsedData.selectedClass || "Not Specified",
           classType: parsedData.selectedPackage,
           numberOfClasses: parsedData.offlineClasses + parsedData.onlineClasses,
+          centerId:parsedData.centerId,
+          centerName:parsedData.centerName
         },
         whatsappNumber: parsedData.whatsappNumber,
         selectionType: parsedData.selectionType,
@@ -83,7 +84,7 @@ const ParentPayment = () => {
 
       const options = {
         key: RAZORPAY_KEY,
-        amount: amountInPaise, // Amount in the smallest unit (paise)
+        amount: amountInPaise, 
         currency: "INR",
         name: "MindMentorz",
         description:

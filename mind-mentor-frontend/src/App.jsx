@@ -276,6 +276,9 @@ import SuperAdminAddNewEnquiryForm from "./pages/employee/superadmin/enquiries/S
 import SuperAdminAllEnquiryLogs from "./pages/employee/superadmin/enquiries/SuperAdminAllEnquiryLogs";
 import SuperAdminAllStatusLogs from "./pages/employee/superadmin/enquiries/SuperAdminAllStatusLogs";
 import SuperAdminAssignNewClass from "./pages/employee/superadmin/classShedules/SuperAdminAssignNewClass";
+import SuperAdminActiveKidData from "./pages/employee/superadmin/SuperAdminActiveKidData";
+import SuperAdminAssignWholeClassToKid from "./pages/employee/superadmin/SuperAdminAssignWholeClassToKid";
+import SuperAdminDisplayWholeClassKid from "./pages/employee/superadmin/SuperAdminDisplayWholeClassKid";
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
 function App() {
@@ -429,7 +432,7 @@ function App() {
           <Route path="/service-delivary/holidays"  element={<ServiceDelivaryHolidayPage />} />
           <Route path="/service-delivary/completeEnquiryLogs/:id"   element={<ServiceCompleteEnquiryLogs />}/>
           <Route path="/serviceMessageStatus/"  element={<ServiceMessageStusTrackPage />} />
-          <Route  path="/service-delivery/department/display-whole-selectedClass/:enqId"  element={<DisplayAssignedClass />} />
+          <Route path="/service-delivery/department/display-whole-selectedClass/:enqId"  element={<DisplayAssignedClass />} />
             
            
         
@@ -549,6 +552,11 @@ function App() {
 
           <Route path="/hr/department/add-employee-form"  element={<AddEmployeeFormPage />}/>
           <Route path="/hr/department/employee-list"  element={<EmployeeList />}/>
+          <Route path="/hr/department/attendance"  element={<EmployeeList />}/>
+
+
+
+   
 
 
           
@@ -565,6 +573,12 @@ function App() {
           <Route path="/super-admin/department/class-timetable-list" element={<SuperadminScheduleClass />}/> 
           <Route path="/super-admin/department/employees" element={<EmployeeTable />} />
           <Route path="/super-admin/department/allowdeduct" element={<AllowDeductTable />} />
+          <Route path="/super-admin/department/active-kid-data"  element={<SuperAdminActiveKidData />}/>
+          <Route path="/super-admin/department/show-complete-enquiry-logs/:id"   element={<ShowAllEnquiryLogs />}   />
+          <Route path="/super-admin/department/assign-whole-plan-class/:enqId"  element={<SuperAdminAssignWholeClassToKid />} />
+
+
+
 
       
 
@@ -580,10 +594,12 @@ function App() {
           <Route path="/super-admin/department/leaves/add" element={<SuperadminLeavesAdd />}/>
           <Route path="/super-admin/department/edit-leaves/:id"  element={<SuperadminLeavesAdd />} />
           <Route path="/super-admin/department/attendance" element={<SuperadminAttendance />}     />
-          <Route path="/superadmin/department/discount-form" element={<DiscountFormPage />}/>  
-          <Route path="/superadmin/department/discount-table" element={<VoucherTablePage />}/>
-          <Route path="/superadmin/department/package-table" element={<SuperAdminPackageTableList />}/>
-          <Route path="/superadmin/department/add-package-form" element={<SuperAdminAddPackageForm />}/>
+          <Route path="/super-admin/department/discount-form" element={<DiscountFormPage />}/>  
+          <Route path="/super-admin/department/discount-table" element={<VoucherTablePage />}/>
+          <Route path="/super-admin/department/package-table" element={<SuperAdminPackageTableList />}/>
+          <Route path="/super-admin/department/add-package-form" element={<SuperAdminAddPackageForm />}/>
+          <Route path="/super-admin/department/display-whole-selectedClass/:enqId"  element={<SuperAdminDisplayWholeClassKid />} />
+
 
 
 

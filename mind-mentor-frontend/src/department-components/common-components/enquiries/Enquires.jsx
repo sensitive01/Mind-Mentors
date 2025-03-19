@@ -33,7 +33,6 @@ import DetailView from "./detailed-view/DetailView";
 import { ClipboardList, Edit, X } from "lucide-react";
 import TaskAssignmentOverlay from "../prospects/detailed-view/SlideDialog";
 import EnquiryRelatedTaskComponent from "../prospects/enquiry-task/EnquiryRelatedTaskComponent";
-import { sendMessage } from "../../../utils/secretApi";
 
 const theme = createTheme({
   palette: {
@@ -108,6 +107,10 @@ const Enquiries = () => {
     studentName: "",
     onConfirm: null,
   });
+  const [whatsappDialog, setWhatsappDialog] = useState({
+    open: false,
+    phoneNumber: null,
+  });
   const [isTaskOverlayOpen, setIsTaskOverlayOpen] = useState(false);
   const [enqId, setEnqId] = useState();
 
@@ -171,13 +174,6 @@ const Enquiries = () => {
     }
   };
 
-  const handleSend = async (number) => {
-    console.log("number", number);
-    const message = "Haii welcome to mind mentors";
-    const sendingMessage = await sendMessage(number, message);
-    console.log("message respoense", sendingMessage);
-  };
-
   const handleRowEditStop = (params, event) => {
     event.defaultMuiPrevented = true;
   };
@@ -236,6 +232,83 @@ const Enquiries = () => {
     console.log("Handle logs ", id);
     navigate(`/${department}/department/show-complete-status-logs/${id}`);
   };
+  const handleMessage = (phoneNumber) => {
+    setWhatsappDialog({
+      open: true,
+      phoneNumber,
+    });
+  };
+
+  const WhatsAppDialog = ({ open, phoneNumber, onClose }) => {
+    if (!phoneNumber) return null;
+
+    const widgetUrl = `${
+      import.meta.env.VITE_MSGKART_MESSAGE_WIDGET
+    }&customerNumber=${phoneNumber}`;
+
+    return (
+      <Slide direction="left" in={open} mountOnEnter unmountOnExit>
+        <Paper
+          elevation={8}
+          sx={{
+            position: "fixed",
+            right: 2,
+            top: "12%",
+            transform: "translateY(-50%)",
+            width: "580px",
+            height: "550px",
+            zIndex: 1300,
+            display: "flex",
+            flexDirection: "column",
+            borderRadius: "12px 0 0 12px",
+            overflow: "hidden",
+            boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              background: "linear-gradient(#642b8f, #aa88be)",
+              color: "white",
+              padding: "12px 16px",
+              minHeight: "56px",
+              boxSizing: "border-box",
+              m: 0,
+            }}
+          >
+            <Typography variant="h6" sx={{ fontWeight: 500 }}>
+              WhatsApp Chat
+            </Typography>
+            <IconButton onClick={onClose} sx={{ color: "white" }} size="small">
+              <X size={20} />
+            </IconButton>
+          </Box>
+          <Box
+            sx={{
+              p: 0,
+              height: "calc(100% - 56px)",
+              overflow: "hidden",
+            }}
+          >
+            <iframe
+              src={widgetUrl}
+              style={{
+                width: "100%",
+                height: "100%",
+                border: "none",
+                display: "block",
+              }}
+              frameBorder="0"
+              allowFullScreen
+              title="WhatsApp Chat"
+            />
+          </Box>
+        </Paper>
+      </Slide>
+    );
+  };
 
   return (
     <ThemeProvider theme={theme}>
@@ -264,7 +337,7 @@ const Enquiries = () => {
                 handleMoveProspects,
                 handleShowLogs,
                 handleShowStatus,
-                handleSend
+                handleMessage
               )}
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel}
@@ -635,6 +708,11 @@ const Enquiries = () => {
           onClose={() => setIsTaskOverlayOpen(false)}
         />
       </TaskAssignmentOverlay>
+      <WhatsAppDialog
+        open={whatsappDialog.open}
+        phoneNumber={whatsappDialog.phoneNumber}
+        onClose={() => setWhatsappDialog({ open: false, phoneNumber: null })}
+      />
     </ThemeProvider>
   );
 };

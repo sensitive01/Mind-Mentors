@@ -16,8 +16,8 @@ const CHESSKID_GROUP_ID = import.meta.env.VITE_CHESSKID_GROUP_ID;
 export async function makeCall(from, to) {
   const url = `${API_BASE_URL}/v1/Accounts/${ACCOUNT_ID}/Calls/connect?apikey=${API_KEY}`;
   const params = new URLSearchParams({
-    From: from,//9074140114 919074140114
-    To: to,
+    From:"919894386276",
+    To: "917559889322",
     CallerId: CALLER_ID,
   });
 

@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Person as ProfileIcon,
+  Email as EmailIcon,
 } from "@mui/icons-material";
 
 import {
@@ -26,19 +27,33 @@ import {
   ListItemText,
   Tooltip,
   Typography,
+  Avatar
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { RouteIcon, TentTree } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { getEmployeeData } from "../../../api/service/employee/EmployeeService";
 
 const ModernSidebar = () => {
   const [openReports, setOpenReports] = useState(false);
+  const empId = localStorage.getItem("empId");
   const [openTasks, setOpenTasks] = useState(false);
   const [openLeadManagement, setOpenLeadManagement] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [empData, setEmpData] = useState({});
   const location = useLocation();
   const navigate = useNavigate();
+  useEffect(() => {
+    const fetchEmployee = async () => {
+      const response = await getEmployeeData(empId);
+      console.log("Response", response.data);
+      if (response.status == 200) {
+        setEmpData(response.data);
+      }
+    };
+    fetchEmployee();
+  }, []);
 
   // Auto-expand parent menu when child is active
   useEffect(() => {
@@ -136,8 +151,8 @@ const ModernSidebar = () => {
         display: "none",
       },
       // Hide scrollbar for IE, Edge and Firefox
-      "-ms-overflow-style": "none",  // IE and Edge
-      "scrollbar-width": "none",  // Firefox
+      "-ms-overflow-style": "none", // IE and Edge
+      "scrollbar-width": "none", // Firefox
     },
   }));
 
@@ -208,7 +223,7 @@ const ModernSidebar = () => {
       link: "/operation/department/holidays",
     },
     {
-      icon: <RouteIcon  />,
+      icon: <RouteIcon />,
       text: "Walk Through",
       color: iconColors.support,
       link: "/operation/department/walk-through",
@@ -220,6 +235,9 @@ const ModernSidebar = () => {
       link: "/operation/department/supports",
     },
   ];
+  const getInitials = (name) => {
+    return name ? name.charAt(0).toUpperCase() : "U";
+  };
 
   const isItemActive = (link) => {
     if (!link) return false;
@@ -287,44 +305,99 @@ const ModernSidebar = () => {
       >
         {!isCollapsed && (
           <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              width: "100%",
-              gap: 1,
-            }}
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            width="100%"
+            mt={2}
           >
-            <Box
-              onClick={() =>
-                navigate("/operation/department/enrollment-profile")
-              }
-              sx={{
-                width: 60,
-                height: 60,
-                backgroundColor: iconColors.profile,
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: 2,
-                cursor: "pointer",
-                "&:hover": {
-                  opacity: 0.9,
-                },
-              }}
+            {/* Profile Icon with Link */}
+            <Link
+              to="/centeradmin/profile"
+              style={{ textDecoration: "none", width: "100%" }}
             >
-              <ProfileIcon sx={{ color: "white", fontSize: 30 }} />
-            </Box>
-            <Typography
-              variant="body2"
-              color="#642b8f"
-              fontWeight="bold"
-              textAlign="center"
-            >
-              Operations Manager
-            </Typography>
-            <Divider sx={{ width: "100%", my: 1 }} />
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  width: "100%",
+                }}
+              >
+                <Avatar
+                  sx={{
+                    width: 60,
+                    height: 60,
+                    bgcolor: iconColors.profile,
+                    fontSize: 24,
+                    fontWeight: "bold",
+                    mb: 1,
+                  }}
+                >
+                  {getInitials(empData.firstName)}
+                </Avatar>
+
+                <Typography
+                  variant="body1"
+                  color="#642b8f"
+                  fontWeight="bold"
+                  textAlign="center"
+                  noWrap
+                  sx={{ maxWidth: "100%" }}
+                >
+                  {empData?.firstName || "Loading..."}
+                </Typography>
+
+                <Box sx={{ mt: 1, width: "100%" }}>
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 0.5 }}>
+                    <EmailIcon
+                      sx={{ color: "#642b8f", fontSize: 16, mr: 0.5 }}
+                    />
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      noWrap
+                      sx={{ maxWidth: "190px" }}
+                    >
+                      {empData?.email || "Loading..."}
+                    </Typography>
+                  </Box>
+
+                  <Box
+                    sx={{ display: "flex", justifyContent: "center", gap: 1 }}
+                  >
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        bgcolor: "#f0e6f7",
+                        color: "#642b8f",
+                        px: 1,
+                        py: 0.5,
+                        borderRadius: 1,
+                        display: "inline-block",
+                      }}
+                    >
+                      {empData?.department || "Loading..."}
+                    </Typography>
+
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        bgcolor: "#f0e6f7",
+                        color: "#642b8f",
+                        px: 1,
+                        py: 0.5,
+                        borderRadius: 1,
+                        display: "inline-block",
+                      }}
+                    >
+                      {empData.role || "Loading..."}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+            </Link>
+            <Divider sx={{ width: "100%", my: 2 }} />
           </Box>
         )}
         <IconButton

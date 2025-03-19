@@ -40,6 +40,7 @@ import {
   HourglassEmpty as TemporaryIcon,
   AccountBalance as TransactionsAlternateIcon,
   Boy as BoyIcon,
+  Email as EmailIcon,
 } from "@mui/icons-material";
 
 import {
@@ -54,11 +55,13 @@ import {
   ListItemText,
   Tooltip,
   Typography,
+  Avatar,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { MenuIcon } from "lucide-react";
+import { Menu as MenuIcon } from "lucide-react"; // Updated import to use Menu instead of MenuIcon
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { getEmployeeData } from "../../../api/service/employee/EmployeeService";
 
 const ModernSidebar = () => {
   const location = useLocation();
@@ -72,6 +75,32 @@ const ModernSidebar = () => {
   const [openParticipants, setOpenParticipants] = useState(false);
   const [openTournaments, setOpenTournaments] = useState(false);
   const [activeItem, setActiveItem] = useState("");
+  const [empData, setEmpData] = useState({});
+
+  useEffect(() => {
+    const fetchEmployee = async () => {
+      try {
+        const empId = localStorage.getItem("empId");
+        if (!empId) {
+          console.error("Employee ID not found in localStorage");
+          return;
+        }
+
+        const response = await getEmployeeData(empId);
+        console.log("Employee Data Response:", response);
+
+        if (response && response.status === 200) {
+          setEmpData(response.data);
+        } else {
+          console.error("Failed to fetch employee data:", response);
+        }
+      } catch (error) {
+        console.error("Error fetching employee data:", error);
+      }
+    };
+
+    fetchEmployee();
+  }, []);
 
   useEffect(() => {
     // Set active item based on current path
@@ -80,21 +109,24 @@ const ModernSidebar = () => {
     // Open appropriate submenu when navigating directly to a subpage
     const currentPath = location.pathname;
 
+    // Check and set the appropriate menu to open
     if (
       currentPath.includes("/super-admin/department/parents-data") ||
       currentPath.includes("/super-admin/department/kids-data") ||
-      currentPath.includes("/superadminRenewals") ||
-      currentPath.includes("/enquiries")
+      currentPath.includes("/super-admin/department/enrollment-data") ||
+      currentPath.includes("/super-admin/department/active-kid-data") ||
+      currentPath.includes("/superadminRenewals")
     ) {
       setOpenEnquiries(true);
     }
 
     if (
       currentPath.includes("/super-admin/department/employees") ||
-      currentPath.includes("/coaches") ||
-      currentPath.includes("/physical-centerlist") ||
+      currentPath.includes("/super-admin/department/task-table") ||
+      currentPath.includes("/super-admin/department/leaves") ||
+      currentPath.includes("/super-admin/department/physical-centerlist") ||
       currentPath.includes("/superadminAttendance") ||
-      currentPath.includes("/allowdeduct") ||
+      currentPath.includes("/super-admin/department/allowdeduct") ||
       currentPath.includes("/payroll")
     ) {
       setOpenEmployees(true);
@@ -115,13 +147,13 @@ const ModernSidebar = () => {
     }
 
     if (
-      currentPath.includes("/superadminFeedback") ||
-      currentPath.includes("/superadminAttendanceReport") ||
-      currentPath.includes("/class-schedules")
+      currentPath.includes("/super-admin/department/class-timetable-list") ||
+      currentPath.includes("/superadmin/department/discount-table") ||
+      currentPath.includes("/superadmin/department/package-table")
     ) {
       setOpenClass(true);
     }
-  }, [location]);
+  }, [location.pathname]); // Add dependency on location.pathname
 
   // Enhanced color palette with more distinct colors
   const iconColors = {
@@ -220,15 +252,43 @@ const ModernSidebar = () => {
     },
   }));
 
-  // Event handlers for toggling submenus
-  const handleReportsClick = () => setOpenReports(!openReports);
-  const handleClassClick = () => setOpenClass(!openClass);
-  const handleTasksClick = () => setOpenTasks(!openTasks);
+  // Event handlers for toggling submenus - prevent default to avoid navigation
+  const handleReportsClick = (e) => {
+    if (e) e.preventDefault();
+    setOpenReports(!openReports);
+  };
+
+  const handleClassClick = (e) => {
+    if (e) e.preventDefault();
+    setOpenClass(!openClass);
+  };
+
+  const handleTasksClick = (e) => {
+    if (e) e.preventDefault();
+    setOpenTasks(!openTasks);
+  };
+
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
-  const handleCRMClick = () => setOpenCRM(!openCRM);
-  const handleEmployeesClick = () => setOpenEmployees(!openEmployees);
-  const handleEnquiriesClick = () => setOpenEnquiries(!openEnquiries);
-  const handleTournamentsClick = () => setOpenTournaments(!openTournaments);
+
+  const handleCRMClick = (e) => {
+    if (e) e.preventDefault();
+    setOpenCRM(!openCRM);
+  };
+
+  const handleEmployeesClick = (e) => {
+    if (e) e.preventDefault();
+    setOpenEmployees(!openEmployees);
+  };
+
+  const handleEnquiriesClick = (e) => {
+    if (e) e.preventDefault();
+    setOpenEnquiries(!openEnquiries);
+  };
+
+  const handleTournamentsClick = (e) => {
+    if (e) e.preventDefault();
+    setOpenTournaments(!openTournaments);
+  };
 
   // Check if a menu item is currently active
   const isItemActive = (link, subItems) => {
@@ -244,6 +304,10 @@ const ModernSidebar = () => {
     return false;
   };
 
+  const getInitials = (name) => {
+    return name ? name.charAt(0).toUpperCase() : "U";
+  };
+
   const menuItems = [
     {
       icon: <DashboardIcon />,
@@ -256,9 +320,26 @@ const ModernSidebar = () => {
       text: "Enquiries",
       color: iconColors.enquiries,
       subItems: [
-        { icon: <EnquiriesIcon />, text: "Enquiry Data", link: "/super-admin/department/enrollment-data" },
-        { icon: <ParentsIcon />, text: "Parents", link: "/super-admin/department/parents-data" },
-        { icon: <KidsIcon />, text: "Kids", link: "/super-admin/department/kids-data" },
+        {
+          icon: <EnquiriesIcon />,
+          text: "Enquiry Data",
+          link: "/super-admin/department/enrollment-data",
+        },
+        {
+          icon: <EnquiriesIcon />,
+          text: "Active Kids",
+          link: "/super-admin/department/active-kid-data",
+        },
+        {
+          icon: <ParentsIcon />,
+          text: "Parents",
+          link: "/super-admin/department/parents-data",
+        },
+        {
+          icon: <KidsIcon />,
+          text: "Kids",
+          link: "/super-admin/department/kids-data",
+        },
         {
           icon: <RenewalsIcon />,
           text: "Renewals",
@@ -268,14 +349,16 @@ const ModernSidebar = () => {
       open: openEnquiries,
       onClick: handleEnquiriesClick,
     },
-
     {
       icon: <EmployeesIcon />,
       text: "Employees",
       color: iconColors.employees,
       subItems: [
-        { icon: <EmployeesIcon />, text: "Employee Data", link: "/super-admin/department/employees" },
-        // { icon: <EmployeesIcon />, text: "Coach Data", link: "/coaches" },
+        {
+          icon: <EmployeesIcon />,
+          text: "Employee Data",
+          link: "/super-admin/department/employees",
+        },
         {
           icon: <DashboardIcon />,
           text: "Physical Centers",
@@ -291,10 +374,16 @@ const ModernSidebar = () => {
           text: "Allowances / Deductions",
           link: "/super-admin/department/allowdeduct",
         },
-        { icon: <TasksIcon />, text: "Task", link: "/super-admin/department/task-table" },
-        { icon: <LeavesIcon />, text: "Leaves", link: "/super-admin/department/leaves" },
-
-
+        {
+          icon: <TasksIcon />,
+          text: "Task",
+          link: "/super-admin/department/task-table",
+        },
+        {
+          icon: <LeavesIcon />,
+          text: "Leaves",
+          link: "/super-admin/department/leaves",
+        },
       ],
       open: openEmployees,
       onClick: handleEmployeesClick,
@@ -378,12 +467,6 @@ const ModernSidebar = () => {
       color: iconColors.documents,
       link: "/documents",
     },
-    // {
-    //   icon: <UsersIcon />,
-    //   text: "Users",
-    //   color: iconColors.users,
-    //   link: "/users",
-    // },
     {
       icon: <TournamentsIcon />,
       text: "Tournaments",
@@ -413,6 +496,7 @@ const ModernSidebar = () => {
       icon: <MarketingIcon />,
       text: "Marketing Management",
       color: iconColors.marketing,
+      link: "#", // Added placeholder link
     },
     {
       icon: <ExpensesIcon />,
@@ -426,7 +510,6 @@ const ModernSidebar = () => {
       color: iconColors.transactions,
       link: "/transactions",
     },
-    
   ];
 
   return (
@@ -446,27 +529,84 @@ const ModernSidebar = () => {
             <Link to="/superadminProfile" style={{ textDecoration: "none" }}>
               <Box
                 sx={{
-                  width: 60,
-                  height: 60,
-                  backgroundColor: iconColors.profile || "primary.main",
-                  borderRadius: "50%",
                   display: "flex",
+                  flexDirection: "column",
                   alignItems: "center",
-                  justifyContent: "center",
-                  mb: 1,
+                  width: "100%",
                 }}
               >
-                <ProfileIcon sx={{ color: "white", fontSize: 30 }} />
+                <Avatar
+                  sx={{
+                    width: 60,
+                    height: 60,
+                    bgcolor: iconColors.profile,
+                    fontSize: 24,
+                    fontWeight: "bold",
+                    mb: 1,
+                  }}
+                >
+                  {getInitials(empData.firstName)}
+                </Avatar>
+
+                <Typography
+                  variant="body1"
+                  color="#642b8f"
+                  fontWeight="bold"
+                  textAlign="center"
+                  noWrap
+                  sx={{ maxWidth: "100%" }}
+                >
+                  {empData?.firstName || "Loading..."}
+                </Typography>
+
+                <Box sx={{ mt: 1, width: "100%" }}>
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 0.5 }}>
+                    <EmailIcon
+                      sx={{ color: "#642b8f", fontSize: 16, mr: 0.5 }}
+                    />
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      noWrap
+                      sx={{ maxWidth: "190px" }}
+                    >
+                      {empData?.email || "Loading..."}
+                    </Typography>
+                  </Box>
+
+                  <Box
+                    sx={{ display: "flex", justifyContent: "center", gap: 1 }}
+                  >
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        bgcolor: "#f0e6f7",
+                        color: "#642b8f",
+                        px: 1,
+                        py: 0.5,
+                        borderRadius: 1,
+                        display: "inline-block",
+                      }}
+                    >
+                      {empData?.department || "Loading..."}
+                    </Typography>
+
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        bgcolor: "#f0e6f7",
+                        color: "#642b8f",
+                        px: 1,
+                        py: 0.5,
+                        borderRadius: 1,
+                        display: "inline-block",
+                      }}
+                    >
+                      {empData?.role || "Loading..."}
+                    </Typography>
+                  </Box>
+                </Box>
               </Box>
-              {/* Name and Role */}
-              <Typography
-                variant="body2"
-                color="#642b8f"
-                fontWeight="bold"
-                textAlign="center"
-              >
-                Super Admin
-              </Typography>
             </Link>
             <Divider sx={{ width: "100%", my: 2 }} />
           </Box>
@@ -492,14 +632,13 @@ const ModernSidebar = () => {
             return (
               <React.Fragment key={index}>
                 <Tooltip title={item.text} placement="right">
-                  {item.link ? (
+                  {item.link && !item.subItems ? (
                     <Link
                       to={item.link}
                       style={{ textDecoration: "none", color: "inherit" }}
                     >
                       <StyledListItem
                         button
-                        onClick={item.onClick || undefined}
                         isActive={isActive}
                         sx={{
                           justifyContent: isCollapsed ? "center" : "flex-start",
@@ -513,26 +652,22 @@ const ModernSidebar = () => {
                           })}
                         </ListItemIcon>
                         {!isCollapsed && (
-                          <>
-                            <ListItemText
-                              primary={item.text}
-                              primaryTypographyProps={{
-                                sx: {
-                                  fontSize: "0.95rem",
-                                  fontWeight: isActive ? 700 : 500,
-                                },
-                              }}
-                            />
-                            {item.subItems &&
-                              (item.open ? <ExpandLess /> : <ExpandMore />)}
-                          </>
+                          <ListItemText
+                            primary={item.text}
+                            primaryTypographyProps={{
+                              sx: {
+                                fontSize: "0.95rem",
+                                fontWeight: isActive ? 700 : 500,
+                              },
+                            }}
+                          />
                         )}
                       </StyledListItem>
                     </Link>
                   ) : (
                     <StyledListItem
                       button
-                      onClick={item.onClick || undefined}
+                      onClick={item.onClick}
                       isActive={isActive}
                       sx={{
                         justifyContent: isCollapsed ? "center" : "flex-start",

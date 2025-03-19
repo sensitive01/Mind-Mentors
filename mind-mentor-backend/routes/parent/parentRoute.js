@@ -22,6 +22,7 @@ parentRoute.get("/get-my-kid-data/:parentId",parentController.getMyKidData)
 
 
 
+parentRoute.post("/parent-submit-enquiry-form",parentController.parentSubmitEnquiryForm)
 
 
 parentRoute.post("/login",parentController.parentLogin)

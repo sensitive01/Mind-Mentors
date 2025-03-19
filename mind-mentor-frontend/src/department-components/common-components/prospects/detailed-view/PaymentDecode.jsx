@@ -12,9 +12,10 @@ const PaymentDetailsPage = () => {
     try {
       const sanitizedData = encodedData.replace(/-/g, "+").replace(/_/g, "/");
       const decodedData = JSON.parse(atob(sanitizedData));
-      console.log("decodedData",decodedData)
+      console.log("Decoded payment data:", decodedData);
       setPaymentData(decodedData);
     } catch (err) {
+      console.error("Error decoding data:", err);
       setError("Invalid payment link");
     }
   }, [encodedData]);
@@ -60,135 +61,156 @@ const PaymentDetailsPage = () => {
           Payment Details
         </Typography>
 
-        {/* Student & Program Details */}
-        {(paymentData.kidName ||
-          paymentData.whatsappNumber ||
-          (paymentData.programs && paymentData.programs.length > 0)) && (
-          <Card variant="outlined" className="mb-4">
-            <Grid container spacing={2} className="p-4">
-              <Grid item xs={12}>
-                <Typography variant="h6" className="mb-2">
-                  Student Information
+        {/* Student Information */}
+        <Card variant="outlined" className="mb-4">
+          <Grid container spacing={2} className="p-4">
+            <Grid item xs={12}>
+              <Typography variant="h6" className="mb-2">
+                Student Information
+              </Typography>
+            </Grid>
+            {paymentData.kidName && (
+              <Grid item xs={12} md={6}>
+                <Typography variant="body1">
+                  <strong>Kid Name:</strong> {paymentData.kidName}
                 </Typography>
               </Grid>
-              {paymentData.kidName && (
-                <Grid item xs={12} md={6}>
-                  <Typography variant="body1">
-                    <strong>Kid Name:</strong> {paymentData.kidName}
+            )}
+            {paymentData.whatsappNumber && (
+              <Grid item xs={12} md={6}>
+                <Typography variant="body1">
+                  <strong>Mobile:</strong> {paymentData.whatsappNumber}
+                </Typography>
+              </Grid>
+            )}
+            {paymentData.programs && paymentData.programs.length > 0 && (
+              <Grid item xs={12}>
+                <Typography variant="body1">
+                  <strong>Programs:</strong>
+                </Typography>
+                {paymentData.programs.map((program, index) => (
+                  <Typography key={index} variant="body2">
+                    {program.program} (Level: {program.level})
                   </Typography>
-                </Grid>
-              )}
-              {paymentData.whatsappNumber && (
-                <Grid item xs={12} md={6}>
-                  <Typography variant="body1">
-                    <strong>Mobile:</strong> {paymentData.whatsappNumber}
-                  </Typography>
-                </Grid>
-              )}
-              {paymentData.programs && paymentData.programs.length > 0 && (
-                <Grid item xs={12}>
-                  <Typography variant="body1">
-                    <strong>Programs:</strong>
-                  </Typography>
-                  {paymentData.programs.map((program, index) => (
+                ))}
+              </Grid>
+            )}
+          </Grid>
+        </Card>
+
+        {/* Package Details */}
+        <Card variant="outlined" className="mb-4">
+          <Grid container spacing={2} className="p-4">
+            <Grid item xs={12}>
+              <Typography variant="h6" className="mb-2">
+                Package Details
+              </Typography>
+            </Grid>
+            {paymentData.selectedPackage && (
+              <Grid item xs={12} md={6}>
+                <Typography variant="body1">
+                  <strong>Package:</strong> {paymentData.selectedPackage}
+                </Typography>
+              </Grid>
+            )}
+            {paymentData.centerName && (
+              <Grid item xs={12} md={6}>
+                <Typography variant="body1">
+                  <strong>Center:</strong> {paymentData.centerName}
+                </Typography>
+              </Grid>
+            )}
+            {paymentData.onlineClasses > 0 && (
+              <Grid item xs={12} md={6}>
+                <Typography variant="body1">
+                  <strong>Online Classes:</strong> {paymentData.onlineClasses}
+                </Typography>
+              </Grid>
+            )}
+            {paymentData.offlineClasses > 0 && (
+              <Grid item xs={12} md={6}>
+                <Typography variant="body1">
+                  <strong>Offline Classes:</strong> {paymentData.offlineClasses}
+                </Typography>
+              </Grid>
+            )}
+            {paymentData.customAmount > 0 && (
+              <Grid item xs={12} md={6}>
+                <Typography variant="body1">
+                  <strong>Custom Amount:</strong> ₹
+                  {paymentData.customAmount.toFixed(2)}
+                </Typography>
+              </Grid>
+            )}
+            {/* Display kit items if present */}
+            {paymentData.kitItems && paymentData.kitItems.length > 0 && (
+              <Grid item xs={12}>
+                <Typography variant="body1">
+                  <strong>Kit Items:</strong>
+                </Typography>
+                {paymentData.kitItems
+                  .filter((item) => item.name && item.quantity > 0)
+                  .map((item, index) => (
                     <Typography key={index} variant="body2">
-                      {program.program} (Level: {program.level})
+                      {item.name}: {item.quantity} unit(s)
                     </Typography>
                   ))}
-                </Grid>
-              )}
-            </Grid>
-          </Card>
-        )}
-
-        {/* Class/Kit Details */}
-        {(paymentData.selectionType === "class" || paymentData.kitItem) && (
-          <Card variant="outlined" className="mb-4">
-            <Grid container spacing={2} className="p-4">
-              <Grid item xs={12}>
-                <Typography variant="h6" className="mb-2">
-                  {paymentData.selectionType === "class"
-                    ? "Class Details"
-                    : "Kit Details"}
-                </Typography>
               </Grid>
-              {paymentData.selectionType === "class" && (
-                <>
-                  {paymentData.selectedClass && (
-                    <Grid item xs={12} md={6}>
-                      <Typography variant="body1">
-                        <strong>Class Type:</strong> {paymentData.selectedClass}
-                      </Typography>
-                    </Grid>
-                  )}
-                  {paymentData.selectedCenter && (
-                    <Grid item xs={12} md={6}>
-                      <Typography variant="body1">
-                        <strong>Center:</strong> {paymentData.selectedCenter}
-                      </Typography>
-                    </Grid>
-                  )}
-                  {paymentData.selectedPackage && (
-                    <Grid item xs={12} md={6}>
-                      <Typography variant="body1">
-                        <strong>Package:</strong> {paymentData.selectedPackage}
-                      </Typography>
-                    </Grid>
-                  )}
-                </>
-              )}
-              {paymentData.selectionType === "kit" && (
-                <Grid item xs={12}>
-                  <Typography variant="body1">
-                    <strong>Kit/Item Description:</strong> {paymentData.kitItem}
-                  </Typography>
-                </Grid>
-              )}
-            </Grid>
-          </Card>
-        )}
+            )}
+          </Grid>
+        </Card>
 
         {/* Payment Details */}
-        {(paymentData.baseAmount ||
-          paymentData.gstAmount ||
-          paymentData.totalAmount) && (
-          <Card variant="outlined" className="mb-4">
-            <Grid container spacing={2} className="p-4">
-              <Grid item xs={12}>
-                <Typography variant="h6" className="mb-2">
-                  Payment Details
+        <Card variant="outlined" className="mb-4">
+          <Grid container spacing={2} className="p-4">
+            <Grid item xs={12}>
+              <Typography variant="h6" className="mb-2">
+                Payment Details
+              </Typography>
+            </Grid>
+            {paymentData.baseAmount !== undefined && (
+              <Grid item xs={12} md={6}>
+                <Typography variant="body1">
+                  <strong>Base Amount:</strong> ₹
+                  {typeof paymentData.baseAmount === "number"
+                    ? paymentData.baseAmount.toFixed(2)
+                    : paymentData.baseAmount}
                 </Typography>
               </Grid>
-              {paymentData.baseAmount !== undefined && (
-                <Grid item xs={12} md={6}>
-                  <Typography variant="body1">
-                    <strong>Base Amount:</strong> ₹
-                    {paymentData.baseAmount.toFixed(2)}
-                  </Typography>
-                </Grid>
-              )}
-              {paymentData.gstAmount !== undefined && (
-                <Grid item xs={12} md={6}>
-                  <Typography variant="body1">
-                    <strong>GST (18%):</strong> ₹
-                    {paymentData.gstAmount.toFixed(2)}
-                  </Typography>
-                </Grid>
-              )}
-              {paymentData.totalAmount !== undefined && (
-                <Grid item xs={12} md={6}>
-                  <Typography
-                    variant="body1"
-                    className="font-bold text-purple-600"
-                  >
-                    <strong>Total Amount:</strong> ₹
-                    {paymentData.totalAmount.toFixed(2)}
-                  </Typography>
-                </Grid>
-              )}
-            </Grid>
-          </Card>
-        )}
+            )}
+            {paymentData.discountAmount > 0 && (
+              <Grid item xs={12} md={6}>
+                <Typography variant="body1" className="text-green-600">
+                  <strong>Discount:</strong> -₹
+                  {paymentData.discountAmount.toFixed(2)}
+                </Typography>
+              </Grid>
+            )}
+            {paymentData.gstAmount !== undefined && (
+              <Grid item xs={12} md={6}>
+                <Typography variant="body1">
+                  <strong>GST (18%):</strong> ₹
+                  {typeof paymentData.gstAmount === "number"
+                    ? paymentData.gstAmount.toFixed(2)
+                    : paymentData.gstAmount}
+                </Typography>
+              </Grid>
+            )}
+            {paymentData.totalAmount !== undefined && (
+              <Grid item xs={12} md={6}>
+                <Typography
+                  variant="body1"
+                  className="font-bold text-purple-600"
+                >
+                  <strong>Total Amount:</strong> ₹
+                  {typeof paymentData.totalAmount === "number"
+                    ? paymentData.totalAmount.toFixed(2)
+                    : paymentData.totalAmount}
+                </Typography>
+              </Grid>
+            )}
+          </Grid>
+        </Card>
 
         {/* Action Buttons */}
         <Grid container spacing={2}>
@@ -197,7 +219,7 @@ const PaymentDetailsPage = () => {
               onClick={handleCancel}
               variant="outlined"
               fullWidth
-              color="secondary" // Change to secondary for a purple outline
+              color="secondary"
             >
               Cancel
             </Button>
@@ -206,7 +228,7 @@ const PaymentDetailsPage = () => {
             <Button
               onClick={handleSubmit}
               variant="contained"
-              color="primary" // Change to primary for a purple background
+              color="primary"
               fullWidth
             >
               Submit

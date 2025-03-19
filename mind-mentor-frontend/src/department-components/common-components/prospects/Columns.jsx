@@ -11,15 +11,16 @@ import {
 } from "@mui/material";
 
 import { HistoryIcon } from "lucide-react";
+import { toast } from "react-toastify";
+import { makeCallToParent } from "../../../api/service/employee/EmployeeService";
 
 const columns = (
   theme,
   handleStatusToggle,
-  setViewDialog,
-
   handleMoveBackToEnquiry,
   handleShowLogs,
-  handleShowStatus
+  handleShowStatus,
+  handleMessage,
 ) => [
   {
     field: "slNo",
@@ -55,7 +56,7 @@ const columns = (
             lineHeight: 1.5,
           }}
         >
-          {params.row.createdOn}
+          {params.row.createdAt}
         </Typography>
       </Box>
     ),
@@ -75,6 +76,7 @@ const columns = (
 
     renderHeader: () => <strong>Contact</strong>,
 
+    width: 100,
     renderCell: (params) => (
       <Box sx={{ display: "flex", gap: 2, marginTop: "7px" }}>
         {params.row.whatsappNumber && (
@@ -83,7 +85,7 @@ const columns = (
             onClick={async (e) => {
               e.stopPropagation();
 
-              // handleMessage(params.row.whatsappNumber);
+              handleMessage(params.row.whatsappNumber);
             }}
             sx={{
               color: "#00FF00", // Purple
@@ -103,20 +105,19 @@ const columns = (
             size="small"
             onClick={async (e) => {
               e.stopPropagation();
+              const contactNumber = params.row.contactNumber;
               try {
-                const response = await fetch("/api/call-contact", {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({
-                    contactNumber: params.row.contactNumber,
-                  }),
-                });
-                const data = await response.json();
-                console.log("Call API response:", data);
+                // Using the existing makeCall function from your imported utils/secretApi
+                const response = await makeCallToParent(contactNumber);
+
+                if (response.success) {
+                  toast.success("Call initiated successfully!");
+                } else {
+                  toast.error("Failed to initiate call");
+                }
               } catch (error) {
                 console.error("Error calling contact:", error);
+                toast.error("Failed to initiate call");
               }
             }}
             sx={{

@@ -11,9 +11,9 @@ export const sheduleTimeTable = async (empId,shedules) => {
 };
 
 
-export const getClassShedules = async () => {
+export const getClassShedules = async (department) => {
   const response = await serviceInstance.get(
-    `/service/get-class-shedule`,
+    `/service/get-class-shedule?department=${department}`,
     
   );
   return response.data.classData;

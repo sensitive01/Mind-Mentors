@@ -11,15 +11,15 @@ import {
 } from "@mui/material";
 
 import { HistoryIcon } from "lucide-react";
+import toast from "react-hot-toast";
+import { makeCallToParent } from "../../../api/service/employee/EmployeeService";
 
 const columns = (
   theme,
   handleStatusToggle,
-  setViewDialog,
-
-  handleMoveBackToEnquiry,
   handleShowLogs,
-  handleShowStatus
+  handleShowStatus,
+  handleMessage
 ) => [
   {
     field: "slNo",
@@ -45,23 +45,27 @@ const columns = (
     editable: true,
   },
 
-  {
+ {
     field: "contact",
     headerName: "Contact",
-    width: 180,
+
+    renderHeader: () => <strong>Contact</strong>,
+
+    width: 100,
     renderCell: (params) => (
-      <Box sx={{ display: "flex", gap: 2 }}>
+      <Box sx={{ display: "flex", gap: 2, marginTop: "7px" }}>
         {params.row.whatsappNumber && (
           <IconButton
             size="small"
-            onClick={(e) => {
+            onClick={async (e) => {
               e.stopPropagation();
-              console.log("WhatsApp:", params.row.whatsappNumber);
+
+              handleMessage(params.row.whatsappNumber);
             }}
             sx={{
-              color: "#8B5CF6", // Purple
+              color: "#00FF00", // Purple
               "&:hover": {
-                bgcolor: alpha("#8B5CF6", 0.1),
+                bgcolor: alpha("#00FF00", 0.1),
               },
             }}
           >
@@ -70,46 +74,31 @@ const columns = (
             </svg>
           </IconButton>
         )}
-        {params.row.email && (
-          <IconButton
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation();
-              console.log("Email:", params.row.email);
-            }}
-            sx={{
-              color: "#8B5CF6", // Purple
-              "&:hover": {
-                bgcolor: alpha("#8B5CF6", 0.1),
-              },
-            }}
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-              <polyline points="22,6 12,13 2,6" />
-            </svg>
-          </IconButton>
-        )}
+
         {params.row.contactNumber && (
           <IconButton
             size="small"
-            onClick={(e) => {
+            onClick={async (e) => {
               e.stopPropagation();
-              console.log("Contact Number:", params.row.contactNumber);
+              const contactNumber = params.row.contactNumber;
+              try {
+                // Using the existing makeCall function from your imported utils/secretApi
+                const response = await makeCallToParent(contactNumber);
+
+                if (response.success) {
+                  toast.success("Call initiated successfully!");
+                } else {
+                  toast.error("Failed to initiate call");
+                }
+              } catch (error) {
+                console.error("Error calling contact:", error);
+                toast.error("Failed to initiate call");
+              }
             }}
             sx={{
-              color: "#8B5CF6", // Purple
+              color: "#00FF00", // Purple
               "&:hover": {
-                bgcolor: alpha("#8B5CF6", 0.1),
+                bgcolor: alpha("#00FF00", 0.1),
               },
             }}
           >
