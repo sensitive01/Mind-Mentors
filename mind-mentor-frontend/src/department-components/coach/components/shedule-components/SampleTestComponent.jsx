@@ -70,12 +70,43 @@ const SampleTestComponent = () => {
               email: 'coach@example.com'
             }}
             onApiReady={handleApiReady}
-            getIFrameRef={(iframeRef) => { iframeRef.style.height = '700px'; }}
+            getIFrameRef={(iframeRef) => { 
+              iframeRef.style.height = '700px'; 
+              // Add allow attributes to handle permissions properly
+              iframeRef.allow = "camera; microphone; display-capture; autoplay; clipboard-write";
+            }}
             configOverwrite={{
               startWithAudioMuted: false,
               startWithVideoMuted: false,
               prejoinPageEnabled: false,
               disableThirdPartyRequests: true,
+              // Better browser compatibility settings
+              resolution: 720,
+              constraints: {
+                video: {
+                  height: {
+                    ideal: 720,
+                    max: 720,
+                    min: 180
+                  }
+                }
+              },
+              disableDeepLinking: true,
+              useNewBrowserCheck: false,
+              useStunTurn: true,
+              // Improved P2P settings for better connectivity
+              p2p: {
+                enabled: true,
+                preferH264: true,
+                disableH264: false,
+                useStunTurn: true
+              },
+              // STUN/TURN servers to help with NAT traversal
+              // Include public STUN servers
+              stunServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+              ],
               // Enable whiteboard feature
               whiteboard: {
                 enabled: true,
@@ -92,6 +123,12 @@ const SampleTestComponent = () => {
               moderator: true,
               testing: {
                 enableEncodedTransformSupport: true
+              },
+              // Explicitly define browser capabilities
+              flags: {
+                sourceNameSignaling: true,
+                sendMultipleVideoStreams: true,
+                receiveMultipleVideoStreams: true
               }
             }}
             interfaceConfigOverwrite={{
@@ -106,7 +143,19 @@ const SampleTestComponent = () => {
               // Make sure coach can admit participants
               SETTINGS_SECTIONS: ['devices', 'language', 'moderator', 'profile', 'calendar'],
               // Automatically grant moderator to the Coach
-              AUTO_ASSIGN_MODERATOR: true
+              AUTO_ASSIGN_MODERATOR: true,
+              // Force low bandwidth mode options
+              DISABLE_VIDEO_BACKGROUND: true,
+              DISABLE_DOMINANT_SPEAKER_INDICATOR: false,
+              DISABLE_FOCUS_INDICATOR: false,
+              // Set low bandwidth mode initially
+              enableLowBandwidth: true,
+              // Add a fallback for WebRTC
+              preferH264: true,
+              // Improve browser compatibility
+              DISABLE_RINGING: true,
+              AUDIO_LEVEL_PRIMARY_COLOR: 'rgba(255,255,255,0.4)',
+              PROVIDER_NAME: 'Classroom'
             }}
           />
         </div>
