@@ -279,6 +279,8 @@ import SuperAdminAssignNewClass from "./pages/employee/superadmin/classShedules/
 import SuperAdminActiveKidData from "./pages/employee/superadmin/SuperAdminActiveKidData";
 import SuperAdminAssignWholeClassToKid from "./pages/employee/superadmin/SuperAdminAssignWholeClassToKid";
 import SuperAdminDisplayWholeClassKid from "./pages/employee/superadmin/SuperAdminDisplayWholeClassKid";
+import SampleKidComponet from "./component/kids-component/kids-dashboard/SampleKidComponet";
+import SampleTestComponent from "./department-components/coach/components/shedule-components/SampleTestComponent";
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
 function App() {
@@ -286,6 +288,22 @@ function App() {
     <>
       <Router>
         <Routes>
+
+        <Route path="/sample-coach" element={<SampleTestComponent />} />
+        <Route path="/sample-kid" element={<SampleKidComponet />} />
+
+
+
+
+
+
+
+
+
+
+
+
+
           <Route path="/" element={<HomePage />} />
 
           <Route path="/parent/login" element={<ParentLogin />} />

@@ -10,7 +10,7 @@ import { operationDeptInstance } from "../../../api/axios/operationDeptInstance"
 const NewEnquiryFormStep = () => {
   const navigate = useNavigate();
   const empId = localStorage.getItem("empId");
-  const department = localStorage.getItem("department")
+  const department = localStorage.getItem("department");
   const { id } = useParams();
   const [activeStep, setActiveStep] = useState(0);
   const [enquiryId, setEnquiryId] = useState(id || null);
@@ -38,7 +38,7 @@ const NewEnquiryFormStep = () => {
     state: "",
     relationship: "",
     otherRelationship: "",
-    pincode: ""
+    pincode: "",
   });
 
   const fetchCityDetails = async (pin) => {
@@ -54,7 +54,7 @@ const NewEnquiryFormStep = () => {
           ...prev,
           city: postOffice.District,
           state: postOffice.State,
-          pincode: pin
+          pincode: pin,
         }));
         setError("");
       } else {
@@ -62,7 +62,7 @@ const NewEnquiryFormStep = () => {
           ...prev,
           city: "",
           state: "",
-          pincode: ""
+          pincode: "",
         }));
         setError("Invalid Pincode");
       }
@@ -72,7 +72,7 @@ const NewEnquiryFormStep = () => {
         ...prev,
         city: "",
         state: "",
-        pincode: ""
+        pincode: "",
       }));
     }
   };
@@ -85,7 +85,7 @@ const NewEnquiryFormStep = () => {
         ...prev,
         city: "",
         state: "",
-        pincode: ""
+        pincode: "",
       }));
     }
   }, [pincode]);
@@ -121,7 +121,7 @@ const NewEnquiryFormStep = () => {
 
   const handleCheckboxChange = () => {
     setIsSameAsContact((prev) => !prev);
-    if (!isSameAsContact) {
+    if (isSameAsContact) {
       setFormData((prevData) => ({
         ...prevData,
         whatsappNumber: formData.contactNumber,
@@ -159,8 +159,10 @@ const NewEnquiryFormStep = () => {
       case 0:
         return (
           formData.parentFirstName.trim() &&
-          formData.whatsappNumber &&
-          formData.whatsappNumber.length >= 10
+          formData.contactNumber &&
+          (isSameAsContact
+            ? formData.whatsappNumber && formData.whatsappNumber.length >= 10
+            : true)
         );
       case 1:
         return (
@@ -190,10 +192,16 @@ const NewEnquiryFormStep = () => {
       };
 
       if (!enquiryId) {
-        const response = await operationDeptInstance.post("/enquiry-form", completeFormData);
+        const response = await operationDeptInstance.post(
+          "/enquiry-form",
+          completeFormData
+        );
         setEnquiryId(response.data.id);
       } else {
-        await operationDeptInstance.put(`/enquiry-form/${enquiryId}`, completeFormData);
+        await operationDeptInstance.put(
+          `/enquiry-form/${enquiryId}`,
+          completeFormData
+        );
       }
 
       toast.success("Enquiry submitted successfully!");
@@ -216,7 +224,10 @@ const NewEnquiryFormStep = () => {
       const stepData = getStepData(activeStep);
 
       if (!enquiryId) {
-        const response = await operationDeptInstance.post("/enquiry-form", stepData);
+        const response = await operationDeptInstance.post(
+          "/enquiry-form",
+          stepData
+        );
         setEnquiryId(response.data.id);
         toast.success("Step saved successfully!");
       } else {
@@ -277,13 +288,13 @@ const NewEnquiryFormStep = () => {
           <div className="space-y-8 ">
             <div className="space-y-4">
               <h3 className="text-[#642b8f] font-semibold text-lg pb-2 border-b-2 border-[#f8a213]">
-                Parent Information
+                Gaurdian Information
               </h3>
               <div className="space-y-4">
                 <div className="flex gap-4">
                   <input
                     type="text"
-                    placeholder="Yours Name *"
+                    placeholder="Gaurdian Name *"
                     className="flex-1 p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors"
                     value={formData.parentFirstName}
                     onChange={(e) =>
@@ -298,7 +309,8 @@ const NewEnquiryFormStep = () => {
               {/* Contact Number Input */}
               <div className="flex-1">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Yours's Contact Number <span className="text-red-500">*</span>
+                  Gaurdian's Contact Number{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <PhoneInput
                   country="in"
@@ -308,7 +320,7 @@ const NewEnquiryFormStep = () => {
                     // Add logic to enable WhatsApp input/checkbox after contact number is entered
                   }}
                   inputProps={{
-                    placeholder: "Enter your contact number",
+                    placeholder: "Enter Gaurdian contact number",
                     required: true,
                     className:
                       "w-full p-4 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:ring-2 focus:ring-[#642b8f] focus:ring-opacity-50 outline-none placeholder-gray-400",
@@ -335,14 +347,14 @@ const NewEnquiryFormStep = () => {
                         checked={isSameAsContact}
                         onChange={handleCheckboxChange}
                       />
-                      Is WhatsApp number same as contact number?
+                      Is WhatsApp number different from Contact number?
                     </label>
                   </div>
 
-                  {!isSameAsContact && (
+                  {isSameAsContact && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Your's WhatsApp Number{" "}
+                        Gaurdian's WhatsApp Number{" "}
                         <span className="text-red-500">*</span>
                       </label>
                       <PhoneInput
@@ -352,7 +364,7 @@ const NewEnquiryFormStep = () => {
                           handleInputChange("whatsappNumber", value)
                         }
                         inputProps={{
-                          placeholder: "Enter your whatsApp number",
+                          placeholder: "Enter Gaurdian whatsApp number",
                           required: true,
                           className:
                             "w-full p-4 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:ring-2 focus:ring-[#642b8f] focus:ring-opacity-50 outline-none placeholder-gray-400",
@@ -373,13 +385,13 @@ const NewEnquiryFormStep = () => {
             </div>
             <div className="space-y-4">
               <label className="block text-sm font-medium text-[#642b8f]">
-                Your's Email ID
+                Gaurdian's Email ID
               </label>
               <div className="relative">
                 <input
                   type="email"
                   className="w-full p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors pl-4 pr-10"
-                  placeholder="Enter your email id"
+                  placeholder="Enter Gaurdian email id"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
                 />
@@ -561,37 +573,6 @@ const NewEnquiryFormStep = () => {
                 />
               </div>
             </div>
-
-            {/* <div className="space-y-4">
-              <h3 className="text-[#642b8f] font-semibold text-lg pb-2 border-b-2 border-[#f8a213]">
-                School Details
-              </h3>
-              <input
-                type="text"
-                placeholder="School Name"
-                className="w-full p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors"
-                value={formData.schoolName}
-                onChange={(e) =>
-                  handleInputChange("schoolName", e.target.value)
-                }
-              />
-              <input
-                type="text"
-                placeholder="Address"
-                className="w-full p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors"
-                value={formData.address}
-                onChange={(e) => handleInputChange("address", e.target.value)}
-              />
-              <input
-                type="text"
-                placeholder="Pincode"
-                className="w-full p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors"
-                value={formData.schoolPincode}
-                onChange={(e) =>
-                  handleInputChange("schoolPincode", e.target.value)
-                }
-              />
-            </div> */}
           </div>
         );
 
@@ -640,8 +621,17 @@ const NewEnquiryFormStep = () => {
                       required
                     >
                       <option value="">-Select Level-</option>
-                      <option value="Beginner">Beginner</option>
-                      <option value="Intermediate">Intermediate</option>
+                      <option value="Absolute Beginner">
+                        Absolute Beginner
+                      </option>
+                      <option value="Lower Beginner">Lower Beginner</option>
+                      <option value="Upper Beginner">Upper Beginner</option>
+                      <option value="Lower Intermediate">
+                        Lower Intermediate
+                      </option>
+                      <option value="Upper Intermediate">
+                        Upper Intermediate
+                      </option>
                       <option value="Advanced">Advanced</option>
                     </select>
                   </div>
@@ -697,7 +687,7 @@ const NewEnquiryFormStep = () => {
               color: "#f8a213", // Set text color for contrast
               "&:hover": {
                 backgroundColor: "#642b8f", // Adjust the hover color if needed
-                color:"#f8a213"
+                color: "#f8a213",
               },
             }}
           >

@@ -148,8 +148,8 @@ const ModernSidebar = () => {
 
     if (
       currentPath.includes("/super-admin/department/class-timetable-list") ||
-      currentPath.includes("/superadmin/department/discount-table") ||
-      currentPath.includes("/superadmin/department/package-table")
+      currentPath.includes("/super-admin/department/discount-table") ||
+      currentPath.includes("/super-admin/department/package-table")
     ) {
       setOpenClass(true);
     }
@@ -401,12 +401,12 @@ const ModernSidebar = () => {
         {
           icon: <ReportsIcon />,
           text: "Voucher_Discounts",
-          link: "/superadmin/department/discount-table",
+          link: "/super-admin/department/discount-table",
         },
         {
           icon: <ReportsIcon />,
           text: "Class / Kit Package",
-          link: "/superadmin/department/package-table",
+          link: "/super-admin/department/package-table",
         },
       ],
       open: openClass,

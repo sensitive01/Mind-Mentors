@@ -5,7 +5,7 @@ import {
   Box,
   Chip,
   Dialog,
-  DialogContent,
+  IconButton,
 } from "@mui/material";
 import { ClassCard, customColors, IconText } from "../../Layout/customStyle";
 import {
@@ -17,7 +17,7 @@ import {
   AssignmentTurnedIn as AttendanceIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-// import ZoomMeeting from "./zoom/ZoomMeeting";
+import WebRtc from "./WebRtc"; // Import the updated component
 
 const RenderClassList = ({
   classes = [],
@@ -25,7 +25,8 @@ const RenderClassList = ({
   isLiveTab = false,
 }) => {
   const navigate = useNavigate();
-  const [activeMeeting, setActiveMeeting] = useState(null);
+  const [isMeetingOpen, setIsMeetingOpen] = useState(false);
+  const [selectedClassId, setSelectedClassId] = useState(null);
 
   if (!classes || classes.length === 0) {
     return (
@@ -42,43 +43,19 @@ const RenderClassList = ({
     );
   }
 
-  const extractMeetingDetails = (meetingLink) => {
-    try {
-      const url = new URL(meetingLink);
-      const params = new URLSearchParams(url.search);
-      const meetingId = params.get("meetingId") || "86278368257";
-      const password =
-        params.get("password") || "NCRojxPdabjCUKIgDX2prRy9qaI0wq";
-      return { meetingId, password };
-    } catch (error) {
-      console.error("Invalid meeting link:", meetingLink);
-      return { meetingId: "", password: "" };
-    }
-  };
-
   const handleJoinClick = (e, classItem) => {
     e.stopPropagation();
-    if (classItem.meetingLink) {
-      const { meetingId, password } = extractMeetingDetails(
-        classItem.meetingLink
-      );
-      if (meetingId) {
-        setActiveMeeting({ meetingId, password });
-      } else {
-        console.error("Invalid or missing meeting ID.");
-      }
-    } else {
-      console.error("No meeting link available for this class.");
-    }
+    setSelectedClassId(classItem._id);
+    setIsMeetingOpen(true);
+  };
+
+  const handleCloseMeeting = () => {
+    setIsMeetingOpen(false);
   };
 
   const handleAttendanceClick = (e, classItem) => {
     e.stopPropagation();
     navigate(`/coachAttandanceFeedback/${classItem._id}`);
-  };
-
-  const handleCloseMeeting = () => {
-    setActiveMeeting(null);
   };
 
   return (
@@ -193,17 +170,9 @@ const RenderClassList = ({
         </ClassCard>
       ))}
 
-      {/* <Dialog fullScreen open={!!activeMeeting} onClose={handleCloseMeeting}>
-        <DialogContent sx={{ padding: 0 }}>
-          {activeMeeting && (
-            <ZoomMeeting
-              meetingId={activeMeeting.meetingId}
-              password={activeMeeting.password}
-              onClose={handleCloseMeeting}
-            />
-          )}
-        </DialogContent>
-      </Dialog> */}
+      <Dialog fullScreen open={isMeetingOpen} onClose={handleCloseMeeting}>
+        <WebRtc onClose={handleCloseMeeting} classId={selectedClassId} />
+      </Dialog>
     </>
   );
 };

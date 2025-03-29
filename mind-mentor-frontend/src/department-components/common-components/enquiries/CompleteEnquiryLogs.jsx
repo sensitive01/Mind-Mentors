@@ -11,6 +11,7 @@ import {
   Divider,
   Fade,
   FormControl,
+  IconButton,
   InputLabel,
   MenuItem,
   Paper,
@@ -19,10 +20,11 @@ import {
   ThemeProvider,
   Typography,
 } from "@mui/material";
-import { useParams } from "react-router-dom";
+import DownloadIcon from "@mui/icons-material/Download";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { useParams, useNavigate } from "react-router-dom";
 import { alpha } from "@mui/material/styles";
-import { useNavigate } from "react-router-dom";
-
+import * as XLSX from "xlsx";
 
 import {
   fetchAllLogs,
@@ -31,7 +33,7 @@ import {
 
 const CompleteEnquiryLogs = () => {
   const empId = localStorage.getItem("empId");
-  const navigate =useNavigate()
+  const navigate = useNavigate();
 
   const { id } = useParams();
   const [logs, setLogs] = useState([]);
@@ -105,7 +107,6 @@ const CompleteEnquiryLogs = () => {
 
   const handleNoteSave = async () => {
     try {
-      // Add your save logic here
       console.log("Note Data:", {
         noteText: noteDialog.noteText,
         enquiryStatus: noteDialog.enquiryStatus,
@@ -117,8 +118,8 @@ const CompleteEnquiryLogs = () => {
         enquiryStatus: noteDialog.enquiryStatus,
         disposition: noteDialog.disposition,
       });
-      if(response.status){
-        navigate("/operation/department/enrollment-data")
+      if (response.status) {
+        navigate("/operation/department/enrollment-data");
       }
 
       console.log("Response", response);
@@ -127,6 +128,33 @@ const CompleteEnquiryLogs = () => {
     } catch (error) {
       console.error("Error saving note:", error);
     }
+  };
+
+  const handleGoBack = () => {
+    navigate(-1);
+  };
+
+  // New method to handle log download
+  const handleDownloadLogs = () => {
+    // Prepare data for download
+    const dataToExport = rows.map((row) => ({
+      "Sl. No": row.id,
+      Date: row.createdAt,
+      Action: row.action,
+    }));
+
+    // Create a new workbook and worksheet
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Enquiry Logs");
+
+    // Generate the file name
+    const fileName = `Enquiry_Logs_${
+      new Date().toISOString().split("T")[0]
+    }.xlsx`;
+
+    // Export the file
+    XLSX.writeFile(workbook, fileName);
   };
 
   const columns = [
@@ -234,15 +262,30 @@ const CompleteEnquiryLogs = () => {
               justifyContent="space-between"
               alignItems="center"
             >
-              <Typography
-                variant="h5"
-                sx={{ color: "text.primary", fontWeight: 600 }}
-              >
-                Enquiry Logs ({rows.length} entries)
-              </Typography>
-              {/* <Button
+              <Box display="flex" alignItems="center">
+                <IconButton
+                  onClick={handleGoBack}
+                  sx={{
+                    mr: 2,
+                    color: "text.secondary",
+                    "&:hover": {
+                      backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                    },
+                  }}
+                >
+                  <ArrowBackIcon />
+                </IconButton>
+                <Typography
+                  variant="h5"
+                  sx={{ color: "text.primary", fontWeight: 600 }}
+                >
+                  Enquiry Logs ({rows.length} entries)
+                </Typography>
+              </Box>
+              <Button
                 variant="contained"
-                onClick={handleOpenNoteDialog}
+                startIcon={<DownloadIcon />}
+                onClick={handleDownloadLogs}
                 sx={{
                   bgcolor: "primary.main",
                   color: "white",
@@ -252,9 +295,10 @@ const CompleteEnquiryLogs = () => {
                   px: 3,
                   py: 1,
                 }}
+                disabled={rows.length === 0}
               >
-                Add Note
-              </Button> */}
+                Download Logs
+              </Button>
             </Box>
             <Box sx={{ height: 500, width: "100%" }}>
               <DataGrid

@@ -240,7 +240,7 @@ const Prospects = () => {
     const WhatsAppDialog = ({ open, phoneNumber, onClose }) => {
       if (!phoneNumber) return null;
       
-      const widgetUrl = `${import.meta.env.VITE_MSGKART_MESSAGE_WIDGET}&customerNumber=${phoneNumber}`;
+      const widgetUrl = `${import.meta.env.VITE_MSGKART_MESSAGE_WIDGET}&subId=${phoneNumber}`;
       
       return (
         <Slide 

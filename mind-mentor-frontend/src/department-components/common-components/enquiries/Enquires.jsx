@@ -244,7 +244,7 @@ const Enquiries = () => {
 
     const widgetUrl = `${
       import.meta.env.VITE_MSGKART_MESSAGE_WIDGET
-    }&customerNumber=${phoneNumber}`;
+    }&subId=${phoneNumber}`;
 
     return (
       <Slide direction="left" in={open} mountOnEnter unmountOnExit>

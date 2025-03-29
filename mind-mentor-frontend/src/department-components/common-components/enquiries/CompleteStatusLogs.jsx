@@ -19,10 +19,12 @@ import {
   ThemeProvider,
   Typography,
   Alert,
+  IconButton,
 } from "@mui/material";
 import { useParams } from "react-router-dom";
 import { alpha } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'; 
 
 import {
   fetchAllStatusLogs,
@@ -90,6 +92,9 @@ const CompleteStatusLogs = () => {
       disposition: "",
     });
   };
+  const handleGoBack = () => {
+    navigate(-1);
+  }
 
   const handleNoteSave = async () => {
     try {
@@ -226,11 +231,23 @@ const CompleteStatusLogs = () => {
               p:3
             }}
           >
-            <Box
+              <Box
               display="flex"
-              justifyContent="flex-end" // Aligns content to the right
-              alignItems="center" // Ensures vertical alignment
+              justifyContent="space-between" // Changed to space-between to accommodate back button
+              alignItems="center"
+              mb={2} // Added margin bottom
             >
+              <IconButton 
+                onClick={handleGoBack}
+                sx={{
+                  color: "primary.main",
+                  "&:hover": {
+                    backgroundColor: alpha(theme.palette.primary.main, 0.1)
+                  }
+                }}
+              >
+                <ArrowBackIcon />
+              </IconButton>
               <Button
                 variant="contained"
                 onClick={handleOpenNoteDialog}

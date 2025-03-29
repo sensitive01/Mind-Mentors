@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Horizontal Image Pieces Joining Animation</title>
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: #222;
+        margin: 0;
+        overflow: hidden;
+        font-family: Arial, sans-serif;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, 100px);
+        grid-template-rows: repeat(3, 100px);
+        gap: 5px;
+        position: relative;
+      }
+      .piece {
+        width: 100px;
+        height: 100px;
+        background-size: 300px 300px;
+        position: absolute;
+        opacity: 0;
+        transition: all 1s ease-out;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="grid"></div>
+
+    <script>
+      const imgSrc = "./chess3d.png";
+      const rows = 3,
+        cols = 3;
+      const grid = document.querySelector(".grid");
+
+      function createImagePieces(imgSrc, rows, cols) {
+        const img = new Image();
+        img.src = imgSrc;
+        img.crossOrigin = "Anonymous";
+
+        img.onload = () => {
+          const pieceWidth = img.width / cols;
+          const pieceHeight = img.height / rows;
+          const gridWidth = cols * 100;
+          const gridHeight = rows * 100;
+
+          // Set grid container to fixed size
+          grid.style.width = `${gridWidth}px`;
+          grid.style.height = `${gridHeight}px`;
+          grid.style.position = "relative";
+
+          // Horizontal order that matches the cutting order
+          const horizontalOrder = [
+            0,
+            1,
+            2, 
+            3,
+            4,
+            5,
+            6,
+            7,
+            8, 
+          ];
+
+          horizontalOrder.forEach((index, orderIndex) => {
+            const row = Math.floor(index / cols);
+            const col = index % cols;
+
+            const canvas = document.createElement("canvas");
+            canvas.width = pieceWidth;
+            canvas.height = pieceHeight;
+            const ctx = canvas.getContext("2d");
+
+            // Draw the portion of the image
+            ctx.drawImage(
+              img,
+              col * pieceWidth,
+              row * pieceHeight,
+              pieceWidth,
+              pieceHeight,
+              0,
+              0,
+              pieceWidth,
+              pieceHeight
+            );
+
+            // Convert to Data URL
+            const imgPart = canvas.toDataURL();
+
+            // Create a div for animation
+            const piece = document.createElement("div");
+            piece.classList.add("piece");
+            piece.style.backgroundImage = `url(${imgPart})`;
+
+            // Calculate final position
+            const finalLeft = col * 100;
+            const finalTop = row * 100;
+
+            // Initial position (off-screen from top)
+            piece.style.left = `${
+              window.innerWidth / 2 - gridWidth / 2 + finalLeft
+            }px`;
+            piece.style.top = `-100px`; // Start from above the screen
+
+            grid.appendChild(piece);
+
+            // Trigger reflow to ensure initial state is applied
+            piece.offsetWidth;
+
+            // Animate pieces to their final position
+            setTimeout(() => {
+              piece.style.left = `${finalLeft}px`;
+              piece.style.top = `${finalTop}px`;
+              piece.style.opacity = "1";
+            }, 100 * orderIndex);
+          });
+        };
+      }
+
+      createImagePieces(imgSrc, rows, cols);
+    </script>
+  </body>
+</html>
