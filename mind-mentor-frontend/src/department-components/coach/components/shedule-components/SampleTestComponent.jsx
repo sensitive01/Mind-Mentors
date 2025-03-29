@@ -7,15 +7,34 @@ const SampleTestComponent = () => {
   const apiRef = useRef(null);
   const [whiteboardActive, setWhiteboardActive] = useState(false);
 
+  // Force browser detection override
+  useEffect(() => {
+    // This injects a script that overrides the browser detection
+    const script = document.createElement('script');
+    script.innerHTML = `
+      // Override browser detection
+      if (typeof navigator !== 'undefined') {
+        Object.defineProperty(navigator, 'userAgent', {
+          get: function() { 
+            return 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'; 
+          }
+        });
+      }
+    `;
+    document.head.appendChild(script);
+    
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, []);
+
   const handleApiReady = (apiObj) => {
     console.log("Jitsi Meet API ready", apiObj);
     apiRef.current = apiObj;
     
-    // Explicitly set moderator status
     if (apiObj && apiObj.executeCommand) {
       apiObj.executeCommand('avatarUrl', 'https://placekitten.com/100/100');
       
-      // Add listener for whiteboard state
       apiObj.addListener('whiteboardStatusChanged', (data) => {
         setWhiteboardActive(data.isWhiteboardVisible);
       });
@@ -72,64 +91,64 @@ const SampleTestComponent = () => {
             onApiReady={handleApiReady}
             getIFrameRef={(iframeRef) => { 
               iframeRef.style.height = '700px'; 
-              // Add allow attributes to handle permissions properly
               iframeRef.allow = "camera; microphone; display-capture; autoplay; clipboard-write";
+              
+              // Try to inject a script to override browser detection inside the iframe too
+              try {
+                setTimeout(() => {
+                  const iframeDoc = iframeRef.contentDocument || iframeRef.contentWindow.document;
+                  const script = iframeDoc.createElement('script');
+                  script.textContent = `
+                    // Override browser detection in iframe
+                    Object.defineProperty(navigator, 'userAgent', {
+                      get: function() { 
+                        return 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'; 
+                      }
+                    });
+                  `;
+                  iframeDoc.head.appendChild(script);
+                }, 1000); // Delay to ensure iframe is loaded
+              } catch (e) {
+                console.log("Cannot inject into iframe due to security restrictions", e);
+              }
             }}
             configOverwrite={{
+              // Force disable browser check
+              disableBrowserCheck: true,
+              // Use an alternative meeting handler
+              useBridge: true,
+              analyticsScriptUrls: [],
               startWithAudioMuted: false,
               startWithVideoMuted: false,
               prejoinPageEnabled: false,
               disableThirdPartyRequests: true,
-              // Better browser compatibility settings
-              resolution: 720,
-              constraints: {
-                video: {
-                  height: {
-                    ideal: 720,
-                    max: 720,
-                    min: 180
-                  }
-                }
-              },
-              disableDeepLinking: true,
-              useNewBrowserCheck: false,
-              useStunTurn: true,
-              // Improved P2P settings for better connectivity
-              p2p: {
-                enabled: true,
-                preferH264: true,
-                disableH264: false,
-                useStunTurn: true
-              },
-              // STUN/TURN servers to help with NAT traversal
-              // Include public STUN servers
-              stunServers: [
+              // Set up ICE servers explicitly
+              iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
                 { urls: 'stun:stun1.l.google.com:19302' }
               ],
-              // Enable whiteboard feature
+              // Turn off features that might be causing browser detection
+              capScreenshareBitrate: true,
+              disableVideoSuspendByDefault: true,
+              pcStatsInterval: 10000,
+              // Explicitly set we're on a supported browser
+              testing: {
+                assumeVideoSendingIsDisabled: false,
+                capScreenshareBitrate: true,
+                enableEncodedTransformSupport: true
+              },
+              // Whiteboard config
               whiteboard: {
                 enabled: true,
                 collabServerBaseUrl: 'https://excalidraw-backend.jitsi.net'
               },
               // Important settings for moderator rights
-              enableClosePage: true,
               toolbarButtons: [
                 'microphone', 'camera', 'desktop', 'participants-pane',
                 'settings', 'raisehand', 'videoquality', 'chat', 'security',
                 'whiteboard'
               ],
-              // Grant host privileges to the coach
-              moderator: true,
-              testing: {
-                enableEncodedTransformSupport: true
-              },
-              // Explicitly define browser capabilities
-              flags: {
-                sourceNameSignaling: true,
-                sendMultipleVideoStreams: true,
-                receiveMultipleVideoStreams: true
-              }
+              moderator: true
             }}
             interfaceConfigOverwrite={{
               SHOW_JITSI_WATERMARK: false,
@@ -140,22 +159,10 @@ const SampleTestComponent = () => {
                 'settings', 'raisehand', 'videoquality', 'chat', 'security',
                 'whiteboard'
               ],
-              // Make sure coach can admit participants
-              SETTINGS_SECTIONS: ['devices', 'language', 'moderator', 'profile', 'calendar'],
-              // Automatically grant moderator to the Coach
               AUTO_ASSIGN_MODERATOR: true,
-              // Force low bandwidth mode options
-              DISABLE_VIDEO_BACKGROUND: true,
-              DISABLE_DOMINANT_SPEAKER_INDICATOR: false,
-              DISABLE_FOCUS_INDICATOR: false,
-              // Set low bandwidth mode initially
-              enableLowBandwidth: true,
-              // Add a fallback for WebRTC
-              preferH264: true,
-              // Improve browser compatibility
-              DISABLE_RINGING: true,
-              AUDIO_LEVEL_PRIMARY_COLOR: 'rgba(255,255,255,0.4)',
-              PROVIDER_NAME: 'Classroom'
+              DISABLE_FOCUS_INDICATOR: true,
+              // Disable features that might be causing issues
+              filmStripOnly: false
             }}
           />
         </div>
