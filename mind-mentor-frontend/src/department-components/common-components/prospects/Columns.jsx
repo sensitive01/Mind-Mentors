@@ -20,7 +20,7 @@ const columns = (
   handleMoveBackToEnquiry,
   handleShowLogs,
   handleShowStatus,
-  handleMessage,
+  handleMessage
 ) => [
   {
     field: "slNo",
@@ -41,9 +41,7 @@ const columns = (
     editable: true,
     renderHeader: () => <strong>Parent Name</strong>,
     renderCell: (params) => (
-      <Box
-        sx={{ display: "flex", flexDirection: "column", marginTop: 1 }}
-      >
+      <Box sx={{ display: "flex", flexDirection: "column", marginTop: 1 }}>
         <Typography variant="body2" sx={{ fontWeight: 500 }}>
           {params.value}
         </Typography>
@@ -76,7 +74,7 @@ const columns = (
 
     renderHeader: () => <strong>Contact</strong>,
 
-    width: 100,
+    width: 120,
     renderCell: (params) => (
       <Box sx={{ display: "flex", gap: 2, marginTop: "7px" }}>
         {params.row.whatsappNumber && (
@@ -88,9 +86,10 @@ const columns = (
               handleMessage(params.row.whatsappNumber);
             }}
             sx={{
-              color: "#00FF00", // Purple
+              color: "#00FF00",
+              padding: "8px",
               "&:hover": {
-                bgcolor: alpha("#00FF00", 0.1),
+                backgroundColor: '#FFFFFF',
               },
             }}
           >
@@ -121,9 +120,10 @@ const columns = (
               }
             }}
             sx={{
-              color: "#00FF00", // Purple
+              color: "#00FF00",
+              padding: "8px",
               "&:hover": {
-                bgcolor: alpha("#00FF00", 0.1),
+                backgroundColor: '#FFFFFF',
               },
             }}
           >
@@ -483,7 +483,5 @@ const columns = (
       );
     },
   },
-
-
 ];
 export default columns;

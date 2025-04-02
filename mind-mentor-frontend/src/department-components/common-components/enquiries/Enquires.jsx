@@ -369,7 +369,7 @@ const Enquiries = () => {
                   transition: "all 0.2s ease-in-out",
                   cursor: "pointer",
                   "&:hover": {
-                    backgroundColor: alpha("#642b8f", 0.08),
+                    backgroundColor: alpha("#642b8f", 0.008),
                     transform: "translateY(-1px)",
                     boxShadow: "0 4px 8px rgba(100, 43, 143, 0.1)",
                   },

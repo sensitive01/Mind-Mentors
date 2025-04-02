@@ -68,7 +68,6 @@ const columns = (
     editable: true,
     renderHeader: () => <strong>Kid Name</strong>,
   },
-
   {
     field: "contact",
     headerName: "Contact",
@@ -83,13 +82,13 @@ const columns = (
             size="small"
             onClick={async (e) => {
               e.stopPropagation();
-
               handleMessage(params.row.whatsappNumber);
             }}
             sx={{
-              color: "#00FF00", // Purple
+              color: "#00FF00",
+              padding: "8px",
               "&:hover": {
-                bgcolor: alpha("#00FF00", 0.1),
+                backgroundColor: '#FFFFFF ',
               },
             }}
           >
@@ -120,9 +119,10 @@ const columns = (
               }
             }}
             sx={{
-              color: "#00FF00", // Purple
+              color: "#00FF00",
+              padding: "8px",
               "&:hover": {
-                bgcolor: alpha("#00FF00", 0.1),
+                backgroundColor: '#FFFFFF',
               },
             }}
           >
@@ -142,7 +142,9 @@ const columns = (
         )}
       </Box>
     ),
-  },
+}
+  
+  ,
 
   {
     field: "programs",
