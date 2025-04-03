@@ -39,7 +39,7 @@ const allowedOrigins = [
   "http://3.104.84.126",
   "https://3.104.84.126:3000",
   "https://3.104.84.126",
-  "http://127.0.0.1:5500"
+  "http://127.0.0.1:5500",
 ];
 
 const corsOptions = {
@@ -77,6 +77,7 @@ app.use("/superadmin", userRoute);
 app.use("/hr", hrRoutes);
 app.use("/join", joinRoute);
 app.use("/zoom/api", zoomRoute);
+
 
 app.use(express.static(path.join(__dirname, "dist")));
 
