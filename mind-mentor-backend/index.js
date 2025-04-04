@@ -15,6 +15,8 @@ const userRoute = require("./routes/superadmin/superAdminRoute");
 const zoomRoute = require("./routes/zoom/zoomRoute");
 const hrRoutes = require("./routes/hr/hrRoutes");
 const joinRoute = require("./routes/classRoom/classRoomRoutes");
+const bbRoutes = require("./routes/bbRoute/blueButtonRoute");
+
 const { initSocket } = require("./utils/socket");
 
 const PORT = 3000;
@@ -40,6 +42,7 @@ const allowedOrigins = [
   "https://3.104.84.126:3000",
   "https://3.104.84.126",
   "http://127.0.0.1:5500",
+  "http://localhost:3000"
 ];
 
 const corsOptions = {
@@ -58,9 +61,16 @@ app.use(cors(corsOptions));
 
 function generateSignature(apiKey, apiSecret, meetingNumber, role) {
   const timestamp = new Date().getTime() - 30000;
-  const msg = Buffer.from(apiKey + meetingNumber + timestamp + role).toString("base64");
-  const hash = crypto.createHmac("sha256", apiSecret).update(msg).digest("base64");
-  const signature = Buffer.from(`${apiKey}.${meetingNumber}.${timestamp}.${role}.${hash}`).toString("base64");
+  const msg = Buffer.from(apiKey + meetingNumber + timestamp + role).toString(
+    "base64"
+  );
+  const hash = crypto
+    .createHmac("sha256", apiSecret)
+    .update(msg)
+    .digest("base64");
+  const signature = Buffer.from(
+    `${apiKey}.${meetingNumber}.${timestamp}.${role}.${hash}`
+  ).toString("base64");
 
   return signature;
 }
@@ -77,7 +87,7 @@ app.use("/superadmin", userRoute);
 app.use("/hr", hrRoutes);
 app.use("/join", joinRoute);
 app.use("/zoom/api", zoomRoute);
-
+app.use("/api/classroom", bbRoutes);
 
 app.use(express.static(path.join(__dirname, "dist")));
 

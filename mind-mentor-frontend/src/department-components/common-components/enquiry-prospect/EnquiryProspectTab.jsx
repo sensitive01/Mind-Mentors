@@ -21,7 +21,7 @@ const EnquiryProspectTab = () => {
             }`}
             onClick={() => setActiveTab("enquiry")}
           >
-            Enquiry
+            Leads
             {activeTab === "enquiry" && (
               <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#642b8f]" />
             )}

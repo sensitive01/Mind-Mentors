@@ -322,7 +322,7 @@ const ModernSidebar = () => {
       subItems: [
         {
           icon: <EnquiriesIcon />,
-          text: "Enquiry Data",
+          text: "Leads",
           link: "/super-admin/department/enrollment-data",
         },
         {

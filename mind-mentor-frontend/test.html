@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -107,4 +107,76 @@
         });
     </script>
   </body>
+</html> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PIN Code Lookup</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      background-color: #f4f4f4;
+    }
+    .container {
+      max-width: 400px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input, button {
+      padding: 10px;
+      margin-top: 10px;
+      width: 100%;
+    }
+    .result {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>PIN Code Lookup</h2>
+  <input type="text" id="pincode" placeholder="Enter PIN code" maxlength="6"/>
+  <button onclick="fetchLocation()">Get Location</button>
+
+  <div class="result" id="result"></div>
+</div>
+
+<script>
+  async function fetchLocation() {
+    const pincode = document.getElementById('pincode').value;
+    const resultDiv = document.getElementById('result');
+
+    if (pincode.length !== 6 || isNaN(pincode)) {
+      resultDiv.innerHTML = "<p style='color: red;'>Please enter a valid 6-digit PIN code.</p>";
+      return;
+    }
+
+    try {
+      const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+      const data = await res.json();
+
+      if (data[0].Status === "Success") {
+        const postOffice = data[0].PostOffice[0];
+        resultDiv.innerHTML = `
+          <p><strong>City/Post Office:</strong> ${postOffice.Name}</p>
+          <p><strong>District:</strong> ${postOffice.District}</p>
+          <p><strong>State:</strong> ${postOffice.State}</p>
+        `;
+      } else {
+        resultDiv.innerHTML = `<p style='color: red;'>No records found for this PIN code.</p>`;
+      }
+    } catch (error) {
+      resultDiv.innerHTML = `<p style='color: red;'>Error fetching data. Please try again.</p>`;
+    }
+  }
+</script>
+
+</body>
 </html>

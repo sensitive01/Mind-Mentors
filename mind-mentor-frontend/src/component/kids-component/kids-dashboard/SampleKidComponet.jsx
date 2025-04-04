@@ -4,7 +4,6 @@ import { JitsiMeeting } from "@jitsi/react-sdk";
 const SampleKidComponent = () => {
   const [roomName, setRoomName] = useState("");
   const [joinMeeting, setJoinMeeting] = useState(false);
-  const [waitingForModerator, setWaitingForModerator] = useState(false);
   const apiRef = useRef(null);
 
   const handleApiReady = (apiObj) => {
@@ -14,11 +13,9 @@ const SampleKidComponent = () => {
     // Listen for conference events
     if (apiObj && apiObj.addEventListener) {
       // Set waiting initially - will be cleared when joined
-      setWaitingForModerator(true);
 
       apiObj.addEventListener("videoConferenceJoined", () => {
         console.log("Joined the conference");
-        setWaitingForModerator(false);
       });
 
       apiObj.addEventListener("participantRoleChanged", (event) => {
@@ -66,11 +63,7 @@ const SampleKidComponent = () => {
         </div>
       ) : (
         <div className="w-full h-screen">
-          {waitingForModerator && (
-            <div className="absolute z-10 top-0 left-0 right-0 bg-yellow-100 p-2 text-center">
-              Waiting for the coach to start the meeting...
-            </div>
-          )}
+
           <JitsiMeeting
             domain="meet.jit.si"
             roomName={roomName}

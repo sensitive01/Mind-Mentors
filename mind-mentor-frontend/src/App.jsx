@@ -281,6 +281,9 @@ import SuperAdminAssignWholeClassToKid from "./pages/employee/superadmin/SuperAd
 import SuperAdminDisplayWholeClassKid from "./pages/employee/superadmin/SuperAdminDisplayWholeClassKid";
 import SampleKidComponet from "./component/kids-component/kids-dashboard/SampleKidComponet";
 import SampleTestComponent from "./department-components/coach/components/shedule-components/SampleTestComponent";
+import JoinMeetingButton from "./department-components/bluebutton/BlueButton";
+import BlueButtonKid from "./department-components/bluebutton/BlueButtonKid";
+import BlueButton from "./department-components/bluebutton/BlueButton";
 
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
@@ -292,6 +295,13 @@ function App() {
 
         <Route path="/sample-coach" element={<SampleTestComponent />} />
         <Route path="/sample-kid" element={<SampleKidComponet />} />
+        <Route path="/join-the-meeting-blue" element={<BlueButton />} />
+        <Route path="/join-the-meeting-blue-kid" element={<BlueButtonKid />} />
+
+
+
+        
+        
 
 
 
