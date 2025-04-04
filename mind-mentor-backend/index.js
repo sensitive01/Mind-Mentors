@@ -87,7 +87,7 @@ app.use("/superadmin", userRoute);
 app.use("/hr", hrRoutes);
 app.use("/join", joinRoute);
 app.use("/zoom/api", zoomRoute);
-app.use("/api/classroom", bbRoutes);
+app.use("/api/meeting", bbRoutes);
 
 app.use(express.static(path.join(__dirname, "dist")));
 
