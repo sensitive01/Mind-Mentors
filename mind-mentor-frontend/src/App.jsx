@@ -295,6 +295,8 @@ function App() {
 
         <Route path="/sample-coach" element={<SampleTestComponent />} />
         <Route path="/sample-kid" element={<SampleKidComponet />} />
+
+        
         <Route path="/join-the-meeting-blue" element={<BlueButton />} />
         <Route path="/join-the-meeting-blue-kid" element={<BlueButtonKid />} />
 

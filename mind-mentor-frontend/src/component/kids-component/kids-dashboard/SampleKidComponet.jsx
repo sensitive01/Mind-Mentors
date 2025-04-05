@@ -1,160 +1,94 @@
-import React, { useState, useRef } from "react";
-import { JitsiMeeting } from "@jitsi/react-sdk";
+import React, { useState, useEffect } from "react";
 
-const SampleKidComponent = () => {
-  const [roomName, setRoomName] = useState("");
-  const [joinMeeting, setJoinMeeting] = useState(false);
-  const apiRef = useRef(null);
+const BlueButtonKid = () => {
+  const [name, setName] = useState("");
+  const [activeClasses, setActiveClasses] = useState([]);
+  const [selectedClass, setSelectedClass] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleApiReady = (apiObj) => {
-    console.log("Jitsi Meet API ready", apiObj);
-    apiRef.current = apiObj;
+  // Fetch active classes
+  useEffect(() => {
+    const fetchActiveClasses = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(
+          "http://3.104.84.126:3000/sample/meeting/active-classes"
+        );
+        const data = await res.json();
 
-    // Listen for conference events
-    if (apiObj && apiObj.addEventListener) {
-      // Set waiting initially - will be cleared when joined
+        // Convert object to array
+        const classesArray = Object.entries(data.classes).map(([id, info]) => ({
+          id,
+          name: info.className,
+          coachName: info.coachName,
+        }));
 
-      apiObj.addEventListener("videoConferenceJoined", () => {
-        console.log("Joined the conference");
-      });
+        setActiveClasses(classesArray);
+      } catch (err) {
+        console.error("Error fetching active classes:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      apiObj.addEventListener("participantRoleChanged", (event) => {
-        console.log("Role changed", event);
-      });
+    fetchActiveClasses();
 
-      apiObj.addEventListener("connectionEstablished", () => {
-        console.log("Connection established");
-      });
+    // Refresh active classes every 30 seconds
+    const interval = setInterval(fetchActiveClasses, 30000);
 
-      apiObj.addEventListener("connectionFailed", () => {
-        console.log("Connection failed");
-        // Could add logic to handle reconnection
-      });
+    return () => clearInterval(interval);
+  }, []);
 
-      apiObj.addEventListener("audioMuteStatusChanged", (muted) => {
-        console.log("Audio mute status changed", muted);
-      });
-    }
+  const handleJoinMeeting = () => {
+    if (!name.trim()) return alert("Please enter your name");
+    if (!selectedClass) return alert("Please select a class to join");
+
+    const encodedName = encodeURIComponent(name);
+    window.open(
+      `http://3.104.84.126:3000/sample/meeting/join?name=${encodedName}&classId=${selectedClass}`,
+      "_blank"
+    );
   };
 
   return (
-    <div className="flex flex-col items-center p-5">
-      {!joinMeeting ? (
-        <div className="text-center">
-          <h2 className="text-xl font-bold mb-2">Join a Classroom</h2>
-          <input
-            type="text"
-            placeholder="Enter Room Name"
-            className="border p-2 rounded mb-2 w-64"
-            value={roomName}
-            onChange={(e) => setRoomName(e.target.value)}
-          />
-          <div>
-            <button
-              onClick={() => roomName && setJoinMeeting(true)}
-              disabled={!roomName}
-              className={`${
-                roomName ? "bg-green-600" : "bg-gray-400"
-              } text-white px-4 py-2 rounded mt-2`}
-            >
-              Join Class
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="w-full h-screen">
+    <div className="flex flex-col items-center justify-center gap-4 p-8 bg-white rounded-xl shadow-lg max-w-md mx-auto mt-12">
+      <h1 className="text-2xl font-bold text-green-700">🧒 Join as Kid</h1>
 
-          <JitsiMeeting
-            domain="meet.jit.si"
-            roomName={roomName}
-            userInfo={{
-              displayName: "Student",
-            }}
-            onApiReady={handleApiReady}
-            getIFrameRef={(iframeRef) => {
-              iframeRef.style.height = "700px";
-              // Add proper permissions to the iframe
-              iframeRef.allow =
-                "camera; microphone; display-capture; autoplay; clipboard-write";
-            }}
-            configOverwrite={{
-              startWithAudioMuted: true,
-              startWithVideoMuted: false,
-              disableThirdPartyRequests: true,
-              prejoinPageEnabled: false,
-              // Better browser compatibility settings
-              resolution: 720,
-              constraints: {
-                video: {
-                  height: {
-                    ideal: 720,
-                    max: 720,
-                    min: 180,
-                  },
-                },
-              },
-              disableDeepLinking: true,
-              useNewBrowserCheck: false,
-              useStunTurn: true,
-              // Improved P2P settings for better connectivity
-              p2p: {
-                enabled: true,
-                preferH264: true,
-                disableH264: false,
-                useStunTurn: true,
-              },
-              // STUN/TURN servers to help with NAT traversal
-              stunServers: [
-                { urls: "stun:stun.l.google.com:19302" },
-                { urls: "stun:stun1.l.google.com:19302" },
-              ],
-              // Setting for students
-              startSilent: false,
-              enableLobbyChat: true,
-              // Whiteboard access for students
-              whiteboard: {
-                enabled: true,
-                collabServerBaseUrl: "https://excalidraw-backend.jitsi.net",
-              },
-              // Explicitly define browser capabilities
-              flags: {
-                sourceNameSignaling: true,
-                sendMultipleVideoStreams: true,
-                receiveMultipleVideoStreams: true,
-              },
-            }}
-            interfaceConfigOverwrite={{
-              SHOW_JITSI_WATERMARK: false,
-              SHOW_WATERMARK_FOR_GUESTS: false,
-              DEFAULT_BACKGROUND: "#282c34",
-              // Limited toolbar for students
-              TOOLBAR_BUTTONS: [
-                "microphone",
-                "camera",
-                "chat",
-                "raisehand",
-                "videoquality",
-                "whiteboard",
-              ],
-              DISABLE_JOIN_LEAVE_NOTIFICATIONS: false,
-              // Force low bandwidth mode options
-              DISABLE_VIDEO_BACKGROUND: true,
-              DISABLE_DOMINANT_SPEAKER_INDICATOR: false,
-              DISABLE_FOCUS_INDICATOR: false,
-              // Set low bandwidth mode initially
-              enableLowBandwidth: true,
-              // Add a fallback for WebRTC
-              preferH264: true,
-              // Improve browser compatibility
-              DISABLE_RINGING: true,
-              AUDIO_LEVEL_PRIMARY_COLOR: "rgba(255,255,255,0.4)",
-              PROVIDER_NAME: "Classroom",
-            }}
-          />
-        </div>
+      <input
+        type="text"
+        placeholder="Enter your name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        className="border border-gray-300 rounded px-4 py-2 w-full focus:ring-2 focus:ring-green-400"
+      />
+
+      <select
+        value={selectedClass}
+        onChange={(e) => setSelectedClass(e.target.value)}
+        className="border border-gray-300 rounded px-4 py-2 w-full focus:ring-2 focus:ring-green-400"
+      >
+        <option value="">Select a class to join</option>
+        {activeClasses.map((classInfo) => (
+          <option key={classInfo.id} value={classInfo.id}>
+            {classInfo.name} (Coach: {classInfo.coachName})
+          </option>
+        ))}
+      </select>
+
+      {loading && <p className="text-gray-500">Loading available classes...</p>}
+      {!loading && activeClasses.length === 0 && (
+        <p className="text-amber-600">No active classes available to join.</p>
       )}
+
+      <button
+        onClick={handleJoinMeeting}
+        className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition"
+        disabled={activeClasses.length === 0}
+      >
+        Join Meeting
+      </button>
     </div>
   );
 };
 
-export default SampleKidComponent;
+export default BlueButtonKid;
