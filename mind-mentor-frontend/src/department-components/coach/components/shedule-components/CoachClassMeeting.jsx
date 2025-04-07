@@ -1,23 +1,14 @@
 import React, { useState } from "react";
 
-const BlueButton = () => {
+const CoachClassMeeting = () => {
   const [loading, setLoading] = useState(false);
   const [className, setClassName] = useState("");
   const [coachName, setCoachName] = useState("");
-
-  // Sample class types - you can fetch these from your database
-  const classTypes = [
-    { id: "math101", name: "Mathematics 101" },
-    { id: "sci202", name: "Science 202" },
-    { id: "eng303", name: "English 303" },
-    { id: "art404", name: "Art 404" },
-  ];
-
-  const [selectedClass, setSelectedClass] = useState("");
+  const [uniqueId, setUniqueId] = useState("");
 
   const handleStartMeeting = async () => {
-    if (!selectedClass) {
-      return alert("Please select a class");
+    if (!uniqueId.trim()) {
+      return alert("Please enter a unique ID");
     }
 
     if (!coachName.trim()) {
@@ -27,16 +18,14 @@ const BlueButton = () => {
     try {
       setLoading(true);
 
-      const selectedClassInfo = classTypes.find((c) => c.id === selectedClass);
-
       const res = await fetch("http://3.104.84.126:3000/sample/meeting/start", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          classId: selectedClass,
-          className: selectedClassInfo.name,
+          classId: uniqueId,
+          className: uniqueId, // Using the uniqueId as className
           coachName,
         }),
       });
@@ -65,18 +54,13 @@ const BlueButton = () => {
         className="border border-gray-300 rounded px-4 py-2 w-full focus:ring-2 focus:ring-blue-400"
       />
 
-      <select
-        value={selectedClass}
-        onChange={(e) => setSelectedClass(e.target.value)}
+      <input
+        type="text"
+        placeholder="Enter a unique ID"
+        value={uniqueId}
+        onChange={(e) => setUniqueId(e.target.value)}
         className="border border-gray-300 rounded px-4 py-2 w-full focus:ring-2 focus:ring-blue-400"
-      >
-        <option value="">Select a class</option>
-        {classTypes.map((classType) => (
-          <option key={classType.id} value={classType.id}>
-            {classType.name}
-          </option>
-        ))}
-      </select>
+      />
 
       <button
         onClick={handleStartMeeting}
@@ -89,4 +73,4 @@ const BlueButton = () => {
   );
 };
 
-export default BlueButton;
+export default CoachClassMeeting;
