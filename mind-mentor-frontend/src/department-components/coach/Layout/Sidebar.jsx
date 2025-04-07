@@ -28,6 +28,7 @@ import {
   Typography
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { Video } from 'lucide-react';
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -132,6 +133,13 @@ const ModernSidebar = () => {
       color: iconColors.dashboard,
       link: '/coach/department/dashboard',
     },
+    {
+      icon: <Video />,
+      text: 'Create Meetings',
+      color: iconColors.dashboard,
+      link: '/coach/start-class-room',
+    },
+    
     {
       icon: <ClassScheduleIcon />,
       text: 'Class Schedules',

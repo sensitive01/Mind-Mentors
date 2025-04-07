@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-const BlueButtonKid = () => {
+const BlueButtonKidLiveClass = () => {
   const [name, setName] = useState("");
   const [activeClasses, setActiveClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState("");
@@ -91,4 +91,4 @@ const BlueButtonKid = () => {
   );
 };
 
-export default BlueButtonKid;
+export default BlueButtonKidLiveClass;

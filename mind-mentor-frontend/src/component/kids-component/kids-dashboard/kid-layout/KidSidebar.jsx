@@ -1,7 +1,8 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
   Home, FileText, Grid, 
-  Map, Trophy, Gamepad, UserCircle, 
+  Map, Trophy, Gamepad, UserCircle,
+  Video, 
 } from "lucide-react";
 
 const KidSidebar = () => {
@@ -10,6 +11,8 @@ const KidSidebar = () => {
 
   const navLinks = [
     { path: "/kids/dashboard", icon: Home, label: "Home", color: "text-secondary" },
+    { path: "/kids/class-rooms-live", icon: Video, label: "Live Meetings", color: "text-secondary" },
+
     { path: "/kids/demo-class", icon: FileText, label: "Class", color: "text-tertiary" },
     { path: "/kids/class-schedule", icon: Grid, label: "Schedule", color: "text-quaternary" },
     { path: "/kids/game-list", icon: Gamepad, label: "Games", color: "text-quinary" },
