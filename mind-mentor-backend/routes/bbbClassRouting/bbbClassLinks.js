@@ -88,4 +88,25 @@ router.get("/get-class/:classId", async (req, res) => {
   }
 });
 
+router.post("/sign-join-url", async (req, res) => {
+  const { fullName, meetingID, password } = req.body;
+
+  if (!fullName || !meetingID || !password) {
+    return res.status(400).json({ error: "Missing required parameters" });
+  }
+
+  try {
+    // Build the properly signed URL using the buildUrl utility
+    const joinQuery = `fullName=${encodeURIComponent(
+      fullName
+    )}&meetingID=${meetingID}&password=${password}&redirect=true`;
+    const signedUrl = buildUrl(BASE_URL, "join", joinQuery, SECRET);
+
+    res.json({ signedUrl });
+  } catch (error) {
+    console.error("Error signing URL:", error);
+    res.status(500).json({ error: "Failed to sign join URL" });
+  }
+});
+
 module.exports = router;
