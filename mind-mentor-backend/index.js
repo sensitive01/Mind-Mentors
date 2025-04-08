@@ -17,6 +17,7 @@ const hrRoutes = require("./routes/hr/hrRoutes");
 const joinRoute = require("./routes/classRoom/classRoomRoutes");
 const bbRoutes = require("./routes/bbRoute/blueButtonRoute");
 const bbRouteSample = require("./routes/bbRoute/bigBlueButtonSample");
+const bbbClassRouting = require("./routes/bbbClassRouting/bbbClassLinks")
 
 
 
@@ -93,6 +94,8 @@ app.use("/join", joinRoute);
 app.use("/zoom/api", zoomRoute);
 app.use("/api/meeting", bbRoutes);
 app.use("/sample/meeting",bbRouteSample)
+app.use("/api/class",bbbClassRouting)
+
 
 app.use(express.static(path.join(__dirname, "dist")));
 
