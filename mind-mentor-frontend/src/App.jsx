@@ -286,6 +286,7 @@ import CoachCreateMeetings from "./pages/employee/coach/CoachCreateMeetings";
 import CoachClassMeeting from "./department-components/coach/components/shedule-components/CoachClassMeeting";
 import KidLiveClassRoom from "./pages/kids/KidLiveClassRoom";
 import BlueButtonKidLiveClass from "./component/kids-component/kids-dashboard/BlueButtonKidLiveClass";
+import AdminCreateClass from "./department-components/bbbclasscomponent/BbbAdminCreateClassLinks";
 
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
@@ -304,6 +305,11 @@ function App() {
           <Route
             path="/join-the-meeting-blue-kid"
             element={<BlueButtonKid />}
+          />
+
+          <Route
+            path="/super-admin/department/create-class-links"
+            element={<AdminCreateClass />}
           />
 
           <Route path="/" element={<HomePage />} />
