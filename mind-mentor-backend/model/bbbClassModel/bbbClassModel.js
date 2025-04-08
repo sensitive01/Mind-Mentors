@@ -12,7 +12,6 @@ const bbbClassModel = new mongoose.Schema({
   },
   coachName: {
     type: String,
-    required: true,
   },
   meetingID: {
     type: String,

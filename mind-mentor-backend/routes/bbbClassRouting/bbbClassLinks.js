@@ -2,12 +2,12 @@ const express = require("express");
 const router = express.Router();
 const axios = require("axios");
 const Class = require("../../model/bbbClassModel/bbbClassModel");
-const { buildUrl } = require("../../utils/bigblue"); // Ensure this utility exists
+const { buildUrl } = require("../../utils/bigblue"); // Utility function to build signed BBB URLs
 
-const BASE_URL = "https://aswinraj.online";
-const SECRET = "UEjv0E4538Y4nXT5Aj5WyaZ0cj3tZzuAxh2y8H7K4E";
+const BASE_URL = "https://aswinraj.online"; // Your BBB server
+const SECRET = "UEjv0E4538Y4nXT5Aj5WyaZ0cj3tZzuAxh2y8H7K4E"; // Shared secret
 
-// Create a new class and return links
+// ✅ Route 1: Create a new class
 router.post("/create-class", async (req, res) => {
   const { className, coachName } = req.body;
 
@@ -17,7 +17,7 @@ router.post("/create-class", async (req, res) => {
       .json({ error: "Class name and coach name are required" });
   }
 
-  const classId = Math.random().toString(36).substr(2, 8); // Generate a simple unique ID
+  const classId = Math.random().toString(36).substr(2, 8);
   const meetingID = `class-${classId}`;
 
   const createQuery = `name=${encodeURIComponent(
@@ -28,8 +28,9 @@ router.post("/create-class", async (req, res) => {
   const createUrl = buildUrl(BASE_URL, "create", createQuery, SECRET);
 
   try {
-    await axios.get(createUrl);
+    await axios.get(createUrl); // Create BBB meeting
 
+    // ✅ Save class info to MongoDB
     const newClass = new Class({
       classId,
       className,
@@ -61,6 +62,29 @@ router.post("/create-class", async (req, res) => {
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ error: "Failed to create class" });
+  }
+});
+
+// ✅ Route 2: Get class details by classId (used when kid joins)
+router.get("/get-class/:classId", async (req, res) => {
+  const { classId } = req.params;
+
+  try {
+    const classData = await Class.findOne({ classId });
+
+    if (!classData) {
+      return res.status(404).json({ message: "Class not found" });
+    }
+
+    res.status(200).json({
+      meetingID: classData.meetingID,
+      started: classData.started,
+      className: classData.className,
+      coachName: classData.coachName,
+    });
+  } catch (error) {
+    console.error("Error fetching class details:", error);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
