@@ -20,11 +20,18 @@ router.post("/create-class", async (req, res) => {
   const classId = Math.random().toString(36).substr(2, 8);
   const meetingID = `class-${classId}`;
 
+  // const createQuery = `name=${encodeURIComponent(
+  //   className
+  // )}&meetingID=${meetingID}&attendeePW=apwd&moderatorPW=mpwd&welcome=Welcome+to+${encodeURIComponent(
+  //   className
+  // )}!`;
+
   const createQuery = `name=${encodeURIComponent(
     className
   )}&meetingID=${meetingID}&attendeePW=apwd&moderatorPW=mpwd&welcome=Welcome+to+${encodeURIComponent(
     className
-  )}!`;
+  )}!&record=true&autoStartRecording=true&allowStartStopRecording=true`;
+  
   const createUrl = buildUrl(BASE_URL, "create", createQuery, SECRET);
 
   try {

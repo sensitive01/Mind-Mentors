@@ -43,11 +43,10 @@ const allowedOrigins = [
   "https://mind-mentors.vercel.app",
   "https://mind-mentors-vt11.vercel.app",
   "https://live.mindmentorz.in",
-  "http://3.104.84.126",
   "https://3.104.84.126:3000",
-  "https://3.104.84.126",
-  "http://127.0.0.1:5500",
-  "http://localhost:3000"
+  "http://localhost:3000",
+  "http://3.104.84.126:3000",
+  "https://aswinraj.online"
 ];
 
 const corsOptions = {
