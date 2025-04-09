@@ -18,7 +18,7 @@ const CoachClassMeeting = () => {
     try {
       setLoading(true);
 
-      const res = await fetch("http://3.104.84.126:3000/sample/meeting/start", {
+      const res = await fetch("https://live.mindmentorz.in/sample/meeting/start", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

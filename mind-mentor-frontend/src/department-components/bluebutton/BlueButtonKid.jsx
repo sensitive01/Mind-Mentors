@@ -7,7 +7,7 @@ const BlueButtonKid = () => {
     if (!name.trim()) return alert("Please enter your name");
     const encodedName = encodeURIComponent(name);
     window.open(
-      `http://3.104.84.126:3000/api/meeting/join?name=${encodedName}`,
+      `https://live.mindmentorz.in/api/meeting/join?name=${encodedName}`,
       "_blank"
     );
   };

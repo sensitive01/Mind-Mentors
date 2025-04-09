@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-axios.post('http://3.104.84.126:3000/api/class/create-class', {
+axios.post('https://live.mindmentorz.in/api/class/create-class', {
   className: "ChessClass",
   coachName: "Jayrams"
 }, {

@@ -12,7 +12,7 @@ const BlueButtonKidLiveClass = () => {
       try {
         setLoading(true);
         const res = await fetch(
-          "http://3.104.84.126:3000/sample/meeting/active-classes"
+          "https://live.mindmentorz.in/sample/meeting/active-classes"
         );
         const data = await res.json();
 
@@ -45,7 +45,7 @@ const BlueButtonKidLiveClass = () => {
 
     const encodedName = encodeURIComponent(name);
     window.open(
-      `http://3.104.84.126:3000/sample/meeting/join?name=${encodedName}&classId=${selectedClass}`,
+      `https://live.mindmentorz.in/sample/meeting/join?name=${encodedName}&classId=${selectedClass}`,
       "_blank"
     );
   };

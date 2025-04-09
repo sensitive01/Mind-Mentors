@@ -21,7 +21,7 @@ const KidJoinTheClass = () => {
     try {
       // First, get the class details using the classId
       const response = await axios.get(
-        `http://3.104.84.126:3000/api/class/get-class/${classId}`
+        `https://live.mindmentorz.in/api/class/get-class/${classId}`
       );
 
       const { meetingID } = response.data;
@@ -39,7 +39,7 @@ const KidJoinTheClass = () => {
       // Create a properly signed URL using a helper function
       // Note: We need to redirect to a properly signed URL
       const joinResponse = await axios.post(
-        `http://3.104.84.126:3000/api/class/sign-join-url`,
+        `https://live.mindmentorz.in/api/class/sign-join-url`,
         {
           fullName: kidName,
           meetingID: meetingID,

@@ -32,7 +32,7 @@ const WebRTCMeeting = ({ onClose, classId }) => {
   useEffect(() => {
     // Create socket connection on the correct namespace
     // const socket = io("http://localhost:3000/meeting");
-    const socket = io("http://3.104.84.126:3000/employee/operation/meeting");
+    const socket = io("https://live.mindmentorz.in/employee/operation/meeting");
 
     socketRef.current = socket;
 

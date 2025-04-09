@@ -42,7 +42,7 @@ const allowedOrigins = [
   "http://localhost:5173",
   "https://mind-mentors.vercel.app",
   "https://mind-mentors-vt11.vercel.app",
-  "http://3.104.84.126:3000",
+  "https://live.mindmentorz.in",
   "http://3.104.84.126",
   "https://3.104.84.126:3000",
   "https://3.104.84.126",

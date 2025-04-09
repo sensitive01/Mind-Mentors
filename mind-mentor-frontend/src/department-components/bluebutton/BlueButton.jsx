@@ -6,7 +6,7 @@ const BlueButton = () => {
   const handleStartMeeting = async () => {
     try {
       setLoading(true);
-      const res = await fetch("http://3.104.84.126:3000/api/meeting/start");
+      const res = await fetch("https://live.mindmentorz.in/api/meeting/start");
       const data = await res.json();
       window.open(data.joinModUrl, "_blank"); // Open coach's (moderator) URL
     } catch (err) {

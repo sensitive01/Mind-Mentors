@@ -18,7 +18,7 @@ const AdminCreateClass = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "http://3.104.84.126:3000/api/class/create-class",
+        "https://live.mindmentorz.in/api/class/create-class",
         {
           className,
           coachName,
