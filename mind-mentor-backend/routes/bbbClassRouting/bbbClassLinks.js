@@ -17,28 +17,34 @@ router.post("/create-class", async (req, res) => {
       .json({ error: "Class name and coach name are required" });
   }
 
-  const cleanClassName = className.replace(/\s+/g, ""); // remove all spaces
   const classId = Math.random().toString(36).substr(2, 8);
   const meetingID = `class-${classId}`;
 
-  const createQuery = `name=${encodeURIComponent(cleanClassName)}
-&meetingID=${meetingID}
-&attendeePW=apwd
-&moderatorPW=mpwd
-&welcome=Welcome+to+${encodeURIComponent(cleanClassName)}!
-&record=true
-&autoStartRecording=true
-&allowStartStopRecording=true`;
+  // const createQuery = `name=${encodeURIComponent(
+  //   className
+  // )}&meetingID=${meetingID}&attendeePW=apwd&moderatorPW=mpwd&welcome=Welcome+to+${encodeURIComponent(
+  //   className
+  // )}!`;
 
+  const createQuery = `name=${encodeURIComponent(className)}
+  &meetingID=${meetingID}
+  &attendeePW=apwd
+  &moderatorPW=mpwd
+  &welcome=Welcome+to+${encodeURIComponent(className)}!
+  &record=true
+  &autoStartRecording=false
+  &allowStartStopRecording=true`;
+  
+  
   const createUrl = buildUrl(BASE_URL, "create", createQuery, SECRET);
 
   try {
     await axios.get(createUrl); // Create BBB meeting
 
-    // ✅ Save original class name to MongoDB
+    // ✅ Save class info to MongoDB
     const newClass = new Class({
       classId,
-      className, // original name with spaces
+      className,
       coachName,
       meetingID,
       started: true,
