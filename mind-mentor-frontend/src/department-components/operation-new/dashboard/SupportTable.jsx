@@ -62,7 +62,7 @@
 //           console.error("Employee ID not found");
 //           return;
 //         }
-//         const response = await fetch("http://localhost:3000/superadmin/chats/", {
+//         const response = await fetch("https://live.mindmentorz.in/superadmin/chats/", {
 //           headers: {
 //             "Content-Type": "application/json",
 //             empId: empId,
@@ -93,7 +93,7 @@
 //   const fetchChatByTicketId = async (ticketId) => {
 //     setIsLoading(true);
 //     try {
-//       const response = await fetch(`http://localhost:3000/superadmin/chats/${ticketId}`);
+//       const response = await fetch(`https://live.mindmentorz.in/superadmin/chats/${ticketId}`);
 //       const data = await response.json();
 //       if (response.ok) {
 //         setSelectedTicket(data.chat);
@@ -128,7 +128,7 @@
 
 //     try {
 //       const response = await fetch(
-//         `http://localhost:3000/superadmin/chats/ticket/${selectedTicket.ticketId}`,
+//         `https://live.mindmentorz.in/superadmin/chats/ticket/${selectedTicket.ticketId}`,
 //         {
 //           method: "PUT",
 //           headers: {
@@ -167,7 +167,7 @@
 //             {/* Header */}
 //             <div className="p-4 border-b">
 //               <h1 className="text-2xl font-bold text-gray-900 mb-4">Support Dashboard</h1>
-              
+
 //               {/* Search and Filter */}
 //               <div className="space-y-3">
 //                 <div className="relative">
@@ -180,7 +180,7 @@
 //                     onChange={(e) => setSearchQuery(e.target.value)}
 //                   />
 //                 </div>
-                
+
 //                 <div className="flex items-center justify-between">
 //                   <div className="relative">
 //                     <button
@@ -207,7 +207,7 @@
 //                       </div>
 //                     )}
 //                   </div>
-                  
+
 //                   <Link
 //                     to="/operation/department/support/add"
 //                     className="flex items-center space-x-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
@@ -242,7 +242,7 @@
 //                         {ticket.status}
 //                       </span>
 //                     </div>
-                    
+
 //                     {ticket.messages.length > 0 && (
 //                       <div className="mt-2">
 //                         <p className="text-sm text-gray-600 line-clamp-2">
@@ -295,7 +295,7 @@
 //                           }`}
 //                         >
 //                           <div className="flex flex-col">
-//                             <span 
+//                             <span
 //                               className={`text-xs ${
 //                                 isCurrentUser(message.sender) ? "text-purple-200" : "text-gray-500"
 //                               } mb-1`}
@@ -304,13 +304,13 @@
 //                             </span>
 //                             <p className="text-sm whitespace-pre-wrap">{message.message}</p>
 //                             {message.attachment && (
-//                               <img 
-//                                 src={message.attachment} 
-//                                 alt="Attachment" 
+//                               <img
+//                                 src={message.attachment}
+//                                 alt="Attachment"
 //                                 className="mt-2 max-w-xs rounded"
 //                               />
 //                             )}
-//                             <span 
+//                             <span
 //                               className={`text-xs ${
 //                                 isCurrentUser(message.sender) ? "text-purple-200" : "text-gray-500"
 //                               } mt-2`}

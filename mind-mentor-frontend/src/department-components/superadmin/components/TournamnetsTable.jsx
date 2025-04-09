@@ -60,7 +60,7 @@
 // useEffect(() => {
 //   const fetchTournamentData = async () => {
 //     try {
-//       const response = await fetch('http://localhost:3000/superadmin/tournaments/'); // Replace with actual API endpoint
+//       const response = await fetch('https://live.mindmentorz.in/superadmin/tournaments/'); // Replace with actual API endpoint
 //       const data = await response.json();
 
 //       // Map API response to the format expected by the DataGrid

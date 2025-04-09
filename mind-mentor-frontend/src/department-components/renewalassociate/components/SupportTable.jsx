@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from "react";
 import { Clock, Filter, Plus, Search, Send, Paperclip, X } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -62,12 +62,15 @@ const Support = () => {
           console.error("Employee ID not found");
           return;
         }
-        const response = await fetch("http://localhost:3000/superadmin/chats/", {
-          headers: {
-            "Content-Type": "application/json",
-            empId: empId,
-          },
-        });
+        const response = await fetch(
+          "https://live.mindmentorz.in/superadmin/chats/",
+          {
+            headers: {
+              "Content-Type": "application/json",
+              empId: empId,
+            },
+          }
+        );
         const data = await response.json();
         if (response.ok) {
           setTickets(data.chats);
@@ -83,8 +86,12 @@ const Support = () => {
 
   useEffect(() => {
     const filtered = tickets.filter((ticket) => {
-      const matchesSearch = ticket.category?.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesFilter = activeFilter === "all" || ticket.status?.toLowerCase() === activeFilter.toLowerCase();
+      const matchesSearch = ticket.category
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      const matchesFilter =
+        activeFilter === "all" ||
+        ticket.status?.toLowerCase() === activeFilter.toLowerCase();
       return matchesSearch && matchesFilter;
     });
     setFilteredTickets(filtered);
@@ -93,7 +100,9 @@ const Support = () => {
   const fetchChatByTicketId = async (ticketId) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:3000/superadmin/chats/${ticketId}`);
+      const response = await fetch(
+        `https://live.mindmentorz.in/superadmin/chats/${ticketId}`
+      );
       const data = await response.json();
       if (response.ok) {
         setSelectedTicket(data.chat);
@@ -107,19 +116,19 @@ const Support = () => {
 
   const formatTime = (dateString) => {
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', {
-      hour: 'numeric',
-      minute: 'numeric',
-      hour12: true
+    return new Intl.DateTimeFormat("en-US", {
+      hour: "numeric",
+      minute: "numeric",
+      hour12: true,
     }).format(date);
   };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     }).format(date);
   };
 
@@ -128,7 +137,7 @@ const Support = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:3000/superadmin/chats/ticket/${selectedTicket.ticketId}`,
+        `https://live.mindmentorz.in/superadmin/chats/ticket/${selectedTicket.ticketId}`,
         {
           method: "PUT",
           headers: {
@@ -149,7 +158,10 @@ const Support = () => {
       if (response.ok) {
         setSelectedTicket((prevTicket) => ({
           ...prevTicket,
-          messages: [...prevTicket.messages, data.updatedChat.messages[data.updatedChat.messages.length - 1]],
+          messages: [
+            ...prevTicket.messages,
+            data.updatedChat.messages[data.updatedChat.messages.length - 1],
+          ],
         }));
         setNewMessage("");
       }
@@ -166,8 +178,10 @@ const Support = () => {
           <div className="w-96 border-r flex flex-col bg-white">
             {/* Header */}
             <div className="p-4 border-b">
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">Support Dashboard</h1>
-              
+              <h1 className="text-2xl font-bold text-gray-900 mb-4">
+                Support Dashboard
+              </h1>
+
               {/* Search and Filter */}
               <div className="space-y-3">
                 <div className="relative">
@@ -180,7 +194,7 @@ const Support = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div className="relative">
                     <button
@@ -192,7 +206,13 @@ const Support = () => {
                     </button>
                     {showFilterOptions && (
                       <div className="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-10 border">
-                        {["all", "open", "in-progress", "resolved", "pending"].map((filter) => (
+                        {[
+                          "all",
+                          "open",
+                          "in-progress",
+                          "resolved",
+                          "pending",
+                        ].map((filter) => (
                           <button
                             key={filter}
                             onClick={() => {
@@ -207,7 +227,7 @@ const Support = () => {
                       </div>
                     )}
                   </div>
-                  
+
                   <Link
                     to="/renewalSupport/add"
                     className="flex items-center space-x-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
@@ -231,26 +251,48 @@ const Support = () => {
                     key={ticket._id}
                     onClick={() => fetchChatByTicketId(ticket.ticketId)}
                     className={`p-4 border-b hover:bg-gray-50 cursor-pointer transition-all
-                      ${selectedTicket?._id === ticket._id ? "bg-purple-50 border-l-4 border-l-purple-600" : ""}`}
+                      ${
+                        selectedTicket?._id === ticket._id
+                          ? "bg-purple-50 border-l-4 border-l-purple-600"
+                          : ""
+                      }`}
                   >
                     <div className="flex justify-between items-start mb-2">
                       <div>
-                        <h3 className="font-medium text-gray-900">{ticket.ticketId}</h3>
-                        <p className="text-sm font-medium text-gray-800">{ticket.category}</p>
+                        <h3 className="font-medium text-gray-900">
+                          {ticket.ticketId}
+                        </h3>
+                        <p className="text-sm font-medium text-gray-800">
+                          {ticket.category}
+                        </p>
                       </div>
-                      <span className={`text-xs px-2 py-1 rounded-full border ${getStatusColor(ticket.status)}`}>
+                      <span
+                        className={`text-xs px-2 py-1 rounded-full border ${getStatusColor(
+                          ticket.status
+                        )}`}
+                      >
                         {ticket.status}
                       </span>
                     </div>
-                    
+
                     {ticket.messages.length > 0 && (
                       <div className="mt-2">
                         <p className="text-sm text-gray-600 line-clamp-2">
                           {ticket.messages[ticket.messages.length - 1].message}
                         </p>
                         <div className="flex items-center justify-between mt-2 text-xs text-gray-400">
-                          <span>{formatDate(ticket.messages[ticket.messages.length - 1].createdAt)}</span>
-                          <span>{formatTime(ticket.messages[ticket.messages.length - 1].createdAt)}</span>
+                          <span>
+                            {formatDate(
+                              ticket.messages[ticket.messages.length - 1]
+                                .createdAt
+                            )}
+                          </span>
+                          <span>
+                            {formatTime(
+                              ticket.messages[ticket.messages.length - 1]
+                                .createdAt
+                            )}
+                          </span>
                         </div>
                       </div>
                     )}
@@ -268,10 +310,18 @@ const Support = () => {
                 <div className="p-6 bg-white border-b">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h2 className="text-xl font-bold text-gray-900 mb-1">{selectedTicket.category}</h2>
+                      <h2 className="text-xl font-bold text-gray-900 mb-1">
+                        {selectedTicket.category}
+                      </h2>
                       <div className="flex items-center space-x-3">
-                        <span className="text-sm text-gray-500">#{selectedTicket.ticketId}</span>
-                        <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(selectedTicket.status)}`}>
+                        <span className="text-sm text-gray-500">
+                          #{selectedTicket.ticketId}
+                        </span>
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full ${getStatusColor(
+                            selectedTicket.status
+                          )}`}
+                        >
                           {selectedTicket.status}
                         </span>
                       </div>
@@ -285,7 +335,11 @@ const Support = () => {
                     {selectedTicket.messages.map((message, idx) => (
                       <div
                         key={idx}
-                        className={`flex ${isCurrentUser(message.sender) ? "justify-end" : "justify-start"}`}
+                        className={`flex ${
+                          isCurrentUser(message.sender)
+                            ? "justify-end"
+                            : "justify-start"
+                        }`}
                       >
                         <div
                           className={`max-w-md rounded-lg p-4 ${
@@ -295,24 +349,31 @@ const Support = () => {
                           }`}
                         >
                           <div className="flex flex-col">
-                            <span 
+                            <span
                               className={`text-xs ${
-                                isCurrentUser(message.sender) ? "text-purple-200" : "text-gray-500"
+                                isCurrentUser(message.sender)
+                                  ? "text-purple-200"
+                                  : "text-gray-500"
                               } mb-1`}
                             >
-                              {message.sender.firstName} {message.sender.lastName}
+                              {message.sender.firstName}{" "}
+                              {message.sender.lastName}
                             </span>
-                            <p className="text-sm whitespace-pre-wrap">{message.message}</p>
+                            <p className="text-sm whitespace-pre-wrap">
+                              {message.message}
+                            </p>
                             {message.attachment && (
-                              <img 
-                                src={message.attachment} 
-                                alt="Attachment" 
+                              <img
+                                src={message.attachment}
+                                alt="Attachment"
                                 className="mt-2 max-w-xs rounded"
                               />
                             )}
-                            <span 
+                            <span
                               className={`text-xs ${
-                                isCurrentUser(message.sender) ? "text-purple-200" : "text-gray-500"
+                                isCurrentUser(message.sender)
+                                  ? "text-purple-200"
+                                  : "text-gray-500"
                               } mt-2`}
                             >
                               {formatTime(message.createdAt)}
@@ -336,7 +397,7 @@ const Support = () => {
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                         onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
+                          if (e.key === "Enter" && !e.shiftKey) {
                             e.preventDefault();
                             sendMessage();
                           }
@@ -361,8 +422,12 @@ const Support = () => {
                 <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
                   <Send size={24} className="text-purple-600" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No Conversation Selected</h3>
-                <p className="text-gray-500">Choose a ticket from the sidebar to start messaging</p>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  No Conversation Selected
+                </h3>
+                <p className="text-gray-500">
+                  Choose a ticket from the sidebar to start messaging
+                </p>
               </div>
             )}
           </div>

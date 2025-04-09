@@ -37,7 +37,6 @@ const Support = () => {
     }
   };
 
-
   const isCurrentUser = (sender) => {
     return sender?._id?._id === empId || sender?._id === empId;
   };
@@ -51,7 +50,7 @@ const Support = () => {
           return;
         }
         const response = await fetch(
-          "http://localhost:3000/superadmin/chats/",
+          "https://live.mindmentorz.in/superadmin/chats/",
           {
             headers: {
               "Content-Type": "application/json",
@@ -89,7 +88,7 @@ const Support = () => {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `http://localhost:3000/superadmin/chats/${ticketId}`
+        `https://live.mindmentorz.in/superadmin/chats/${ticketId}`
       );
       const data = await response.json();
       if (response.ok) {
@@ -125,7 +124,7 @@ const Support = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:3000/superadmin/chats/ticket/${selectedTicket.ticketId}`,
+        `https://live.mindmentorz.in/superadmin/chats/ticket/${selectedTicket.ticketId}`,
         {
           method: "PUT",
           headers: {
