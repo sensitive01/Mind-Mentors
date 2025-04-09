@@ -4,8 +4,10 @@ const router = express.Router();
 const { buildUrl } = require("../../utils/bigblue");
 const axios = require("axios");
 
-const BASE_URL = "https://bbb.mindmentorz.in";
-const SECRET = "UEjv0E4538Y4nXT5Aj5WyaZ0cj3tZzuAxh2y8H7K4E";
+const BASE_URL = "https://aswinraj.online/bigbluebutton";
+const SECRET = "InhUDw8YmwzaScfbnu14ItbUukbRNPqNQs1XAFiwk";
+
+
 
 // Store active meetings (in-memory, use database in production)
 const activeClasses = {};

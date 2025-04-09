@@ -4,8 +4,8 @@ const axios = require("axios");
 const Class = require("../../model/bbbClassModel/bbbClassModel");
 const { buildUrl } = require("../../utils/bigblue"); // Utility function to build signed BBB URLs
 
-const BASE_URL = "https://bbb.mindmentorz.in"; // Your BBB server
-const SECRET = "UEjv0E4538Y4nXT5Aj5WyaZ0cj3tZzuAxh2y8H7K4E"; // Shared secret
+const BASE_URL = "https://aswinraj.online";
+const SECRET = "InhUDw8YmwzaScfbnu14ItbUukbRNPqNQs1XAFiwk";
 
 // ✅ Route 1: Create a new class
 router.post("/create-class", async (req, res) => {
