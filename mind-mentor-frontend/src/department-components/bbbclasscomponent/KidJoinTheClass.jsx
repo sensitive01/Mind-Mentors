@@ -32,7 +32,7 @@ const KidJoinTheClass = () => {
 
       // Construct the BBB join URL with proper parameters
       // Note: This URL construction matches how it's done in the server-side code
-      const joinUrl = `https://aswinraj.online/bigbluebutton/api/join?fullName=${encodeURIComponent(
+      const joinUrl = `https://bbb.mindmentorz.in/bigbluebutton/api/join?fullName=${encodeURIComponent(
         kidName
       )}&meetingID=${meetingID}&password=apwd&redirect=true`;
 
