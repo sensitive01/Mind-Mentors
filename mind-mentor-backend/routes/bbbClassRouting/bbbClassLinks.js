@@ -33,7 +33,7 @@ router.post("/create-class", async (req, res) => {
   &welcome=Welcome+to+${encodeURIComponent(className)}!
   &record=true
   &autoStartRecording=false
-  &allowStartStopRecording=true`;
+  &allowStartStopRecording=false`;
   
   
   const createUrl = buildUrl(BASE_URL, "create", createQuery, SECRET);

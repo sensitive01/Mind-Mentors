@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 axios.post('https://live.mindmentorz.in/api/class/create-class', {
-  className: "NeilsMindMentorzs",
+  className: "NeilsMindMentorzss",
   coachName: "Neils"
 }, {
   headers: {
