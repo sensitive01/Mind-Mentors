@@ -58,7 +58,7 @@ router.post("/create-class-new", async (req, res) => {
       SECRET
     );
 
-    const joinKidUrl = `https://live.mindmentorz.in/kid/join-class-room/${classId}`;
+    const joinKidUrl = `https://live.mindmentorz.in/kid/join-class-room-new/${classId}`;
 
     res.json({
       message: "Class created successfully",
