@@ -17,10 +17,8 @@ const hrRoutes = require("./routes/hr/hrRoutes");
 const joinRoute = require("./routes/classRoom/classRoomRoutes");
 const bbRoutes = require("./routes/bbRoute/blueButtonRoute");
 const bbRouteSample = require("./routes/bbRoute/bigBlueButtonSample");
-const bbbClassRouting = require("./routes/bbbClassRouting/bbbClassLinks")
-
-
-
+const bbbClassRouting = require("./routes/bbbClassRouting/bbbClassLinks");
+const bbbClassRoutingNew = require("./routes/bbbClassRouting/bbMMClassLink");
 
 const { initSocket } = require("./utils/socket");
 
@@ -46,7 +44,8 @@ const allowedOrigins = [
   "https://3.104.84.126:3000",
   "http://localhost:3000",
   "http://3.104.84.126:3000",
-  "https://aswinraj.online"
+  "https://aswinraj.online",
+  "https://bbb.mindmentorz.in",
 ];
 
 const corsOptions = {
@@ -92,9 +91,9 @@ app.use("/hr", hrRoutes);
 app.use("/join", joinRoute);
 app.use("/zoom/api", zoomRoute);
 app.use("/api/meeting", bbRoutes);
-app.use("/sample/meeting",bbRouteSample)
-app.use("/api/class",bbbClassRouting)
-
+app.use("/sample/meeting", bbRouteSample);
+app.use("/api/class", bbbClassRouting);
+app.use("/api/class-new", bbbClassRoutingNew);
 
 app.use(express.static(path.join(__dirname, "dist")));
 

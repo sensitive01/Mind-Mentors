@@ -288,6 +288,8 @@ import KidLiveClassRoom from "./pages/kids/KidLiveClassRoom";
 import BlueButtonKidLiveClass from "./component/kids-component/kids-dashboard/BlueButtonKidLiveClass";
 import AdminCreateClass from "./department-components/bbbclasscomponent/BbbAdminCreateClassLinks";
 import KidJoinTheClass from "./department-components/bbbclasscomponent/KidJoinTheClass";
+import NewMMClassUI from "./department-components/bbbclasscomponent/NewMMClassUI";
+import MmKidJoinClass from "./department-components/bbbclasscomponent/MmKidJoinClass";
 
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
@@ -314,8 +316,17 @@ function App() {
           />
 
           <Route
+            path="/super-admin/department/create-class-links-new-class"
+            element={<NewMMClassUI />}
+          />
+
+          <Route
             path="/kid/join-class-room/:classId"
             element={<KidJoinTheClass />}
+          />
+              <Route
+            path="/kid/join-class-room-new/:classId"
+            element={<MmKidJoinClass />}
           />
 
           <Route path="/" element={<HomePage />} />
