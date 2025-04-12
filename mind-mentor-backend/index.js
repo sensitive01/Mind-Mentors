@@ -19,6 +19,8 @@ const bbRoutes = require("./routes/bbRoute/blueButtonRoute");
 const bbRouteSample = require("./routes/bbRoute/bigBlueButtonSample");
 const bbbClassRouting = require("./routes/bbbClassRouting/bbbClassLinks");
 const bbbClassRoutingNew = require("./routes/bbbClassRouting/bbMMClassLink");
+const hostingerRoutingClass = require("./routes/bbbClassRouting/hostingerBB");
+
 
 const { initSocket } = require("./utils/socket");
 
@@ -92,8 +94,10 @@ app.use("/join", joinRoute);
 app.use("/zoom/api", zoomRoute);
 app.use("/api/meeting", bbRoutes);
 app.use("/sample/meeting", bbRouteSample);
-app.use("/api/class", bbbClassRouting);
-app.use("/api/class-new", bbbClassRoutingNew);
+app.use("/api/class", bbbClassRouting);//do
+app.use("/api/class-new", bbbClassRoutingNew);//aws
+app.use("/api/new-class", hostingerRoutingClass); //hostinger
+
 
 app.use(express.static(path.join(__dirname, "dist")));
 

@@ -290,6 +290,8 @@ import AdminCreateClass from "./department-components/bbbclasscomponent/BbbAdmin
 import KidJoinTheClass from "./department-components/bbbclasscomponent/KidJoinTheClass";
 import NewMMClassUI from "./department-components/bbbclasscomponent/NewMMClassUI";
 import MmKidJoinClass from "./department-components/bbbclasscomponent/MmKidJoinClass";
+import BbAdminCreateLinkHostinger from "./department-components/hotinger/BbAdminCreateLinkHostinger";
+import BbKidJoinClassHostinger from "./department-components/hotinger/BbKidJoinClassHostinger";
 
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
@@ -324,9 +326,19 @@ function App() {
             path="/kid/join-class-room/:classId"
             element={<KidJoinTheClass />}
           />
-              <Route
+          <Route
             path="/kid/join-class-room-new/:classId"
             element={<MmKidJoinClass />}
+          />
+
+          <Route
+            path="/super-admin/department/create-new-class-link"
+            element={<BbAdminCreateLinkHostinger />}
+          />
+
+          <Route
+            path="/kid/join-the-class-room/:classId"
+            element={<BbKidJoinClassHostinger />}
           />
 
           <Route path="/" element={<HomePage />} />
