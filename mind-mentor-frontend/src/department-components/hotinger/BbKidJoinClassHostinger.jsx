@@ -21,7 +21,7 @@ const BbKidJoinClassHostinger = () => {
     try {
       // First, get the class details using the classId
       const response = await axios.get(
-        `https://live.mindmentorz.in/api/class/get-class/${classId}`
+        `https://live.mindmentorz.in/api/new-class/get-new-class/${classId}`
       );
 
       const { meetingID } = response.data;
@@ -39,7 +39,7 @@ const BbKidJoinClassHostinger = () => {
       // Create a properly signed URL using a helper function
       // Note: We need to redirect to a properly signed URL
       const joinResponse = await axios.post(
-        `https://live.mindmentorz.in/api/class/sign-join-url`,
+        `https://live.mindmentorz.in/api/new-class/new-sign-join-url`,
         {
           fullName: kidName,
           meetingID: meetingID,
