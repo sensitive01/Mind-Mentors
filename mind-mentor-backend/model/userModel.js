@@ -15,9 +15,9 @@ const userSchema = new mongoose.Schema(
     address: { type: String },
     dateOfBirth: { type: Date },
     gender: { type: String, enum: ["Male", "Female", "Other"] },
-    profilePicture: { type: String }, // URL or path to the profile picture
-    bio: { type: String }, // Short biography or description
-    skills: { type: [String] }, // Array of skills
+    profilePicture: { type: String }, 
+    bio: { type: String }, 
+    skills: { type: [String] },
     education: [
       {
         degree: { type: String },

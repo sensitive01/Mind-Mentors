@@ -1,110 +1,114 @@
 import {
-    Assessment,
-    CalendarToday,
-    Chat,
-    Group,
-    MoreVert,
-    Speed,
-    TimelineOutlined,
-    TrendingUp
-} from '@mui/icons-material';
+  Assessment,
+  CalendarToday,
+  Chat,
+  Group,
+  MoreVert,
+  Speed,
+  TimelineOutlined,
+  TrendingUp,
+  Person,
+  PersonOff,
+  QuestionAnswer,
+  SportsKabaddi,
+} from "@mui/icons-material";
 import {
-    Box,
-    Button,
-    Card,
-    CardContent,
-    Grid,
-    IconButton,
-    LinearProgress,
-    Menu,
-    MenuItem,
-    Tab,
-    Tabs,
-    Typography
-} from '@mui/material';
-import { createTheme, styled, ThemeProvider } from '@mui/material/styles';
-import { AnimatePresence, motion } from 'framer-motion';
-import React, { useState } from 'react';
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Grid,
+  IconButton,
+  LinearProgress,
+  Menu,
+  MenuItem,
+  Tab,
+  Tabs,
+  Typography,
+} from "@mui/material";
+import { createTheme, styled, ThemeProvider } from "@mui/material/styles";
+import { AnimatePresence, motion } from "framer-motion";
+import React, { useState } from "react";
 import {
-    Area,
-    AreaChart,
-    Bar,
-    BarChart,
-    CartesianGrid,
-    Line,
-    LineChart,
-    Tooltip as RechartsTooltip,
-    ResponsiveContainer,
-    XAxis,
-    YAxis
-} from 'recharts';
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 // Custom theme with your color scheme
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#642b8f',
-      light: '#aa88be',
+      main: "#642b8f",
+      light: "#aa88be",
     },
     secondary: {
-      main: '#f8a213',
-      light: '#f0ba6f',
+      main: "#f8a213",
+      light: "#f0ba6f",
     },
   },
 });
 
 // Styled Components
 const StyledCard = styled(Card)(({ theme }) => ({
-  background: 'white',
+  background: "white",
   borderRadius: theme.spacing(2),
-  boxShadow: '0 4px 20px rgba(100, 43, 143, 0.1)',
-  transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
-  '&:hover': {
-    transform: 'translateY(-5px)',
-    boxShadow: '0 8px 25px rgba(100, 43, 143, 0.15)',
+  boxShadow: "0 4px 20px rgba(100, 43, 143, 0.1)",
+  transition: "transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out",
+  "&:hover": {
+    transform: "translateY(-5px)",
+    boxShadow: "0 8px 25px rgba(100, 43, 143, 0.15)",
   },
 }));
 
 const StatValue = styled(Typography)(({ theme }) => ({
-  fontSize: '2.5rem',
+  fontSize: "2.5rem",
   fontWeight: 700,
   background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.light} 90%)`,
-  WebkitBackgroundClip: 'text',
-  WebkitTextFillColor: 'transparent',
+  WebkitBackgroundClip: "text",
+  WebkitTextFillColor: "transparent",
 }));
 
 const IconWrapper = styled(Box)(({ theme }) => ({
   background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.light} 90%)`,
-  borderRadius: '50%',
+  borderRadius: "50%",
   padding: theme.spacing(1),
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  color: 'white',
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  color: "white",
   width: 48,
   height: 48,
 }));
 
 // Sample data for charts
 const performanceData = [
-  { month: 'Jan', team: 65, individual: 45 },
-  { month: 'Feb', team: 75, individual: 55 },
-  { month: 'Mar', team: 85, individual: 65 },
-  { month: 'Apr', team: 80, individual: 70 },
-  { month: 'May', team: 90, individual: 75 },
-  { month: 'Jun', team: 95, individual: 80 },
+  { month: "Jan", active: 65, inactive: 20, enquiries: 45 },
+  { month: "Feb", active: 75, inactive: 25, enquiries: 55 },
+  { month: "Mar", active: 85, inactive: 22, enquiries: 65 },
+  { month: "Apr", active: 80, inactive: 18, enquiries: 70 },
+  { month: "May", active: 90, inactive: 15, enquiries: 75 },
+  { month: "Jun", active: 95, inactive: 10, enquiries: 80 },
 ];
 
-const interactionData = [
-  { day: 'Mon', calls: 12, meetings: 5, emails: 25 },
-  { day: 'Tue', calls: 15, meetings: 7, emails: 30 },
-  { day: 'Wed', calls: 18, meetings: 4, emails: 28 },
-  { day: 'Thu', calls: 14, meetings: 6, emails: 32 },
-  { day: 'Fri', calls: 16, meetings: 8, emails: 27 },
+const coachingData = [
+  { day: "Mon", activeCoaches: 12, inactiveCoaches: 5 },
+  { day: "Tue", activeCoaches: 15, inactiveCoaches: 3 },
+  { day: "Wed", activeCoaches: 18, inactiveCoaches: 4 },
+  { day: "Thu", activeCoaches: 14, inactiveCoaches: 6 },
+  { day: "Fri", activeCoaches: 16, inactiveCoaches: 4 },
 ];
 
 const Dashboard = () => {
-  const [timeRange, setTimeRange] = useState('week');
+  const [timeRange, setTimeRange] = useState("week");
   const [anchorEl, setAnchorEl] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
 
@@ -123,44 +127,67 @@ const Dashboard = () => {
 
   const stats = [
     {
-      title: "Monthly Team's Performance",
-      value: 120,
-      maxValue: 200,
-      type: "progress",
-      icon: <TrendingUp />,
-      description: "Team performance based on monthly targets"
+      title: "Total Enquiries",
+      value: 247,
+      type: "value",
+      icon: <QuestionAnswer />,
+      description: "Total number of enquiries received",
     },
     {
-      title: "Monthly Individual Performance",
-      value: 85,
-      maxValue: 100,
-      type: "progress",
-      icon: <Speed />,
-      description: "Your individual performance metrics"
+      title: "Active Kids",
+      value: 185,
+      type: "value",
+      icon: <Person />,
+      description: "Total number of active kids",
     },
     {
-      title: "Today's Interactions",
+      title: "Inactive Kids",
+      value: 62,
+      type: "value",
+      icon: <PersonOff />,
+      description: "Total number of inactive kids",
+    },
+    {
+      title: "Total Coaches",
       value: 24,
-      subtitle: "Interactions",
-      icon: <Chat />,
-      description: "Total interactions made today"
+      type: "value",
+      icon: <SportsKabaddi />,
+      description: "Total number of coaches",
     },
   ];
 
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ p: 3, backgroundColor: '#f5f5f5', minHeight: '100vh',width:'100' }}style={{marginLeft:'0'}}>
+      <Box
+        sx={{
+          p: 3,
+          backgroundColor: "#f5f5f5",
+          minHeight: "100vh",
+          width: "100%",
+        }}
+        style={{ marginLeft: "0" }}
+      >
         {/* Header Section */}
-        <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h4" sx={{ fontWeight: 600, color: 'primary.main' }}>
-            Performance Dashboard
+        <Box
+          sx={{
+            mb: 3,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Typography
+            variant="h4"
+            sx={{ fontWeight: 600, color: "primary.main" }}
+          >
+           
           </Typography>
           <Box>
             <Button
               variant="contained"
               endIcon={<CalendarToday />}
               onClick={handleMenuClick}
-              sx={{ backgroundColor: 'secondary.main' }}
+              sx={{ backgroundColor: "secondary.main" }}
             >
               {timeRange.charAt(0).toUpperCase() + timeRange.slice(1)}
             </Button>
@@ -169,9 +196,15 @@ const Dashboard = () => {
               open={Boolean(anchorEl)}
               onClose={handleMenuClose}
             >
-              <MenuItem onClick={() => handleTimeRangeChange('day')}>Day</MenuItem>
-              <MenuItem onClick={() => handleTimeRangeChange('week')}>Week</MenuItem>
-              <MenuItem onClick={() => handleTimeRangeChange('month')}>Month</MenuItem>
+              <MenuItem onClick={() => handleTimeRangeChange("day")}>
+                Day
+              </MenuItem>
+              <MenuItem onClick={() => handleTimeRangeChange("week")}>
+                Week
+              </MenuItem>
+              <MenuItem onClick={() => handleTimeRangeChange("month")}>
+                Month
+              </MenuItem>
             </Menu>
           </Box>
         </Box>
@@ -179,7 +212,7 @@ const Dashboard = () => {
         {/* Stats Grid */}
         <Grid container spacing={3}>
           {stats.map((stat, index) => (
-            <Grid item xs={12} md={4} key={index}>
+            <Grid item xs={12} sm={6} md={3} key={index}>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -187,34 +220,44 @@ const Dashboard = () => {
               >
                 <StyledCard>
                   <CardContent>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                      <IconWrapper>
-                        {stat.icon}
-                      </IconWrapper>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        mb: 2,
+                      }}
+                    >
+                      <IconWrapper>{stat.icon}</IconWrapper>
                       <IconButton>
                         <MoreVert />
                       </IconButton>
                     </Box>
-                    
+
                     <Typography variant="h6" gutterBottom>
                       {stat.title}
                     </Typography>
-                    
+
                     {stat.type === "progress" ? (
                       <Box>
-                        <LinearProgress 
-                          variant="determinate" 
+                        <LinearProgress
+                          variant="determinate"
                           value={(stat.value / stat.maxValue) * 100}
-                          sx={{ 
-                            height: 10, 
+                          sx={{
+                            height: 10,
                             borderRadius: 5,
-                            backgroundColor: 'secondary.light',
-                            '& .MuiLinearProgress-bar': {
-                              backgroundColor: 'secondary.main'
-                            }
+                            backgroundColor: "secondary.light",
+                            "& .MuiLinearProgress-bar": {
+                              backgroundColor: "secondary.main",
+                            },
                           }}
                         />
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            mt: 1,
+                          }}
+                        >
                           <Typography variant="body2" color="text.secondary">
                             Progress
                           </Typography>
@@ -224,7 +267,12 @@ const Dashboard = () => {
                         </Box>
                       </Box>
                     ) : (
-                      <StatValue>{stat.value}</StatValue>
+                      <>
+                        <StatValue>{stat.value}</StatValue>
+                        <Typography variant="body2" color="text.secondary">
+                          {stat.description}
+                        </Typography>
+                      </>
                     )}
                   </CardContent>
                 </StyledCard>
@@ -235,12 +283,12 @@ const Dashboard = () => {
 
         {/* Charts Section */}
         <Grid container spacing={3} sx={{ mt: 2 }}>
-          {/* Performance Trends */}
+          {/* Members Trends */}
           <Grid item xs={12} md={8}>
             <StyledCard>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
-                  Performance Trends
+                  Member & Enquiry Trends
                 </Typography>
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={performanceData}>
@@ -248,19 +296,29 @@ const Dashboard = () => {
                     <XAxis dataKey="month" />
                     <YAxis />
                     <RechartsTooltip />
-                    <Line 
-                      type="monotone" 
-                      dataKey="team" 
-                      stroke="#642b8f" 
+                    <Line
+                      type="monotone"
+                      dataKey="active"
+                      name="Active Kids"
+                      stroke="#642b8f"
                       strokeWidth={2}
-                      dot={{ fill: '#642b8f' }}
+                      dot={{ fill: "#642b8f" }}
                     />
-                    <Line 
-                      type="monotone" 
-                      dataKey="individual" 
-                      stroke="#f8a213" 
+                    <Line
+                      type="monotone"
+                      dataKey="inactive"
+                      name="Inactive Kids"
+                      stroke="#f8a213"
                       strokeWidth={2}
-                      dot={{ fill: '#f8a213' }}
+                      dot={{ fill: "#f8a213" }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="enquiries"
+                      name="Enquiries"
+                      stroke="#4caf50"
+                      strokeWidth={2}
+                      dot={{ fill: "#4caf50" }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -268,42 +326,49 @@ const Dashboard = () => {
             </StyledCard>
           </Grid>
 
-          {/* Interaction Breakdown */}
+          {/* Coaching Breakdown */}
           <Grid item xs={12} md={4}>
             <StyledCard>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
-                  Interaction Breakdown
+                  Coaching Breakdown
                 </Typography>
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={interactionData}>
+                  <BarChart data={coachingData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="day" />
                     <YAxis />
                     <RechartsTooltip />
-                    <Bar dataKey="calls" stackId="a" fill="#642b8f" />
-                    <Bar dataKey="meetings" stackId="a" fill="#f8a213" />
-                    <Bar dataKey="emails" stackId="a" fill="#aa88be" />
+                    <Bar
+                      dataKey="activeCoaches"
+                      name="Active Coaches"
+                      fill="#642b8f"
+                    />
+                    <Bar
+                      dataKey="inactiveCoaches"
+                      name="Inactive Coaches"
+                      fill="#f8a213"
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
             </StyledCard>
           </Grid>
 
-          {/* Activity Timeline */}
+          {/* Activity Analysis */}
           <Grid item xs={12}>
             <StyledCard>
               <CardContent>
-                <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-                  <Tabs 
-                    value={activeTab} 
+                <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
+                  <Tabs
+                    value={activeTab}
                     onChange={(e, newValue) => setActiveTab(newValue)}
                     textColor="primary"
                     indicatorColor="primary"
                   >
-                    <Tab icon={<Assessment />} label="Analytics" />
-                    <Tab icon={<TimelineOutlined />} label="Timeline" />
-                    <Tab icon={<Group />} label="Team" />
+                    <Tab icon={<Assessment />} label="Member Analytics" />
+                    <Tab icon={<Group />} label="Coach Analytics" />
+                    <Tab icon={<QuestionAnswer />} label="Enquiry Analytics" />
                   </Tabs>
                 </Box>
                 <AnimatePresence mode="wait">
@@ -321,16 +386,18 @@ const Dashboard = () => {
                           <XAxis dataKey="month" />
                           <YAxis />
                           <RechartsTooltip />
-                          <Area 
-                            type="monotone" 
-                            dataKey="team" 
+                          <Area
+                            type="monotone"
+                            dataKey="active"
+                            name="Active Kids"
                             stackId="1"
                             stroke="#642b8f"
                             fill="#aa88be"
                           />
-                          <Area 
-                            type="monotone" 
-                            dataKey="individual" 
+                          <Area
+                            type="monotone"
+                            dataKey="inactive"
+                            name="Inactive Kids"
                             stackId="1"
                             stroke="#f8a213"
                             fill="#f0ba6f"
@@ -339,10 +406,42 @@ const Dashboard = () => {
                       </ResponsiveContainer>
                     )}
                     {activeTab === 1 && (
-                      <Typography variant="body1">Timeline content</Typography>
+                      <ResponsiveContainer width="100%" height={200}>
+                        <BarChart data={coachingData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="day" />
+                          <YAxis />
+                          <RechartsTooltip />
+                          <Bar
+                            dataKey="activeCoaches"
+                            name="Active Coaches"
+                            fill="#642b8f"
+                          />
+                          <Bar
+                            dataKey="inactiveCoaches"
+                            name="Inactive Coaches"
+                            fill="#f8a213"
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
                     )}
                     {activeTab === 2 && (
-                      <Typography variant="body1">Team content</Typography>
+                      <ResponsiveContainer width="100%" height={200}>
+                        <LineChart data={performanceData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="month" />
+                          <YAxis />
+                          <RechartsTooltip />
+                          <Line
+                            type="monotone"
+                            dataKey="enquiries"
+                            name="Enquiries"
+                            stroke="#4caf50"
+                            strokeWidth={2}
+                            dot={{ fill: "#4caf50" }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
                     )}
                   </motion.div>
                 </AnimatePresence>
@@ -356,7 +455,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
-
-
-

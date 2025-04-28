@@ -501,7 +501,7 @@ const updateProspectData = async (req, res) => {
       const logUpdate = {
         employeeId: empId,
         employeeName: empData.firstName,
-        action: `Enquiry moved to prospects by ${empData.firstName} in ${empData.department} department on ${formattedDateTime}`,
+        action: `Enquiry moved to prospects by ${empData.firstName} in ${empData.department} department.`,
         updatedAt: new Date(),
       };
 
@@ -520,7 +520,7 @@ const updateProspectData = async (req, res) => {
         employeeName: empData.firstName,
         action: `Enquiry moved to prospects by ${
           empData.firstName
-        } on ${new Date().toLocaleString()}`,
+        }`,
         createdAt: new Date(),
       },
     ];
@@ -2577,11 +2577,7 @@ const scheduleDemoClass = async (req, res) => {
         employeeId: id,
         employeeName: empData.firstName,
 
-        action: `Demo class is sheduled for ${kidFirstName} with ${
-          selectedProgram.program
-        } (Level: ${selectedProgram.level}) on ${date} at ${time} by  ${
-          empData.name
-        } on ${new Date().toLocaleString()}`,
+        action: `Demo class is sheduled for ${kidFirstName} with ${selectedProgram.program} Level: ${selectedProgram.level}`,
         createdAt: new Date(),
       },
     ];
@@ -2663,15 +2659,21 @@ const fetchAllLogs = async (req, res) => {
   try {
     console.log("Welcome to fetch logs");
     const { id } = req.params;
+
     const logsData = await enquiryLogs.findOne({ enqId: id });
 
     if (!logsData) {
       return res.status(404).json({ message: "Logs not found" });
     }
 
-    // Extracting only the `createdAt` and `action` fields
-    const logs = logsData.logs.map((log) => ({
-      createdAt: moment(log.createdAt).format("DD-MM-YY"), // Format the date to dd-mm-yy
+    // 👉 Sort the logs array by createdAt descending
+    const sortedLogs = logsData.logs.sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
+
+    // Extract only createdAt and action
+    const logs = sortedLogs.map((log) => ({
+      createdAt: moment(log.createdAt).format("DD-MM-YY , hh:mm A"),
       action: log.action,
     }));
 
@@ -2899,10 +2901,7 @@ const saveDemoClassData = async (req, res) => {
     // Wait for all updates to finish
     await Promise.all(updatedKidsDataPromises);
 
-    const formattedDateTime = new Intl.DateTimeFormat("en-US", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    }).format(new Date());
+
 
     // Update logs for each student
     const logUpdatePromises = kidsData.map(async (kid) => {
@@ -2915,7 +2914,7 @@ const saveDemoClassData = async (req, res) => {
               logs: {
                 employeeId: empId,
                 employeeName: empData.firstName, // Assuming 'name' contains the employee's full name
-                action: ` ${empData.firstName} in the ${empData.department} department scheduled a demo class for the ${classSchedule.program} program at the ${classSchedule.level} level with coach ${classSchedule.coachName}. Created on ${formattedDateTime}`,
+                action: ` ${empData.firstName} in the ${empData.department} department scheduled a demo class for the ${classSchedule.program} program at the ${classSchedule.level} level with coach ${classSchedule.coachName}.`,
                 createdAt: new Date(),
               },
             },
@@ -3372,23 +3371,19 @@ const getDiscountVouchers = async (req, res) => {
     });
 
     if (validVouchers.length === 0) {
-      return res
-        .status(200)
-        .json({
-          message: "No valid vouchers available",
-          discount: 0,
-          physicalCenters,
-        });
+      return res.status(200).json({
+        message: "No valid vouchers available",
+        discount: 0,
+        physicalCenters,
+      });
     }
     console.log("validVouchers", validVouchers);
 
-    return res
-      .status(200)
-      .json({
-        message: "Valid vouchers found",
-        vouchers: validVouchers[0].value,
-        physicalCenters,
-      });
+    return res.status(200).json({
+      message: "Valid vouchers found",
+      vouchers: validVouchers[0].value,
+      physicalCenters,
+    });
   } catch (err) {
     console.error("Error in getting the discount for new enquiry", err);
     res.status(500).json({ message: "Internal server error" });
@@ -3412,7 +3407,9 @@ const departmentPayNowOption = async (req, res) => {
 
     // Update statuses
     await Promise.all([
-      parentSchema.findByIdAndUpdate(parentData.parentId, { $set: { status: "Active" } }),
+      parentSchema.findByIdAndUpdate(parentData.parentId, {
+        $set: { status: "Active" },
+      }),
       kidSchema.findByIdAndUpdate(kidId, { $set: { status: "Active" } }),
       OperationDept.findByIdAndUpdate(enqId, {
         $set: { status: "Active", payment: "Success", isNewUser: false },
@@ -3449,7 +3446,7 @@ const departmentPayNowOption = async (req, res) => {
         numberOfClasses: classDetails.numberOfClasses,
         offlineClasses,
         onlineClasses,
-        classMode:classDetails.classMode,
+        classMode: classDetails.classMode,
       },
       enqId,
       kidId,
@@ -3462,7 +3459,7 @@ const departmentPayNowOption = async (req, res) => {
       whatsappNumber,
       parentId: parentData.parentId,
       raz_transaction_id: transactionId,
-      paymentStatus:"Success",
+      paymentStatus: "Success",
       timestamp: Date.now(),
     });
 
@@ -3479,20 +3476,22 @@ const departmentPayNowOption = async (req, res) => {
       message: "Payment data saved successfully",
       data: savedPayment,
     });
-
   } catch (err) {
     console.error("Error in making the department payments", err);
-    res.status(500).json({ message: "Internal server error", error: err.message });
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: err.message });
   }
 };
-
-
 
 const getThePhysicalCenterName = async (req, res) => {
   try {
     console.log("Welcome to the physical center");
 
-    const centerData = await PhysicalCenters.find({}, { centerId: 1, centerName: 1 });
+    const centerData = await PhysicalCenters.find(
+      {},
+      { centerId: 1, centerName: 1 }
+    );
 
     if (!centerData || centerData.length === 0) {
       return res.status(404).json({ message: "No physical centers found" });
@@ -3502,15 +3501,15 @@ const getThePhysicalCenterName = async (req, res) => {
 
     res.status(200).json({
       message: "Physical centers retrieved successfully",
-     centerData,
+      centerData,
     });
-
   } catch (err) {
     console.error("Error in getting the physical center name", err);
-    res.status(500).json({ message: "Internal server error", error: err.message });
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: err.message });
   }
 };
-
 
 const updatePaymentData = async (req, res) => {
   try {
@@ -3534,7 +3533,9 @@ const updatePaymentData = async (req, res) => {
 
     // Update statuses
     await Promise.all([
-      parentSchema.findByIdAndUpdate(parentData.parentId, { $set: { status: "Active" } }),
+      parentSchema.findByIdAndUpdate(parentData.parentId, {
+        $set: { status: "Active" },
+      }),
       kidSchema.findByIdAndUpdate(kidId, { $set: { status: "Active" } }),
       OperationDept.findByIdAndUpdate(enqId, {
         $set: { status: "Active", payment: "Success", isNewUser: false },
@@ -3611,31 +3612,28 @@ const updatePaymentData = async (req, res) => {
     });
   } catch (err) {
     console.error("Error in updating payment data:", err);
-    res.status(500).json({ message: "Internal server error", error: err.message });
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: err.message });
   }
 };
 
-
-const makeaCallToParent = async(req,res)=>{
+const makeaCallToParent = async (req, res) => {
   try {
     const { mobile } = req.body;
-    
+
     // Make the request to the external API
-    const response = await fetch(
-      `${CALLING_API}=${mobile}`,
-      { method: 'POST' }
-    );
-    
+    const response = await fetch(`${CALLING_API}=${mobile}`, {
+      method: "POST",
+    });
+
     const data = await response.json();
     res.json(data);
   } catch (error) {
-    console.error('Error calling external API:', error);
+    console.error("Error calling external API:", error);
     res.status(500).json({ success: false, message: error.message });
   }
-
-}
-
-
+};
 
 const getEmployeeData = async (req, res) => {
   try {
@@ -3648,24 +3646,13 @@ const getEmployeeData = async (req, res) => {
 
     console.log("Employee data in the sidebar is", employeeData);
     res.status(200).json(employeeData);
-
   } catch (err) {
     console.error("Error in getting the employee data in the sidebar", err);
-    res.status(500).json({ message: "Internal server error", error: err.message });
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: err.message });
   }
 };
-
-
-
-
-
-
-
-
-
-
-
-
 
 module.exports = {
   getEmployeeData,

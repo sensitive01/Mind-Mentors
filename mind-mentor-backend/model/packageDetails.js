@@ -8,7 +8,7 @@ const packageSchema = new mongoose.Schema({
   type: {
     type: String,
 
-    enum: ["online", "offline", "hybrid", "kit"],
+    enum: ["online", "offline", "hybrid"],
   },
   packageName: {
     type: String,
@@ -46,3 +46,17 @@ const packageSchema = new mongoose.Schema({
 const Package = mongoose.model("Package", packageSchema);
 
 module.exports = Package;
+
+
+// Online - offline-Hybrid
+
+//online - time ---mng,night
+//how many class 8,16, custom internal teams
+//day -->8=3068/-  1=383.5/-  16=5428/- 1=339.25/-
+
+//night --> offline ---> 8=3835/- 1=479.375/-  16=7060/- 1=442.5/-    
+
+//4day 4 night
+
+
+//kit ---->750/-

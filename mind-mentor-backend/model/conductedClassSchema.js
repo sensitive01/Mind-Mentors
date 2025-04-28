@@ -40,3 +40,6 @@ const conductedClassSchema = new mongoose.Schema({
 const ConductedClass = mongoose.model("ConductedClass", conductedClassSchema);
 
 module.exports = ConductedClass;
+
+
+// class start time,attannce , individual join time,kid count, attended kid count,coach amount,coach paid date,audit score , feedback score, average rating, 

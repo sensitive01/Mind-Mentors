@@ -1,3 +1,4 @@
+//KID PROFILE
 const mongoose = require("mongoose");
 
 const logEntrySchema = new mongoose.Schema({

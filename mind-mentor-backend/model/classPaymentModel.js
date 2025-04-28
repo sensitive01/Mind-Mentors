@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-// Define the Class Payment schema
+
 const classPaymentSchema = new Schema(
   {
     amount: { type: Number },
@@ -23,7 +23,7 @@ const classPaymentSchema = new Schema(
     kidId: { type: String },
     kidName: { type: String },
     kitItem: { type: String, default: "" },
-    kitItems: { type: [String], default: [] }, // Added missing field
+    kitItems: { type: [String], default: [] }, 
     selectionType: { type: String },
     baseAmount: { type: Number },
     gstAmount: { type: Number },
@@ -32,17 +32,17 @@ const classPaymentSchema = new Schema(
     parentId: { type: String },
     raz_transaction_id: { type: String },
     timestamp: { type: Date, default: Date.now },
-    centerId: { type: String }, // Added missing field
-    centerName: { type: String }, // Added missing field
-    customAmount: { type: Number, default: 0 }, // Added missing field
-    discount: { type: Number }, // Added missing field
-    discountAmount: { type: Number, default: 0 }, // Added missing field
+    centerId: { type: String }, 
+    centerName: { type: String }, 
+    customAmount: { type: Number, default: 0 }, 
+    discount: { type: Number }, 
+    discountAmount: { type: Number, default: 0 }, 
     programs: [
       {
         program: { type: String },
         level: { type: String },
       },
-    ], // Added missing field
+    ], 
     paymentStatus:{type:String,default:"Pending"},
     paymentMode:{type:String,default:"online"}
   },

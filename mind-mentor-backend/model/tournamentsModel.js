@@ -1,18 +1,18 @@
 const mongoose = require('mongoose');
 
-// Tournament Schema
+
 const tournamentSchema = new mongoose.Schema({
   tournamentDate: { type: Date },
   tournamentCentre: { type: String },
-  time: { type: String }, // Time should be a string to store in HH:mm format
+  time: { type: String }, 
   tournamentType: { type: String },
   registrationFee: { type: Number },
-  registeredKids: { type: [String] }, // Or Number, depending on your use case
+  registeredKids: { type: [String] }, 
   numberOfParticipants: { type: Number },
 }, { timestamps: true });
 
 
-// Notification Schema
+
 const notificationSchema = new mongoose.Schema({
   title: { type: String, },
   body: { type: String, },
@@ -29,9 +29,9 @@ const holidaySchema = new mongoose.Schema({
   category: { type: String,  }, 
 }, { timestamps: true });
 
-// allowanceDeductionSchema
+
 const allowanceDeductionSchema = new mongoose.Schema({
-  employeeName: { type: String, }, // Store the employee's name
+  employeeName: { type: String, },
   allowance: {
     type: String,
     enum: ['HRA', 'Travel', 'Medical', 'Other'],

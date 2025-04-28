@@ -14,7 +14,7 @@ const AttendanceSchema = new mongoose.Schema({
     },
   },
   time: { 
-    type: Date, // Store the exact time as a Date object
+    type: Date, 
     required: true, 
   },
   employeeName: { 
@@ -24,7 +24,7 @@ const AttendanceSchema = new mongoose.Schema({
   status: { 
     type: String, 
     required: true, 
-    enum: ['Present', 'Absent'], // Attendance status
+    enum: ['Present', 'Absent'],
   },
 });
 

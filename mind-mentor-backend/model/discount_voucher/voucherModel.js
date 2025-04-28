@@ -2,13 +2,13 @@ const mongoose = require("mongoose");
 
 const voucherSchema = new mongoose.Schema(
   {
-    voucherId: { type: String },
-    code: { type: String },
-    mmKidId: { type: String },
-    remarks: { type: String },
-    type: { type: String, enum: ["amount", "class"] },
+    voucherId: { type: String }, // DEFAULT
+    code: { type: String }, // FREE500
+    mmKidId: [{ type: String }],
     value: { type: Number },
-    condition: { type: String, enum: ["new user", "existing user"] },
+    // remarks: { type: String },
+    // type: { type: String, }, 
+    // condition: { type: String, enum: ["new user", "existing user"] },
     slots: { type: Number },
     startDate: { type: Date },
     expiry: { type: Date },

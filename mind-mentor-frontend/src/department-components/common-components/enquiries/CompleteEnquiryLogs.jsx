@@ -85,15 +85,7 @@ const CompleteEnquiryLogs = () => {
     return `${day}/${month}/20${year}`;
   };
 
-  const handleOpenNoteDialog = () => {
-    setNoteDialog({
-      open: true,
-      rowData: null,
-      noteText: "",
-      enquiryStatus: "",
-      disposition: "",
-    });
-  };
+
 
   const handleCloseNoteDialog = () => {
     setNoteDialog({
@@ -167,8 +159,8 @@ const CompleteEnquiryLogs = () => {
     {
       field: "createdAt",
       headerName: "Date",
-      width: 120,
-      minWidth: 120,
+      width: 150,
+      minWidth: 150,
     },
     {
       field: "action",
@@ -366,102 +358,7 @@ const CompleteEnquiryLogs = () => {
             </Box>
           </Paper>
 
-          {/* Add Note Dialog */}
-          <Dialog
-            open={noteDialog.open}
-            onClose={handleCloseNoteDialog}
-            maxWidth="sm"
-            fullWidth
-          >
-            <DialogTitle
-              sx={{
-                color: "#ffffff",
-                fontWeight: 600,
-                background: "linear-gradient(to right, #642b8f, #aa88be)",
-              }}
-            >
-              Add Note
-            </DialogTitle>
-            <Divider />
-            <DialogContent>
-              <FormControl fullWidth sx={{ mt: 2 }}>
-                <InputLabel>Enquiry Stage</InputLabel>
-                <Select
-                  value={noteDialog.enquiryStatus}
-                  onChange={(e) =>
-                    setNoteDialog((prev) => ({
-                      ...prev,
-                      enquiryStatus: e.target.value,
-                    }))
-                  }
-                  label="Enquiry Stage"
-                >
-                  <MenuItem value="Pending">Pending</MenuItem>
-                  <MenuItem value="Qualified Lead">Qualified Lead</MenuItem>
-                  <MenuItem value="Unqualified Lead">Unqualified Lead</MenuItem>
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth sx={{ mt: 2 }}>
-                <InputLabel>Disposition</InputLabel>
-                <Select
-                  value={noteDialog.disposition}
-                  onChange={(e) =>
-                    setNoteDialog((prev) => ({
-                      ...prev,
-                      disposition: e.target.value,
-                    }))
-                  }
-                  label="Disposition"
-                >
-                  <MenuItem value="RnR">RnR</MenuItem>
-                  <MenuItem value="Call Back">Call Back</MenuItem>
-                  <MenuItem value="None">None</MenuItem>
-                </Select>
-              </FormControl>
-
-              <TextField
-                label="Note"
-                value={noteDialog.noteText}
-                onChange={(e) =>
-                  setNoteDialog((prev) => ({
-                    ...prev,
-                    noteText: e.target.value,
-                  }))
-                }
-                multiline
-                rows={4}
-                fullWidth
-                sx={{ mt: 2 }}
-              />
-            </DialogContent>
-            <Divider sx={{ borderColor: "#aa88be" }} />
-            <DialogActions sx={{ p: 2.5 }}>
-              <Button
-                onClick={handleNoteSave}
-                variant="contained"
-                sx={{
-                  bgcolor: "primary.main",
-                  color: "white",
-                  "&:hover": {
-                    bgcolor: "primary.dark",
-                  },
-                }}
-              >
-                Save Note
-              </Button>
-              <Button
-                onClick={handleCloseNoteDialog}
-                variant="outlined"
-                sx={{
-                  color: "text.primary",
-                  borderColor: "divider",
-                }}
-              >
-                Cancel
-              </Button>
-            </DialogActions>
-          </Dialog>
+   
         </Box>
       </Fade>
     </ThemeProvider>
