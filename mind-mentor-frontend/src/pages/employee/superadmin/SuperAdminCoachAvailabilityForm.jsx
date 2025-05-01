@@ -1,8 +1,11 @@
-import Topbar from "../../../component/parent-component/parent-dashboard/layout/Topbar";
-import Sidebar from "../../../department-components/superadmin/Layout/Sidebar";
-import RenewalTable from "../../../department-components/superadmin/components/programs/RenewalTable";
+import CoachAvailabilityForm from "../../../department-components/servicedelivery/components/CoachAvailabilityForm";
 
-const renewalPrograms = () => {
+
+import Topbar from '../../../component/parent-component/parent-dashboard/layout/Topbar';
+import Sidebar from "../../../department-components/superadmin/Layout/Sidebar";
+
+
+const SuperAdminCoachAvailabilityForm = () => {
   return (
     <div className="flex h-screen w-screen overflow-hidden">
       <div className="z-30 flex-shrink-0">
@@ -13,9 +16,9 @@ const renewalPrograms = () => {
           <Topbar />
         </div>
         <div className="flex-1 overflow-hidden relative z-10">
-          <div className="h-full w-full overflow-auto scrollbar-hide bg-gray-50">
+          <div className="h-full w-full overflow-auto scrollbar-hide">
             <div className="min-w-full p-4">
-              <RenewalTable />
+              <CoachAvailabilityForm />
             </div>
           </div>
         </div>
@@ -24,4 +27,4 @@ const renewalPrograms = () => {
   );
 };
 
-export default renewalPrograms;
+export default SuperAdminCoachAvailabilityForm;

@@ -18,12 +18,7 @@ import {
 } from "../../../api/service/employee/serviceDeliveryService";
 import { toast, ToastContainer } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-
-const programs = [
-  { name: "Chess", levels: ["Beginner", "Intermediate", "Advanced"] },
-  { name: "Rubiks Cube", levels: ["Beginner", "Intermediate", "Advanced"] },
-  { name: "Math", levels: ["Beginner", "Intermediate", "Advanced"] },
-];
+import { getAllProgrameData } from "../../../api/service/employee/EmployeeService";
 
 // Map day names to their index in the week (0 = Sunday, 1 = Monday, etc.)
 const dayToIndex = {
@@ -38,8 +33,10 @@ const dayToIndex = {
 
 const ClassScheduleForm = () => {
   const navigate = useNavigate();
+  const department = localStorage.getItem("department");
   const empId = localStorage.getItem("empId");
   const [availabilityData, setAvailabilityData] = useState([]);
+  const [programData, setProgramData] = useState([]);
   const [schedules, setSchedules] = useState([
     {
       day: "",
@@ -50,6 +47,7 @@ const ClassScheduleForm = () => {
       level: "",
       fromTime: "",
       toTime: "",
+      meetingLink: "",
       isDemo: false,
       mode: "online",
     },
@@ -67,6 +65,21 @@ const ClassScheduleForm = () => {
       }
     };
     fetchAvailableData();
+  }, []);
+
+  useEffect(() => {
+    const fetchProgramData = async () => {
+      try {
+        const response = await getAllProgrameData();
+        if (response.data && response.data.success) {
+          setProgramData(response.data.programs);
+        }
+      } catch (error) {
+        console.error("Error fetching program data:", error);
+        toast.error("Could not load program data. Please try again later.");
+      }
+    };
+    fetchProgramData();
   }, []);
 
   const getNextDayDate = (dayName) => {
@@ -168,6 +181,10 @@ const ClassScheduleForm = () => {
       if (value) {
         currentSchedule.date = getNextDayDate(value);
       }
+    } else if (field === "program") {
+      currentSchedule[field] = value;
+      // Reset level when program changes
+      currentSchedule.level = "";
     } else {
       currentSchedule[field] = value;
     }
@@ -218,6 +235,11 @@ const ClassScheduleForm = () => {
         item.program === program &&
         item.day === day
     );
+  };
+
+  const getLevelsForProgram = (programName) => {
+    const program = programData.find((p) => p.programName === programName);
+    return program ? program.programLevel : [];
   };
 
   const addSchedule = () => {
@@ -282,7 +304,7 @@ const ClassScheduleForm = () => {
       if (response.status === 201) {
         toast.success(response.data.message);
         setTimeout(() => {
-          navigate("/service-delivery/department/class-shedules");
+          navigate(`/${department}/department/class-shedules`);
         }, 1500);
       }
     } catch (error) {
@@ -420,13 +442,11 @@ const ClassScheduleForm = () => {
                         }
                       >
                         {schedule.program &&
-                          programs
-                            .find((p) => p.name === schedule.program)
-                            ?.levels.map((level) => (
-                              <MenuItem key={level} value={level}>
-                                {level}
-                              </MenuItem>
-                            ))}
+                          getLevelsForProgram(schedule.program).map((level) => (
+                            <MenuItem key={level} value={level}>
+                              {level}
+                            </MenuItem>
+                          ))}
                       </Select>
                     </FormControl>
                   </Grid>
@@ -598,7 +618,7 @@ const ClassScheduleForm = () => {
         pauseOnHover
         draggable
         pauseOnFocusLoss
-        style={{ marginTop: "60px" }} 
+        style={{ marginTop: "60px" }}
       />
     </div>
   );

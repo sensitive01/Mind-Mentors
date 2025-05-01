@@ -292,6 +292,9 @@ import NewMMClassUI from "./department-components/bbbclasscomponent/NewMMClassUI
 import MmKidJoinClass from "./department-components/bbbclasscomponent/MmKidJoinClass";
 import BbAdminCreateLinkHostinger from "./department-components/hotinger/BbAdminCreateLinkHostinger";
 import BbKidJoinClassHostinger from "./department-components/hotinger/BbKidJoinClassHostinger";
+import SuperAdminCoachAvailabilityTable from "./pages/employee/superadmin/SuperAdminCoachAvailabilityTable";
+import SuperAdminCoachAvailabilityForm from "./pages/employee/superadmin/SuperAdminCoachAvailabilityForm";
+import SuperAdminAddTimeTable from "./pages/employee/superadmin/SuperAdminAddTimeTable";
 
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
@@ -987,19 +990,18 @@ function App() {
 
 
           <Route path="/super-admin/department/dashboard"  element={<SuperadminDashboard />}/>     
-
-         
           <Route path="/super-admin/department/enrollment-data"  element={<SuperAdminEnquiryProspectsTab />}/>
           {/* <Route path="/super-admin/department/show-complete-enquiry-logs/:id" element={<ShowAllEnquiryLogs />} /> */}
-
-
           <Route path="/super-admin/department/show-complete-enquiry-logs/:id"  element={<SuperAdminAllEnquiryLogs />} />
           <Route path="/super-admin/department/show-complete-status-logs/:id"  element={<SuperAdminAllStatusLogs />}/>
           <Route path="/super-admin/department/enquiry-form" element={<SuperAdminAddNewEnquiryForm />}/>
-          <Route path="/super-admin/department/schedule-demo-class-list-individually/:enqId/:isSheduled" element={<SuperAdminAssignNewClass />}  />
+          <Route path="/super-admin/department/schedule-demo-class-list-individually/:enqId/:isSheduled" element={<SuperAdminAssignNewClass />}/>
           <Route path="/super-admin/department/parents-data" element={<SuperadminParents />}/>
           <Route path="/super-admin/department/kids-data" element={<SuperadminKids />}/>
           <Route path="/super-admin/department/class-timetable-list"  element={<SuperadminScheduleClass />}/>
+          <Route path="/super-admin/department/coachAvailabilityTable" element={<SuperAdminCoachAvailabilityTable />}/>
+          <Route path="/super-admin/department/coachAvailabilityForm" element={<SuperAdminCoachAvailabilityForm />}/>
+          <Route path="/super-admin/department/class-shedules"  element={<SuperAdminAddTimeTable />}/>
           <Route path="/super-admin/department/employees" element={<EmployeeTable />}/>
           <Route path="/super-admin/department/allowdeduct" element={<AllowDeductTable />} />
           <Route path="/super-admin/department/active-kid-data" element={<SuperAdminActiveKidData />}/>
@@ -1020,13 +1022,14 @@ function App() {
           <Route path="/super-admin/department/package-table"  element={<SuperAdminPackageTableList />} />   
           <Route path="/super-admin/department/add-package-form" element={<SuperAdminAddPackageForm />}/>
           <Route path="/super-admin/department/display-whole-selectedClass/:enqId"  element={<SuperAdminDisplayWholeClassKid />}/>
+          
           <Route path="/superadminRenewals" element={<SuperadminRenewal />} />
           <Route path="/superadminEnquiries" element={<SuperadminEnquiries />} />
           <Route path="/superadminInvoices" element={<SuperadminInvoice />} />
           <Route path="/chessKids/" element={<ChessKid />} />
           <Route path="/superadminFeedback" element={<SuperadminFeedback />} />
           <Route path="/superadminAttendanceReport" element={<SuperadminAttendanceReport />}/>
-          <Route path="/superadminPrograms" element={<SuperadminPrograms />} />
+          <Route path="/super-admin/department/list-all-programme" element={<SuperadminPrograms />} />
           <Route path="/superadminSupport/"  element={<SuperadminSupportRequest />}/>
           <Route path="/notifications" element={<NotificationTable />} />
           <Route path="/employee/add" element={<EmployeeForm />} />

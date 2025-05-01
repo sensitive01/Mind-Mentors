@@ -155,18 +155,15 @@ const getClassShedules = async (req, res) => {
   try {
     console.log("Welcome to class schedules");
     const { department } = req.query;
-    let type;
-    if (department == "centeradmin") {
-      type = "offline";
-    } else if (
-      department == "operation" ||
-      department == "service-delivary"
-    ) {
-      type = "online";
-    } else {
-      type = "";
-    }
-    const classData = await ClassSchedule.find({ type: type });
+
+    let query = {};
+    if (department === "centeradmin") {
+      query.type = "offline";
+    } else if (department === "operation" || department === "service-delivary") {
+      query.type = "online";
+    } // else, no filter — return all
+
+    const classData = await ClassSchedule.find(query); // `query` may be empty, which fetches all
 
     res.status(200).json({
       success: true,
@@ -175,7 +172,6 @@ const getClassShedules = async (req, res) => {
     });
   } catch (err) {
     console.error("Error in getting the class schedules", err);
-
     res.status(500).json({
       success: false,
       message: "Failed to retrieve class schedules",
@@ -183,6 +179,10 @@ const getClassShedules = async (req, res) => {
     });
   }
 };
+
+
+
+
 const getCoachData = async (req, res) => {
   try {
     console.log("Welcome to fetch coach data");

@@ -384,6 +384,11 @@ const ModernSidebar = () => {
           text: "Leaves",
           link: "/super-admin/department/leaves",
         },
+        {
+          icon: <LeavesIcon />,
+          text: "Coach Availability Table",
+          link: "/super-admin/department/coachAvailabilityTable",
+        },
       ],
       open: openEmployees,
       onClick: handleEmployeesClick,
@@ -447,7 +452,7 @@ const ModernSidebar = () => {
       icon: <ProgramsIcon />,
       text: "Programs",
       color: iconColors.classSchedules,
-      link: "/superadminPrograms",
+      link: "/super-admin/department/list-all-programme",
     },
     {
       icon: <SupportIcon />,

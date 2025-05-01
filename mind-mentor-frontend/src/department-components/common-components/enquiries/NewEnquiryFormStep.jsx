@@ -6,6 +6,7 @@ import "react-phone-input-2/lib/style.css";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import { operationDeptInstance } from "../../../api/axios/operationDeptInstance";
+import { getAllProgrameData } from "../../../api/service/employee/EmployeeService";
 
 const NewEnquiryFormStep = () => {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ const NewEnquiryFormStep = () => {
   const [pincode, setPincode] = useState("");
   const [error, setError] = useState("");
   const [isSameAsContact, setIsSameAsContact] = useState(false);
+  const [programData,setProgrameData]=useState([])
 
   const [formData, setFormData] = useState({
     parentFirstName: "",
@@ -40,6 +42,18 @@ const NewEnquiryFormStep = () => {
     otherRelationship: "",
     pincode: "",
   });
+
+  useEffect(()=>{
+    const fetchProgramData = async()=>{
+      const response = await getAllProgrameData()
+      console.log(response)
+      if(response.status===200){
+        setProgrameData(response?.data?.programs)
+      }
+    }
+    fetchProgramData()
+
+  },[])
 
   const fetchCityDetails = async (pin) => {
     try {
@@ -576,90 +590,88 @@ const NewEnquiryFormStep = () => {
           </div>
         );
 
-      case 2:
-        return (
-          <div className="space-y-8">
-            <div className="space-y-4">
-              <h3 className="text-[#642b8f] font-semibold text-lg pb-2 border-b-2 border-[#f8a213]">
-                Program Selection
-              </h3>
-              {formData.programs.map((program, index) => (
-                <div key={index} className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-[#642b8f]">
-                      Program {index + 1}
-                    </label>
-                    {formData.programs.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeProgram(index)}
-                        className="text-red-500 hover:text-red-700 transition-colors"
+        case 2:
+          return (
+            <div className="space-y-8">
+              <div className="space-y-4">
+                <h3 className="text-[#642b8f] font-semibold text-lg pb-2 border-b-2 border-[#f8a213]">
+                  Program Selection
+                </h3>
+                {formData.programs.map((program, index) => (
+                  <div key={index} className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium text-[#642b8f]">
+                        Program {index + 1}
+                      </label>
+                      {formData.programs.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeProgram(index)}
+                          className="text-red-500 hover:text-red-700 transition-colors"
+                        >
+                          <Trash className="h-5 w-5" />
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex gap-4">
+                      <select
+                        className="flex-1 p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors bg-white"
+                        value={program.program}
+                        onChange={(e) =>
+                          handleProgramChange(index, "program", e.target.value)
+                        }
+                        required
                       >
-                        <Trash className="h-5 w-5" />
-                      </button>
-                    )}
+                        <option value="">-Select Program-</option>
+                        {programData.map((pgm) => (
+                          <option key={pgm._id} value={pgm.programName}>
+                            {pgm.programName}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        className="flex-1 p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors bg-white"
+                        value={program.level}
+                        onChange={(e) =>
+                          handleProgramChange(index, "level", e.target.value)
+                        }
+                        required
+                      >
+                        <option value="">-Select Level-</option>
+                        {program.program && programData
+                          .find(pgm => pgm.programName === program.program)
+                          ?.programLevel.map((level) => (
+                            <option key={level} value={level}>
+                              {level}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
                   </div>
-                  <div className="flex gap-4">
-                    <select
-                      className="flex-1 p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors bg-white"
-                      value={program.program}
-                      onChange={(e) =>
-                        handleProgramChange(index, "program", e.target.value)
-                      }
-                      required
-                    >
-                      <option value="">-Select Program-</option>
-                      <option value="Chess">Chess</option>
-                      <option value="Rubiks Cube">Rubiks Cube</option>
-                    </select>
-                    <select
-                      className="flex-1 p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors bg-white"
-                      value={program.level}
-                      onChange={(e) =>
-                        handleProgramChange(index, "level", e.target.value)
-                      }
-                      required
-                    >
-                      <option value="">-Select Level-</option>
-                      <option value="Absolute Beginner">
-                        Absolute Beginner
-                      </option>
-                      <option value="Lower Beginner">Lower Beginner</option>
-                      <option value="Upper Beginner">Upper Beginner</option>
-                      <option value="Lower Intermediate">
-                        Lower Intermediate
-                      </option>
-                      <option value="Upper Intermediate">
-                        Upper Intermediate
-                      </option>
-                      <option value="Advanced">Advanced</option>
-                    </select>
-                  </div>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={addProgram}
-                className="text-[#642b8f] hover:text-[#aa88be] font-medium text-sm transition-colors"
-              >
-                + Add Program
-              </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={addProgram}
+                  className="text-[#642b8f] hover:text-[#aa88be] font-medium text-sm transition-colors"
+                >
+                  + Add Program
+                </button>
+              </div>
+        
+              <div className="space-y-4">
+                <label className="block text-sm font-medium text-[#642b8f]">
+                  Remarks
+                </label>
+                <textarea
+                  rows={4}
+                  className="w-full p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors resize-none"
+                  placeholder="Enter your Message here..."
+                  value={formData.message}
+                  onChange={(e) => handleInputChange("message", e.target.value)}
+                />
+              </div>
             </div>
-
-            <div className="space-y-4">
-              <label className="block text-sm font-medium text-[#642b8f]">
-                Remarks
-              </label>
-              <textarea
-                rows={4}
-                className="w-full p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors resize-none"
-                placeholder="Enter your Message here..."
-                value={formData.message}
-                onChange={(e) => handleInputChange("message", e.target.value)}
-              />
-            </div>
-          </div>
-        );
+          );
 
       default:
         return null;

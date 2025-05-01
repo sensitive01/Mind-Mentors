@@ -8,7 +8,7 @@ const app = express();
 const upload = multer(); // You can configure storage options if needed
 const bcrypt = require("bcryptjs");
 const Voucher = require("../../model/discount_voucher/voucherModel");
-const parentModel = require("../../model/parentModel")
+const parentModel = require("../../model/parentModel");
 const {
   Tournament,
   Notification,
@@ -19,6 +19,7 @@ const {
   Chat,
 } = require("../../model/tournamentsModel");
 const PhysicalCenter = require("../../model/physicalcenter/physicalCenterShema");
+const ProgramData = require("../../model/programe/programeDataSchema");
 
 const createUser = async (req, res) => {
   try {
@@ -1024,7 +1025,7 @@ const insertPackage = async (req, res) => {
 
 const addNewVoucher = async (req, res) => {
   try {
-    const {formData} = req.body
+    const { formData } = req.body;
     const newVoucher = new Voucher(formData);
     const savedVoucher = await newVoucher.save();
     res
@@ -1049,12 +1050,10 @@ const getAllVouchers = async (req, res) => {
   }
 };
 
-
 const savePhysicalCenterData = async (req, res) => {
   try {
     const formData = req.body;
     console.log("Received Form Data:", formData);
-
 
     const newCenter = new PhysicalCenter({
       centerName: formData.centerName,
@@ -1067,7 +1066,6 @@ const savePhysicalCenterData = async (req, res) => {
       photos: formData.photos || [],
     });
 
-   
     const savedCenter = await newCenter.save();
 
     res.status(201).json({
@@ -1091,7 +1089,7 @@ const getPhysicalCenterData = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Physical center data retrieved successfully",
-       physicalCenters,
+      physicalCenters,
     });
   } catch (err) {
     res.status(500).json({
@@ -1102,10 +1100,8 @@ const getPhysicalCenterData = async (req, res) => {
   }
 };
 
-
 const getIndividualPhysicalCenterData = async (req, res) => {
   try {
-   
     const { centerId } = req.params;
     const physicalCenter = await PhysicalCenter.findById(centerId);
 
@@ -1129,7 +1125,6 @@ const getIndividualPhysicalCenterData = async (req, res) => {
     });
   }
 };
-
 
 const generateUniquePackageId = async () => {
   let isUnique = false;
@@ -1193,32 +1188,33 @@ const addNewPackageData = async (req, res) => {
   }
 };
 
-
 const getAllPackageData = async (req, res) => {
   try {
     console.log("Welcome to get all package data");
-    
+
     const packagesData = await Package.find();
 
     if (!packagesData.length) {
       return res.status(404).json({ message: "No packages found" });
     }
 
-    return res.status(200).json({ message: "Packages retrieved successfully",  packagesData });
+    return res
+      .status(200)
+      .json({ message: "Packages retrieved successfully", packagesData });
   } catch (err) {
     console.error("Error in getting the package", err);
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
-
-
 const getAllParentData = async (req, res) => {
   try {
-    const parentData = await parentModel.find(); 
+    const parentData = await parentModel.find();
 
     if (!parentData || parentData.length === 0) {
-      return res.status(404).json({ success: false, message: "No parent data found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "No parent data found" });
     }
 
     res.status(200).json({
@@ -1226,10 +1222,98 @@ const getAllParentData = async (req, res) => {
       message: "Parent data retrieved successfully",
       parentData,
     });
-
   } catch (err) {
     console.error("Error in getting the parent data", err);
     res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+function toTitleCase(str) {
+  if (typeof str !== 'string') return '';
+  return str
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+const addNewProgrammeData = async (req, res) => {
+  try {
+    console.log("Welcome to add programme", req.body);
+    
+    const { programName, programLevel, physicalCenters } = req.body;
+
+    // Validate input
+    if (!programName || !programLevel || !physicalCenters || !Array.isArray(physicalCenters)) {
+      return res.status(400).json({
+        success: false,
+        message: "Program name, level, and physical centers (as array) are required",
+      });
+    }
+
+    const formattedName = toTitleCase(programName);
+
+    // Format levels to title case
+    const formattedLevels = Array.isArray(programLevel)
+      ? programLevel.map(lvl => toTitleCase(lvl))
+      : [toTitleCase(programLevel)];
+
+    // Check if program already exists
+    const existingProgram = await ProgramData.findOne({ programName: formattedName });
+
+    if (existingProgram) {
+      let updated = false;
+
+      // Add new levels if not already present
+      formattedLevels.forEach(lvl => {
+        if (!existingProgram.programLevel.includes(lvl)) {
+          existingProgram.programLevel.push(lvl);
+          updated = true;
+        }
+      });
+
+      // Add new physical centers if not already present
+      physicalCenters.forEach(centerId => {
+        const exists = existingProgram.physicalCenter.some(
+          existingId => existingId.toString() === centerId.toString()
+        );
+        if (!exists) {
+          existingProgram.physicalCenter.push(centerId);
+          updated = true;
+        }
+      });
+
+      if (updated) {
+        await existingProgram.save();
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: updated
+          ? "Program updated with new level(s) or center(s)"
+          : "Program already has all provided levels and centers",
+        data: existingProgram,
+      });
+    }
+
+    // If not existing, create new program
+    const newProgram = new ProgramData({
+      programName: formattedName,
+      programLevel: formattedLevels,
+      physicalCenter: physicalCenters,
+    });
+
+    await newProgram.save();
+
+    res.status(201).json({
+      success: true,
+      message: "New program created",
+      data: newProgram,
+    });
+
+  } catch (err) {
+    console.error("Error in adding the program data", err);
+    res.status(500).json({ success: false, message: "Failed to add program" });
   }
 };
 
@@ -1238,13 +1322,32 @@ const getAllParentData = async (req, res) => {
 
 
 
+const getAllProgrameData = async (req, res) => {
+  try {
+    const programs = await ProgramData.find().populate('physicalCenter', 'centerName'); // only populate center name
+    console.log("programs", programs);
 
+    res.status(200).json({
+      success: true,
+      message: "Program data fetched successfully",
+      programs,
+    });
+  } catch (err) {
+    console.log("Error in getting the program data", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch program data",
+    });
+  }
+};
 
 
 
 
 
 module.exports = {
+  getAllProgrameData,
+  addNewProgrammeData,
   getAllParentData,
   getAllPackageData,
   addNewPackageData,

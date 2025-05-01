@@ -375,6 +375,18 @@ export const createUser = async (userData) => {
   return response.data;
 };
 
+export const adminAddNewProgramme = async (programmeData) => {
+  const response = await userInstance.post("/add-new-programme", programmeData);
+
+  return response;
+};
+
+export const getAllProgrameData = async () => {
+  const response = await userInstance.get("/get-programme-data");
+
+  return response;
+};
+
 // Get All Users
 export const fetchAllUsers = async () => {
   const response = await userInstance.get("/users");

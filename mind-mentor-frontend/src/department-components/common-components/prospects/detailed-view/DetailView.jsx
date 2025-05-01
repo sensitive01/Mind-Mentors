@@ -379,7 +379,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                 </Grid>
               )}
 
-              {(data.payment === "Pending" || data.payment === "Requested") && (
+              {(data.payment !== "Pending" || data.payment === "Requested") && (
                 <Grid item xs={12} md={3} style={{ overflow: "visible" }}>
                   <DetailCard
                     title={

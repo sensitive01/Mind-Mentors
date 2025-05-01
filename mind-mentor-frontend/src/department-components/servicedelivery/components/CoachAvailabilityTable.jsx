@@ -92,6 +92,7 @@ const generateTimeSlots = () => {
 const timeSlots = generateTimeSlots();
 
 const CoachAvailabilityTable = () => {
+  const department = localStorage.getItem("department")
   const [rows, setRows] = useState([]);
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 5,
@@ -244,7 +245,7 @@ const CoachAvailabilityTable = () => {
               variant="contained"
               color="primary"
               component={Link}
-              to="/service-delivery/department/coachAvailabilityForm"
+              to={`/${department}/department/coachAvailabilityForm`}
             >
               + Add Availability
             </Button>

@@ -18,6 +18,7 @@ import {
 } from "../../../api/service/employee/serviceDeliveryService";
 import { toast, ToastContainer } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { getAllProgrameData } from "../../../api/service/employee/EmployeeService";
 
 const customColors = {
   primary: "#642B8F",
@@ -26,12 +27,6 @@ const customColors = {
   highlight: "#F0BA6F",
   background: "#EFE8F0",
 };
-
-const programs = [
-  { name: "Chess", levels: ["Beginner", "Intermediate", "Advanced"] },
-  { name: "Rubiks Cube", levels: ["Beginner", "Intermediate", "Advanced"] },
-  { name: "Math", levels: ["Beginner", "Intermediate", "Advanced"] },
-];
 
 const days = [
   "Monday",
@@ -60,19 +55,37 @@ const timeSlots = generateTimeSlots();
 
 const CoachAvailabilityForm = () => {
   const navigate = useNavigate();
+  const department = localStorage.getItem("department");
   const empId = localStorage.getItem("empId");
   const [coaches, setCoaches] = useState([]);
+  const [programData, setProgramData] = useState([]);
   const [availabilities, setAvailabilities] = useState([
     {
       coachName: "",
       days: [], // Changed from day to days for multiple selection
       program: "",
+      level: "", // Added level field
       fromTime: "",
       toTime: "",
     },
   ]);
 
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchProgramData = async () => {
+      try {
+        const response = await getAllProgrameData();
+        if (response.data && response.data.success) {
+          setProgramData(response.data.programs);
+        }
+      } catch (error) {
+        console.error("Error fetching program data:", error);
+        toast.error("Could not load program data. Please try again later.");
+      }
+    };
+    fetchProgramData();
+  }, []);
 
   useEffect(() => {
     const fetchCoaches = async () => {
@@ -103,6 +116,12 @@ const CoachAvailabilityForm = () => {
       ...newAvailabilities[index],
       [field]: value,
     };
+    
+    // Reset level when program changes
+    if (field === "program") {
+      newAvailabilities[index].level = "";
+    }
+    
     setAvailabilities(newAvailabilities);
   };
 
@@ -113,6 +132,7 @@ const CoachAvailabilityForm = () => {
         coachName: "",
         days: [], // Initialize with empty array for multiple days
         program: "",
+        level: "",
         fromTime: "",
         toTime: "",
       },
@@ -136,6 +156,7 @@ const CoachAvailabilityForm = () => {
           coachName: availability.coachName,
           day: day,
           program: availability.program,
+          level: availability.level, // Include level in the submitted data
           fromTime: availability.fromTime,
           toTime: availability.toTime,
         }))
@@ -146,7 +167,7 @@ const CoachAvailabilityForm = () => {
 
       if (response.status === 200) {
         toast.success(response.data.message);
-        navigate("/service-delivery/department/coachAvailabilityTable");
+        navigate(`/${department}/department/coachAvailabilityTable`);
       }
     } catch (error) {
       console.error("Submission error:", error);
@@ -162,10 +183,17 @@ const CoachAvailabilityForm = () => {
         coachName: "",
         days: [],
         program: "",
+        level: "",
         fromTime: "",
         toTime: "",
       },
     ]);
+  };
+
+  // Find the selected program's levels
+  const getLevelsForProgram = (programName) => {
+    const program = programData.find(p => p.programName === programName);
+    return program ? program.programLevel : [];
   };
 
   return (
@@ -186,7 +214,7 @@ const CoachAvailabilityForm = () => {
               key={index}
               sx={{ mb: 2, alignItems: "center" }}
             >
-              <Grid item xs={12} sm={3}>
+              <Grid item xs={12} sm={2}>
                 <FormControl fullWidth margin="normal">
                   <InputLabel>Coach</InputLabel>
                   <Select
@@ -239,9 +267,9 @@ const CoachAvailabilityForm = () => {
                     }
                     label="Program"
                   >
-                    {programs.map((prog) => (
-                      <MenuItem key={prog.name} value={prog.name}>
-                        {prog.name}
+                    {programData.map((prog) => (
+                      <MenuItem key={prog._id} value={prog.programName}>
+                        {prog.programName}
                       </MenuItem>
                     ))}
                   </Select>
@@ -249,6 +277,26 @@ const CoachAvailabilityForm = () => {
               </Grid>
 
               <Grid item xs={12} sm={2}>
+                <FormControl fullWidth margin="normal">
+                  <InputLabel>Level</InputLabel>
+                  <Select
+                    value={availability.level}
+                    onChange={(e) =>
+                      handleChange(index, "level", e.target.value)
+                    }
+                    label="Level"
+                    disabled={!availability.program}
+                  >
+                    {getLevelsForProgram(availability.program).map((level) => (
+                      <MenuItem key={level} value={level}>
+                        {level}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} sm={1.5}>
                 <FormControl fullWidth margin="normal">
                   <InputLabel>From Time</InputLabel>
                   <Select
@@ -273,7 +321,7 @@ const CoachAvailabilityForm = () => {
                 </FormControl>
               </Grid>
 
-              <Grid item xs={12} sm={2}>
+              <Grid item xs={12} sm={1.5}>
                 <FormControl fullWidth margin="normal">
                   <InputLabel>To Time</InputLabel>
                   <Select

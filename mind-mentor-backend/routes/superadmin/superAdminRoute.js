@@ -83,6 +83,11 @@ userRoute.post('/save-physcical-center-data', userController.savePhysicalCenterD
 userRoute.get('/get-all-parent-data', userController.getAllParentData);
 
 
+userRoute.post('/add-new-programme', userController.addNewProgrammeData);
+userRoute.get('/get-programme-data', userController.getAllProgrameData);
+
+
+
 
 
 
