@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus } from "lucide-react";
+import { Plus, ChevronDown, ChevronUp, Clock } from "lucide-react";
 import { fetchPhycicalCenterData } from "../../../api/service/employee/EmployeeService";
 import axios from "axios";
 
@@ -47,6 +47,134 @@ const ImageDisplay = ({ images = [], centerName }) => {
   );
 };
 
+const BusinessHoursDisplay = ({ businessHours }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const formatTime = (time) => {
+    const [hours, minutes] = time.split(":");
+    const hour = parseInt(hours, 10);
+    const suffix = hour >= 12 ? "PM" : "AM";
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minutes} ${suffix}`;
+  };
+
+  return (
+    <div className="border-t pt-4 mt-4">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center justify-between w-full text-left text-gray-700 font-medium"
+      >
+        <div className="flex items-center gap-2">
+          <Clock size={18} className="text-gray-500" />
+          <span>Business Hours</span>
+        </div>
+        {isOpen ? (
+          <ChevronUp size={18} className="text-gray-500" />
+        ) : (
+          <ChevronDown size={18} className="text-gray-500" />
+        )}
+      </button>
+      
+      {isOpen && (
+        <div className="mt-3 space-y-2 text-sm text-gray-600">
+          {businessHours.map((day, idx) => (
+            <div key={idx} className="flex justify-between">
+              <span className={day.isClosed ? "text-red-500" : ""}>
+                {day.day}:
+              </span>
+              <span>
+                {day.isClosed ? (
+                  <span className="text-red-500">Closed</span>
+                ) : day.is24Hours ? (
+                  <span className="text-green-600">Open 24 Hours</span>
+                ) : (
+                  <span>
+                    {day.periods.map((period, pidx) => (
+                      <span key={pidx}>
+                        {pidx > 0 && ", "}
+                        {formatTime(period.openTime)} - {formatTime(period.closeTime)}
+                      </span>
+                    ))}
+                  </span>
+                )}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const ProgramLevelsDisplay = ({ programLevels }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  return (
+    <div className="border-t pt-4 mt-4">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center justify-between w-full text-left text-gray-700 font-medium"
+      >
+        <div className="flex items-center gap-2">
+          <svg 
+            className="w-5 h-5 text-gray-500" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24" 
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M19 9l-7 7-7-7" 
+            />
+          </svg>
+          <span>Program Levels ({programLevels.length})</span>
+        </div>
+        {isOpen ? (
+          <ChevronUp size={18} className="text-gray-500" />
+        ) : (
+          <ChevronDown size={18} className="text-gray-500" />
+        )}
+      </button>
+      
+      {isOpen && (
+        <div className="mt-3 space-y-3 text-sm">
+          {programLevels.map((program, idx) => (
+            <div key={idx} className="border-l-2 border-primary pl-3">
+              <div className="font-medium text-gray-700">
+                Program:<span className="font-bold"> {program.program}</span>
+              </div>
+              <div className="mt-1 flex flex-wrap gap-1">
+                {program.levels.map((level, lidx) => (
+                  <span 
+                    key={lidx} 
+                    className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-xs"
+                  >
+                    {level}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const CenterTypeTag = ({ type }) => {
+  const bgColor = type === "online" ? "bg-green-100" : "bg-blue-100";
+  const textColor = type === "online" ? "text-green-700" : "text-blue-700";
+  
+  return (
+    <span className={`${bgColor} ${textColor} px-2 py-1 rounded-full text-xs font-medium`}>
+      {type === "online" ? "Online" : "Offline"}
+    </span>
+  );
+};
+
 const ChessCenterCard = ({ center, onDelete }) => {
   const navigate = useNavigate();
 
@@ -78,81 +206,92 @@ const ChessCenterCard = ({ center, onDelete }) => {
 
       <div className="p-5">
         <div className="border-b pb-4">
-          <h2 className="text-xl font-bold text-primary mb-2">
-            {center.centerName}
-          </h2>
-        </div>
-
-        <div className="py-4 border-b">
-          <div className="flex items-start gap-2 text-gray-600 mb-2">
-            <svg
-              className="w-5 h-5 mt-0.5 flex-shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-              />
-            </svg>
-            <div>
-              <p>{center.address}</p>
-              <p>
-                {center.city}, {center.state} - {center.pincode}
-              </p>
-            </div>
+          <div className="flex justify-between items-center mb-2">
+            <h2 className="text-xl font-bold text-primary">
+              {center.centerName}
+            </h2>
+            <CenterTypeTag type={center.centerType} />
           </div>
         </div>
 
+        {center.centerType === "offline" && center.address && (
+          <div className="py-4 border-b">
+            <div className="flex items-start gap-2 text-gray-600 mb-2">
+              <svg
+                className="w-5 h-5 mt-0.5 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+              <div>
+                <p>{center.address}</p>
+                {center.city && center.state && center.pincode && (
+                  <p>
+                    {center.city}, {center.state} - {center.pincode}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex justify-between items-center mt-4 pt-4 border-t">
           <div className="space-y-1">
-            <a
-              href={`mailto:${center.email}`}
-              className="text-sm text-gray-600 hover:text-gray-800 flex items-center gap-2"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            {center.email && (
+              <a
+                href={`mailto:${center.email}`}
+                className="text-sm text-gray-600 hover:text-gray-800 flex items-center gap-2"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                />
-              </svg>
-              {center.email}
-            </a>
-            <a
-              href={`tel:${center.phoneNumber}`}
-              className="text-sm text-gray-600 hover:text-gray-800 flex items-center gap-2"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
+                </svg>
+                {center.email}
+              </a>
+            )}
+            {center.phoneNumber && (
+              <a
+                href={`tel:${center.phoneNumber}`}
+                className="text-sm text-gray-600 hover:text-gray-800 flex items-center gap-2"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                />
-              </svg>
-              {center.phoneNumber}
-            </a>
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                  />
+                </svg>
+                {center.phoneNumber}
+              </a>
+            )}
           </div>
           <div className="flex gap-2">
             <button
@@ -193,6 +332,14 @@ const ChessCenterCard = ({ center, onDelete }) => {
             </button>
           </div>
         </div>
+
+        {center.businessHours && center.businessHours.length > 0 && (
+          <BusinessHoursDisplay businessHours={center.businessHours} />
+        )}
+        
+        {center.programLevels && center.programLevels.length > 0 && (
+          <ProgramLevelsDisplay programLevels={center.programLevels} />
+        )}
       </div>
     </div>
   );
@@ -204,6 +351,7 @@ const ChessCentersList = () => {
   const [physicalCenters, setPhysicalCenters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [centerTypeFilter, setCenterTypeFilter] = useState("all");
 
   useEffect(() => {
     fetchCenters();
@@ -231,9 +379,11 @@ const ChessCentersList = () => {
     );
   };
 
-  const filteredCenters = physicalCenters.filter((center) =>
-    center.centerName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredCenters = physicalCenters.filter((center) => {
+    const matchesSearch = center.centerName.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesType = centerTypeFilter === "all" || center.centerType === centerTypeFilter;
+    return matchesSearch && matchesType;
+  });
 
   if (loading) {
     return (
@@ -280,6 +430,17 @@ const ChessCentersList = () => {
               />
             </svg>
           </div>
+          
+          <select
+            value={centerTypeFilter}
+            onChange={(e) => setCenterTypeFilter(e.target.value)}
+            className="px-4 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-gray-300"
+          >
+            <option value="all">All Types</option>
+            <option value="online">Online</option>
+            <option value="offline">Offline</option>
+          </select>
+          
           <button
             onClick={() =>
               navigate("/super-admin/department/add-physical-center")
@@ -293,13 +454,19 @@ const ChessCentersList = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredCenters.map((center) => (
-          <ChessCenterCard
-            key={center._id}
-            center={center}
-            onDelete={handleDelete}
-          />
-        ))}
+        {filteredCenters.length > 0 ? (
+          filteredCenters.map((center) => (
+            <ChessCenterCard
+              key={center._id}
+              center={center}
+              onDelete={handleDelete}
+            />
+          ))
+        ) : (
+          <div className="col-span-3 py-8 text-center text-gray-500">
+            No centers found matching your search criteria
+          </div>
+        )}
       </div>
     </div>
   );

@@ -14,22 +14,13 @@ import {
   ThemeProvider,
   Typography,
   Chip,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  OutlinedInput,
-  Checkbox,
-  ListItemText,
-  Divider,
 } from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import { ArrowBack } from "@mui/icons-material";
 import {
   adminAddNewProgramme,
-  fetchPhycicalCenterData,
   getAllProgrameData,
 } from "../../../../api/service/employee/EmployeeService";
 
@@ -131,69 +122,7 @@ const columns = [
       );
     },
   },
-  {
-    field: "physicalCenters",
-    headerName: "Physical Centers",
-    flex: 1.5,
-    minWidth: 250,
-    headerAlign: "left",
-    renderCell: (params) => {
-      // Handle both physicalCenters and physicalCenter properties
-      let centers = [];
-
-      if (params.value && Array.isArray(params.value)) {
-        centers = params.value;
-      } else if (
-        params.row.physicalCenter &&
-        Array.isArray(params.row.physicalCenter)
-      ) {
-        centers = params.row.physicalCenter;
-      }
-
-      if (centers.length === 0) {
-        return "-";
-      }
-
-      return (
-        <Box
-          sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, maxWidth: "100%" }}
-        >
-          {centers.map((center, index) => (
-            <Chip
-              key={index}
-              label={center.centerName || "Unknown Center"}
-              size="small"
-              sx={{
-                borderRadius: 1,
-                backgroundColor: "rgba(0, 128, 128, 0.1)",
-                color: "teal",
-                fontSize: "0.75rem",
-                height: "22px",
-                maxWidth: "100%",
-                "& .MuiChip-label": {
-                  padding: "0px 8px",
-                  whiteSpace: "normal",
-                  textOverflow: "ellipsis",
-                },
-              }}
-            />
-          ))}
-        </Box>
-      );
-    },
-  },
 ];
-
-const ITEM_HEIGHT = 48;
-const ITEM_PADDING_TOP = 8;
-const MenuProps = {
-  PaperProps: {
-    style: {
-      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-      width: 250,
-    },
-  },
-};
 
 const ProgramListing = () => {
   const [rows, setRows] = useState([]);
@@ -201,33 +130,14 @@ const ProgramListing = () => {
   const [newProgram, setNewProgram] = useState({
     programName: "",
     programLevel: [],
-    physicalCenters: [],
   });
   const [tempLevel, setTempLevel] = useState("");
   const [loading, setLoading] = useState(false);
-  const [centers, setCenters] = useState([]);
   const [toast, setToast] = useState({
     open: false,
     message: "",
     severity: "success",
   });
-
-  const fetchPhysicalCenter = async () => {
-    try {
-      const response = await fetchPhycicalCenterData();
-      const validCenters = response?.data?.physicalCenters?.filter(
-        (item) => item.centerName && item._id
-      );
-      setCenters(validCenters || []);
-    } catch (error) {
-      console.error("Error fetching physical centers:", error);
-      setToast({
-        open: true,
-        message: "Error loading physical centers. Please try again.",
-        severity: "error",
-      });
-    }
-  };
 
   const fetchProgramData = async () => {
     try {
@@ -238,9 +148,6 @@ const ProgramListing = () => {
         const processedRows = response.data.programs.map((program, index) => ({
           ...program,
           sno: index + 1,
-          // Ensure data consistency by mapping physicalCenter to physicalCenters if needed
-          physicalCenters:
-            program.physicalCenters || program.physicalCenter || [],
         }));
         setRows(processedRows);
       } else {
@@ -265,7 +172,6 @@ const ProgramListing = () => {
 
   useEffect(() => {
     fetchProgramData();
-    fetchPhysicalCenter();
   }, []);
 
   const handleClickOpen = () => {
@@ -274,7 +180,7 @@ const ProgramListing = () => {
 
   const handleClose = () => {
     setOpen(false);
-    setNewProgram({ programName: "", programLevel: [], physicalCenters: [] });
+    setNewProgram({ programName: "", programLevel: [] });
     setTempLevel("");
   };
 
@@ -298,21 +204,6 @@ const ProgramListing = () => {
 
   const handleLevelChange = (e) => {
     setTempLevel(e.target.value);
-  };
-
-  const handleCenterChange = (event) => {
-    const {
-      target: { value },
-    } = event;
-
-    // On autofill we get a stringified value.
-    const selectedCenters =
-      typeof value === "string" ? value.split(",") : value;
-
-    setNewProgram({
-      ...newProgram,
-      physicalCenters: selectedCenters,
-    });
   };
 
   const handleAddLevel = () => {
@@ -355,18 +246,13 @@ const ProgramListing = () => {
   };
 
   const handleAddProgram = async () => {
-    if (
-      newProgram.programName &&
-      newProgram.programLevel.length > 0 &&
-      newProgram.physicalCenters.length > 0
-    ) {
+    if (newProgram.programName && newProgram.programLevel.length > 0) {
       try {
         setLoading(true);
 
         const programData = {
           programName: newProgram.programName,
           programLevel: [...newProgram.programLevel],
-          physicalCenters: [...newProgram.physicalCenters],
         };
 
         const response = await adminAddNewProgramme(programData);
@@ -406,8 +292,7 @@ const ProgramListing = () => {
     } else {
       setToast({
         open: true,
-        message:
-          "Please enter program name, at least one level, and select at least one center",
+        message: "Please enter program name and at least one level",
         severity: "warning",
       });
     }
@@ -648,68 +533,6 @@ const ProgramListing = () => {
               )}
             </Box>
           </Box>
-
-          <Divider sx={{ my: 2 }} />
-
-          {/* Physical Centers Section */}
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
-              Physical Centers
-            </Typography>
-
-            <FormControl fullWidth sx={{ borderRadius: 1.5 }}>
-              <InputLabel id="physical-centers-label">
-                Select Physical Centers
-              </InputLabel>
-              <Select
-                labelId="physical-centers-label"
-                id="physical-centers"
-                multiple
-                value={newProgram.physicalCenters}
-                onChange={handleCenterChange}
-                input={<OutlinedInput label="Select Physical Centers" />}
-                renderValue={(selected) => (
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                    {selected.map((value) => {
-                      const centerName =
-                        centers.find((center) => center._id === value)
-                          ?.centerName || value;
-                      return (
-                        <Chip
-                          key={value}
-                          label={centerName}
-                          sx={{
-                            borderRadius: 1,
-                            backgroundColor: "rgba(0, 128, 128, 0.1)",
-                            color: "teal",
-                          }}
-                        />
-                      );
-                    })}
-                  </Box>
-                )}
-                MenuProps={MenuProps}
-                sx={{ borderRadius: 1.5 }}
-              >
-                {centers.map((center) => (
-                  <MenuItem key={center._id} value={center._id}>
-                    <Checkbox
-                      checked={
-                        newProgram.physicalCenters.indexOf(center._id) > -1
-                      }
-                    />
-                    <ListItemText primary={center.centerName} />
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            {centers.length === 0 && (
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                No physical centers available
-              </Typography>
-            )}
-          </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, py: 3, borderTop: "1px solid #eaeaea" }}>
           <Button
@@ -728,7 +551,6 @@ const ProgramListing = () => {
             disabled={
               !newProgram.programName ||
               newProgram.programLevel.length === 0 ||
-              newProgram.physicalCenters.length === 0 ||
               loading
             }
             sx={{

@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-axios.post('https://live.mindmentorz.in/api/new-class/create-new-class', {
+axios.post('https://mind-mentors-1.onrender.com/api/new-class/create-new-class', {
   className: "Database Discussion",
   coachName: "Aswinraj"
 }, {

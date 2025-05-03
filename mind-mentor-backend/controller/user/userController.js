@@ -1054,8 +1054,12 @@ const savePhysicalCenterData = async (req, res) => {
   try {
     const formData = req.body;
     console.log("Received Form Data:", formData);
+    const {programLevels} = formData
+    const {levels} = programLevels
+    console.log("programLevels",programLevels,"levels",levels)
 
     const newCenter = new PhysicalCenter({
+      centerType: formData.centerType,
       centerName: formData.centerName,
       address: formData.address,
       city: formData.city,
@@ -1064,6 +1068,8 @@ const savePhysicalCenterData = async (req, res) => {
       email: formData.email,
       phoneNumber: formData.phoneNumber,
       photos: formData.photos || [],
+      businessHours: formData.businessHours || [],
+      programLevels: formData.programLevels || [],
     });
 
     const savedCenter = await newCenter.save();
@@ -1085,12 +1091,39 @@ const savePhysicalCenterData = async (req, res) => {
 
 const getPhysicalCenterData = async (req, res) => {
   try {
-    const physicalCenters = await PhysicalCenter.find();
+    const centers = await PhysicalCenter.find().lean();
+    const programs = await ProgramData.find().lean();
+
+    // Convert program list into a Map for quick lookup
+    const programMap = new Map();
+    programs.forEach(p => {
+      programMap.set(p._id.toString(), p.programName);
+    });
+
+    // Replace program ID with program name in each center's programLevels
+    const updatedCenters = centers.map(center => {
+      const updatedProgramLevels = center.programLevels.map(pl => {
+        const programId = pl.program?.toString(); // assuming pl.program is ObjectId
+        const programName = programMap.get(programId) || "Unknown Program";
+
+        return {
+          ...pl,
+          program: programName, // Replace ObjectId with name
+        };
+      });
+
+      return {
+        ...center,
+        programLevels: updatedProgramLevels,
+      };
+    });
+
     res.status(200).json({
       success: true,
       message: "Physical center data retrieved successfully",
-      physicalCenters,
+      physicalCenters: updatedCenters,
     });
+
   } catch (err) {
     res.status(500).json({
       success: false,
@@ -1099,6 +1132,7 @@ const getPhysicalCenterData = async (req, res) => {
     });
   }
 };
+
 
 const getIndividualPhysicalCenterData = async (req, res) => {
   try {
@@ -1229,25 +1263,25 @@ const getAllParentData = async (req, res) => {
 };
 
 function toTitleCase(str) {
-  if (typeof str !== 'string') return '';
+  if (typeof str !== "string") return "";
   return str
     .toLowerCase()
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }
 
 const addNewProgrammeData = async (req, res) => {
   try {
     console.log("Welcome to add programme", req.body);
-    
-    const { programName, programLevel, physicalCenters } = req.body;
+
+    const { programName, programLevel } = req.body;
 
     // Validate input
-    if (!programName || !programLevel || !physicalCenters || !Array.isArray(physicalCenters)) {
+    if (!programName || !programLevel) {
       return res.status(400).json({
         success: false,
-        message: "Program name, level, and physical centers (as array) are required",
+        message: "Program name, level are required",
       });
     }
 
@@ -1255,43 +1289,30 @@ const addNewProgrammeData = async (req, res) => {
 
     // Format levels to title case
     const formattedLevels = Array.isArray(programLevel)
-      ? programLevel.map(lvl => toTitleCase(lvl))
+      ? programLevel.map((lvl) => toTitleCase(lvl))
       : [toTitleCase(programLevel)];
 
     // Check if program already exists
-    const existingProgram = await ProgramData.findOne({ programName: formattedName });
+    const existingProgram = await ProgramData.findOne({
+      programName: formattedName,
+    });
 
     if (existingProgram) {
       let updated = false;
 
       // Add new levels if not already present
-      formattedLevels.forEach(lvl => {
+      formattedLevels.forEach((lvl) => {
         if (!existingProgram.programLevel.includes(lvl)) {
           existingProgram.programLevel.push(lvl);
           updated = true;
         }
       });
 
-      // Add new physical centers if not already present
-      physicalCenters.forEach(centerId => {
-        const exists = existingProgram.physicalCenter.some(
-          existingId => existingId.toString() === centerId.toString()
-        );
-        if (!exists) {
-          existingProgram.physicalCenter.push(centerId);
-          updated = true;
-        }
-      });
-
-      if (updated) {
-        await existingProgram.save();
-      }
-
       return res.status(200).json({
         success: true,
         message: updated
           ? "Program updated with new level(s) or center(s)"
-          : "Program already has all provided levels and centers",
+          : "Program already has all provided levels ",
         data: existingProgram,
       });
     }
@@ -1300,7 +1321,6 @@ const addNewProgrammeData = async (req, res) => {
     const newProgram = new ProgramData({
       programName: formattedName,
       programLevel: formattedLevels,
-      physicalCenter: physicalCenters,
     });
 
     await newProgram.save();
@@ -1310,21 +1330,15 @@ const addNewProgrammeData = async (req, res) => {
       message: "New program created",
       data: newProgram,
     });
-
   } catch (err) {
     console.error("Error in adding the program data", err);
     res.status(500).json({ success: false, message: "Failed to add program" });
   }
 };
 
-
-
-
-
-
 const getAllProgrameData = async (req, res) => {
   try {
-    const programs = await ProgramData.find().populate('physicalCenter', 'centerName'); // only populate center name
+    const programs = await ProgramData.find();
     console.log("programs", programs);
 
     res.status(200).json({
@@ -1340,10 +1354,6 @@ const getAllProgrameData = async (req, res) => {
     });
   }
 };
-
-
-
-
 
 module.exports = {
   getAllProgrameData,

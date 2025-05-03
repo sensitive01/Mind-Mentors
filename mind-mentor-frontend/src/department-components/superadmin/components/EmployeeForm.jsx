@@ -6,6 +6,10 @@ import {
   InputLabel,
   Select,
   FormHelperText,
+  FormGroup,
+  FormControlLabel,
+  Checkbox,
+  Typography,
 } from "@mui/material";
 import axios from "axios";
 import { useState, useEffect } from "react";
@@ -28,7 +32,10 @@ const AddEmployeeForm = () => {
     role: "",
     centerId: "",
     centerName: "",
-    mode: "", // New state for mode
+    modes: {
+      online: false,
+      offline: false
+    }, // Changed from mode string to modes object
   });
 
   const [centers, setCenters] = useState([]);
@@ -46,11 +53,11 @@ const AddEmployeeForm = () => {
   }, []);
 
   useEffect(() => {
-    // Show center dropdown if department or role is "centeradmin" or mode is "offline"
+    // Show center dropdown if department or role is "centeradmin" or offline mode is selected
     if (
       formData.department === "centeradmin" ||
       formData.role === "centeradmin" ||
-      formData.mode === "offline"
+      formData.modes.offline
     ) {
       setShowCenterDropdown(true);
     } else {
@@ -62,10 +69,20 @@ const AddEmployeeForm = () => {
         centerName: "",
       }));
     }
-  }, [formData.department, formData.role, formData.mode]);
+  }, [formData.department, formData.role, formData.modes.offline]);
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleModeChange = (mode) => {
+    setFormData((prev) => ({
+      ...prev,
+      modes: {
+        ...prev.modes,
+        [mode]: !prev.modes[mode]
+      }
+    }));
   };
 
   const handleCenterChange = (e) => {
@@ -91,6 +108,11 @@ const AddEmployeeForm = () => {
     e.preventDefault();
 
     try {
+      // Convert modes object to array for submission
+      const modesArray = Object.entries(formData.modes)
+        .filter(([_, isSelected]) => isSelected)
+        .map(([modeName]) => modeName);
+
       // Prepare the data to be submitted - only the fields we're keeping
       const formDataToSubmit = {
         firstName: formData.firstName,
@@ -100,7 +122,7 @@ const AddEmployeeForm = () => {
         gender: formData.gender,
         department: formData.department,
         role: formData.role,
-        mode: formData.mode, // Include mode in the submission
+        modes: modesArray, // Submit as array of selected modes
       };
 
       // Only include center data if it's selected
@@ -112,8 +134,8 @@ const AddEmployeeForm = () => {
       let response;
 
       response = await addNewEmployee(formDataToSubmit);
-      console.log("User  updated:", response.data);
-      alert("User  updated successfully!");
+      console.log("User updated:", response.data);
+      alert("User updated successfully!");
     } catch (error) {
       console.error(
         "Error:",
@@ -148,6 +170,9 @@ const AddEmployeeForm = () => {
     { value: "Female", label: "Female" },
     { value: "Other", label: "Other" },
   ];
+
+  // Determine if at least one mode is selected (for validation)
+  const isAnyModeSelected = formData.modes.online || formData.modes.offline;
 
   return (
     <div className="min-h-screen p-6 bg-gray-100">
@@ -255,7 +280,7 @@ const AddEmployeeForm = () => {
                 </FormControl>
               </div>
 
-              {/* Department, Mode, and Role in one row */}
+              {/* Department, Mode Checkboxes, and Role in one row */}
               <div className="flex gap-4 mb-4">
                 <FormControl variant="outlined" className="flex-1" required>
                   <InputLabel id="department-label">Department</InputLabel>
@@ -279,22 +304,48 @@ const AddEmployeeForm = () => {
                   </Select>
                 </FormControl>
 
-                {/* Mode Dropdown */}
-                <FormControl variant="outlined" className="flex-1" required>
-                  <InputLabel id="mode-label">Mode</InputLabel>
+                {/* Mode Dropdown with Multiple Checkboxes */}
+                <FormControl 
+                  variant="outlined" 
+                  className="flex-1" 
+                  required
+                  error={!isAnyModeSelected}
+                >
+                  <InputLabel id="mode-checkbox-label">Mode</InputLabel>
                   <Select
-                    labelId="mode-label"
-                    id="mode"
-                    value={formData.mode}
-                    onChange={(e) => handleInputChange("mode", e.target.value)}
+                    labelId="mode-checkbox-label"
+                    id="mode-checkbox"
+                    multiple
+                    value={Object.entries(formData.modes)
+                      .filter(([_, selected]) => selected)
+                      .map(([mode]) => mode)}
+                    onChange={(e) => {
+                      const selectedValues = e.target.value;
+                      setFormData(prev => ({
+                        ...prev,
+                        modes: {
+                          online: selectedValues.includes('online'),
+                          offline: selectedValues.includes('offline')
+                        }
+                      }));
+                    }}
+                    renderValue={(selected) => selected.join(', ')}
                     label="Mode"
                   >
-                    <MenuItem value="" disabled>
-                      <em>Select Mode</em>
+                    <MenuItem value="online">
+                      <Checkbox checked={formData.modes.online} />
+                      <Typography>Online</Typography>
                     </MenuItem>
-                    <MenuItem value="online">Online</MenuItem>
-                    <MenuItem value="offline">Offline</MenuItem>
+                    <MenuItem value="offline">
+                      <Checkbox checked={formData.modes.offline} />
+                      <Typography>Offline</Typography>
+                    </MenuItem>
                   </Select>
+                  {!isAnyModeSelected && (
+                    <FormHelperText error>
+                      Please select at least one mode
+                    </FormHelperText>
+                  )}
                 </FormControl>
 
                 <FormControl variant="outlined" className="flex-1" required>
@@ -376,6 +427,7 @@ const AddEmployeeForm = () => {
                 color: "white",
                 padding: "10px 32px",
               }}
+              disabled={!isAnyModeSelected}
             >
               Submit
             </Button>
@@ -398,7 +450,7 @@ const AddEmployeeForm = () => {
                   role: "",
                   centerId: "",
                   centerName: "",
-                  mode: "", // Reset mode
+                  modes: { online: false, offline: false },
                 });
               }}
             >

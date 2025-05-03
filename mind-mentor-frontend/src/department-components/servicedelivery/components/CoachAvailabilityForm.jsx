@@ -233,29 +233,7 @@ const CoachAvailabilityForm = () => {
                 </FormControl>
               </Grid>
 
-              <Grid item xs={12} sm={2}>
-                <FormControl fullWidth margin="normal">
-                  <InputLabel>Days</InputLabel>
-                  <Select
-                    multiple
-                    value={availability.days}
-                    onChange={(e) =>
-                      handleChange(index, "days", e.target.value)
-                    }
-                    input={<OutlinedInput label="Days" />}
-                    renderValue={(selected) => selected.join(", ")}
-                  >
-                    {days.map((day) => (
-                      <MenuItem key={day} value={day}>
-                        <Checkbox
-                          checked={availability.days.indexOf(day) > -1}
-                        />
-                        <ListItemText primary={day} />
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
+             
 
               <Grid item xs={12} sm={2}>
                 <FormControl fullWidth margin="normal">
@@ -290,6 +268,29 @@ const CoachAvailabilityForm = () => {
                     {getLevelsForProgram(availability.program).map((level) => (
                       <MenuItem key={level} value={level}>
                         {level}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={2}>
+                <FormControl fullWidth margin="normal">
+                  <InputLabel>Days</InputLabel>
+                  <Select
+                    multiple
+                    value={availability.days}
+                    onChange={(e) =>
+                      handleChange(index, "days", e.target.value)
+                    }
+                    input={<OutlinedInput label="Days" />}
+                    renderValue={(selected) => selected.join(", ")}
+                  >
+                    {days.map((day) => (
+                      <MenuItem key={day} value={day}>
+                        <Checkbox
+                          checked={availability.days.indexOf(day) > -1}
+                        />
+                        <ListItemText primary={day} />
                       </MenuItem>
                     ))}
                   </Select>

@@ -523,103 +523,105 @@ const ModernSidebar = () => {
         sx={{
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between",
-          py: 2,
+          justifyContent: "flex-end", // Changed to flex-end to move button to the right
+          py: 1,
           px: 2,
         }}
       >
-        {!isCollapsed && (
-          <Box display="flex" flexDirection="column" alignItems="center" mt={2}>
-            {/* Profile Icon with Link */}
-            <Link to="/superadminProfile" style={{ textDecoration: "none" }}>
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  width: "100%",
-                }}
-              >
-                <Avatar
-                  sx={{
-                    width: 60,
-                    height: 60,
-                    bgcolor: iconColors.profile,
-                    fontSize: 24,
-                    fontWeight: "bold",
-                    mb: 1,
-                  }}
-                >
-                  {getInitials(empData.firstName)}
-                </Avatar>
-
-                <Typography
-                  variant="body1"
-                  color="#642b8f"
-                  fontWeight="bold"
-                  textAlign="center"
-                  noWrap
-                  sx={{ maxWidth: "100%" }}
-                >
-                  {empData?.firstName || "Loading..."}
-                </Typography>
-
-                <Box sx={{ mt: 1, width: "100%" }}>
-                  <Box sx={{ display: "flex", alignItems: "center", mb: 0.5 }}>
-                    <EmailIcon
-                      sx={{ color: "#642b8f", fontSize: 16, mr: 0.5 }}
-                    />
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      noWrap
-                      sx={{ maxWidth: "190px" }}
-                    >
-                      {empData?.email || "Loading..."}
-                    </Typography>
-                  </Box>
-
-                  <Box
-                    sx={{ display: "flex", justifyContent: "center", gap: 1 }}
-                  >
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        bgcolor: "#f0e6f7",
-                        color: "#642b8f",
-                        px: 1,
-                        py: 0.5,
-                        borderRadius: 1,
-                        display: "inline-block",
-                      }}
-                    >
-                      {empData?.department || "Loading..."}
-                    </Typography>
-
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        bgcolor: "#f0e6f7",
-                        color: "#642b8f",
-                        px: 1,
-                        py: 0.5,
-                        borderRadius: 1,
-                        display: "inline-block",
-                      }}
-                    >
-                      {empData?.role || "Loading..."}
-                    </Typography>
-                  </Box>
-                </Box>
-              </Box>
-            </Link>
-            <Divider sx={{ width: "100%", my: 2 }} />
-          </Box>
-        )}
         <IconButton onClick={toggleSidebar}>
           <MenuIcon />
         </IconButton>
       </Box>
+      
+      {!isCollapsed && (
+        <Box display="flex" flexDirection="column" alignItems="center" mt={1} px={2}>
+          {/* Profile Icon with Link */}
+          <Link to="/superadminProfile" style={{ textDecoration: "none" }}>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                width: "100%",
+              }}
+            >
+              <Avatar
+                sx={{
+                  width: 60,
+                  height: 60,
+                  bgcolor: iconColors.profile,
+                  fontSize: 24,
+                  fontWeight: "bold",
+                  mb: 1,
+                }}
+              >
+                {getInitials(empData.firstName)}
+              </Avatar>
+
+              <Typography
+                variant="body1"
+                color="#642b8f"
+                fontWeight="bold"
+                textAlign="center"
+                noWrap
+                sx={{ maxWidth: "100%" }}
+              >
+                {empData?.firstName || "Loading..."}
+              </Typography>
+
+              <Box sx={{ mt: 1, width: "100%" }}>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 0.5 }}>
+                  <EmailIcon
+                    sx={{ color: "#642b8f", fontSize: 16, mr: 0.5 }}
+                  />
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    noWrap
+                    sx={{ maxWidth: "190px" }}
+                  >
+                    {empData?.email || "Loading..."}
+                  </Typography>
+                </Box>
+
+                <Box
+                  sx={{ display: "flex", justifyContent: "center", gap: 1 }}
+                >
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      bgcolor: "#f0e6f7",
+                      color: "#642b8f",
+                      px: 1,
+                      py: 0.5,
+                      borderRadius: 1,
+                      display: "inline-block",
+                    }}
+                  >
+                    {empData?.department || "Loading..."}
+                  </Typography>
+
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      bgcolor: "#f0e6f7",
+                      color: "#642b8f",
+                      px: 1,
+                      py: 0.5,
+                      borderRadius: 1,
+                      display: "inline-block",
+                    }}
+                  >
+                    {empData?.role || "Loading..."}
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+          </Link>
+          <Divider sx={{ width: "100%", my: 2 }} />
+        </Box>
+      )}
+      
       <Box
         sx={{
           overflow: "auto",

@@ -1,13 +1,16 @@
-import  { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import MultipleFileUpload from "../../../components/uploader/MultipleFileUpload";
 import { savePhysicalCenterData } from "../../../api/service/employee/EmployeeService";
 import { toast, ToastContainer } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import BusinessHoursSelector from "./BusinessHoursSelector";
+import ProgramLevelSelector from "./ProgramLevelSelector";
 
-const AddPhysicalCenterForm = ({  initialData = null }) => {
-  const navigate = useNavigate()
+const AddPhysicalCenterForm = ({ initialData = null }) => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState(
     initialData || {
+      centerType: "offline", // Default to offline
       centerName: "",
       address: "",
       city: "",
@@ -15,6 +18,8 @@ const AddPhysicalCenterForm = ({  initialData = null }) => {
       pincode: "",
       email: "",
       phoneNumber: "",
+      programLevels: [], // Array of program-level objects
+      businessHours: [],
       photos: [],
     }
   );
@@ -24,14 +29,63 @@ const AddPhysicalCenterForm = ({  initialData = null }) => {
   const [isLoadingPincode, setIsLoadingPincode] = useState(false);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    const { name, value, type, checked } = e.target;
+
+    if (type === "checkbox") {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: checked,
+      }));
+    } else {
+      // Handle other inputs
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
+
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: null }));
     }
+  };
+
+  // Handle program levels change
+// Handle program levels change
+const handleProgramLevelsChange = (updatedProgramLevels) => {
+  // Make sure we're getting valid program level data
+  const validProgramLevels = updatedProgramLevels.filter(
+    (item) => item.program && item.levels && item.levels.length > 0
+  );
+  
+  // Only update form data if there's valid data to update
+  if (updatedProgramLevels && updatedProgramLevels.length > 0) {
+    setFormData((prev) => ({
+      ...prev,
+      programLevels: updatedProgramLevels, // Store all program levels in state
+    }));
+
+    if (errors.programLevels) {
+      setErrors((prev) => ({ ...prev, programLevels: null }));
+    }
+    
+    // For debugging - only log when there's an actual change
+    console.log("Updated program levels:", updatedProgramLevels);
+  }
+};
+
+  // Handle business hours change
+  const handleBusinessHoursChange = (updatedHours) => {
+    setFormData((prev) => ({
+      ...prev,
+      businessHours: updatedHours,
+    }));
+
+    if (errors.businessHours) {
+      setErrors((prev) => ({ ...prev, businessHours: null }));
+    }
+    
+    // For debugging
+    console.log("Updated business hours:", updatedHours);
   };
 
   const fetchLocationByPincode = useCallback(async (pincode) => {
@@ -70,28 +124,53 @@ const AddPhysicalCenterForm = ({  initialData = null }) => {
     }
   }, [formData.pincode, fetchLocationByPincode]);
 
+  const handleFileUpload = (urls) => {
+    console.log("Received URLs:", urls);
+    setFormData((prev) => ({
+      ...prev,
+      photos: urls,
+    }));
+  };
 
-const handleFileUpload = (urls) => {
-  console.log('Received URLs:', urls);
-  setFormData(prev => ({
-    ...prev,
-    photos: urls
-  }));
-};
   const validate = () => {
     const newErrors = {};
+
+    if (!formData.centerType) newErrors.centerType = "Center type is required";
     if (!formData.centerName.trim())
       newErrors.centerName = "Center name is required";
-    if (!formData.address.trim()) newErrors.address = "Address is required";
-    if (!formData.city.trim()) newErrors.city = "City is required";
-    if (!formData.state.trim()) newErrors.state = "State is required";
-    if (!formData.pincode.trim()) newErrors.pincode = "Pincode is required";
+
+    // Only validate address, city, state, pincode for offline centers
+    if (formData.centerType === "offline") {
+      if (!formData.address.trim()) newErrors.address = "Address is required";
+      if (!formData.city.trim()) newErrors.city = "City is required";
+      if (!formData.state.trim()) newErrors.state = "State is required";
+      if (!formData.pincode.trim()) newErrors.pincode = "Pincode is required";
+    }
+
     if (!formData.email.trim()) newErrors.email = "Email is required";
     else if (!/^\S+@\S+\.\S+$/.test(formData.email))
       newErrors.email = "Invalid email format";
+
     if (!formData.phoneNumber.trim())
       newErrors.phoneNumber = "Phone number is required";
 
+    // Validate all program-level pairs
+    if (!formData.programLevels || formData.programLevels.length === 0) {
+      newErrors.programLevels =
+        "At least one program and level must be selected";
+    } else {
+      const invalidProgramLevels = formData.programLevels.some(
+        (item) => !item.program || !item.levels || item.levels.length === 0
+      );
+
+      if (invalidProgramLevels) {
+        newErrors.programLevels = "All programs and levels must be selected";
+      }
+    }
+
+    if (!formData.businessHours || formData.businessHours.length === 0) {
+      newErrors.businessHours = "Business hours must be set";
+    }
 
     if (formData.photos.length === 0) {
       newErrors.photos = "At least one photo is required";
@@ -100,42 +179,40 @@ const handleFileUpload = (urls) => {
     return newErrors;
   };
 
-  const handleSubmit = async(e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = validate();
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      console.log("Form validation errors:", newErrors);
       return;
     }
 
     setIsSubmitting(true);
 
-    console.log(formData)
+    // Log the form data before submission for debugging
+    console.log("Submitting form data:", formData);
 
     try {
-  
-
-
       const response = await savePhysicalCenterData(formData);
-      console.log("Response",response)
-      if(response.status===201){
-        toast.success(response.data.message)
+      console.log("API Response:", response);
+      
+      if (response.status === 201) {
+        toast.success(response.data.message);
         setTimeout(() => {
-          navigate("/super-admin/department/physical-centerlist")
-          
+          navigate("/super-admin/department/physical-centerlist");
         }, 1500);
+      } else {
+        toast.error("Failed to save data. Please try again.");
       }
-
-  
     } catch (error) {
       console.error("Error submitting form:", error);
+      toast.error(error.response?.data?.message || "An error occurred while saving your data");
     } finally {
       setIsSubmitting(false);
     }
   };
-
-
 
   return (
     <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
@@ -144,6 +221,40 @@ const handleFileUpload = (urls) => {
       </h2>
 
       <form onSubmit={handleSubmit}>
+        {/* Center Type - Radio Button */}
+        <div className="mb-6">
+          <label className="block text-gray-700 font-medium mb-2">
+            Center Type*
+          </label>
+          <div className="flex space-x-4">
+            <label className="inline-flex items-center">
+              <input
+                type="radio"
+                name="centerType"
+                value="offline"
+                checked={formData.centerType === "offline"}
+                onChange={handleChange}
+                className="form-radio h-5 w-5 text-primary"
+              />
+              <span className="ml-2 text-gray-700">Offline</span>
+            </label>
+            <label className="inline-flex items-center">
+              <input
+                type="radio"
+                name="centerType"
+                value="online"
+                checked={formData.centerType === "online"}
+                onChange={handleChange}
+                className="form-radio h-5 w-5 text-primary"
+              />
+              <span className="ml-2 text-gray-700">Online</span>
+            </label>
+          </div>
+          {errors.centerType && (
+            <p className="text-red-500 text-sm mt-1">{errors.centerType}</p>
+          )}
+        </div>
+
         {/* Center Name */}
         <div className="mb-6">
           <label
@@ -170,140 +281,144 @@ const handleFileUpload = (urls) => {
           )}
         </div>
 
-        {/* Address */}
-        <div className="mb-6">
-          <label
-            className="block text-gray-700 font-medium mb-2"
-            htmlFor="address"
-          >
-            Address*
-          </label>
-          <textarea
-            id="address"
-            name="address"
-            value={formData.address}
-            onChange={handleChange}
-            rows="3"
-            className={`w-full p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 transition-colors ${
-              errors.address
-                ? "border-red-500 focus:ring-red-300"
-                : "border-gray-300 focus:ring-primary"
-            }`}
-            placeholder="Enter complete address"
-          />
-          {errors.address && (
-            <p className="text-red-500 text-sm mt-1">{errors.address}</p>
-          )}
-        </div>
-
-        {/* Pincode, City, State in same line */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          {/* Pincode with auto-fetch */}
-          <div>
-            <label
-              className="block text-gray-700 font-medium mb-2"
-              htmlFor="pincode"
-            >
-              Pincode*
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                id="pincode"
-                name="pincode"
-                value={formData.pincode}
+        {/* Address - Only show for offline centers */}
+        {formData.centerType === "offline" && (
+          <>
+            <div className="mb-6">
+              <label
+                className="block text-gray-700 font-medium mb-2"
+                htmlFor="address"
+              >
+                Address*
+              </label>
+              <textarea
+                id="address"
+                name="address"
+                value={formData.address}
                 onChange={handleChange}
-                maxLength={6}
-                className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-                  errors.pincode
+                rows="3"
+                className={`w-full p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 transition-colors ${
+                  errors.address
                     ? "border-red-500 focus:ring-red-300"
                     : "border-gray-300 focus:ring-primary"
-                } ${isLoadingPincode ? "pr-10" : ""}`}
-                placeholder="560034"
+                }`}
+                placeholder="Enter complete address"
               />
-              {isLoadingPincode && (
-                <div className="absolute right-3 top-3">
-                  <svg
-                    className="animate-spin h-5 w-5 text-gray-500"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                      fill="none"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                </div>
+              {errors.address && (
+                <p className="text-red-500 text-sm mt-1">{errors.address}</p>
               )}
             </div>
-            {errors.pincode && (
-              <p className="text-red-500 text-sm mt-1">{errors.pincode}</p>
-            )}
-          </div>
 
-          {/* City - Auto-populated */}
-          <div>
-            <label
-              className="block text-gray-700 font-medium mb-2"
-              htmlFor="city"
-            >
-              City*
-            </label>
-            <input
-              type="text"
-              id="city"
-              name="city"
-              value={formData.city}
-              onChange={handleChange}
-              className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-                errors.city
-                  ? "border-red-500 focus:ring-red-300"
-                  : "border-gray-300 focus:ring-primary"
-              }`}
-              placeholder="City"
-              readOnly={isLoadingPincode}
-            />
-            {errors.city && (
-              <p className="text-red-500 text-sm mt-1">{errors.city}</p>
-            )}
-          </div>
+            {/* Pincode, City, State in same line */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              {/* Pincode with auto-fetch */}
+              <div>
+                <label
+                  className="block text-gray-700 font-medium mb-2"
+                  htmlFor="pincode"
+                >
+                  Pincode*
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="pincode"
+                    name="pincode"
+                    value={formData.pincode}
+                    onChange={handleChange}
+                    maxLength={6}
+                    className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
+                      errors.pincode
+                        ? "border-red-500 focus:ring-red-300"
+                        : "border-gray-300 focus:ring-primary"
+                    } ${isLoadingPincode ? "pr-10" : ""}`}
+                    placeholder="560034"
+                  />
+                  {isLoadingPincode && (
+                    <div className="absolute right-3 top-3">
+                      <svg
+                        className="animate-spin h-5 w-5 text-gray-500"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          fill="none"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                {errors.pincode && (
+                  <p className="text-red-500 text-sm mt-1">{errors.pincode}</p>
+                )}
+              </div>
 
-          {/* State - Auto-populated */}
-          <div>
-            <label
-              className="block text-gray-700 font-medium mb-2"
-              htmlFor="state"
-            >
-              State*
-            </label>
-            <input
-              type="text"
-              id="state"
-              name="state"
-              value={formData.state}
-              onChange={handleChange}
-              className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-                errors.state
-                  ? "border-red-500 focus:ring-red-300"
-                  : "border-gray-300 focus:ring-primary"
-              }`}
-              placeholder="State"
-              readOnly={isLoadingPincode}
-            />
-            {errors.state && (
-              <p className="text-red-500 text-sm mt-1">{errors.state}</p>
-            )}
-          </div>
-        </div>
+              {/* City - Auto-populated */}
+              <div>
+                <label
+                  className="block text-gray-700 font-medium mb-2"
+                  htmlFor="city"
+                >
+                  City*
+                </label>
+                <input
+                  type="text"
+                  id="city"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleChange}
+                  className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
+                    errors.city
+                      ? "border-red-500 focus:ring-red-300"
+                      : "border-gray-300 focus:ring-primary"
+                  }`}
+                  placeholder="City"
+                  readOnly={isLoadingPincode}
+                />
+                {errors.city && (
+                  <p className="text-red-500 text-sm mt-1">{errors.city}</p>
+                )}
+              </div>
+
+              {/* State - Auto-populated */}
+              <div>
+                <label
+                  className="block text-gray-700 font-medium mb-2"
+                  htmlFor="state"
+                >
+                  State*
+                </label>
+                <input
+                  type="text"
+                  id="state"
+                  name="state"
+                  value={formData.state}
+                  onChange={handleChange}
+                  className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
+                    errors.state
+                      ? "border-red-500 focus:ring-red-300"
+                      : "border-gray-300 focus:ring-primary"
+                  }`}
+                  placeholder="State"
+                  readOnly={isLoadingPincode}
+                />
+                {errors.state && (
+                  <p className="text-red-500 text-sm mt-1">{errors.state}</p>
+                )}
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Email and Phone in same line */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -360,16 +475,34 @@ const handleFileUpload = (urls) => {
           </div>
         </div>
 
+        {/* Program Levels Component - Replaces the old Program and Level fields */}
+        <ProgramLevelSelector onChange={handleProgramLevelsChange} />
 
+        {errors.programLevels && (
+          <p className="text-red-500 text-sm mt-1 mb-4">
+            {errors.programLevels}
+          </p>
+        )}
 
+        {/* Business Hours Component */}
+        <BusinessHoursSelector onChange={handleBusinessHoursChange} />
+
+        {errors.businessHours && (
+          <p className="text-red-500 text-sm mt-1 mb-4">
+            {errors.businessHours}
+          </p>
+        )}
+
+        {/* File Upload Component */}
         <MultipleFileUpload
           fieldName="Physical Center Photos"
           name="photos"
           onFileUpload={handleFileUpload}
-
-         
         />
-        
+
+        {errors.photos && (
+          <p className="text-red-500 text-sm mt-1 mb-4">{errors.photos}</p>
+        )}
 
         {/* Submit Button */}
         <div className="mt-8 flex justify-end gap-4">
@@ -411,7 +544,7 @@ const handleFileUpload = (urls) => {
           </button>
         </div>
       </form>
-      <ToastContainer/>
+      <ToastContainer />
     </div>
   );
 };

@@ -25,6 +25,7 @@
     "@zegocloud/zego-uikit-prebuilt": "^2.13.1",
     "@zoom/videosdk": "^2.1.5",
     "@zoomus/websdk": "^2.18.3",
+    "antd": "^5.24.9",
     "axios": "^1.7.7",
     "buffer": "^6.0.3",
     "cloudinary": "^2.5.1",

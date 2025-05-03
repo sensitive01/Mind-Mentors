@@ -384,7 +384,7 @@ const ClassScheduleForm = () => {
                   className="mb-4 p-4 border rounded-lg"
                   alignItems="center"
                 >
-                  <Grid item xs={12} sm={4}>
+                  <Grid item xs={12} sm={3}>
                     <FormControl fullWidth>
                       <InputLabel>Coach</InputLabel>
                       <Select
@@ -454,28 +454,31 @@ const ClassScheduleForm = () => {
                   <Grid
                     item
                     xs={12}
-                    sm={1}
+                    sm={2}
                     container
                     alignItems="center"
-                    justifyContent="center"
+                    justifyContent="flex-start"
                   >
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={schedule.isDemo}
-                          onChange={(e) =>
-                            handleScheduleChange(
-                              index,
-                              "isDemo",
-                              e.target.checked
-                            )
-                          }
-                          color="primary"
-                        />
-                      }
-                      label={schedule.isDemo ? "Demo" : "Class"}
-                      labelPlacement="start"
-                    />
+                    <div className="flex flex-col items-center">
+                      <p className="text-sm mb-1 font-medium">Demo</p>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={schedule.isDemo}
+                            onChange={(e) =>
+                              handleScheduleChange(
+                                index,
+                                "isDemo",
+                                e.target.checked
+                              )
+                            }
+                            color="primary"
+                          />
+                        }
+                        label={schedule.isDemo ? "On" : "Off"}
+                        labelPlacement="end"
+                      />
+                    </div>
                   </Grid>
                 </Grid>
 
