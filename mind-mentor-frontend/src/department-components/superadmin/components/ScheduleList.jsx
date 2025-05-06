@@ -15,6 +15,16 @@ import {
   Fade,
   IconButton,
   Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import {
   AccessTime as TimeIcon,
@@ -26,6 +36,10 @@ import {
   CalendarToday as DayIcon,
   PersonAdd as AddStudentIcon,
   EventBusy as NoScheduleIcon,
+  ArrowBack as BackIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Save as SaveIcon,
 } from "@mui/icons-material";
 import { Link, useNavigate } from "react-router-dom";
 import { getClassShedules } from "../../../api/service/employee/serviceDeliveryService";
@@ -88,11 +102,14 @@ const NoScheduleCard = ({ day }) => (
 );
 
 const ScheduleKanban = () => {
-  const department = localStorage.getItem("department")
+  const department = localStorage.getItem("department");
   const [scheduleData, setScheduleData] = useState({});
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedDay, setSelectedDay] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedClass, setEditedClass] = useState(null);
   const navigate = useNavigate();
 
   const parseTime = (timeString) => {
@@ -173,18 +190,83 @@ const ScheduleKanban = () => {
     setSelectedClass(classInfo);
     setSelectedDay(day);
     setModalOpen(true);
+    setIsEditing(false); // Reset editing state when opening modal
   };
 
   const handleCloseModal = () => {
     setModalOpen(false);
     setSelectedClass(null);
     setSelectedDay(null);
+    setIsEditing(false);
   };
 
   const handleAddKids = (e, classInfo) => {
     e.stopPropagation();
     console.log("Add kids for class:", classInfo);
     navigate(`/serviceAssignClassToKid/${classInfo.id}`);
+  };
+
+  const handleDeleteClick = (e) => {
+    e.stopPropagation();
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    // Here you would add the API call to delete the class
+    console.log("Deleting class:", selectedClass?.id);
+
+    // Remove the class from scheduleData
+    if (selectedClass && selectedDay) {
+      const updatedData = { ...scheduleData };
+      updatedData[selectedDay] = updatedData[selectedDay].filter(
+        (cls) => cls.id !== selectedClass.id
+      );
+      setScheduleData(updatedData);
+    }
+
+    setDeleteDialogOpen(false);
+    setModalOpen(false);
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+  };
+
+  const handleEditClick = () => {
+    setEditedClass({ ...selectedClass });
+    setIsEditing(true);
+  };
+
+  const handleEditChange = (field, value) => {
+    setEditedClass((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleEditSubmit = () => {
+    // Here you would add the API call to update the class
+    console.log("Updating class:", editedClass);
+
+    // Update the class in scheduleData
+    if (editedClass && selectedDay) {
+      const updatedData = { ...scheduleData };
+      const classIndex = updatedData[selectedDay].findIndex(
+        (cls) => cls.id === editedClass.id
+      );
+
+      if (classIndex !== -1) {
+        updatedData[selectedDay][classIndex] = { ...editedClass };
+        setScheduleData(updatedData);
+        setSelectedClass({ ...editedClass });
+      }
+    }
+
+    setIsEditing(false);
+  };
+
+  const goBack = () => {
+    navigate(-1);
   };
 
   return (
@@ -203,12 +285,26 @@ const ScheduleKanban = () => {
           justifyContent="space-between"
           alignItems="center"
         >
-          <Typography
-            variant="h5"
-            sx={{ color: "text.primary", fontWeight: 600 }}
-          >
-            Class Schedules
-          </Typography>
+          <Box display="flex" alignItems="center">
+            <IconButton
+              onClick={goBack}
+              sx={{
+                mr: 2,
+                color: customColors.primary,
+                "&:hover": {
+                  backgroundColor: `${customColors.primary}20`,
+                },
+              }}
+            >
+              <BackIcon />
+            </IconButton>
+            <Typography
+              variant="h5"
+              sx={{ color: "text.primary", fontWeight: 600 }}
+            >
+              Class Schedules
+            </Typography>
+          </Box>
           <Button
             variant="contained"
             component={Link}
@@ -405,18 +501,14 @@ const ScheduleKanban = () => {
                 },
               }}
             >
-              {selectedClass && (
+              {selectedClass && !isEditing && (
                 <>
                   <Box
                     sx={{
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
-
-                      // position: "sticky",
-                      top: 0,
-                      backgroundColor: "white",
-                      zIndex: 10,
+                      marginBottom: 2,
                     }}
                   >
                     <Typography
@@ -430,17 +522,43 @@ const ScheduleKanban = () => {
                     >
                       Class Details
                     </Typography>
-                    <IconButton
-                      onClick={handleCloseModal}
-                      sx={{
-                        color: customColors.primary,
-                        "&:hover": {
-                          backgroundColor: `${customColors.primary}20`,
-                        },
-                      }}
-                    >
-                      <CloseIcon />
-                    </IconButton>
+                    <Box>
+                      <IconButton
+                        onClick={handleEditClick}
+                        sx={{
+                          color: customColors.secondary,
+                          marginRight: 1,
+                          "&:hover": {
+                            backgroundColor: `${customColors.secondary}20`,
+                          },
+                        }}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton
+                        onClick={handleDeleteClick}
+                        sx={{
+                          color: "#d32f2f",
+                          marginRight: 1,
+                          "&:hover": {
+                            backgroundColor: "rgba(211, 47, 47, 0.1)",
+                          },
+                        }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                      <IconButton
+                        onClick={handleCloseModal}
+                        sx={{
+                          color: customColors.primary,
+                          "&:hover": {
+                            backgroundColor: `${customColors.primary}20`,
+                          },
+                        }}
+                      >
+                        <CloseIcon />
+                      </IconButton>
+                    </Box>
                   </Box>
 
                   <DetailRow>
@@ -529,7 +647,8 @@ const ScheduleKanban = () => {
                       <Button
                         variant="outlined"
                         color="primary"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           navigate(
                             `/employeeAssignDemoClass/${selectedClass.id}`
                           );
@@ -603,9 +722,178 @@ const ScheduleKanban = () => {
                   )}
                 </>
               )}
+
+              {selectedClass && isEditing && (
+                <>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: 3,
+                    }}
+                  >
+                    <Typography
+                      variant="h4"
+                      component="h2"
+                      sx={{
+                        color: customColors.primary,
+                        fontWeight: "bold",
+                        margin: 0,
+                      }}
+                    >
+                      Edit Class
+                    </Typography>
+                    <IconButton
+                      onClick={handleCloseModal}
+                      sx={{
+                        color: customColors.primary,
+                        "&:hover": {
+                          backgroundColor: `${customColors.primary}20`,
+                        },
+                      }}
+                    >
+                      <CloseIcon />
+                    </IconButton>
+                  </Box>
+
+                  <FormControl fullWidth sx={{ mb: 2 }}>
+                    <InputLabel>Day</InputLabel>
+                    <Select
+                      value={selectedDay}
+                      label="Day"
+                      onChange={(e) => setSelectedDay(e.target.value)}
+                    >
+                      {[
+                        "Monday",
+                        "Tuesday",
+                        "Wednesday",
+                        "Thursday",
+                        "Friday",
+                        "Saturday",
+                        "Sunday",
+                      ].map((day) => (
+                        <MenuItem key={day} value={day}>
+                          {day}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+
+                  <TextField
+                    fullWidth
+                    label="Subject/Program"
+                    value={editedClass?.subject || ""}
+                    onChange={(e) =>
+                      handleEditChange("subject", e.target.value)
+                    }
+                    sx={{ mb: 2 }}
+                  />
+
+                  <TextField
+                    fullWidth
+                    label="Time"
+                    value={editedClass?.time || ""}
+                    onChange={(e) => handleEditChange("time", e.target.value)}
+                    sx={{ mb: 2 }}
+                  />
+
+                  <TextField
+                    fullWidth
+                    label="Instructor"
+                    value={editedClass?.teacher || ""}
+                    onChange={(e) =>
+                      handleEditChange("teacher", e.target.value)
+                    }
+                    sx={{ mb: 2 }}
+                  />
+
+                  <TextField
+                    fullWidth
+                    label="Level"
+                    value={editedClass?.level || ""}
+                    onChange={(e) => handleEditChange("level", e.target.value)}
+                    sx={{ mb: 2 }}
+                  />
+
+                  <FormControl fullWidth sx={{ mb: 2 }}>
+                    <InputLabel>Class Type</InputLabel>
+                    <Select
+                      value={editedClass?.classType || ""}
+                      label="Class Type"
+                      onChange={(e) =>
+                        handleEditChange("classType", e.target.value)
+                      }
+                    >
+                      <MenuItem value="Class">Class</MenuItem>
+                      <MenuItem value="Demo">Demo</MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  <FormControl fullWidth sx={{ mb: 3 }}>
+                    <InputLabel>Status</InputLabel>
+                    <Select
+                      value={editedClass?.status || ""}
+                      label="Status"
+                      onChange={(e) =>
+                        handleEditChange("status", e.target.value)
+                      }
+                    >
+                      <MenuItem value="Scheduled">Scheduled</MenuItem>
+                      <MenuItem value="Completed">Completed</MenuItem>
+                      <MenuItem value="Cancelled">Cancelled</MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  <Box
+                    sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}
+                  >
+                    <Button
+                      variant="outlined"
+                      onClick={() => setIsEditing(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={handleEditSubmit}
+                      startIcon={<SaveIcon />}
+                    >
+                      Save Changes
+                    </Button>
+                  </Box>
+                </>
+              )}
             </ModalContent>
           </Fade>
         </Modal>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={handleDeleteCancel}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+        >
+          <DialogTitle id="alert-dialog-title">
+            {"Confirm Deletion"}
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-description">
+              Are you sure you want to delete this class schedule? This action
+              cannot be undone.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleDeleteCancel} color="primary">
+              Cancel
+            </Button>
+            <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </ThemeProvider>
   );

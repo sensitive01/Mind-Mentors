@@ -5,6 +5,7 @@ import { toast, ToastContainer } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import BusinessHoursSelector from "./BusinessHoursSelector";
 import ProgramLevelSelector from "./ProgramLevelSelector";
+import { ArrowLeft } from "lucide-react";
 
 const AddPhysicalCenterForm = ({ initialData = null }) => {
   const navigate = useNavigate();
@@ -50,28 +51,28 @@ const AddPhysicalCenterForm = ({ initialData = null }) => {
   };
 
   // Handle program levels change
-// Handle program levels change
-const handleProgramLevelsChange = (updatedProgramLevels) => {
-  // Make sure we're getting valid program level data
-  const validProgramLevels = updatedProgramLevels.filter(
-    (item) => item.program && item.levels && item.levels.length > 0
-  );
-  
-  // Only update form data if there's valid data to update
-  if (updatedProgramLevels && updatedProgramLevels.length > 0) {
-    setFormData((prev) => ({
-      ...prev,
-      programLevels: updatedProgramLevels, // Store all program levels in state
-    }));
+  // Handle program levels change
+  const handleProgramLevelsChange = (updatedProgramLevels) => {
+    // Make sure we're getting valid program level data
+    const validProgramLevels = updatedProgramLevels.filter(
+      (item) => item.program && item.levels && item.levels.length > 0
+    );
 
-    if (errors.programLevels) {
-      setErrors((prev) => ({ ...prev, programLevels: null }));
+    // Only update form data if there's valid data to update
+    if (updatedProgramLevels && updatedProgramLevels.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        programLevels: updatedProgramLevels, // Store all program levels in state
+      }));
+
+      if (errors.programLevels) {
+        setErrors((prev) => ({ ...prev, programLevels: null }));
+      }
+
+      // For debugging - only log when there's an actual change
+      console.log("Updated program levels:", updatedProgramLevels);
     }
-    
-    // For debugging - only log when there's an actual change
-    console.log("Updated program levels:", updatedProgramLevels);
-  }
-};
+  };
 
   // Handle business hours change
   const handleBusinessHoursChange = (updatedHours) => {
@@ -83,7 +84,7 @@ const handleProgramLevelsChange = (updatedProgramLevels) => {
     if (errors.businessHours) {
       setErrors((prev) => ({ ...prev, businessHours: null }));
     }
-    
+
     // For debugging
     console.log("Updated business hours:", updatedHours);
   };
@@ -197,7 +198,7 @@ const handleProgramLevelsChange = (updatedProgramLevels) => {
     try {
       const response = await savePhysicalCenterData(formData);
       console.log("API Response:", response);
-      
+
       if (response.status === 201) {
         toast.success(response.data.message);
         setTimeout(() => {
@@ -208,7 +209,10 @@ const handleProgramLevelsChange = (updatedProgramLevels) => {
       }
     } catch (error) {
       console.error("Error submitting form:", error);
-      toast.error(error.response?.data?.message || "An error occurred while saving your data");
+      toast.error(
+        error.response?.data?.message ||
+          "An error occurred while saving your data"
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -216,9 +220,19 @@ const handleProgramLevelsChange = (updatedProgramLevels) => {
 
   return (
     <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-3">
-        {initialData ? "Edit Chess Center" : "Add New Chess Center"}
-      </h2>
+      <div className="flex items-center gap-2 mb-7">
+        <button
+          onClick={() => navigate(-1)}
+          className="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+          aria-label="Go back"
+        >
+          <ArrowLeft size={24} />
+        </button>
+        <h1 className="text-2xl font-bold text-gray-800">
+        Add New Chess Center
+        </h1>
+      </div>
+ 
 
       <form onSubmit={handleSubmit}>
         {/* Center Type - Radio Button */}

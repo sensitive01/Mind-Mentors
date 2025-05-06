@@ -8,6 +8,7 @@ import { toast, ToastContainer } from "react-toastify";
 import { useNavigate, useParams } from "react-router-dom";
 import BusinessHoursSelector from "./BusinessHoursSelector";
 import ProgramLevelSelector from "./ProgramLevelSelector";
+import { ArrowLeft } from "lucide-react";
 
 const EditPhysicalCenters = () => {
   const { id } = useParams();
@@ -154,6 +155,7 @@ const EditPhysicalCenters = () => {
     }));
   };
 
+  // Update this validate function in your EditPhysicalCenters component
   const validate = () => {
     const newErrors = {};
 
@@ -181,8 +183,9 @@ const EditPhysicalCenters = () => {
       newErrors.programLevels =
         "At least one program and level must be selected";
     } else {
+      // Check if any program doesn't have a program ID or has empty levels array
       const invalidProgramLevels = formData.programLevels.some(
-        (item) => !item.program || !item.level
+        (item) => !item.program || !item.levels || item.levels.length === 0
       );
 
       if (invalidProgramLevels) {
@@ -201,31 +204,39 @@ const EditPhysicalCenters = () => {
     return newErrors;
   };
 
+  // Updated handleSubmit function with better error handling and console logs
   const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = validate();
 
     if (Object.keys(newErrors).length > 0) {
+      console.log("Form validation failed:", newErrors);
       setErrors(newErrors);
       return;
     }
 
     setIsSubmitting(true);
-    console.log(formData);
+    console.log("Submitting form data:", formData);
 
     try {
       // Update existing center
       const response = await updatePhysicalCenterData(id, formData);
-      if (response.success) {
-        toast.success("Center updated successfully");
-      }
+      console.log("API Response:", response);
 
-      setTimeout(() => {
-        navigate("/super-admin/department/physical-centerlist");
-      }, 1500);
+      if (response.status === 200) {
+        toast.success("Center updated successfully");
+        setTimeout(() => {
+          navigate("/super-admin/department/physical-centerlist");
+        }, 1500);
+      } else {
+        // Handle unsuccessful response
+        toast.error(response.message || "Update failed. Please try again.");
+      }
     } catch (error) {
       console.error("Error submitting form:", error);
-      toast.error(error.response?.data?.message || "An error occurred");
+      toast.error(
+        error.response?.data?.message || "An error occurred during submission"
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -241,9 +252,16 @@ const EditPhysicalCenters = () => {
 
   return (
     <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-3">
-        Edit Chess Center
-      </h2>
+      <div className="flex items-center gap-2 mb-7">
+        <button
+          onClick={() => navigate(-1)}
+          className="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+          aria-label="Go back"
+        >
+          <ArrowLeft size={24} />
+        </button>
+        <h1 className="text-2xl font-bold text-gray-800">Edit Chess Center</h1>
+      </div>
 
       <form onSubmit={handleSubmit}>
         {/* Center Type - Radio Button */}
@@ -503,8 +521,7 @@ const EditPhysicalCenters = () => {
         {/* Program Levels Component */}
         <ProgramLevelSelector
           onChange={handleProgramLevelsChange}
-          value={formData.programLevels}
-
+          initialData={formData.programLevels}
         />
 
         {errors.programLevels && (
@@ -516,8 +533,8 @@ const EditPhysicalCenters = () => {
         {/* Business Hours Component */}
         <BusinessHoursSelector
           onChange={handleBusinessHoursChange}
-          value={formData.businessHours}
-          />
+          initialData={formData.businessHours}
+        />
 
         {errors.businessHours && (
           <p className="text-red-500 text-sm mt-1 mb-4">

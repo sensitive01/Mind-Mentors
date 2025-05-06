@@ -2,52 +2,57 @@
 /* eslint-disable react/prop-types */
 import { useState } from "react";
 
-const BusinessHoursSelector = ({ onChange }) => {
+const BusinessHoursSelector = ({ onChange, initialData = [] }) => {
   // Initialize business hours for each day of the week
-  const [businessHours, setBusinessHours] = useState([
-    {
-      day: "Monday",
-      periods: [{ openTime: "09:00", closeTime: "21:00" }],
-      is24Hours: false,
-      isClosed: false,
-    },
-    {
-      day: "Tuesday",
-      periods: [{ openTime: "09:00", closeTime: "21:00" }],
-      is24Hours: false,
-      isClosed: false,
-    },
-    {
-      day: "Wednesday",
-      periods: [{ openTime: "09:00", closeTime: "21:00" }],
-      is24Hours: false,
-      isClosed: false,
-    },
-    {
-      day: "Thursday",
-      periods: [{ openTime: "09:00", closeTime: "21:00" }],
-      is24Hours: false,
-      isClosed: false,
-    },
-    {
-      day: "Friday",
-      periods: [{ openTime: "09:00", closeTime: "21:00" }],
-      is24Hours: false,
-      isClosed: false,
-    },
-    {
-      day: "Saturday",
-      periods: [{ openTime: "09:00", closeTime: "21:00" }],
-      is24Hours: false,
-      isClosed: false,
-    },
-    {
-      day: "Sunday",
-      periods: [{ openTime: "09:00", closeTime: "21:00" }],
-      is24Hours: false,
-      isClosed: false,
-    },
-  ]);
+
+  const [businessHours, setBusinessHours] = useState(
+    initialData && initialData.length > 0
+      ? initialData
+      : [
+          {
+            day: "Monday",
+            periods: [{ openTime: "09:00", closeTime: "21:00" }],
+            is24Hours: false,
+            isClosed: false,
+          },
+          {
+            day: "Tuesday",
+            periods: [{ openTime: "09:00", closeTime: "21:00" }],
+            is24Hours: false,
+            isClosed: false,
+          },
+          {
+            day: "Wednesday",
+            periods: [{ openTime: "09:00", closeTime: "21:00" }],
+            is24Hours: false,
+            isClosed: false,
+          },
+          {
+            day: "Thursday",
+            periods: [{ openTime: "09:00", closeTime: "21:00" }],
+            is24Hours: false,
+            isClosed: false,
+          },
+          {
+            day: "Friday",
+            periods: [{ openTime: "09:00", closeTime: "21:00" }],
+            is24Hours: false,
+            isClosed: false,
+          },
+          {
+            day: "Saturday",
+            periods: [{ openTime: "09:00", closeTime: "21:00" }],
+            is24Hours: false,
+            isClosed: false,
+          },
+          {
+            day: "Sunday",
+            periods: [{ openTime: "09:00", closeTime: "21:00" }],
+            is24Hours: false,
+            isClosed: false,
+          },
+        ]
+  );
 
   // Copy hours from one day to all other days
   const [expandedDay, setExpandedDay] = useState(null);

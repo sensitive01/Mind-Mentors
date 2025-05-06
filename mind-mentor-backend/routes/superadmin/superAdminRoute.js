@@ -17,6 +17,15 @@ userRoute.get('/employees/:id', userController.getEmployeeById);
 userRoute.put('/employees/:id', userController.updateEmployee);
 userRoute.delete('/employees/:id',userController.deleteEmployee);
 
+
+userRoute.get('/get-employee-data/:empId',userController.getEmployeeData);
+userRoute.put('/update-employee-data/:empId',userController.updateEmployeeData);
+userRoute.put('/delete-employee-data/:empId',userController.deleteEmployeeData);
+
+
+
+
+
 userRoute.post('/tournaments',  userController.createTournament);
 userRoute.get('/tournaments',  userController.getTournaments);
 userRoute.get('/tournaments/:id',  userController.getTournamentById);
@@ -75,7 +84,9 @@ userRoute.post('/add-new-voucher', userController.addNewVoucher);
 
 userRoute.get('/get-physcical-center-data', userController.getPhysicalCenterData);
 userRoute.get('/get-individual-physcical-center-data/:centerId', userController.getIndividualPhysicalCenterData);
-userRoute.put('/update-individual-physcical-center-data/:centerId', userController.getIndividualPhysicalCenterData);
+userRoute.put('/update-individual-physcical-center-data/:centerId', userController.updatePhysicalCenterData);
+userRoute.delete('/delete-physcical-center-data/:centerId', userController.deletePhysicalCenterData);
+
 
 
 userRoute.post('/save-physcical-center-data', userController.savePhysicalCenterData);
@@ -85,6 +96,10 @@ userRoute.get('/get-all-parent-data', userController.getAllParentData);
 
 userRoute.post('/add-new-programme', userController.addNewProgrammeData);
 userRoute.get('/get-programme-data', userController.getAllProgrameData);
+userRoute.put('/update-programData', userController.updateProgrameData);
+userRoute.delete('/delete-programData/:pgmId', userController.deleteProgrameData);
+
+
 
 
 

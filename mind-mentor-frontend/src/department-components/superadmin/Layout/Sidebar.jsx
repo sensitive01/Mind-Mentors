@@ -87,7 +87,6 @@ const ModernSidebar = () => {
         }
 
         const response = await getEmployeeData(empId);
-        console.log("Employee Data Response:", response);
 
         if (response && response.status === 200) {
           setEmpData(response.data);
@@ -356,12 +355,12 @@ const ModernSidebar = () => {
       subItems: [
         {
           icon: <EmployeesIcon />,
-          text: "Employee Data",
+          text: "Employee List",
           link: "/super-admin/department/employees",
         },
         {
           icon: <DashboardIcon />,
-          text: "Physical Centers",
+          text: "Centers",
           link: "/super-admin/department/physical-centerlist",
         },
         {

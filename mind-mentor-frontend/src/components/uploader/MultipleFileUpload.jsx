@@ -1,9 +1,31 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import PropTypes from "prop-types";
 import { Upload, X, Check, Image as ImageIcon, Loader2 } from "lucide-react";
 
-const MultipleFileUpload = ({ fieldName, onFileUpload }) => {
+const MultipleFileUpload = ({
+  fieldName,
+  name,
+  onFileUpload,
+  initialFiles = [],
+}) => {
+  // Convert initial URLs to file state objects
   const [files, setFiles] = useState([]);
+
+  // Initialize files from initialFiles URLs when component mounts or initialFiles changes
+  useEffect(() => {
+    if (initialFiles && initialFiles.length > 0) {
+      // Convert URLs to file state objects
+      const initialFileStates = initialFiles.map((url) => ({
+        file: null, // No actual File object for existing images
+        preview: url,
+        status: "complete",
+        url: url,
+        isInitial: true, // Flag to identify it's an initial file
+      }));
+      setFiles(initialFileStates);
+    }
+  }, [initialFiles]);
+
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
 
@@ -77,6 +99,7 @@ const MultipleFileUpload = ({ fieldName, onFileUpload }) => {
           preview,
           status: "pending",
           url: null,
+          isInitial: false,
         };
       });
 
@@ -88,9 +111,7 @@ const MultipleFileUpload = ({ fieldName, onFileUpload }) => {
       for (let i = 0; i < newFileStates.length; i++) {
         const fileState = newFileStates[i];
         setFiles((prev) =>
-          prev.map((f) =>
-            f.file === fileState.file ? { ...f, status: "uploading" } : f
-          )
+          prev.map((f) => (f === fileState ? { ...f, status: "uploading" } : f))
         );
 
         const url = await uploadFile(fileState.file);
@@ -98,28 +119,28 @@ const MultipleFileUpload = ({ fieldName, onFileUpload }) => {
           uploadedUrls.push(url);
           setFiles((prev) =>
             prev.map((f) =>
-              f.file === fileState.file ? { ...f, status: "complete", url } : f
+              f === fileState ? { ...f, status: "complete", url } : f
             )
           );
         } else {
           // Handle failed upload
           setFiles((prev) =>
-            prev.map((f) =>
-              f.file === fileState.file ? { ...f, status: "error" } : f
-            )
+            prev.map((f) => (f === fileState ? { ...f, status: "error" } : f))
           );
         }
       }
 
       // Get all URLs including previously uploaded files
-      const allUrls = [
-        ...files.map((f) => f.url).filter(Boolean),
-        ...uploadedUrls.filter(Boolean),
-      ];
+      const allUrls = files
+        .filter((f) => f.status === "complete")
+        .map((f) => f.url);
+
+      // Add newly uploaded URLs
+      const updatedUrls = [...allUrls, ...uploadedUrls.filter(Boolean)];
 
       // Notify parent component of all uploaded URLs
       if (onFileUpload) {
-        onFileUpload(allUrls);
+        onFileUpload(updatedUrls);
       }
     } catch (error) {
       console.error("Error handling files:", error);
@@ -147,7 +168,11 @@ const MultipleFileUpload = ({ fieldName, onFileUpload }) => {
   const handleRemove = (indexToRemove) => {
     setFiles((prev) => {
       const newFiles = prev.filter((_, index) => index !== indexToRemove);
-      const urls = newFiles.map((f) => f.url).filter(Boolean);
+      const urls = newFiles
+        .filter((f) => f.status === "complete")
+        .map((f) => f.url);
+
+      // Notify parent component of updated URLs
       if (onFileUpload) {
         onFileUpload(urls);
       }
@@ -206,7 +231,7 @@ const MultipleFileUpload = ({ fieldName, onFileUpload }) => {
         <input
           type="file"
           id={fieldName}
-          name={fieldName}
+          name={name || fieldName}
           className="hidden"
           onChange={handleChange}
           accept="image/*"
@@ -250,10 +275,18 @@ const MultipleFileUpload = ({ fieldName, onFileUpload }) => {
                       )}
                       <div>
                         <p className="text-sm font-medium text-gray-700">
-                          {fileState.file.name}
+                          {fileState.isInitial
+                            ? "Uploaded image"
+                            : fileState.file?.name || "Image"}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {(fileState.file.size / (1024 * 1024)).toFixed(2)} MB
+                          {fileState.isInitial
+                            ? "Previously uploaded"
+                            : fileState.file
+                            ? `${(fileState.file.size / (1024 * 1024)).toFixed(
+                                2
+                              )} MB`
+                            : ""}
                         </p>
                       </div>
                     </div>
@@ -291,7 +324,9 @@ const MultipleFileUpload = ({ fieldName, onFileUpload }) => {
 
 MultipleFileUpload.propTypes = {
   fieldName: PropTypes.string.isRequired,
+  name: PropTypes.string,
   onFileUpload: PropTypes.func.isRequired,
+  initialFiles: PropTypes.array,
 };
 
 export default MultipleFileUpload;

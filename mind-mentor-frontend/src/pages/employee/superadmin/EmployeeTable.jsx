@@ -1,4 +1,4 @@
-import EmployeeTable from "../../../department-components/superadmin/components/EmployeeTable";
+import EmployeeTable from "../../../department-components/superadmin/components/employeetable/EmployeeTable";
 import Topbar from '../../../component/parent-component/parent-dashboard/layout/Topbar';
 import Sidebar from "../../../department-components/superadmin/Layout/Sidebar";
 

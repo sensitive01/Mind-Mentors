@@ -144,8 +144,9 @@ const ProgramLevelSelector = ({ onChange, initialData = [] }) => {
   // Track validation errors
   const [errors, setErrors] = useState([]);
 
-  // Flag to track whether programLevels has changed due to user action
-  const [hasChanged, setHasChanged] = useState(false);
+  // Reference to track changes for parent notification
+  const hasInitialDataRef = useRef(Boolean(initialData?.length > 0));
+  const notifiedRef = useRef(false);
 
   // Fetch program data from API
   useEffect(() => {
@@ -169,16 +170,16 @@ const ProgramLevelSelector = ({ onChange, initialData = [] }) => {
     fetchPrograms();
   }, []);
 
-  // Update parent component when program levels change, but only when necessary
+  // Update parent component when program levels change
+  // This effect runs only once for initial data or when programLevels changes due to user actions
   useEffect(() => {
-    // Only notify parent when there's an actual user-triggered change
-    // or during initial load with valid initialData
-    if (hasChanged || (initialData?.length > 0 && !hasChanged)) {
+    // Initial load with valid initialData (run only once)
+    if (hasInitialDataRef.current && !notifiedRef.current) {
       onChange(programLevels);
-      // Reset the flag after notifying
-      setHasChanged(false);
+      notifiedRef.current = true;
+      return;
     }
-  }, [programLevels, onChange, hasChanged, initialData]);
+  }, []); // Empty dependency array means this runs only once on mount
 
   // Create program options from API data
   const getProgramOptions = () => {
@@ -216,9 +217,14 @@ const ProgramLevelSelector = ({ onChange, initialData = [] }) => {
 
   // Add new program-level pair
   const addProgramLevel = () => {
-    setProgramLevels([...programLevels, { program: "", levels: [] }]);
+    const updatedProgramLevels = [
+      ...programLevels,
+      { program: "", levels: [] },
+    ];
+    setProgramLevels(updatedProgramLevels);
     setErrors([...errors, { program: false, levels: false }]);
-    setHasChanged(true);
+    // Notify parent about the change
+    onChange(updatedProgramLevels);
   };
 
   // Remove a program-level pair
@@ -231,7 +237,9 @@ const ProgramLevelSelector = ({ onChange, initialData = [] }) => {
       const updatedErrors = [...errors];
       updatedErrors.splice(index, 1);
       setErrors(updatedErrors);
-      setHasChanged(true);
+
+      // Notify parent about the change
+      onChange(updatedProgramLevels);
     }
   };
 
@@ -240,7 +248,6 @@ const ProgramLevelSelector = ({ onChange, initialData = [] }) => {
     const updatedProgramLevels = [...programLevels];
     updatedProgramLevels[index] = { program: value, levels: [] };
     setProgramLevels(updatedProgramLevels);
-    setHasChanged(true);
 
     // Clear error for this field if it exists
     if (errors[index] && errors[index].program) {
@@ -248,6 +255,9 @@ const ProgramLevelSelector = ({ onChange, initialData = [] }) => {
       updatedErrors[index] = { ...updatedErrors[index], program: false };
       setErrors(updatedErrors);
     }
+
+    // Notify parent about the change
+    onChange(updatedProgramLevels);
   };
 
   // Handle change in level selection
@@ -255,7 +265,6 @@ const ProgramLevelSelector = ({ onChange, initialData = [] }) => {
     const updatedProgramLevels = [...programLevels];
     updatedProgramLevels[index].levels = selected;
     setProgramLevels(updatedProgramLevels);
-    setHasChanged(true);
 
     // Clear error if levels are selected
     if (errors[index]?.levels && selected.length > 0) {
@@ -266,6 +275,9 @@ const ProgramLevelSelector = ({ onChange, initialData = [] }) => {
       };
       setErrors(updatedErrors);
     }
+
+    // Notify parent about the change
+    onChange(updatedProgramLevels);
   };
 
   return (

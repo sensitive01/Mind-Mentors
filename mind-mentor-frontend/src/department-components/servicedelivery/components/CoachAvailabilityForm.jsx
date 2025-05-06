@@ -116,12 +116,12 @@ const CoachAvailabilityForm = () => {
       ...newAvailabilities[index],
       [field]: value,
     };
-    
+
     // Reset level when program changes
     if (field === "program") {
       newAvailabilities[index].level = "";
     }
-    
+
     setAvailabilities(newAvailabilities);
   };
 
@@ -192,7 +192,7 @@ const CoachAvailabilityForm = () => {
 
   // Find the selected program's levels
   const getLevelsForProgram = (programName) => {
-    const program = programData.find(p => p.programName === programName);
+    const program = programData.find((p) => p.programName === programName);
     return program ? program.programLevel : [];
   };
 
@@ -200,10 +200,22 @@ const CoachAvailabilityForm = () => {
     <div className="min-h-screen p-6">
       <div className="max-w-6xl mx-auto bg-white rounded-xl shadow-xl overflow-hidden">
         <div className="bg-gradient-to-r from-[#642b8f] to-[#aa88be] p-8 text-white">
-          <h2 className="text-3xl font-bold mb-2">Coach Availability Form</h2>
-          <p className="text-sm opacity-90">
-            Please select your available days, programs, and time slots
-          </p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-3xl font-bold mb-2">
+                Coach Availability Form
+              </h2>
+              <p className="text-sm opacity-90">
+                Please select your available days, programs, and time slots
+              </p>
+            </div>
+
+            <div>
+              <button className="px-6 py-2 bg-white text-[#642b8f] font-semibold rounded hover:bg-[#f3e8fc] transition duration-300" onClick={()=>navigate("/super-admin/department/coachAvailabilityTable")}>
+                See Available Slots
+              </button>
+            </div>
+          </div>
         </div>
 
         <form className="p-8" onSubmit={handleSubmit} onReset={handleReset}>
@@ -232,8 +244,6 @@ const CoachAvailabilityForm = () => {
                   </Select>
                 </FormControl>
               </Grid>
-
-             
 
               <Grid item xs={12} sm={2}>
                 <FormControl fullWidth margin="normal">

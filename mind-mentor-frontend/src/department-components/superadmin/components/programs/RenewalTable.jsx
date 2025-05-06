@@ -14,14 +14,20 @@ import {
   ThemeProvider,
   Typography,
   Chip,
+  DialogContentText,
 } from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
-import { ArrowBack } from "@mui/icons-material";
+import { ArrowBack, Delete, Edit } from "@mui/icons-material";
 import {
   adminAddNewProgramme,
+  adminDeleteProgramme,
+  adminUpdateProgramme,
   getAllProgrameData,
+  // Add these new imports to your service file:
+  // adminUpdateProgramme,
+  // adminDeleteProgramme,
 } from "../../../../api/service/employee/EmployeeService";
 
 const theme = createTheme({
@@ -39,6 +45,9 @@ const theme = createTheme({
       primary: "#1E293B",
       secondary: "#64748B",
     },
+    error: {
+      main: "#ef4444",
+    },
   },
   components: {
     MuiDataGrid: {
@@ -55,78 +64,12 @@ const theme = createTheme({
   },
 });
 
-// Enhanced columns with better formatting
-const columns = [
-  {
-    field: "sno",
-    headerName: "SNo",
-    width: 70,
-    headerAlign: "center",
-    align: "center",
-    sortable: true,
-  },
-  {
-    field: "programName",
-    headerName: "Program Name",
-    flex: 1,
-    minWidth: 180,
-    headerAlign: "left",
-    align: "left",
-    renderCell: (params) => (
-      <Typography
-        variant="body2"
-        sx={{ fontWeight: 600, color: "text.primary" }}
-      >
-        {params.value || "-"}
-      </Typography>
-    ),
-  },
-  {
-    field: "programLevel",
-    headerName: "Program Levels",
-    flex: 1.5,
-    minWidth: 250,
-    headerAlign: "left",
-    renderCell: (params) => {
-      if (!params || !params.value || params.value.length === 0) {
-        return "-";
-      }
-
-      const levels = Array.isArray(params.value) ? params.value : [];
-
-      return (
-        <Box
-          sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, maxWidth: "100%" }}
-        >
-          {levels.map((level, index) => (
-            <Chip
-              key={index}
-              label={level}
-              size="small"
-              sx={{
-                borderRadius: 1,
-                backgroundColor: "rgba(100, 43, 143, 0.1)",
-                color: "primary.main",
-                fontSize: "0.75rem",
-                height: "22px",
-                maxWidth: "100%",
-                "& .MuiChip-label": {
-                  padding: "0px 8px",
-                  whiteSpace: "normal",
-                  textOverflow: "ellipsis",
-                },
-              }}
-            />
-          ))}
-        </Box>
-      );
-    },
-  },
-];
-
 const ProgramListing = () => {
   const [rows, setRows] = useState([]);
   const [open, setOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedProgram, setSelectedProgram] = useState(null);
   const [newProgram, setNewProgram] = useState({
     programName: "",
     programLevel: [],
@@ -138,6 +81,125 @@ const ProgramListing = () => {
     message: "",
     severity: "success",
   });
+
+  // Enhanced columns with improved widths and better responsive behavior
+  const columns = [
+    {
+      field: "sno",
+      headerName: "SNo",
+      width: 80,
+      headerAlign: "center",
+      align: "center",
+      sortable: true,
+    },
+    {
+      field: "programName",
+      headerName: "Program Name",
+      flex: 1,
+      minWidth: 220,
+      headerAlign: "left",
+      align: "left",
+      renderCell: (params) => (
+        <Typography
+          variant="body2"
+          sx={{
+            fontWeight: 600,
+            color: "text.primary",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            width: "100%",
+            paddingRight: 1,
+          }}
+        >
+          {params.value || "-"}
+        </Typography>
+      ),
+    },
+    {
+      field: "programLevel",
+      headerName: "Program Levels",
+      flex: 2,
+      minWidth: 300,
+      headerAlign: "left",
+      renderCell: (params) => {
+        if (!params || !params.value || params.value.length === 0) {
+          return "-";
+        }
+    
+        const levels = Array.isArray(params.value) ? params.value : [];
+    
+        return (
+          <Box
+            sx={{ 
+              display: "flex", 
+              flexWrap: "wrap", 
+              gap: 0.8, 
+              maxWidth: "100%",
+              px: 0.5, // Add horizontal padding
+              alignItems: "flex-start", // Align items at the top
+              height: "100%", // Take full height of the cell
+            }}
+          >
+            {levels.map((level, index) => (
+              <Chip
+                key={index}
+                label={level}
+                size="small"
+                sx={{
+                  borderRadius: 1,
+                  backgroundColor: "rgba(100, 43, 143, 0.1)",
+                  color: "primary.main",
+                  fontSize: "0.75rem",
+                  height: "22px",
+                  margin: "2px", // Add margin between chips
+                  "& .MuiChip-label": {
+                    padding: "0px 8px",
+                    whiteSpace: "normal",
+                    lineHeight: "1.2", // Better line height for chip text
+                  },
+                }}
+              />
+            ))}
+          </Box>
+        );
+      },
+    },
+    {
+      field: "actions",
+      headerName: "Actions",
+      width: 120,
+      headerAlign: "center",
+      align: "center",
+      sortable: false,
+      renderCell: (params) => (
+        <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
+          <IconButton
+            onClick={() => handleEditClick(params.row)}
+            aria-label="edit"
+            size="small"
+            sx={{
+              color: "primary.main",
+              "&:hover": { backgroundColor: "rgba(100, 43, 143, 0.1)" },
+            }}
+          >
+            <Edit fontSize="small" />
+          </IconButton>
+          <IconButton
+            onClick={() => handleDeleteClick(params.row)}
+            aria-label="delete"
+            size="small"
+            sx={{
+              color: "error.main",
+              "&:hover": { backgroundColor: "rgba(239, 68, 68, 0.1)" },
+            }}
+          >
+            <Delete fontSize="small" />
+          </IconButton>
+        </Box>
+      ),
+    },
+  ];
 
   const fetchProgramData = async () => {
     try {
@@ -174,7 +236,27 @@ const ProgramListing = () => {
     fetchProgramData();
   }, []);
 
+  // Handle Edit button click
+  const handleEditClick = (program) => {
+    setSelectedProgram(program);
+    setNewProgram({
+      _id: program._id,
+      programName: program.programName,
+      programLevel: [...program.programLevel],
+    });
+    setEditMode(true);
+    setOpen(true);
+  };
+
+  // Handle Delete button click
+  const handleDeleteClick = (program) => {
+    setSelectedProgram(program);
+    setDeleteDialogOpen(true);
+  };
+
   const handleClickOpen = () => {
+    setEditMode(false);
+    setNewProgram({ programName: "", programLevel: [] });
     setOpen(true);
   };
 
@@ -182,6 +264,12 @@ const ProgramListing = () => {
     setOpen(false);
     setNewProgram({ programName: "", programLevel: [] });
     setTempLevel("");
+    setEditMode(false);
+  };
+
+  const handleDeleteDialogClose = () => {
+    setDeleteDialogOpen(false);
+    setSelectedProgram(null);
   };
 
   const handleToastClose = (event, reason) => {
@@ -257,14 +345,10 @@ const ProgramListing = () => {
 
         const response = await adminAddNewProgramme(programData);
 
-        // Fixed toast message display
         if (response && (response.status === 200 || response.success)) {
           await fetchProgramData();
-
-          // Ensure dialog closes first
           handleClose();
 
-          // Then show the toast message
           setTimeout(() => {
             setToast({
               open: true,
@@ -298,6 +382,95 @@ const ProgramListing = () => {
     }
   };
 
+  const handleUpdateProgram = async () => {
+    if (newProgram.programName && newProgram.programLevel.length > 0) {
+      try {
+        setLoading(true);
+
+        const programData = {
+          _id: newProgram._id,
+          programName: newProgram.programName,
+          programLevel: [...newProgram.programLevel],
+        };
+
+        console.log("programData",programData)
+
+        const response = await adminUpdateProgramme(programData);
+
+        if (response && (response.status === 200 || response.success)) {
+          await fetchProgramData();
+          handleClose();
+
+          setTimeout(() => {
+            setToast({
+              open: true,
+              message: "Program updated successfully!",
+              severity: "success",
+            });
+          }, 100);
+        } else {
+          setToast({
+            open: true,
+            message: response?.message || "Failed to update program",
+            severity: "error",
+          });
+        }
+      } catch (error) {
+        console.error("Error updating program:", error);
+        setToast({
+          open: true,
+          message: "Error updating program. Please try again.",
+          severity: "error",
+        });
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      setToast({
+        open: true,
+        message: "Please enter program name and at least one level",
+        severity: "warning",
+      });
+    }
+  };
+
+  const handleDeleteProgram = async () => {
+    if (selectedProgram && selectedProgram._id) {
+      try {
+        setLoading(true);
+        const response = await adminDeleteProgramme(selectedProgram._id);
+
+        if (response && (response.status === 200 || response.success)) {
+          await fetchProgramData();
+          handleDeleteDialogClose();
+
+          setTimeout(() => {
+            setToast({
+              open: true,
+              message: "Program deleted successfully!",
+              severity: "success",
+            });
+          }, 100);
+        } else {
+          setToast({
+            open: true,
+            message: response?.message || "Failed to delete program",
+            severity: "error",
+          });
+        }
+      } catch (error) {
+        console.error("Error deleting program:", error);
+        setToast({
+          open: true,
+          message: "Error deleting program. Please try again.",
+          severity: "error",
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <Box
@@ -305,7 +478,7 @@ const ProgramListing = () => {
           width: "100%",
           height: "100vh",
           p: 4,
-          backgroundColor: "#f5f5f5",
+          backgroundColor: "#fffff",
         }}
       >
         <Paper
@@ -393,11 +566,19 @@ const ProgramListing = () => {
               sorting: {
                 sortModel: [{ field: "sno", sort: "asc" }],
               },
+              columns: {
+                columnVisibilityModel: {
+                  sno: true,
+                  programName: true,
+                  programLevel: true,
+                  actions: true,
+                },
+              },
             }}
             pageSizeOptions={[5, 10, 25]}
             sx={{
               height: "calc(100% - 80px)",
-              minHeight: "500px",
+              minHeight: "470px",
               border: "none",
               borderRadius: 2,
               "& .MuiDataGrid-main": {
@@ -407,6 +588,11 @@ const ProgramListing = () => {
               "& .MuiDataGrid-cell": {
                 borderColor: "#f0f0f0",
                 py: 1.5,
+                paddingLeft: 2,
+                paddingRight: 2,
+                whiteSpace: "normal !important", // Allow text to wrap
+                overflow: "visible",
+                lineHeight: "1.5", // Improve line height for wrapped text
               },
               "& .MuiDataGrid-cell:focus": {
                 outline: "none",
@@ -416,12 +602,19 @@ const ProgramListing = () => {
               },
               "& .MuiDataGrid-row": {
                 fontSize: "14px",
+                minHeight: "80px !important", // Increase minimum row height
+                height: "auto !important", // Allow rows to expand based on content
               },
               "& .MuiDataGrid-columnHeader": {
                 backgroundColor: "#642b8f",
                 color: "white",
                 fontWeight: 600,
                 height: "60px",
+                paddingLeft: 2,
+                paddingRight: 2,
+              },
+              "& .MuiDataGrid-columnHeaders": {
+                borderRadius: "8px 8px 0 0",
               },
               "& .MuiDataGrid-footerContainer": {
                 borderTop: "1px solid #eaeaea",
@@ -430,16 +623,34 @@ const ProgramListing = () => {
                 padding: 2,
               },
               "& .MuiDataGrid-virtualScroller": {
-                minHeight: "200px", // Ensures minimum height even with few rows
+                minHeight: "300px", // Ensure enough height for content
               },
               "& .MuiDataGrid-overlay": {
                 backgroundColor: "rgba(255, 255, 255, 0.8)",
+              },
+              "& .MuiDataGrid-columnSeparator": {
+                visibility: "hidden",
+              },
+              // Force all cells to use auto height
+              "& .MuiDataGrid-cell--textLeft": {
+                whiteSpace: "normal",
+              },
+              // Ensure Grid renders correctly with wrapped text
+              "& .MuiDataGrid-viewport": {
+                overflow: "visible",
+              },
+              "& .MuiDataGrid-renderingZone": {
+                maxHeight: "none !important",
+              },
+              "& .MuiDataGrid-window": {
+                position: "static !important",
               },
             }}
           />
         </Paper>
       </Box>
 
+      {/* Add/Edit Program Dialog */}
       <Dialog
         open={open}
         onClose={handleClose}
@@ -460,7 +671,7 @@ const ProgramListing = () => {
             borderBottom: "1px solid #eaeaea",
           }}
         >
-          Add New Program
+          {editMode ? "Edit Program" : "Add New Program"}
         </DialogTitle>
         <DialogContent sx={{ pt: 4, pb: 2, px: 3 }}>
           <TextField
@@ -546,7 +757,7 @@ const ProgramListing = () => {
             Cancel
           </Button>
           <Button
-            onClick={handleAddProgram}
+            onClick={editMode ? handleUpdateProgram : handleAddProgram}
             variant="contained"
             disabled={
               !newProgram.programName ||
@@ -561,7 +772,70 @@ const ProgramListing = () => {
               textTransform: "none",
             }}
           >
-            {loading ? "Adding..." : "Add Program"}
+            {loading
+              ? editMode
+                ? "Updating..."
+                : "Adding..."
+              : editMode
+              ? "Update Program"
+              : "Add Program"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleDeleteDialogClose}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            px: 1,
+          },
+        }}
+      >
+        <DialogTitle
+          id="alert-dialog-title"
+          sx={{
+            fontSize: 20,
+            fontWeight: 700,
+            py: 2,
+            color: "error.main",
+          }}
+        >
+          Delete Program
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText
+            id="alert-dialog-description"
+            sx={{ color: "text.primary" }}
+          >
+            Are you sure you want to delete the program "
+            {selectedProgram?.programName}"? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button
+            onClick={handleDeleteDialogClose}
+            sx={{ color: "text.secondary", fontWeight: 500 }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDeleteProgram}
+            variant="contained"
+            color="error"
+            disabled={loading}
+            sx={{
+              borderRadius: 1.5,
+              fontWeight: 600,
+              textTransform: "none",
+            }}
+            autoFocus
+          >
+            {loading ? "Deleting..." : "Delete"}
           </Button>
         </DialogActions>
       </Dialog>

@@ -295,6 +295,7 @@ import BbKidJoinClassHostinger from "./department-components/hotinger/BbKidJoinC
 import SuperAdminCoachAvailabilityTable from "./pages/employee/superadmin/SuperAdminCoachAvailabilityTable";
 import SuperAdminCoachAvailabilityForm from "./pages/employee/superadmin/SuperAdminCoachAvailabilityForm";
 import SuperAdminAddTimeTable from "./pages/employee/superadmin/SuperAdminAddTimeTable";
+import EditEmployee from "./pages/employee/superadmin/EditEmployee";
 
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
@@ -987,6 +988,16 @@ function App() {
 
 
          {/* SUPER  ADMIN DEPARTMENT */}
+          <Route path="/super-admin/department/list-all-programme" element={<SuperadminPrograms />} />
+          <Route path="/super-admin/department/physical-centerlist" element={<PhysicalCenterListPage />}/>
+          <Route path="/super-admin/department/add-physical-center"  element={<AddPhysicalCenterFormPage />}/>
+          <Route path="/super-admin/department/edit-physical-center/:id" element={<EditPhysicalCenterData />} />
+          <Route path="/super-admin/department/employees" element={<EmployeeTable />}/>
+          <Route path="/super-admin/department/employee/edit/:empId" element={<EditEmployee />}/>
+          <Route path="/super-admin/department/coachAvailabilityTable" element={<SuperAdminCoachAvailabilityTable />}/>
+          <Route path="/super-admin/department/class-timetable-list"  element={<SuperadminScheduleClass />}/>
+
+
 
 
           <Route path="/super-admin/department/dashboard"  element={<SuperadminDashboard />}/>     
@@ -998,17 +1009,11 @@ function App() {
           <Route path="/super-admin/department/schedule-demo-class-list-individually/:enqId/:isSheduled" element={<SuperAdminAssignNewClass />}/>
           <Route path="/super-admin/department/parents-data" element={<SuperadminParents />}/>
           <Route path="/super-admin/department/kids-data" element={<SuperadminKids />}/>
-          <Route path="/super-admin/department/class-timetable-list"  element={<SuperadminScheduleClass />}/>
-          <Route path="/super-admin/department/coachAvailabilityTable" element={<SuperAdminCoachAvailabilityTable />}/>
           <Route path="/super-admin/department/coachAvailabilityForm" element={<SuperAdminCoachAvailabilityForm />}/>
           <Route path="/super-admin/department/class-shedules"  element={<SuperAdminAddTimeTable />}/>
-          <Route path="/super-admin/department/employees" element={<EmployeeTable />}/>
           <Route path="/super-admin/department/allowdeduct" element={<AllowDeductTable />} />
           <Route path="/super-admin/department/active-kid-data" element={<SuperAdminActiveKidData />}/>
           <Route path="/super-admin/department/assign-whole-plan-class/:enqId" element={<SuperAdminAssignWholeClassToKid />} />
-          <Route path="/super-admin/department/physical-centerlist" element={<PhysicalCenterListPage />}/>
-          <Route path="/super-admin/department/add-physical-center"  element={<AddPhysicalCenterFormPage />}/>
-          <Route path="/super-admin/department/edit-physical-center/:id" element={<EditPhysicalCenterData />} />
           <Route path="/super-admin/department/task-table" element={<SuperadminMyTasks />}/>
           <Route path="/super-admin/department/list-task-assigned-me" element={<SuperadminMyAssignTasksTable />}/>        
           <Route path="/super-admin/department/assign-new-task"  element={<SuperadminMyAssignTasks />}/>
@@ -1022,6 +1027,9 @@ function App() {
           <Route path="/super-admin/department/package-table"  element={<SuperAdminPackageTableList />} />   
           <Route path="/super-admin/department/add-package-form" element={<SuperAdminAddPackageForm />}/>
           <Route path="/super-admin/department/display-whole-selectedClass/:enqId"  element={<SuperAdminDisplayWholeClassKid />}/>
+          <Route path="/super-admin/department/employee/add" element={<EmployeeForm />} />
+
+
           
           <Route path="/superadminRenewals" element={<SuperadminRenewal />} />
           <Route path="/superadminEnquiries" element={<SuperadminEnquiries />} />
@@ -1029,10 +1037,8 @@ function App() {
           <Route path="/chessKids/" element={<ChessKid />} />
           <Route path="/superadminFeedback" element={<SuperadminFeedback />} />
           <Route path="/superadminAttendanceReport" element={<SuperadminAttendanceReport />}/>
-          <Route path="/super-admin/department/list-all-programme" element={<SuperadminPrograms />} />
           <Route path="/superadminSupport/"  element={<SuperadminSupportRequest />}/>
           <Route path="/notifications" element={<NotificationTable />} />
-          <Route path="/employee/add" element={<EmployeeForm />} />
           <Route path="/superadminAttendance" element={<SuperadminAttendance />}/>
           <Route path="/payroll/" element={<Payroll />} />
           <Route path="/documents/" element={<DocumentsTable />} />

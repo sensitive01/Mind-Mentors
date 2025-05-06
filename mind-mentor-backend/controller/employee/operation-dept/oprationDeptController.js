@@ -3644,7 +3644,6 @@ const getEmployeeData = async (req, res) => {
       return res.status(404).json({ message: "Employee not found" });
     }
 
-    console.log("Employee data in the sidebar is", employeeData);
     res.status(200).json(employeeData);
   } catch (err) {
     console.error("Error in getting the employee data in the sidebar", err);

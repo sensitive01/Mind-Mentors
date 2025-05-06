@@ -1160,6 +1160,79 @@ const getIndividualPhysicalCenterData = async (req, res) => {
   }
 };
 
+const updatePhysicalCenterData = async (req, res) => {
+  try {
+    const {formData} = req.body;
+
+    const {centerId} = req.params;
+    if (!centerId) {
+      return res.status(400).json({ success: false, message: "Center ID is required for update" });
+    }
+
+    const updatedCenter = await PhysicalCenter.findByIdAndUpdate(
+      centerId,
+      {
+        centerType: formData.centerType,
+        centerName: formData.centerName,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        pincode: formData.pincode,
+        email: formData.email,
+        phoneNumber: formData.phoneNumber,
+        photos: formData.photos || [],
+        businessHours: formData.businessHours || [],
+        programLevels: formData.programLevels || [],
+      },
+      { new: true } // Return the updated document
+    );
+
+    if (!updatedCenter) {
+      return res.status(404).json({ success: false, message: "Center not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Physical center data updated successfully",
+      data: updatedCenter,
+    });
+  } catch (err) {
+    console.error("Error in updating the physical center data", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update physical center data",
+      error: err.message,
+    });
+  }
+};
+
+const deletePhysicalCenterData = async (req, res) => {
+  try {
+    const { centerId } = req.params;
+
+    if (!centerId) {
+      return res.status(400).json({ success: false, message: "Center ID is required" });
+    }
+
+    const deletedCenter = await PhysicalCenter.findByIdAndDelete(centerId);
+
+    if (!deletedCenter) {
+      return res.status(404).json({ success: false, message: "Center not found" });
+    }
+
+    res.status(200).json({ success: true, message: "Physical center deleted successfully" });
+  } catch (err) {
+    console.error("Error in deleting the physical center data", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete physical center data",
+      error: err.message,
+    });
+  }
+};
+
+
+
 const generateUniquePackageId = async () => {
   let isUnique = false;
   let packageId;
@@ -1355,7 +1428,187 @@ const getAllProgrameData = async (req, res) => {
   }
 };
 
+
+const updateProgrameData = async (req, res) => {
+  try {
+    console.log("Welcome to update the program data", req.body);
+
+    const { _id, programName, programLevel } = req.body;
+
+    if (!_id) {
+      return res.status(400).json({ success: false, message: "Program ID is required" });
+    }
+
+    const updatedProgram = await ProgramData.findByIdAndUpdate(
+      _id,
+      { programName, programLevel },
+      { new: true } // returns the updated document
+    );
+
+    if (!updatedProgram) {
+      return res.status(404).json({ success: false, message: "Program not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Program updated successfully",
+      data: updatedProgram,
+    });
+  } catch (err) {
+    console.log("Error in updating the program data", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update program data",
+    });
+  }
+};
+
+const deleteProgrameData = async (req, res) => {
+  try {
+    const { pgmId } = req.params;
+
+    if (!pgmId) {
+      return res.status(400).json({ success: false, message: "Program ID is required" });
+    }
+
+    const deletedProgram = await ProgramData.findByIdAndDelete(pgmId);
+
+    if (!deletedProgram) {
+      return res.status(404).json({ success: false, message: "Program not found" });
+    }
+
+    res.status(200).json({ success: true, message: "Program deleted successfully" });
+  } catch (err) {
+    console.log("Error in deleting the program data", err);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+const getEmployeeData = async (req, res) => {
+  try {
+    const { empId } = req.params;
+
+    if (!empId) {
+      return res.status(400).json({ success: false, message: "Employee ID is required" });
+    }
+
+    const employee = await Employee.findById(empId,{password:0});
+
+    if (!employee) {
+      return res.status(404).json({ success: false, message: "Employee not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Employee data fetched successfully",
+      data: employee,
+    });
+  } catch (err) {
+    console.error("Error in getting employee data", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch employee data",
+      error: err.message,
+    });
+  }
+};
+
+const updateEmployeeData = async (req, res) => {
+  try {
+    const { empId } = req.params;
+    const {formData} = req.body;
+
+    if (!empId) {
+      return res.status(400).json({ success: false, message: "Employee ID is required" });
+    }
+
+    const updatedEmployee = await Employee.findByIdAndUpdate(
+      empId,
+      {
+        firstName: formData.firstName,
+        email: formData.email,
+        phoneNumber: formData.phoneNumber,
+        address: formData.address,
+        gender: formData.gender,
+        department: formData.department,
+        role: formData.role || "employee",
+        centerName: formData.centerName,
+        centerId: formData.centerId,
+        mode: formData.mode || [],
+        status: formData.status || "Active",
+      },
+      { new: true }
+    );
+
+    if (!updatedEmployee) {
+      return res.status(404).json({ success: false, message: "Employee not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Employee data updated successfully",
+      data: updatedEmployee,
+    });
+  } catch (err) {
+    console.error("Error in updating employee data", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update employee data",
+      error: err.message,
+    });
+  }
+};
+
+const deleteEmployeeData = async (req, res) => {
+  try {
+    const { empId } = req.params;
+    const { status } = req.body;
+
+    if (!empId || !status) {
+      return res.status(400).json({
+        success: false,
+        message: "Employee ID and status are required",
+      });
+    }
+
+    const updatedEmployee = await Employee.findByIdAndUpdate(
+      empId,
+      { status },
+      { new: true }
+    );
+
+    if (!updatedEmployee) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Employee status updated successfully",
+      data: updatedEmployee,
+    });
+  } catch (err) {
+    console.error("Error in updating employee status", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update employee status",
+      error: err.message,
+    });
+  }
+};
+
+
+
 module.exports = {
+  deleteEmployeeData,
+  updateEmployeeData,
+  getEmployeeData,
+  deletePhysicalCenterData,
+  updatePhysicalCenterData,
+  deleteProgrameData,
+  updateProgrameData,
   getAllProgrameData,
   addNewProgrammeData,
   getAllParentData,

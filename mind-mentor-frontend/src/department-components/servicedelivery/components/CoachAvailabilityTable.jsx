@@ -17,17 +17,18 @@ import {
 } from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { useEffect, useState } from "react";
-import { 
+import {
   deleteCoachAvailability,
   getCoachAvailabilityData,
   updateCoachAvailability,
-  
 } from "../../../api/service/employee/serviceDeliveryService";
 import { formatDateOnly } from "../../../utils/formatDateOnly";
-import { Link } from "react-router-dom";
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { Link, useNavigate } from "react-router-dom";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const theme = createTheme({
   palette: {
@@ -81,8 +82,8 @@ const generateTimeSlots = () => {
   const slots = [];
   for (let hour = 0; hour < 24; hour++) {
     for (let minute of [0, 15, 30, 45]) {
-      const formattedHour = hour.toString().padStart(2, '0');
-      const formattedMinute = minute.toString().padStart(2, '0');
+      const formattedHour = hour.toString().padStart(2, "0");
+      const formattedMinute = minute.toString().padStart(2, "0");
       slots.push(`${formattedHour}:${formattedMinute}`);
     }
   }
@@ -92,14 +93,17 @@ const generateTimeSlots = () => {
 const timeSlots = generateTimeSlots();
 
 const CoachAvailabilityTable = () => {
-  const department = localStorage.getItem("department")
+  const department = localStorage.getItem("department");
+  const navigate = useNavigate();
   const [rows, setRows] = useState([]);
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 5,
     page: 0,
   });
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
+  const [itemToDelete, setItemToDelete] = useState(null);
   const [editedData, setEditedData] = useState({});
 
   const fetchCoachAvailabilityData = async () => {
@@ -107,17 +111,19 @@ const CoachAvailabilityTable = () => {
       const response = await getCoachAvailabilityData();
       console.log("Coach Availability Data", response);
 
-      const formattedData = response.data.availableDays.map((availability,index) => ({
-        id: availability._id,
-        slNo:index+1,
-        coachId:availability.coachId,
-        coachName: availability.coachName,
-        program: availability.program,
-        day: availability.day,
-        fromTime: availability.fromTime,
-        toTime: availability.toTime,
-        createdAt: formatDateOnly(availability.createdAt),
-      }));
+      const formattedData = response.data.availableDays.map(
+        (availability, index) => ({
+          id: availability._id,
+          slNo: index + 1,
+          coachId: availability.coachId,
+          coachName: availability.coachName,
+          program: availability.program,
+          day: availability.day,
+          fromTime: availability.fromTime,
+          toTime: availability.toTime,
+          createdAt: formatDateOnly(availability.createdAt),
+        })
+      );
       setRows(formattedData);
     } catch (error) {
       console.error("Error fetching coach availability data:", error);
@@ -133,45 +139,75 @@ const CoachAvailabilityTable = () => {
     setSelectedRow(row);
     setEditedData({
       ...row,
-      coachId: row.coachId  // Explicitly include coachId
+      coachId: row.coachId, // Explicitly include coachId
     });
     setEditDialogOpen(true);
   };
 
-  const handleDeleteClick = async (id) => {
-    if (window.confirm("Are you sure you want to delete this availability?")) {
-      try {
-        await deleteCoachAvailability(id);
-        toast.success("Availability deleted successfully");
-        fetchCoachAvailabilityData();
-      } catch (error) {
-        console.error("Error deleting availability:", error);
-        toast.error("Failed to delete availability");
-      }
+  const handleDeleteClick = (id) => {
+    setItemToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      await deleteCoachAvailability(itemToDelete);
+      setDeleteDialogOpen(false);
+      toast.success("Availability deleted successfully", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        style: { marginTop: "60px" },
+      });
+      fetchCoachAvailabilityData();
+    } catch (error) {
+      console.error("Error deleting availability:", error);
+      toast.error("Failed to delete availability", {
+        style: { marginTop: "60px" },
+      });
     }
   };
 
   const handleEditSave = async () => {
     try {
-    
       const updateData = {
         ...editedData,
-        coachId: selectedRow.coachId
+        coachId: selectedRow.coachId,
       };
       await updateCoachAvailability(selectedRow.id, updateData);
       setEditDialogOpen(false);
-      toast.success("Availability updated successfully");
+      toast.success("Availability updated successfully", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        style: { marginTop: "60px" },
+      });
       fetchCoachAvailabilityData();
     } catch (error) {
       console.error("Error updating availability:", error);
-      toast.error("Failed to update availability");
+      toast.error("Failed to update availability", {
+        style: { marginTop: "60px" },
+      });
     }
   };
+
   const handleEditChange = (field, value) => {
-    setEditedData(prev => ({
+    setEditedData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
+  };
+
+  const handleBack = () => {
+    navigate(-1);
   };
 
   const columns = [
@@ -192,7 +228,7 @@ const CoachAvailabilityTable = () => {
       width: 250,
       renderCell: (params) => (
         <Box>
-          <IconButton 
+          <IconButton
             onClick={() => handleEditClick(params.row)}
             color="primary"
             size="small"
@@ -232,15 +268,20 @@ const CoachAvailabilityTable = () => {
               marginBottom: 3,
             }}
           >
-            <Typography
-              variant="h5"
-              sx={{
-                color: "text.primary",
-                fontWeight: 600,
-              }}
-            >
-              Coach Availability
-            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <IconButton onClick={handleBack} sx={{ mr: 1 }} color="primary">
+                <ArrowBackIcon />
+              </IconButton>
+              <Typography
+                variant="h5"
+                sx={{
+                  color: "text.primary",
+                  fontWeight: 600,
+                }}
+              >
+                Coach Availability
+              </Typography>
+            </Box>
             <Button
               variant="contained"
               color="primary"
@@ -283,22 +324,26 @@ const CoachAvailabilityTable = () => {
         </Paper>
 
         {/* Edit Dialog */}
-        <Dialog 
-          open={editDialogOpen} 
+        <Dialog
+          open={editDialogOpen}
           onClose={() => setEditDialogOpen(false)}
           maxWidth="sm"
           fullWidth
         >
-          <DialogTitle sx={{ backgroundColor: theme.palette.primary.main, color: 'white' }}>
+          <DialogTitle
+            sx={{ backgroundColor: theme.palette.primary.main, color: "white" }}
+          >
             Edit Availability
           </DialogTitle>
           <DialogContent sx={{ pt: 2 }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+            <Box
+              sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}
+            >
               <FormControl fullWidth>
                 <InputLabel>Program</InputLabel>
                 <Select
-                  value={editedData.program || ''}
-                  onChange={(e) => handleEditChange('program', e.target.value)}
+                  value={editedData.program || ""}
+                  onChange={(e) => handleEditChange("program", e.target.value)}
                   label="Program"
                 >
                   {programs.map((prog) => (
@@ -312,8 +357,8 @@ const CoachAvailabilityTable = () => {
               <FormControl fullWidth>
                 <InputLabel>Day</InputLabel>
                 <Select
-                  value={editedData.day || ''}
-                  onChange={(e) => handleEditChange('day', e.target.value)}
+                  value={editedData.day || ""}
+                  onChange={(e) => handleEditChange("day", e.target.value)}
                   label="Day"
                 >
                   {days.map((day) => (
@@ -327,13 +372,13 @@ const CoachAvailabilityTable = () => {
               <FormControl fullWidth>
                 <InputLabel>From Time</InputLabel>
                 <Select
-                  value={editedData.fromTime || ''}
-                  onChange={(e) => handleEditChange('fromTime', e.target.value)}
+                  value={editedData.fromTime || ""}
+                  onChange={(e) => handleEditChange("fromTime", e.target.value)}
                   label="From Time"
                 >
                   {timeSlots.map((time) => (
-                    <MenuItem 
-                      key={time} 
+                    <MenuItem
+                      key={time}
                       value={time}
                       disabled={editedData.toTime && time >= editedData.toTime}
                     >
@@ -346,15 +391,17 @@ const CoachAvailabilityTable = () => {
               <FormControl fullWidth>
                 <InputLabel>To Time</InputLabel>
                 <Select
-                  value={editedData.toTime || ''}
-                  onChange={(e) => handleEditChange('toTime', e.target.value)}
+                  value={editedData.toTime || ""}
+                  onChange={(e) => handleEditChange("toTime", e.target.value)}
                   label="To Time"
                 >
                   {timeSlots.map((time) => (
-                    <MenuItem 
-                      key={time} 
+                    <MenuItem
+                      key={time}
                       value={time}
-                      disabled={editedData.fromTime && time <= editedData.fromTime}
+                      disabled={
+                        editedData.fromTime && time <= editedData.fromTime
+                      }
                     >
                       {time}
                     </MenuItem>
@@ -365,12 +412,56 @@ const CoachAvailabilityTable = () => {
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleEditSave} variant="contained" color="primary">
+            <Button
+              onClick={handleEditSave}
+              variant="contained"
+              color="primary"
+            >
               Save Changes
             </Button>
           </DialogActions>
         </Dialog>
-        <ToastContainer />
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+        >
+          <DialogTitle
+            sx={{ backgroundColor: theme.palette.error.main, color: "white" }}
+          >
+            Confirm Deletion
+          </DialogTitle>
+          <DialogContent sx={{ pt: 2, mt: 2 }}>
+            <Typography>
+              Are you sure you want to delete this availability? This action
+              cannot be undone.
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button
+              onClick={handleConfirmDelete}
+              variant="contained"
+              color="error"
+            >
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          style={{ marginTop: "60px" }}
+        />
       </Box>
     </ThemeProvider>
   );
