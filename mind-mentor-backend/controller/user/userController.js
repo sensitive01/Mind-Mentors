@@ -1695,60 +1695,68 @@ const getClassDataForEdit = async (req, res) => {
 
 const updateSelectedClassData = async (req, res) => {
   try {
-    console.log("Welcome to edit time table schedules", req.body);
+    console.log("Welcome to edit time table schedules");
+    console.log("classId", req.params.classId);
+    console.log("shedules", req.body.shedules);
 
     const { classId } = req.params;
     const { shedules } = req.body;
+
+    if (!Array.isArray(shedules) || shedules.length !== 1) {
+      return res
+        .status(400)
+        .json({ message: "Exactly one schedule must be provided in an array" });
+    }
+
+    const schedule = shedules[0];
+
+    // Utility function for time format
     const convertTo12HourFormat = (time24) => {
       const [hour, minute] = time24.split(":");
       let hourNum = parseInt(hour);
       const ampm = hourNum >= 12 ? "PM" : "AM";
-      hourNum = hourNum % 12 || 12; // Convert '0' to '12'
+      hourNum = hourNum % 12 || 12;
       return `${hourNum}:${minute} ${ampm}`;
     };
 
-    if (!Array.isArray(shedules) || shedules.length === 0) {
-      return res.status(400).json({ message: "No schedules provided" });
+    // Parse and validate date
+    const dateParts = schedule.date.split(/[-\/]/);
+    if (dateParts.length !== 3) {
+      return res
+        .status(400)
+        .json({ message: `Invalid date format: ${schedule.date}` });
+    }
+    const [day, month, year] = dateParts;
+    const formattedDate = new Date(`${year}-${month}-${day}`);
+    const classTime = `${convertTo12HourFormat(
+      schedule.fromTime
+    )} - ${convertTo12HourFormat(schedule.toTime)}`;
+
+    // Check if schedule exists for this classId, date, and time
+    const existingSchedule = await ClassSchedule.findOne({
+      _id: classId,
+    });
+
+    let savedSchedule;
+    if (existingSchedule) {
+      // Update existing
+      existingSchedule.day = schedule.day;
+      existingSchedule.coachName = schedule.coachName;
+      existingSchedule.coachId = schedule.coachId;
+      existingSchedule.program = schedule.program;
+      existingSchedule.level = schedule.level;
+      existingSchedule.isDemoAdded = schedule.isDemo || false;
+      existingSchedule.type = schedule.mode;
+      existingSchedule.centerName = schedule.centerName;
+      existingSchedule.centerId = schedule.centerId;
+      existingSchedule.maximumKidCount = schedule.maxKids;
+
+      savedSchedule = await existingSchedule.save();
     }
 
-    // Optional: Remove old schedules linked to this classId before updating
-    await ClassSchedule.deleteMany({ classGroupId: classId });
-
-    const savedSchedules = await Promise.all(
-      shedules.map(async (shedule) => {
-        // Accept both DD-MM-YYYY and DD/MM/YYYY formats
-        const dateParts = shedule.date.split(/[-\/]/);
-        if (dateParts.length !== 3) {
-          throw new Error(`Invalid date format: ${shedule.date}`);
-        }
-        const [day, month, year] = dateParts;
-        const formattedDate = new Date(`${year}-${month}-${day}`);
-
-        const newSchedule = new ClassSchedule({
-          classGroupId: classId,
-          day: shedule.day,
-          classDate: formattedDate,
-          classTime: `${convertTo12HourFormat(
-            shedule.fromTime
-          )} - ${convertTo12HourFormat(shedule.toTime)}`,
-          coachName: shedule.coachName,
-          coachId: shedule.coachId,
-          program: shedule.program,
-          level: shedule.level,
-          isDemoAdded: shedule.isDemo || false,
-          type: shedule.mode,
-          centerName: shedule.centerName,
-          centerId: shedule.centerId,
-          maximumKidCount: shedule.maxKids,
-        });
-
-        return await newSchedule.save();
-      })
-    );
-
-    return res.status(201).json({
-      message: "Schedules updated successfully",
-      savedSchedules,
+    return res.status(200).json({
+      message: "Schedule updated successfully",
+      schedule: savedSchedule,
     });
   } catch (err) {
     console.error("Error updating the timetable schedules:", err);

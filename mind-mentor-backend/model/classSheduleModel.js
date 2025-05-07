@@ -45,7 +45,11 @@ const classScheduleSchema = new mongoose.Schema({
   meetingLink: {
     type: String,
   },
-
+  isDemo: {
+    // New field to indicate if the class is a demo
+    type: Boolean,
+    default: false,
+  },
   status: {
     type: String,
     default: "Scheduled",

@@ -669,31 +669,6 @@ const EditClassShedule = () => {
     setSchedules(newSchedules);
   };
 
-  const addSchedule = () => {
-    setSchedules([
-      ...schedules,
-      {
-        mode: "",
-        day: "",
-        date: "",
-        centerId: "",
-        centerName: "",
-        coachId: "",
-        coachName: "",
-        program: "",
-        level: "",
-        fromTime: "",
-        toTime: "",
-        isDemo: false,
-        maxKids: 0,
-      },
-    ]);
-  };
-
-  const removeSchedule = (index) => {
-    setSchedules(schedules.filter((_, idx) => idx !== index));
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -737,12 +712,12 @@ const EditClassShedule = () => {
 
     try {
       const response = await editSheduleTimeTable(classId, schedules);
-      if (response.status === 201) {
+      if (response.status === 200) {
         toast.success(
           response.data.message || "Schedules submitted successfully"
         );
         setTimeout(() => {
-          navigate(`/${department}/department/class-shedules`);
+          navigate(`/${department}/department/class-timetable-list`);
         }, 1500);
       }
     } catch (error) {
@@ -808,7 +783,9 @@ const EditClassShedule = () => {
             </p>
           </div>
           <button
-            onClick={() => navigate(`/${department}/department/class-timetable-list`)}
+            onClick={() =>
+              navigate(`/${department}/department/class-timetable-list`)
+            }
             className="bg-white text-[#642b8f] px-4 py-2 rounded font-medium hover:bg-gray-100 transition"
           >
             View Schedule
@@ -1226,16 +1203,6 @@ const EditClassShedule = () => {
             }}
           >
             <Button
-              onClick={addSchedule}
-              variant="outlined"
-              color="secondary"
-              size="small"
-              startIcon={<span>+</span>}
-              aria-label="Add schedule"
-            >
-              Add Schedule
-            </Button>
-            <Button
               type="submit"
               variant="contained"
               size="small"
@@ -1273,4 +1240,3 @@ const EditClassShedule = () => {
 };
 
 export default EditClassShedule;
-
