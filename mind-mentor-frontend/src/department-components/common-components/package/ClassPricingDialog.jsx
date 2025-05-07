@@ -22,6 +22,10 @@ import {
   FormControlLabel,
   IconButton,
   Tooltip,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import {
   School,
@@ -51,14 +55,41 @@ function TabPanel(props) {
 
 // Class-Amount input row component
 const ClassAmountRow = ({ index, data, onChange, onDelete, disableDelete }) => {
+
+  console.log(" index, data", index, data)
   return (
     <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+      
+      <FormControl variant="outlined" size="small" sx={{ width: 150, mr: 2 }}>
+        <InputLabel>Mode</InputLabel>
+        <Select
+          value={data.mode || ""}
+          onChange={(e) => onChange(index, "mode", e.target.value)}
+          label="Mode"
+        >
+          <MenuItem value="online">Online</MenuItem>
+          <MenuItem value="offline">Offline</MenuItem>
+        </Select>
+      </FormControl>
+      
+      <FormControl variant="outlined" size="small" sx={{ width: 150, mr: 2 }}>
+        <InputLabel>Time</InputLabel>
+        <Select
+          value={data.time || ""}
+          onChange={(e) => onChange(index, "time", e.target.value)}
+          label="Time"
+        >
+          <MenuItem value="day">Day</MenuItem>
+          <MenuItem value="night">Night</MenuItem>
+        </Select>
+      </FormControl>
+      
       <TextField
         label="Number of Classes"
         type="number"
         value={data.classes || ""}
         onChange={(e) => onChange(index, "classes", e.target.value)}
-        sx={{ width: 180, mr: 2 }}
+        sx={{ width: 150, mr: 2 }}
         variant="outlined"
         size="small"
       />
@@ -70,10 +101,11 @@ const ClassAmountRow = ({ index, data, onChange, onDelete, disableDelete }) => {
         InputProps={{
           startAdornment: <InputAdornment position="start">₹</InputAdornment>,
         }}
-        sx={{ width: 180, mr: 2 }}
+        sx={{ width: 150, mr: 2 }}
         variant="outlined"
         size="small"
       />
+      
       {!disableDelete && (
         <IconButton color="error" onClick={() => onDelete(index)}>
           <DeleteIcon />

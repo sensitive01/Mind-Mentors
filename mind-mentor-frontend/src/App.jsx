@@ -996,11 +996,11 @@ function App() {
           <Route path="/super-admin/department/employees" element={<EmployeeTable />}/>
           <Route path="/super-admin/department/employee/edit/:empId" element={<EditEmployee />}/>
           <Route path="/super-admin/department/coachAvailabilityTable" element={<SuperAdminCoachAvailabilityTable />}/>
-          <Route path="/super-admin/department/employee/add" element={<EmployeeForm />} />
-          
+          <Route path="/super-admin/department/employee/add" element={<EmployeeForm />} />        
           <Route path="/super-admin/department/class-timetable-list"  element={<SuperadminScheduleClass />}/>
           <Route path="/super-admin/department/class-shedules"  element={<SuperAdminAddTimeTable />}/>
           <Route path="/super-admin/department/edit-class-shedules/:classId"  element={<SuperAdminEditClassShedule />}/>
+          <Route path="/super-admin/department/package-table"  element={<SuperAdminPackageTableList />} />   
 
 
 
@@ -1029,7 +1029,6 @@ function App() {
           <Route path="/super-admin/department/attendance" element={<SuperadminAttendance />}/>
           <Route path="/super-admin/department/discount-form" element={<DiscountFormPage />}/>
           <Route path="/super-admin/department/discount-table" element={<VoucherTablePage />}/>
-          <Route path="/super-admin/department/package-table"  element={<SuperAdminPackageTableList />} />   
           <Route path="/super-admin/department/add-package-form" element={<SuperAdminAddPackageForm />}/>
           <Route path="/super-admin/department/display-whole-selectedClass/:enqId"  element={<SuperAdminDisplayWholeClassKid />}/>
 
