@@ -296,6 +296,7 @@ import SuperAdminCoachAvailabilityTable from "./pages/employee/superadmin/SuperA
 import SuperAdminCoachAvailabilityForm from "./pages/employee/superadmin/SuperAdminCoachAvailabilityForm";
 import SuperAdminAddTimeTable from "./pages/employee/superadmin/SuperAdminAddTimeTable";
 import EditEmployee from "./pages/employee/superadmin/EditEmployee";
+import SuperAdminEditClassShedule from "./pages/employee/superadmin/SuperAdminEditClassShedule";
 
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
@@ -995,7 +996,12 @@ function App() {
           <Route path="/super-admin/department/employees" element={<EmployeeTable />}/>
           <Route path="/super-admin/department/employee/edit/:empId" element={<EditEmployee />}/>
           <Route path="/super-admin/department/coachAvailabilityTable" element={<SuperAdminCoachAvailabilityTable />}/>
+          <Route path="/super-admin/department/employee/add" element={<EmployeeForm />} />
+          
           <Route path="/super-admin/department/class-timetable-list"  element={<SuperadminScheduleClass />}/>
+          <Route path="/super-admin/department/class-shedules"  element={<SuperAdminAddTimeTable />}/>
+          <Route path="/super-admin/department/edit-class-shedules/:classId"  element={<SuperAdminEditClassShedule />}/>
+
 
 
 
@@ -1010,7 +1016,6 @@ function App() {
           <Route path="/super-admin/department/parents-data" element={<SuperadminParents />}/>
           <Route path="/super-admin/department/kids-data" element={<SuperadminKids />}/>
           <Route path="/super-admin/department/coachAvailabilityForm" element={<SuperAdminCoachAvailabilityForm />}/>
-          <Route path="/super-admin/department/class-shedules"  element={<SuperAdminAddTimeTable />}/>
           <Route path="/super-admin/department/allowdeduct" element={<AllowDeductTable />} />
           <Route path="/super-admin/department/active-kid-data" element={<SuperAdminActiveKidData />}/>
           <Route path="/super-admin/department/assign-whole-plan-class/:enqId" element={<SuperAdminAssignWholeClassToKid />} />
@@ -1027,7 +1032,6 @@ function App() {
           <Route path="/super-admin/department/package-table"  element={<SuperAdminPackageTableList />} />   
           <Route path="/super-admin/department/add-package-form" element={<SuperAdminAddPackageForm />}/>
           <Route path="/super-admin/department/display-whole-selectedClass/:enqId"  element={<SuperAdminDisplayWholeClassKid />}/>
-          <Route path="/super-admin/department/employee/add" element={<EmployeeForm />} />
 
 
           

@@ -35,10 +35,11 @@ const AddEmployeeForm = () => {
     modes: {
       online: false,
       offline: false,
-    }, // Changed from mode string to modes object
+    },
   });
 
   const [centers, setCenters] = useState([]);
+  const [filteredCenters, setFilteredCenters] = useState([]);
   const [showCenterDropdown, setShowCenterDropdown] = useState(false);
 
   useEffect(() => {
@@ -52,24 +53,64 @@ const AddEmployeeForm = () => {
     fetchCenters();
   }, []);
 
+  // Filter centers based on selected modes
   useEffect(() => {
-    // Show center dropdown if department or role is "centeradmin" or offline mode is selected
+    if (centers.length > 0) {
+      let filtered = [];
+
+      if (formData.modes.online && formData.modes.offline) {
+        // If both modes are selected, show all centers
+        filtered = centers;
+      } else if (formData.modes.online) {
+        // If only online mode is selected
+        filtered = centers.filter((center) => center.centerType === "online");
+      } else if (formData.modes.offline) {
+        // If only offline mode is selected
+        filtered = centers.filter((center) => center.centerType === "offline");
+      }
+
+      setFilteredCenters(filtered);
+
+      // Clear selected center if it's not in the filtered list
+      if (formData.centerId) {
+        const centerStillValid = filtered.some(
+          (center) => center._id === formData.centerId
+        );
+        if (!centerStillValid) {
+          setFormData((prev) => ({
+            ...prev,
+            centerId: "",
+            centerName: "",
+          }));
+        }
+      }
+    }
+  }, [centers, formData.modes.online, formData.modes.offline]);
+
+  useEffect(() => {
+    // Show center dropdown if department or role is "centeradmin" or any mode is selected
     if (
       formData.department === "centeradmin" ||
       formData.role === "centeradmin" ||
-      formData.modes.offline
+      formData.modes.offline ||
+      formData.modes.online
     ) {
       setShowCenterDropdown(true);
     } else {
       setShowCenterDropdown(false);
-      // Clear center selection if not a center admin or offline mode
+      // Clear center selection if not a center admin or no mode is selected
       setFormData((prev) => ({
         ...prev,
         centerId: "",
         centerName: "",
       }));
     }
-  }, [formData.department, formData.role, formData.modes.offline]);
+  }, [
+    formData.department,
+    formData.role,
+    formData.modes.offline,
+    formData.modes.online,
+  ]);
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -369,7 +410,7 @@ const AddEmployeeForm = () => {
                 </FormControl>
               </div>
 
-              {/* Conditional Center dropdown */}
+              {/* Conditional Center dropdown with filtered centers */}
               {showCenterDropdown && (
                 <div className="mb-4">
                   <FormControl
@@ -388,9 +429,9 @@ const AddEmployeeForm = () => {
                       <MenuItem value="" disabled>
                         <em>Select Center</em>
                       </MenuItem>
-                      {centers.map((center) => (
+                      {filteredCenters.map((center) => (
                         <MenuItem key={center._id} value={center._id}>
-                          {center.centerName}
+                          {center.centerName} ({center.centerType})
                         </MenuItem>
                       ))}
                     </Select>

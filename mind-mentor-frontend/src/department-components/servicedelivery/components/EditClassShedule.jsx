@@ -15,6 +15,7 @@ import {
   Typography,
   Box,
   Divider,
+  CircularProgress,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import VideocamIcon from "@mui/icons-material/Videocam";
@@ -24,8 +25,12 @@ import {
   sheduleTimeTable,
 } from "../../../api/service/employee/serviceDeliveryService";
 import { toast, ToastContainer } from "react-toastify";
-import { useNavigate } from "react-router-dom";
-import { getAllProgrameData } from "../../../api/service/employee/EmployeeService";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  editSheduledClassData,
+  editSheduleTimeTable,
+  getAllProgrameData,
+} from "../../../api/service/employee/EmployeeService";
 
 // Map day names to their index in the week (0 = Sunday, 1 = Monday, etc.)
 const dayToIndex = {
@@ -76,14 +81,18 @@ const getNextDayDate = (dayName) => {
     .padStart(2, "0")}-${targetDate.getFullYear()}`;
 };
 
-const ClassScheduleForm = () => {
+const EditClassShedule = () => {
+  const { classId } = useParams();
   const navigate = useNavigate();
   const department = localStorage.getItem("department");
   const empId = localStorage.getItem("empId");
+
   const [availabilityData, setAvailabilityData] = useState([]);
   const [programData, setProgramData] = useState([]);
   const [centerData, setCenterData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [classDataLoading, setClassDataLoading] = useState(false);
+
   const [schedules, setSchedules] = useState([
     {
       mode: "",
@@ -102,58 +111,130 @@ const ClassScheduleForm = () => {
     },
   ]);
 
+  // Fetch initial reference data (coaches, centers, programs)
   useEffect(() => {
-    fetchInitialData();
-  }, []);
+    const fetchInitialData = async () => {
+      setLoading(true);
+      try {
+        const [availabilityResponse, programResponse] = await Promise.all([
+          getCoachAvailabilityData(),
+          getAllProgrameData(),
+        ]);
 
-  const fetchInitialData = async () => {
-    setLoading(true);
-    try {
-      const [availabilityResponse, programResponse] = await Promise.all([
-        getCoachAvailabilityData(),
-        getAllProgrameData(),
-      ]);
-      if (availabilityResponse.data && availabilityResponse.data.success) {
-        setAvailabilityData(availabilityResponse.data.availableDays);
+        if (availabilityResponse.data && availabilityResponse.data.success) {
+          setAvailabilityData(availabilityResponse.data.availableDays || []);
 
-        const uniqueCentersMap = new Map();
-        availabilityResponse.data.availableDays.forEach((item) => {
-          if (
-            item.centerInfo &&
-            item.coachInfo &&
-            !uniqueCentersMap.has(item.centerInfo.centerId)
-          ) {
-            uniqueCentersMap.set(item.centerInfo.centerId, {
-              id: item.centerInfo.centerId,
-              name: item.coachInfo.centerName,
-              centerType: item.centerInfo.centerType,
-              businessHours: item.centerInfo.businessHours,
-            });
-          }
-        });
-        setCenterData(Array.from(uniqueCentersMap.values()));
+          const uniqueCentersMap = new Map();
+          (availabilityResponse.data.availableDays || []).forEach((item) => {
+            if (
+              item.centerInfo &&
+              item.coachInfo &&
+              !uniqueCentersMap.has(item.centerInfo.centerId)
+            ) {
+              uniqueCentersMap.set(item.centerInfo.centerId, {
+                id: item.centerInfo.centerId,
+                name: item.coachInfo.centerName,
+                centerType: item.centerInfo.centerType,
+                businessHours: item.centerInfo.businessHours,
+              });
+            }
+          });
+          setCenterData(Array.from(uniqueCentersMap.values()));
+        } else {
+          console.error("Invalid availability response:", availabilityResponse);
+          toast.error("Failed to fetch coach availability data.");
+        }
+
+        if (programResponse.data && programResponse.data.success) {
+          setProgramData(programResponse.data.programs || []);
+        } else {
+          console.error("Invalid program response:", programResponse);
+          toast.error("Failed to fetch program data.");
+        }
+
+        // After data is loaded, fetch class data if editing
+        if (classId) {
+          await fetchClassData();
+        }
+      } catch (error) {
+        console.error("Error fetching initial data:", error);
+        toast.error("Failed to fetch required data. Please try again.");
+      } finally {
+        setLoading(false);
       }
-      if (programResponse.data && programResponse.data.success) {
-        setProgramData(programResponse.data.programs);
+    };
+
+    fetchInitialData();
+  }, [classId]);
+
+  const fetchClassData = async () => {
+    if (!classId) return;
+
+    setClassDataLoading(true);
+    try {
+      const response = await editSheduledClassData(classId);
+
+      if (response.status === 200 && response.data && response.data.classData) {
+        const classData = response.data.classData;
+
+        // Parse classTime "10:30 AM - 11:30 AM" to 24 hour format "HH:mm"
+        let fromTime = "";
+        let toTime = "";
+        if (classData.classTime) {
+          const [start, end] = classData.classTime.split(" - ");
+          const convertTo24Hour = (time12h) => {
+            const [time, modifier] = time12h.split(" ");
+            let [hours, minutes] = time.split(":").map(Number);
+            if (modifier === "PM" && hours !== 12) hours += 12;
+            if (modifier === "AM" && hours === 12) hours = 0;
+            return `${hours.toString().padStart(2, "0")}:${minutes
+              .toString()
+              .padStart(2, "0")}`;
+          };
+          fromTime = convertTo24Hour(start.trim());
+          toTime = convertTo24Hour(end.trim());
+        }
+
+        const mappedSchedule = {
+          mode: classData.type || "",
+          day: classData.day || "",
+          date: classData.classDate
+            ? new Date(classData.classDate).toLocaleDateString("en-GB")
+            : "",
+          centerId: classData.centerId || "",
+          centerName: classData.centerName || "",
+          coachId: classData.coachId || "",
+          coachName: classData.coachName || "",
+          program: classData.program || "",
+          level: classData.level || "",
+          fromTime: fromTime,
+          toTime: toTime,
+          isDemo: classData.isDemoAdded || false,
+          maxKids: classData.maximumKidCount || 0,
+        };
+
+        setSchedules([mappedSchedule]);
+      } else {
+        console.error("Invalid class data response:", response);
+        toast.error("Failed to load class data. Invalid response format.");
       }
     } catch (error) {
-      console.error("Error fetching data:", error);
-      toast.error("Failed to fetch required data. Please try again.");
+      console.error("Error fetching class data:", error);
+      toast.error("Failed to load class data. Please try again.");
     } finally {
-      setLoading(false);
+      setClassDataLoading(false);
     }
   };
 
-  // Find center business hours for a given day
+  // Helper to get center business hours for a day
   const getCenterBusinessHoursForDay = (centerId, day) => {
     if (!centerId || !day) return null;
     const center = centerData.find((c) => c.id === centerId);
     if (!center || !center.businessHours) return null;
-    const dayBusiness = center.businessHours.find((bh) => bh.day === day);
-    return dayBusiness || null;
+    return center.businessHours.find((bh) => bh.day === day) || null;
   };
 
-  // Validate if scheduled time fits both coach availability and center business hours
+  // Validate time slot inside coach availability and center hours
   const validateTimeSlot = (schedule, fromTime, toTime) => {
     if (!schedule.mode || !fromTime || !toTime) return true;
 
@@ -168,7 +249,6 @@ const ClassScheduleForm = () => {
       const schTo = timeToMinutes(toTime);
       return itemFrom <= schFrom && itemTo >= schTo;
     });
-
     if (availableSlots.length === 0) return false;
 
     const businessHours = getCenterBusinessHoursForDay(
@@ -181,35 +261,30 @@ const ClassScheduleForm = () => {
     const schFrom = timeToMinutes(fromTime);
     const schTo = timeToMinutes(toTime);
 
-    const fitsBusinessHours = businessHours.periods.some((period) => {
+    return businessHours.periods.some((period) => {
       const openMins = timeToMinutes(period.openTime);
       const closeMins = timeToMinutes(period.closeTime);
       return schFrom >= openMins && schTo <= closeMins;
     });
-
-    return fitsBusinessHours;
   };
 
+  // Filtered coaches based on schedule filters
   const getFilteredCoaches = (schedule) => {
     if (!availabilityData?.length) return [];
     let filtered = availabilityData;
 
-    if (schedule.mode) {
+    if (schedule.mode)
       filtered = filtered.filter((item) =>
         item.coachInfo?.modes?.includes(schedule.mode)
       );
-    }
-    if (schedule.centerId) {
+    if (schedule.centerId)
       filtered = filtered.filter(
         (item) => item.centerInfo?.centerId === schedule.centerId
       );
-    }
-    if (schedule.program) {
+    if (schedule.program)
       filtered = filtered.filter((item) => item.program === schedule.program);
-    }
-    if (schedule.day) {
+    if (schedule.day)
       filtered = filtered.filter((item) => item.day === schedule.day);
-    }
     if (schedule.fromTime && schedule.toTime) {
       const fromMins = timeToMinutes(schedule.fromTime);
       const toMins = timeToMinutes(schedule.toTime);
@@ -236,6 +311,7 @@ const ClassScheduleForm = () => {
     );
   };
 
+  // Filtered centers based on schedule filters
   const getFilteredCenters = (schedule) => {
     if (!centerData?.length) return [];
     let filtered = centerData;
@@ -248,7 +324,6 @@ const ClassScheduleForm = () => {
         return false;
       });
     }
-
     if (schedule.coachId) {
       const coachCenters = availabilityData
         .filter(
@@ -259,7 +334,6 @@ const ClassScheduleForm = () => {
         .map((item) => item.centerInfo?.centerId);
       filtered = filtered.filter((center) => coachCenters.includes(center.id));
     }
-
     if (schedule.program) {
       const programCenters = availabilityData
         .filter(
@@ -272,7 +346,6 @@ const ClassScheduleForm = () => {
         programCenters.includes(center.id)
       );
     }
-
     if (schedule.day) {
       const dayCenters = availabilityData
         .filter(
@@ -283,7 +356,6 @@ const ClassScheduleForm = () => {
         .map((item) => item.centerInfo?.centerId);
       filtered = filtered.filter((center) => dayCenters.includes(center.id));
     }
-
     if (schedule.fromTime && schedule.toTime) {
       const fromMins = timeToMinutes(schedule.fromTime);
       const toMins = timeToMinutes(schedule.toTime);
@@ -315,27 +387,24 @@ const ClassScheduleForm = () => {
     return uniqueCenters;
   };
 
+  // Filtered programs based on schedule filters
   const getFilteredPrograms = (schedule) => {
     if (!availabilityData?.length) return [];
 
     let filtered = availabilityData;
 
-    if (schedule.mode) {
+    if (schedule.mode)
       filtered = filtered.filter((item) =>
         item.coachInfo?.modes?.includes(schedule.mode)
       );
-    }
-    if (schedule.centerId) {
+    if (schedule.centerId)
       filtered = filtered.filter(
         (item) => item.centerInfo?.centerId === schedule.centerId
       );
-    }
-    if (schedule.coachId) {
+    if (schedule.coachId)
       filtered = filtered.filter((item) => item.coachId === schedule.coachId);
-    }
-    if (schedule.day) {
+    if (schedule.day)
       filtered = filtered.filter((item) => item.day === schedule.day);
-    }
     if (schedule.fromTime && schedule.toTime) {
       const fromMins = timeToMinutes(schedule.fromTime);
       const toMins = timeToMinutes(schedule.toTime);
@@ -350,26 +419,23 @@ const ClassScheduleForm = () => {
     return Array.from(programSet).sort();
   };
 
+  // Filtered days based on schedule filters
   const getFilteredDays = (schedule) => {
     if (!availabilityData?.length) return [];
 
     let filtered = availabilityData;
-    if (schedule.mode) {
+    if (schedule.mode)
       filtered = filtered.filter((item) =>
         item.coachInfo?.modes?.includes(schedule.mode)
       );
-    }
-    if (schedule.centerId) {
+    if (schedule.centerId)
       filtered = filtered.filter(
         (item) => item.centerInfo?.centerId === schedule.centerId
       );
-    }
-    if (schedule.coachId) {
+    if (schedule.coachId)
       filtered = filtered.filter((item) => item.coachId === schedule.coachId);
-    }
-    if (schedule.program) {
+    if (schedule.program)
       filtered = filtered.filter((item) => item.program === schedule.program);
-    }
     if (schedule.fromTime && schedule.toTime) {
       const fromMins = timeToMinutes(schedule.fromTime);
       const toMins = timeToMinutes(schedule.toTime);
@@ -385,6 +451,7 @@ const ClassScheduleForm = () => {
     return daysArray;
   };
 
+  // Filtered time slots and options based on schedule filters
   const getFilteredTimeSlots = (schedule) => {
     if (!availabilityData?.length) {
       return {
@@ -397,25 +464,20 @@ const ClassScheduleForm = () => {
 
     let filtered = availabilityData;
 
-    if (schedule.mode) {
+    if (schedule.mode)
       filtered = filtered.filter((item) =>
         item.coachInfo?.modes?.includes(schedule.mode)
       );
-    }
-    if (schedule.centerId) {
+    if (schedule.centerId)
       filtered = filtered.filter(
         (item) => item.centerInfo?.centerId === schedule.centerId
       );
-    }
-    if (schedule.coachId) {
+    if (schedule.coachId)
       filtered = filtered.filter((item) => item.coachId === schedule.coachId);
-    }
-    if (schedule.program) {
+    if (schedule.program)
       filtered = filtered.filter((item) => item.program === schedule.program);
-    }
-    if (schedule.day) {
+    if (schedule.day)
       filtered = filtered.filter((item) => item.day === schedule.day);
-    }
 
     if (filtered.length === 0) {
       return {
@@ -445,19 +507,16 @@ const ClassScheduleForm = () => {
       padTime(maxAvailable)
     );
 
-    // Now, intersect center business hours for selected day to disable unavailable start times in UI
-
     const businessHours = getCenterBusinessHoursForDay(
       schedule.centerId,
       schedule.day
     );
     if (businessHours && !businessHours.isClosed) {
-      // Get open-close periods as array of [startMinutes, endMinutes]
-      const openPeriods = businessHours.periods.map((p) => {
-        return [timeToMinutes(p.openTime), timeToMinutes(p.closeTime)];
-      });
+      const openPeriods = businessHours.periods.map((p) => [
+        timeToMinutes(p.openTime),
+        timeToMinutes(p.closeTime),
+      ]);
 
-      // Filter time options to those inside any open period
       const filteredOptions = options.filter((timeStr) => {
         const timeMins = timeToMinutes(timeStr);
         return openPeriods.some(
@@ -481,6 +540,7 @@ const ClassScheduleForm = () => {
     };
   };
 
+  // Get levels for selected program
   const getLevelsForProgram = (programName) => {
     const program = programData.find((p) => p.programName === programName);
     return program ? program.programLevel : [];
@@ -527,7 +587,7 @@ const ClassScheduleForm = () => {
           if (selectedCenter) {
             schedule.centerName = selectedCenter.name;
             schedule.centerId = selectedCenter.id;
-            // Reset times and day if new center incompatible with previous
+            // Reset day and times
             schedule.day = "";
             schedule.date = "";
             schedule.fromTime = "";
@@ -548,7 +608,6 @@ const ClassScheduleForm = () => {
       case "day":
         schedule.day = value;
         if (value) {
-          // Check center business hours for that day
           const businessHours = getCenterBusinessHoursForDay(
             schedule.centerId,
             value
@@ -563,7 +622,6 @@ const ClassScheduleForm = () => {
             schedule.toTime = "";
           } else {
             schedule.date = getNextDayDate(value);
-            // Reset times on day change
             schedule.fromTime = "";
             schedule.toTime = "";
           }
@@ -599,6 +657,10 @@ const ClassScheduleForm = () => {
         schedule.isDemo = value;
         break;
 
+      case "maxKids":
+        schedule.maxKids = value;
+        break;
+
       default:
         schedule[field] = value;
     }
@@ -623,6 +685,7 @@ const ClassScheduleForm = () => {
         fromTime: "",
         toTime: "",
         isDemo: false,
+        maxKids: 0,
       },
     ]);
   };
@@ -673,7 +736,7 @@ const ClassScheduleForm = () => {
     }
 
     try {
-      const response = await sheduleTimeTable(empId, schedules);
+      const response = await editSheduleTimeTable(classId, schedules);
       if (response.status === 201) {
         toast.success(
           response.data.message || "Schedules submitted successfully"
@@ -705,14 +768,29 @@ const ClassScheduleForm = () => {
         fromTime: "",
         toTime: "",
         isDemo: false,
+        maxKids: 0,
       },
     ]);
   };
 
-  if (loading) {
+  // Show loading indicator for initial loading and class data loading
+  if (loading || classDataLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Typography variant="h5">Loading class scheduling data...</Typography>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
+          <CircularProgress color="secondary" />
+          <Typography variant="h5" sx={{ mt: 2 }}>
+            {loading
+              ? "Loading class scheduling data..."
+              : "Loading class details..."}
+          </Typography>
+        </Box>
       </div>
     );
   }
@@ -724,11 +802,13 @@ const ClassScheduleForm = () => {
           <div>
             <h2 className="text-2xl font-bold">Class Schedule Form</h2>
             <p className="text-sm opacity-90">
-              Create class schedules for students
+              {classId
+                ? "Edit class schedule"
+                : "Create class schedules for students"}
             </p>
           </div>
           <button
-            onClick={()=>navigate("/super-admin/department/class-timetable-list")} // replace with your actual handler
+            onClick={() => navigate(`/${department}/department/class-timetable-list`)}
             className="bg-white text-[#642b8f] px-4 py-2 rounded font-medium hover:bg-gray-100 transition"
           >
             View Schedule
@@ -1003,7 +1083,6 @@ const ClassScheduleForm = () => {
                         >
                           {days.length ? (
                             days.map((day) => {
-                              // Disable days where center is closed
                               const bh = getCenterBusinessHoursForDay(
                                 schedule.centerId,
                                 day
@@ -1193,4 +1272,5 @@ const ClassScheduleForm = () => {
   );
 };
 
-export default ClassScheduleForm;
+export default EditClassShedule;
+

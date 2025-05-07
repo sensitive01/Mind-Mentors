@@ -51,7 +51,7 @@ const getAllPhysicalCenters = async (req, res) => {
     try {
         console.log("Welcome to get the physical centers");
 
-        const physicalCenter = await PhysicalCenter.find({}, { centerName: 1 });
+        const physicalCenter = await PhysicalCenter.find({}, { centerName: 1,centerType:1 });
 
         console.log("physicalCenter", physicalCenter);
 

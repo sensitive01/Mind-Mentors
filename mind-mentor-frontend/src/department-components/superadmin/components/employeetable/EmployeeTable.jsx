@@ -1,4 +1,10 @@
-import { ArrowBack, Delete, Edit, Visibility } from "@mui/icons-material";
+import {
+  ArrowBack,
+  Delete,
+  Edit,
+  Visibility,
+  CheckCircle,
+} from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -60,55 +66,58 @@ const EmployeeMasterList = () => {
   const [rows, setRows] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [openViewDialog, setOpenViewDialog] = useState(false);
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [employeeToDelete, setEmployeeToDelete] = useState(null);
+  const [openStatusDialog, setOpenStatusDialog] = useState(false);
+  const [employeeToUpdate, setEmployeeToUpdate] = useState(null);
 
   useEffect(() => {
-    const fetchEmployees = async () => {
-      try {
-        const response = await fetchAllEmployees();
-
-        // Check if the data is an array
-        if (Array.isArray(response)) {
-          // Adjust if response is directly the array
-          setRows(
-            response.map((employee, index) => ({
-              sno: index + 1,
-              id: employee._id, // Use _id as the unique identifier
-              ...employee, // Spread the other properties
-            }))
-          );
-        } else {
-          console.error("Response data is not an array:", response);
-        }
-      } catch (error) {
-        console.error("Error fetching employees:", error);
-      }
-    };
-
-    fetchEmployees();
+    fetchEmployeesData();
   }, []);
 
-  const handleDeleteConfirmation = (id, employeeData) => {
-    setEmployeeToDelete({ id, employeeData });
-    setOpenDeleteDialog(true);
+  const fetchEmployeesData = async () => {
+    try {
+      const response = await fetchAllEmployees();
+
+      // Check if the data is an array
+      if (Array.isArray(response)) {
+        // Adjust if response is directly the array
+        setRows(
+          response.map((employee, index) => ({
+            sno: index + 1,
+            id: employee._id, // Use _id as the unique identifier
+            ...employee, // Spread the other properties
+          }))
+        );
+      } else {
+        console.error("Response data is not an array:", response);
+      }
+    } catch (error) {
+      console.error("Error fetching employees:", error);
+    }
   };
 
-  const handleDelete = async () => {
+  const handleStatusChangeConfirmation = (id, employeeData) => {
+    const newStatus = employeeData.status === "Active" ? "Inactive" : "Active";
+    setEmployeeToUpdate({ id, employeeData, newStatus });
+    setOpenStatusDialog(true);
+  };
+
+  const handleStatusChange = async () => {
     try {
-      // Call the service function to update the status to 'Inactive' instead of deleting
-      await deleteEmployeeData(employeeToDelete.id, "Inactive");
+      // Call the service function to update the status
+      await deleteEmployeeData(employeeToUpdate.id, employeeToUpdate.newStatus);
 
       // Update the UI to reflect the status change
       setRows(
         rows.map((row) =>
-          row.id === employeeToDelete.id ? { ...row, status: "Inactive" } : row
+          row.id === employeeToUpdate.id
+            ? { ...row, status: employeeToUpdate.newStatus }
+            : row
         )
       );
       console.log(
-        `User with ID ${employeeToDelete.id} status changed to Inactive.`
+        `User with ID ${employeeToUpdate.id} status changed to ${employeeToUpdate.newStatus}.`
       );
-      setOpenDeleteDialog(false);
+      setOpenStatusDialog(false);
     } catch (error) {
       console.error("Error updating user status:", error);
     }
@@ -174,7 +183,7 @@ const EmployeeMasterList = () => {
             borderRadius: "16px",
             py: 0.5,
             px: 2,
-            marginTop:"13px",
+            marginTop: "13px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -193,16 +202,21 @@ const EmployeeMasterList = () => {
       flex: 0.8,
       minWidth: 120,
       getActions: (params) => [
-  
         <GridActionsCellItem
           icon={<Edit color="secondary" />}
           label="Edit"
           onClick={() => handleEdit(params.id)}
         />,
         <GridActionsCellItem
-          icon={<Delete color="error" />}
-          label="Delete"
-          onClick={() => handleDeleteConfirmation(params.id, params.row)}
+          icon={
+            params.row.status === "Active" ? (
+              <Delete color="error" />
+            ) : (
+              <CheckCircle color="success" />
+            )
+          }
+          label={params.row.status === "Active" ? "Deactivate" : "Activate"}
+          onClick={() => handleStatusChangeConfirmation(params.id, params.row)}
         />,
       ],
     },
@@ -524,32 +538,38 @@ const EmployeeMasterList = () => {
           </DialogActions>
         </Dialog>
 
-        {/* Delete Confirmation Dialog */}
+        {/* Status Change Confirmation Dialog */}
         <Dialog
-          open={openDeleteDialog}
-          onClose={() => setOpenDeleteDialog(false)}
+          open={openStatusDialog}
+          onClose={() => setOpenStatusDialog(false)}
         >
           <DialogTitle>Confirm Status Change</DialogTitle>
           <DialogContent>
             <DialogContentText>
-              Are you sure you want to change the status of this employee to
-              "Inactive"?
-              {employeeToDelete && (
+              Are you sure you want to change the status of this employee to "
+              {employeeToUpdate?.newStatus}"?
+              {employeeToUpdate && (
                 <Box
                   component="span"
                   sx={{ display: "block", fontWeight: "bold", mt: 1 }}
                 >
-                  {employeeToDelete.employeeData.firstName} (
-                  {employeeToDelete.employeeData.email})
+                  {employeeToUpdate.employeeData.firstName} (
+                  {employeeToUpdate.employeeData.email})
                 </Box>
               )}
             </DialogContentText>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setOpenDeleteDialog(false)} color="primary">
+            <Button onClick={() => setOpenStatusDialog(false)} color="primary">
               Cancel
             </Button>
-            <Button onClick={handleDelete} color="error" variant="contained">
+            <Button
+              onClick={handleStatusChange}
+              color={
+                employeeToUpdate?.newStatus === "Active" ? "success" : "error"
+              }
+              variant="contained"
+            >
               Confirm
             </Button>
           </DialogActions>

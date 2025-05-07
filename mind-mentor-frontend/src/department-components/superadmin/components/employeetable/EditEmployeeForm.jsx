@@ -20,11 +20,13 @@ import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { getAllPhysicalcenters } from "../../../../api/service/employee/hrService";
-import { fetchEditEmployeeData, updateEmployeeData } from "../../../../api/service/employee/EmployeeService";
-
+import {
+  fetchEditEmployeeData,
+  updateEmployeeData,
+} from "../../../../api/service/employee/EmployeeService";
 
 const AddEmployeeForm = () => {
-  const {  empId } = useParams();
+  const { empId } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(empId ? true : false);
@@ -52,6 +54,7 @@ const AddEmployeeForm = () => {
   });
 
   const [centers, setCenters] = useState([]);
+  const [filteredCenters, setFilteredCenters] = useState([]);
   const [showCenterDropdown, setShowCenterDropdown] = useState(false);
   const [isEditMode, setIsEditMode] = useState(!!empId);
 
@@ -84,7 +87,7 @@ const AddEmployeeForm = () => {
       try {
         const response = await fetchEditEmployeeData(empId);
         const employeeData = response.data.data;
-        console.log("employeeData",employeeData)
+        console.log("employeeData", employeeData);
 
         if (employeeData) {
           // Process modes - convert from array or string to object structure
@@ -125,7 +128,8 @@ const AddEmployeeForm = () => {
             employeeData.centerName ||
             (Array.isArray(employeeData.modes) &&
               employeeData.modes.includes("offline")) ||
-            employeeData.mode === "offline"
+            employeeData.mode === "offline" ||
+            modesObj.offline
           ) {
             setShowCenterDropdown(true);
           }
@@ -145,12 +149,47 @@ const AddEmployeeForm = () => {
     fetchData();
   }, [empId]);
 
+  // Filter centers based on selected modes
+  useEffect(() => {
+    if (centers.length > 0) {
+      let filtered = [];
+
+      if (formData.modes.online && formData.modes.offline) {
+        // If both modes are selected, show all centers
+        filtered = centers;
+      } else if (formData.modes.online) {
+        // If only online mode is selected
+        filtered = centers.filter((center) => center.centerType === "online");
+      } else if (formData.modes.offline) {
+        // If only offline mode is selected
+        filtered = centers.filter((center) => center.centerType === "offline");
+      }
+
+      setFilteredCenters(filtered);
+
+      // Clear selected center if it's not in the filtered list
+      if (formData.centerId) {
+        const centerStillValid = filtered.some(
+          (center) => center._id === formData.centerId
+        );
+        if (!centerStillValid) {
+          setFormData((prev) => ({
+            ...prev,
+            centerId: "",
+            centerName: "",
+          }));
+        }
+      }
+    }
+  }, [centers, formData.modes.online, formData.modes.offline]);
+
   // Update center dropdown visibility based on form changes
   useEffect(() => {
     if (
       formData.department === "centeradmin" ||
       formData.role === "centeradmin" ||
-      formData.modes.offline
+      formData.modes.offline ||
+      formData.modes.online
     ) {
       setShowCenterDropdown(true);
     } else {
@@ -162,7 +201,12 @@ const AddEmployeeForm = () => {
         centerName: "",
       }));
     }
-  }, [formData.department, formData.role, formData.modes.offline]);
+  }, [
+    formData.department,
+    formData.role,
+    formData.modes.offline,
+    formData.modes.online,
+  ]);
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -236,7 +280,7 @@ const AddEmployeeForm = () => {
           message: "Employee updated successfully!",
           severity: "success",
         });
-      } 
+      }
       console.log("Response:", response.data);
 
       // Redirect after a short delay
@@ -539,9 +583,9 @@ const AddEmployeeForm = () => {
                       <MenuItem value="" disabled>
                         <em>Select Center</em>
                       </MenuItem>
-                      {centers.map((center) => (
+                      {filteredCenters.map((center) => (
                         <MenuItem key={center._id} value={center._id}>
-                          {center.centerName}
+                          {center.centerName} ({center.centerType})
                         </MenuItem>
                       ))}
                     </Select>
@@ -553,6 +597,7 @@ const AddEmployeeForm = () => {
                   </FormControl>
                 )}
 
+                {/* Status field commented out as in the original code */}
                 {/* <FormControl
                   variant="outlined"
                   className={showCenterDropdown ? "w-1/3" : "flex-1"}

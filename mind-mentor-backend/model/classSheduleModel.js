@@ -16,31 +16,36 @@ const classScheduleSchema = new mongoose.Schema({
   day: {
     type: String,
   },
-  classDate: { type: Date },
+  classDate: {
+    type: Date,
+  },
   classTime: {
     type: String,
   },
-
+  duration: {
+    // New field for class duration
+    type: Number, // Duration in minutes
+  },
   coachName: {
     type: String,
   },
   coachId: {
     type: String,
   },
-
   program: {
     type: String,
   },
   level: {
     type: String,
   },
-
-  classType: {
-    type: String,
+  isDemoAdded: {
+    type: Boolean,
+    default: false,
   },
   meetingLink: {
     type: String,
   },
+
   status: {
     type: String,
     default: "Scheduled",
@@ -49,15 +54,46 @@ const classScheduleSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-  type: { type: String },
-  centerName:{type:String},
-  centerId:{type:String},
+  updatedAt: {
+    // New field to track last update time
+    type: Date,
+    default: Date.now,
+  },
+  createdBy: {
+    // New field to track who created the schedule
+    type: String,
+  },
+  notes: {
+    // New field for additional notes
+    type: String,
+  },
+  type: {
+    type: String,
+  },
+  centerName: {
+    type: String,
+  },
+  centerId: {
+    type: String,
+  },
+  maximumKidCount: {
+    type: Number,
+    default: 0,
+  },
   selectedStudents: [
     {
       kidId: { type: String },
       chessKid: { type: String },
       kidName: { type: String },
-      status: { type: String, default: "Sheduled" },
+      status: { type: String, default: "Scheduled" },
+    },
+  ],
+  demoAssignedKid: [
+    {
+      kidId: { type: String },
+      chessKid: { type: String },
+      kidName: { type: String },
+      status: { type: String, default: "Scheduled" },
     },
   ],
 });

@@ -9,8 +9,6 @@ import {
   Chip,
   Modal,
   ThemeProvider,
-  createTheme,
-  styled,
   Backdrop,
   Fade,
   IconButton,
@@ -20,11 +18,6 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
 } from "@mui/material";
 import {
   AccessTime as TimeIcon,
@@ -39,7 +32,11 @@ import {
   ArrowBack as BackIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Save as SaveIcon,
+  DateRange as DateIcon,
+  LocationOn as LocationIcon,
+  Groups as MaxStudentsIcon,
+  Wifi as OnlineIcon,
+  Store as CenterIcon,
 } from "@mui/icons-material";
 import { Link, useNavigate } from "react-router-dom";
 import { getClassShedules } from "../../../api/service/employee/serviceDeliveryService";
@@ -52,6 +49,7 @@ import {
   ModalContent,
   theme,
 } from "../../coach/Layout/customStyle";
+import { deleteSheduleClass } from "../../../api/service/employee/EmployeeService";
 
 const NoScheduleCard = ({ day }) => (
   <ClassCard
@@ -108,8 +106,6 @@ const ScheduleKanban = () => {
   const [selectedDay, setSelectedDay] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedClass, setEditedClass] = useState(null);
   const navigate = useNavigate();
 
   const parseTime = (timeString) => {
@@ -130,9 +126,12 @@ const ScheduleKanban = () => {
     const fetchAllClassSchedules = async () => {
       try {
         const response = await getClassShedules(department);
-        console.log(response);
+        console.log("API response:", response);
 
-        const transformedData = response.reduce((acc, classItem) => {
+        // Assuming response structure has classData array
+        const classData = response.classData || response;
+
+        const transformedData = classData.reduce((acc, classItem) => {
           if (!acc[classItem.day]) {
             acc[classItem.day] = [];
           }
@@ -144,11 +143,18 @@ const ScheduleKanban = () => {
               time: classItem.classTime,
               subject: classItem.program,
               teacher: classItem.coachName,
-              students: classItem.selectedStudents.length || 0,
+              students: classItem.selectedStudents?.length || 0,
               level: classItem.level,
-              classType: classItem.classType,
+              classType: classItem.isDemo ? "Demo" : "Class",
               status: classItem.status,
               meetingLink: classItem.meetingLink,
+              classDate: classItem.classDate,
+              type: classItem.type,
+              centerName: classItem.centerName,
+              centerId: classItem.centerId,
+              maximumKidCount: classItem.maximumKidCount,
+              isDemoAdded: classItem.isDemoAdded,
+              scheduledBy: classItem.scheduledBy,
             },
           ];
 
@@ -190,14 +196,12 @@ const ScheduleKanban = () => {
     setSelectedClass(classInfo);
     setSelectedDay(day);
     setModalOpen(true);
-    setIsEditing(false); // Reset editing state when opening modal
   };
 
   const handleCloseModal = () => {
     setModalOpen(false);
     setSelectedClass(null);
     setSelectedDay(null);
-    setIsEditing(false);
   };
 
   const handleAddKids = (e, classInfo) => {
@@ -211,17 +215,20 @@ const ScheduleKanban = () => {
     setDeleteDialogOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     // Here you would add the API call to delete the class
     console.log("Deleting class:", selectedClass?.id);
 
-    // Remove the class from scheduleData
-    if (selectedClass && selectedDay) {
-      const updatedData = { ...scheduleData };
-      updatedData[selectedDay] = updatedData[selectedDay].filter(
-        (cls) => cls.id !== selectedClass.id
-      );
-      setScheduleData(updatedData);
+    const response = await deleteSheduleClass(selectedClass?.id);
+    if (response.status === 200) {
+      // Remove the class from scheduleData
+      if (selectedClass && selectedDay) {
+        const updatedData = { ...scheduleData };
+        updatedData[selectedDay] = updatedData[selectedDay].filter(
+          (cls) => cls.id !== selectedClass.id
+        );
+        setScheduleData(updatedData);
+      }
     }
 
     setDeleteDialogOpen(false);
@@ -232,41 +239,28 @@ const ScheduleKanban = () => {
     setDeleteDialogOpen(false);
   };
 
-  const handleEditClick = () => {
-    setEditedClass({ ...selectedClass });
-    setIsEditing(true);
-  };
-
-  const handleEditChange = (field, value) => {
-    setEditedClass((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const handleEditSubmit = () => {
-    // Here you would add the API call to update the class
-    console.log("Updating class:", editedClass);
-
-    // Update the class in scheduleData
-    if (editedClass && selectedDay) {
-      const updatedData = { ...scheduleData };
-      const classIndex = updatedData[selectedDay].findIndex(
-        (cls) => cls.id === editedClass.id
-      );
-
-      if (classIndex !== -1) {
-        updatedData[selectedDay][classIndex] = { ...editedClass };
-        setScheduleData(updatedData);
-        setSelectedClass({ ...editedClass });
-      }
+  const handleEditClick = (e) => {
+    e.stopPropagation();
+    // Navigate to edit page with class ID
+    if (selectedClass) {
+      navigate(`/super-admin/department/edit-class-shedules/${selectedClass.id}`);
     }
-
-    setIsEditing(false);
   };
 
   const goBack = () => {
     navigate(-1);
+  };
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
   };
 
   return (
@@ -437,7 +431,9 @@ const ScheduleKanban = () => {
                               sx={{ color: customColors.highlight }}
                             />
                             <Chip
-                              label={`${classItem.students} students`}
+                              label={`${classItem.students}/${
+                                classItem.maximumKidCount || "∞"
+                              } students`}
                               size="small"
                               sx={{
                                 borderColor: customColors.primary,
@@ -450,7 +446,8 @@ const ScheduleKanban = () => {
                             />
                           </IconText>
 
-                          {classItem.classType === "Class" && (
+                          {(classItem.classType === "Class" ||
+                            !classItem.isDemoAdded) && (
                             <IconButton
                               onClick={(e) => handleAddKids(e, classItem)}
                               sx={{
@@ -463,6 +460,37 @@ const ScheduleKanban = () => {
                               <AddStudentIcon />
                             </IconButton>
                           )}
+                        </Box>
+
+                        <Box
+                          sx={{
+                            mt: 1,
+                            display: "flex",
+                            justifyContent: "space-between",
+                            width: "100%",
+                          }}
+                        >
+                          <Chip
+                            label={classItem.status}
+                            size="small"
+                            sx={{
+                              backgroundColor:
+                                classItem.status === "Completed"
+                                  ? "#4caf50"
+                                  : classItem.status === "Cancelled"
+                                  ? "#f44336"
+                                  : "#2196f3",
+                              color: "white",
+                            }}
+                          />
+                          <Chip
+                            label={classItem.type || "N/A"}
+                            size="small"
+                            sx={{
+                              backgroundColor: customColors.primary,
+                              color: "white",
+                            }}
+                          />
                         </Box>
                       </ClassCard>
                     ))
@@ -501,7 +529,7 @@ const ScheduleKanban = () => {
                 },
               }}
             >
-              {selectedClass && !isEditing && (
+              {selectedClass && (
                 <>
                   <Box
                     sx={{
@@ -574,6 +602,26 @@ const ScheduleKanban = () => {
                   </DetailRow>
 
                   <DetailRow>
+                    <DateIcon
+                      sx={{ color: customColors.accent, fontSize: 28 }}
+                    />
+                    <Box>
+                      <Typography
+                        variant="body1"
+                        sx={{ color: customColors.primary }}
+                      >
+                        Class Date
+                      </Typography>
+                      <Typography
+                        variant="h6"
+                        sx={{ color: customColors.accent }}
+                      >
+                        {formatDate(selectedClass.classDate)}
+                      </Typography>
+                    </Box>
+                  </DetailRow>
+
+                  <DetailRow>
                     <SubjectIcon
                       sx={{ color: customColors.secondary, fontSize: 28 }}
                     />
@@ -618,6 +666,7 @@ const ScheduleKanban = () => {
                       </Typography>
                     </Box>
                   </DetailRow>
+
                   <DetailRow>
                     <StudentsIcon
                       sx={{ color: customColors.secondary, fontSize: 28 }}
@@ -627,7 +676,7 @@ const ScheduleKanban = () => {
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "center",
-                        width: "100%", // Ensure the row takes full width
+                        width: "100%",
                       }}
                     >
                       <Box>
@@ -641,39 +690,43 @@ const ScheduleKanban = () => {
                           variant="h6"
                           sx={{ color: customColors.secondary }}
                         >
-                          {selectedClass?.students} Students
+                          {selectedClass.students} /{" "}
+                          {selectedClass.maximumKidCount || "∞"} Students
                         </Typography>
                       </Box>
-                      <Button
-                        variant="outlined"
-                        color="primary"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(
-                            `/employeeAssignDemoClass/${selectedClass.id}`
-                          );
-                        }}
-                        disabled={selectedClass.status !== "Scheduled"} // Disable button based on condition
-                        sx={{
-                          height: "fit-content",
-                          backgroundColor:
-                            selectedClass.status !== "Scheduled"
-                              ? "#cccccc"
-                              : "#642b8f", // Grey out if disabled
-                          color:
-                            selectedClass.status !== "Scheduled"
-                              ? "black"
-                              : "white", // Adjust text color
-                          "&:hover": {
+                      {(!selectedClass.isDemoAdded ||
+                        selectedClass.classType === "Class") && (
+                        <Button
+                          variant="outlined"
+                          color="primary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(
+                              `/serviceAssignClassToKid/${selectedClass.id}`
+                            );
+                          }}
+                          disabled={selectedClass.status !== "Scheduled"}
+                          sx={{
+                            height: "fit-content",
                             backgroundColor:
                               selectedClass.status !== "Scheduled"
                                 ? "#cccccc"
-                                : "#0056b3", // Maintain hover color for active button
-                          },
-                        }}
-                      >
-                        Add kids
-                      </Button>
+                                : "#642b8f",
+                            color:
+                              selectedClass.status !== "Scheduled"
+                                ? "black"
+                                : "white",
+                            "&:hover": {
+                              backgroundColor:
+                                selectedClass.status !== "Scheduled"
+                                  ? "#cccccc"
+                                  : "#0056b3",
+                            },
+                          }}
+                        >
+                          Add kids
+                        </Button>
+                      )}
                     </Box>
                   </DetailRow>
 
@@ -699,170 +752,101 @@ const ScheduleKanban = () => {
                     </DetailRow>
                   )}
 
-                  {selectedClass.classType && (
-                    <DetailRow>
+                  <DetailRow>
+                    <OnlineIcon
+                      sx={{ color: customColors.primary, fontSize: 28 }}
+                    />
+                    <Box>
                       <Typography
                         variant="body1"
                         sx={{ color: customColors.primary }}
                       >
-                        Class Type: {selectedClass.classType}
+                        Class Type
                       </Typography>
-                    </DetailRow>
-                  )}
+                      <Typography
+                        variant="h6"
+                        sx={{ color: customColors.primary }}
+                      >
+                        {selectedClass.type === "online" ? "Online" : "Offline"}
+                      </Typography>
+                    </Box>
+                  </DetailRow>
 
-                  {selectedClass.status && (
-                    <DetailRow>
+                  <DetailRow>
+                    <CenterIcon
+                      sx={{ color: customColors.highlight, fontSize: 28 }}
+                    />
+                    <Box>
                       <Typography
                         variant="body1"
                         sx={{ color: customColors.primary }}
                       >
-                        Status: {selectedClass.status}
+                        Center
                       </Typography>
-                    </DetailRow>
-                  )}
-                </>
-              )}
+                      <Typography
+                        variant="h6"
+                        sx={{ color: customColors.highlight }}
+                      >
+                        {selectedClass.centerName || "N/A"}
+                      </Typography>
+                    </Box>
+                  </DetailRow>
 
-              {selectedClass && isEditing && (
-                <>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginBottom: 3,
-                    }}
-                  >
+                  <DetailRow>
                     <Typography
-                      variant="h4"
-                      component="h2"
+                      variant="body1"
                       sx={{
-                        color: customColors.primary,
-                        fontWeight: "bold",
-                        margin: 0,
+                        fontWeight: 600,
+                        backgroundColor:
+                          selectedClass.status === "Completed"
+                            ? "#4caf50"
+                            : selectedClass.status === "Cancelled"
+                            ? "#f44336"
+                            : "#2196f3",
+                        color: "white",
+                        padding: "4px 8px",
+                        borderRadius: "4px",
                       }}
                     >
-                      Edit Class
+                      Status: {selectedClass.status}
                     </Typography>
-                    <IconButton
-                      onClick={handleCloseModal}
-                      sx={{
-                        color: customColors.primary,
-                        "&:hover": {
-                          backgroundColor: `${customColors.primary}20`,
-                        },
-                      }}
-                    >
-                      <CloseIcon />
-                    </IconButton>
-                  </Box>
+                  </DetailRow>
 
-                  <FormControl fullWidth sx={{ mb: 2 }}>
-                    <InputLabel>Day</InputLabel>
-                    <Select
-                      value={selectedDay}
-                      label="Day"
-                      onChange={(e) => setSelectedDay(e.target.value)}
-                    >
-                      {[
-                        "Monday",
-                        "Tuesday",
-                        "Wednesday",
-                        "Thursday",
-                        "Friday",
-                        "Saturday",
-                        "Sunday",
-                      ].map((day) => (
-                        <MenuItem key={day} value={day}>
-                          {day}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                  {selectedClass.scheduledBy && (
+                    <DetailRow>
+                      <Box>
+                        <Typography
+                          variant="body1"
+                          sx={{ color: customColors.primary }}
+                        >
+                          Scheduled By
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: customColors.secondary }}
+                        >
+                          {selectedClass.scheduledBy.name} (
+                          {selectedClass.scheduledBy.department})
+                        </Typography>
+                      </Box>
+                    </DetailRow>
+                  )}
 
-                  <TextField
-                    fullWidth
-                    label="Subject/Program"
-                    value={editedClass?.subject || ""}
-                    onChange={(e) =>
-                      handleEditChange("subject", e.target.value)
-                    }
-                    sx={{ mb: 2 }}
-                  />
-
-                  <TextField
-                    fullWidth
-                    label="Time"
-                    value={editedClass?.time || ""}
-                    onChange={(e) => handleEditChange("time", e.target.value)}
-                    sx={{ mb: 2 }}
-                  />
-
-                  <TextField
-                    fullWidth
-                    label="Instructor"
-                    value={editedClass?.teacher || ""}
-                    onChange={(e) =>
-                      handleEditChange("teacher", e.target.value)
-                    }
-                    sx={{ mb: 2 }}
-                  />
-
-                  <TextField
-                    fullWidth
-                    label="Level"
-                    value={editedClass?.level || ""}
-                    onChange={(e) => handleEditChange("level", e.target.value)}
-                    sx={{ mb: 2 }}
-                  />
-
-                  <FormControl fullWidth sx={{ mb: 2 }}>
-                    <InputLabel>Class Type</InputLabel>
-                    <Select
-                      value={editedClass?.classType || ""}
-                      label="Class Type"
-                      onChange={(e) =>
-                        handleEditChange("classType", e.target.value)
-                      }
-                    >
-                      <MenuItem value="Class">Class</MenuItem>
-                      <MenuItem value="Demo">Demo</MenuItem>
-                    </Select>
-                  </FormControl>
-
-                  <FormControl fullWidth sx={{ mb: 3 }}>
-                    <InputLabel>Status</InputLabel>
-                    <Select
-                      value={editedClass?.status || ""}
-                      label="Status"
-                      onChange={(e) =>
-                        handleEditChange("status", e.target.value)
-                      }
-                    >
-                      <MenuItem value="Scheduled">Scheduled</MenuItem>
-                      <MenuItem value="Completed">Completed</MenuItem>
-                      <MenuItem value="Cancelled">Cancelled</MenuItem>
-                    </Select>
-                  </FormControl>
-
-                  <Box
-                    sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}
-                  >
-                    <Button
-                      variant="outlined"
-                      onClick={() => setIsEditing(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      onClick={handleEditSubmit}
-                      startIcon={<SaveIcon />}
-                    >
-                      Save Changes
-                    </Button>
-                  </Box>
+                  {selectedClass.isDemoAdded && (
+                    <DetailRow>
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          backgroundColor: "#ff9800",
+                          color: "white",
+                          padding: "4px 8px",
+                          borderRadius: "4px",
+                        }}
+                      >
+                        Demo Added
+                      </Typography>
+                    </DetailRow>
+                  )}
                 </>
               )}
             </ModalContent>

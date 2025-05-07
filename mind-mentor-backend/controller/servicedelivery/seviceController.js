@@ -14,6 +14,8 @@ const jwt = require("jsonwebtoken");
 const { generateZoomMeeting } = require("../../utils/generateZoomLink");
 const classPaymentModel = require("../../model/classPaymentModel");
 const SelectedClass = require("../../model/wholeClassAssignedModel");
+const moment = require("moment"); // Import moment.js for date formatting
+const PhysicalCenter = require("../../model/physicalcenter/physicalCenterShema");
 
 // const ZOOM_CLIENT_ID = "ChkFppFRmmzbQKT6jiQlA";
 
@@ -254,21 +256,63 @@ const saveCoachAvailableDays = async (req, res) => {
 
 const getCoachAvailableDays = async (req, res) => {
   try {
-    // Fetch all availability records from the database
+    // Fetch all coaches
+    const coachData = await Employee.find(
+      { role: "coach" },
+      { firstName: 1, centerId: 1, centerName: 1, modes: 1 }
+    );
+
+    // Fetch center data
+    const centerData = await PhysicalCenter.find({}, { businessHours: 1, programLevels: 1,centerType:1 });
+
+    // Fetch all availability records
     const availableDays = await CoachAvailability.find();
 
     if (availableDays.length === 0) {
       return res.status(404).json({ message: "No availability records found" });
     }
 
+    // Create maps for quick lookups
+    const coachMap = {};
+    coachData.forEach(coach => {
+      coachMap[coach._id.toString()] = coach;
+    });
+
+    const centerMap = {};
+    centerData.forEach(center => {
+      centerMap[center._id.toString()] = center;
+    });
+
+    // Merge coach and center details
+    const mergedAvailableDays = availableDays.map(entry => {
+      const coachInfo = coachMap[entry.coachId];
+      let centerInfo = null;
+
+      if (coachInfo && coachInfo.centerId) {
+        centerInfo = centerMap[coachInfo.centerId.toString()] || null;
+      }
+
+      return {
+        ...entry.toObject(),
+        coachInfo: coachInfo || null,
+        centerInfo: centerInfo ? {
+          centerId: centerInfo._id,
+          centerType:centerInfo.centerType,
+          businessHours: centerInfo.businessHours,
+          programLevels: centerInfo.programLevels
+        } : null
+      };
+    });
+
+    console.log("mergedAvailableDays",mergedAvailableDays)
+
     res.status(200).json({
       success: true,
       message: "Coach availability fetched successfully",
-      availableDays,
+      availableDays: mergedAvailableDays,
     });
   } catch (err) {
     console.error("Error in getting the available days", err);
-
     res.status(500).json({
       success: false,
       message: "An error occurred while fetching availability",
@@ -276,6 +320,8 @@ const getCoachAvailableDays = async (req, res) => {
     });
   }
 };
+
+
 
 const getClassAndStudentsData = async (req, res) => {
   try {
@@ -540,8 +586,13 @@ const timeTableShedules = async (req, res) => {
 
     const savedShedules = await Promise.all(
       shedules.map(async (shedule) => {
-        const zoomLink = await generateZoomMeeting(); // Generate Zoom link
-        console.log("zoomLink", zoomLink);
+        // Convert date from 'DD-MM-YYYY' to 'YYYY-MM-DD'
+        const dateParts = shedule.date.split("-");
+        if (dateParts.length !== 3) {
+          throw new Error(`Invalid date format: ${shedule.date}`);
+        }
+        const [day, month, year] = dateParts;
+        const formattedDate = new Date(`${year}-${month}-${day}`);
 
         const newSchedule = new ClassSchedule({
           scheduledBy: {
@@ -550,6 +601,7 @@ const timeTableShedules = async (req, res) => {
             department: empData.department,
           },
           day: shedule.day,
+          classDate: formattedDate,
           classTime: `${convertTo12HourFormat(
             shedule.fromTime
           )} - ${convertTo12HourFormat(shedule.toTime)}`,
@@ -557,9 +609,11 @@ const timeTableShedules = async (req, res) => {
           coachId: shedule.coachId,
           program: shedule.program,
           level: shedule.level,
-          meetingLink: zoomLink,
-          classType: shedule.isDemo ? "Demo" : "Class",
+          isDemoAdded: shedule.isDemo ? true : false,
           type: shedule.mode,
+          centerName: shedule.centerName,
+          centerId: shedule.centerId,
+          maximumKidCount: shedule.maxKids,
         });
 
         return await newSchedule.save();
@@ -577,7 +631,8 @@ const timeTableShedules = async (req, res) => {
       .json({ message: "Internal server error", error: err.message });
   }
 };
-const moment = require("moment"); // Import moment.js for date formatting
+
+
 
 const getActiveKidAndClassData = async (req, res) => {
   try {

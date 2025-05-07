@@ -86,6 +86,8 @@ userRoute.get('/get-physcical-center-data', userController.getPhysicalCenterData
 userRoute.get('/get-individual-physcical-center-data/:centerId', userController.getIndividualPhysicalCenterData);
 userRoute.put('/update-individual-physcical-center-data/:centerId', userController.updatePhysicalCenterData);
 userRoute.delete('/delete-physcical-center-data/:centerId', userController.deletePhysicalCenterData);
+userRoute.get('/get-physcial-center-timings', userController.getPhysicalCenterTimings);
+
 
 
 
@@ -98,6 +100,13 @@ userRoute.post('/add-new-programme', userController.addNewProgrammeData);
 userRoute.get('/get-programme-data', userController.getAllProgrameData);
 userRoute.put('/update-programData', userController.updateProgrameData);
 userRoute.delete('/delete-programData/:pgmId', userController.deleteProgrameData);
+
+
+userRoute.delete('/delete-selected-class-data/:classId', userController.deleteSelectedClass);
+userRoute.get('/get-selected-class-data/:classId', userController.getClassDataForEdit);
+userRoute.put('/update-selected-class-data/:classId', userController.updateSelectedClassData);
+
+
 
 
 

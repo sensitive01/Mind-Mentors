@@ -613,6 +613,27 @@ export const fetchEditEmployeeData = async (empId) => {
   return response;
 };
 
+export const fetchPhysicalCenterTimings = async () => {
+  const response = await userInstance.get(`/get-physcial-center-timings`);
+  return response;
+};
+
+export const deleteSheduleClass = async (classId) => {
+  const response = await userInstance.delete(`/delete-selected-class-data/${classId}`);
+  return response;
+};
+
+export const editSheduledClassData = async (classId) => {
+  const response = await userInstance.get(`/get-selected-class-data/${classId}`);
+  return response;
+};
+
+export const editSheduleTimeTable = async (classId,shedules) => {
+  const response = await userInstance.put(`/update-selected-class-data/${classId}`,{shedules});
+  return response;
+};
+
+
 export const deletePhysicalCenters = async (centerId) => {
   const response = await userInstance.delete(`/delete-physcical-center-data/${centerId}`);
   return response;

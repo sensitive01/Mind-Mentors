@@ -20,6 +20,7 @@ const {
 } = require("../../model/tournamentsModel");
 const PhysicalCenter = require("../../model/physicalcenter/physicalCenterShema");
 const ProgramData = require("../../model/programe/programeDataSchema");
+const ClassSchedule = require("../../model/classSheduleModel");
 
 const createUser = async (req, res) => {
   try {
@@ -1054,9 +1055,9 @@ const savePhysicalCenterData = async (req, res) => {
   try {
     const formData = req.body;
     console.log("Received Form Data:", formData);
-    const {programLevels} = formData
-    const {levels} = programLevels
-    console.log("programLevels",programLevels,"levels",levels)
+    const { programLevels } = formData;
+    const { levels } = programLevels;
+    console.log("programLevels", programLevels, "levels", levels);
 
     const newCenter = new PhysicalCenter({
       centerType: formData.centerType,
@@ -1096,13 +1097,13 @@ const getPhysicalCenterData = async (req, res) => {
 
     // Convert program list into a Map for quick lookup
     const programMap = new Map();
-    programs.forEach(p => {
+    programs.forEach((p) => {
       programMap.set(p._id.toString(), p.programName);
     });
 
     // Replace program ID with program name in each center's programLevels
-    const updatedCenters = centers.map(center => {
-      const updatedProgramLevels = center.programLevels.map(pl => {
+    const updatedCenters = centers.map((center) => {
+      const updatedProgramLevels = center.programLevels.map((pl) => {
         const programId = pl.program?.toString(); // assuming pl.program is ObjectId
         const programName = programMap.get(programId) || "Unknown Program";
 
@@ -1123,7 +1124,6 @@ const getPhysicalCenterData = async (req, res) => {
       message: "Physical center data retrieved successfully",
       physicalCenters: updatedCenters,
     });
-
   } catch (err) {
     res.status(500).json({
       success: false,
@@ -1132,7 +1132,6 @@ const getPhysicalCenterData = async (req, res) => {
     });
   }
 };
-
 
 const getIndividualPhysicalCenterData = async (req, res) => {
   try {
@@ -1162,11 +1161,13 @@ const getIndividualPhysicalCenterData = async (req, res) => {
 
 const updatePhysicalCenterData = async (req, res) => {
   try {
-    const {formData} = req.body;
+    const { formData } = req.body;
 
-    const {centerId} = req.params;
+    const { centerId } = req.params;
     if (!centerId) {
-      return res.status(400).json({ success: false, message: "Center ID is required for update" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Center ID is required for update" });
     }
 
     const updatedCenter = await PhysicalCenter.findByIdAndUpdate(
@@ -1188,7 +1189,9 @@ const updatePhysicalCenterData = async (req, res) => {
     );
 
     if (!updatedCenter) {
-      return res.status(404).json({ success: false, message: "Center not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Center not found" });
     }
 
     res.status(200).json({
@@ -1211,16 +1214,22 @@ const deletePhysicalCenterData = async (req, res) => {
     const { centerId } = req.params;
 
     if (!centerId) {
-      return res.status(400).json({ success: false, message: "Center ID is required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Center ID is required" });
     }
 
     const deletedCenter = await PhysicalCenter.findByIdAndDelete(centerId);
 
     if (!deletedCenter) {
-      return res.status(404).json({ success: false, message: "Center not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Center not found" });
     }
 
-    res.status(200).json({ success: true, message: "Physical center deleted successfully" });
+    res
+      .status(200)
+      .json({ success: true, message: "Physical center deleted successfully" });
   } catch (err) {
     console.error("Error in deleting the physical center data", err);
     res.status(500).json({
@@ -1231,7 +1240,27 @@ const deletePhysicalCenterData = async (req, res) => {
   }
 };
 
+const getPhysicalCenterTimings = async (req, res) => {
+  try {
+    const physicalCenterTimings = await PhysicalCenter.find(
+      {},
+      { programLevels: 1, businessHours: 1, centerName: 1, centerType: 1 }
+    );
 
+    res.status(200).json({
+      success: true,
+      message: "Physical center timings fetched successfully",
+      data: physicalCenterTimings,
+    });
+  } catch (err) {
+    console.error("Error in getting the physical center timings", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch physical center timings",
+      error: err.message,
+    });
+  }
+};
 
 const generateUniquePackageId = async () => {
   let isUnique = false;
@@ -1428,7 +1457,6 @@ const getAllProgrameData = async (req, res) => {
   }
 };
 
-
 const updateProgrameData = async (req, res) => {
   try {
     console.log("Welcome to update the program data", req.body);
@@ -1436,7 +1464,9 @@ const updateProgrameData = async (req, res) => {
     const { _id, programName, programLevel } = req.body;
 
     if (!_id) {
-      return res.status(400).json({ success: false, message: "Program ID is required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Program ID is required" });
     }
 
     const updatedProgram = await ProgramData.findByIdAndUpdate(
@@ -1446,7 +1476,9 @@ const updateProgrameData = async (req, res) => {
     );
 
     if (!updatedProgram) {
-      return res.status(404).json({ success: false, message: "Program not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Program not found" });
     }
 
     res.status(200).json({
@@ -1468,16 +1500,22 @@ const deleteProgrameData = async (req, res) => {
     const { pgmId } = req.params;
 
     if (!pgmId) {
-      return res.status(400).json({ success: false, message: "Program ID is required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Program ID is required" });
     }
 
     const deletedProgram = await ProgramData.findByIdAndDelete(pgmId);
 
     if (!deletedProgram) {
-      return res.status(404).json({ success: false, message: "Program not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Program not found" });
     }
 
-    res.status(200).json({ success: true, message: "Program deleted successfully" });
+    res
+      .status(200)
+      .json({ success: true, message: "Program deleted successfully" });
   } catch (err) {
     console.log("Error in deleting the program data", err);
     res.status(500).json({ success: false, message: "Internal server error" });
@@ -1489,13 +1527,17 @@ const getEmployeeData = async (req, res) => {
     const { empId } = req.params;
 
     if (!empId) {
-      return res.status(400).json({ success: false, message: "Employee ID is required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Employee ID is required" });
     }
 
-    const employee = await Employee.findById(empId,{password:0});
+    const employee = await Employee.findById(empId, { password: 0 });
 
     if (!employee) {
-      return res.status(404).json({ success: false, message: "Employee not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Employee not found" });
     }
 
     res.status(200).json({
@@ -1516,10 +1558,12 @@ const getEmployeeData = async (req, res) => {
 const updateEmployeeData = async (req, res) => {
   try {
     const { empId } = req.params;
-    const {formData} = req.body;
+    const { formData } = req.body;
 
     if (!empId) {
-      return res.status(400).json({ success: false, message: "Employee ID is required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Employee ID is required" });
     }
 
     const updatedEmployee = await Employee.findByIdAndUpdate(
@@ -1541,7 +1585,9 @@ const updateEmployeeData = async (req, res) => {
     );
 
     if (!updatedEmployee) {
-      return res.status(404).json({ success: false, message: "Employee not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Employee not found" });
     }
 
     res.status(200).json({
@@ -1599,9 +1645,124 @@ const deleteEmployeeData = async (req, res) => {
   }
 };
 
+const deleteSelectedClass = async (req, res) => {
+  try {
+    const { classId } = req.params;
 
+    if (!classId) {
+      return res.status(400).json({ message: "Class ID is required" });
+    }
+
+    const classData = await ClassSchedule.findByIdAndDelete(classId);
+
+    if (!classData) {
+      return res.status(404).json({ message: "Class not found" });
+    }
+
+    return res.status(200).json({ message: "Class deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting class:", err);
+    return res
+      .status(500)
+      .json({ message: "Internal server error", error: err.message });
+  }
+};
+
+const getClassDataForEdit = async (req, res) => {
+  try {
+    const { classId } = req.params;
+
+    if (!classId) {
+      return res.status(400).json({ message: "Class ID is required" });
+    }
+
+    const classData = await ClassSchedule.findById(classId);
+
+    if (!classData) {
+      return res.status(404).json({ message: "Class not found" });
+    }
+
+    return res
+      .status(200)
+      .json({ message: "Class data fetched successfully", classData });
+  } catch (err) {
+    console.error("Error getting class data for edit:", err);
+    return res
+      .status(500)
+      .json({ message: "Internal server error", error: err.message });
+  }
+};
+
+const updateSelectedClassData = async (req, res) => {
+  try {
+    console.log("Welcome to edit time table schedules", req.body);
+
+    const { classId } = req.params;
+    const { shedules } = req.body;
+    const convertTo12HourFormat = (time24) => {
+      const [hour, minute] = time24.split(":");
+      let hourNum = parseInt(hour);
+      const ampm = hourNum >= 12 ? "PM" : "AM";
+      hourNum = hourNum % 12 || 12; // Convert '0' to '12'
+      return `${hourNum}:${minute} ${ampm}`;
+    };
+
+    if (!Array.isArray(shedules) || shedules.length === 0) {
+      return res.status(400).json({ message: "No schedules provided" });
+    }
+
+    // Optional: Remove old schedules linked to this classId before updating
+    await ClassSchedule.deleteMany({ classGroupId: classId });
+
+    const savedSchedules = await Promise.all(
+      shedules.map(async (shedule) => {
+        // Accept both DD-MM-YYYY and DD/MM/YYYY formats
+        const dateParts = shedule.date.split(/[-\/]/);
+        if (dateParts.length !== 3) {
+          throw new Error(`Invalid date format: ${shedule.date}`);
+        }
+        const [day, month, year] = dateParts;
+        const formattedDate = new Date(`${year}-${month}-${day}`);
+
+        const newSchedule = new ClassSchedule({
+          classGroupId: classId,
+          day: shedule.day,
+          classDate: formattedDate,
+          classTime: `${convertTo12HourFormat(
+            shedule.fromTime
+          )} - ${convertTo12HourFormat(shedule.toTime)}`,
+          coachName: shedule.coachName,
+          coachId: shedule.coachId,
+          program: shedule.program,
+          level: shedule.level,
+          isDemoAdded: shedule.isDemo || false,
+          type: shedule.mode,
+          centerName: shedule.centerName,
+          centerId: shedule.centerId,
+          maximumKidCount: shedule.maxKids,
+        });
+
+        return await newSchedule.save();
+      })
+    );
+
+    return res.status(201).json({
+      message: "Schedules updated successfully",
+      savedSchedules,
+    });
+  } catch (err) {
+    console.error("Error updating the timetable schedules:", err);
+    return res
+      .status(500)
+      .json({ message: "Internal server error", error: err.message });
+  }
+};
 
 module.exports = {
+  updateSelectedClassData,
+  getClassDataForEdit,
+  deleteSelectedClass,
+  getPhysicalCenterTimings,
   deleteEmployeeData,
   updateEmployeeData,
   getEmployeeData,
