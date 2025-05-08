@@ -66,6 +66,8 @@ import { getEmployeeData } from "../../../api/service/employee/EmployeeService";
 const ModernSidebar = () => {
   const location = useLocation();
   const [openReports, setOpenReports] = useState(false);
+  const [openAttandance, setOpenAttandance] = useState(false);
+
   const [openClass, setOpenClass] = useState(false);
   const [openTasks, setOpenTasks] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -257,6 +259,11 @@ const ModernSidebar = () => {
     setOpenReports(!openReports);
   };
 
+  const handleAttandanceClick = (e) => {
+    if (e) e.preventDefault();
+    setOpenAttandance(!openAttandance);
+  };
+
   const handleClassClick = (e) => {
     if (e) e.preventDefault();
     setOpenClass(!openClass);
@@ -363,11 +370,7 @@ const ModernSidebar = () => {
           text: "Centers",
           link: "/super-admin/department/physical-centerlist",
         },
-        {
-          icon: <RenewalsIcon />,
-          text: "Attendance",
-          link: "/superadminAttendance",
-        },
+
         {
           icon: <ExpensesIcon />,
           text: "Allowances / Deductions",
@@ -421,6 +424,25 @@ const ModernSidebar = () => {
       text: "Invoices",
       color: iconColors.invoices,
       link: "/superadminInvoices",
+    },
+    {
+      icon: <ReportsIcon />,
+      text: "Attandance",
+      color: iconColors.reports,
+      subItems: [
+        {
+          icon: <ReportsIcon />,
+          text: "My Attandance",
+          link: "/super-admin/department/employee-mark-attandance",
+        },
+        {
+          icon: <ReportsIcon />,
+          text: "Employee Attandance",
+          link: "/super-admin/department/employee-attandance-list",
+        },
+      ],
+      open: openAttandance,
+      onClick: handleAttandanceClick,
     },
     {
       icon: <ReportsIcon />,
@@ -531,9 +553,15 @@ const ModernSidebar = () => {
           <MenuIcon />
         </IconButton>
       </Box>
-      
+
       {!isCollapsed && (
-        <Box display="flex" flexDirection="column" alignItems="center" mt={1} px={2}>
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          mt={1}
+          px={2}
+        >
           {/* Profile Icon with Link */}
           <Link to="/superadminProfile" style={{ textDecoration: "none" }}>
             <Box
@@ -570,9 +598,7 @@ const ModernSidebar = () => {
 
               <Box sx={{ mt: 1, width: "100%" }}>
                 <Box sx={{ display: "flex", alignItems: "center", mb: 0.5 }}>
-                  <EmailIcon
-                    sx={{ color: "#642b8f", fontSize: 16, mr: 0.5 }}
-                  />
+                  <EmailIcon sx={{ color: "#642b8f", fontSize: 16, mr: 0.5 }} />
                   <Typography
                     variant="caption"
                     color="text.secondary"
@@ -583,9 +609,7 @@ const ModernSidebar = () => {
                   </Typography>
                 </Box>
 
-                <Box
-                  sx={{ display: "flex", justifyContent: "center", gap: 1 }}
-                >
+                <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
                   <Typography
                     variant="caption"
                     sx={{
@@ -620,7 +644,7 @@ const ModernSidebar = () => {
           <Divider sx={{ width: "100%", my: 2 }} />
         </Box>
       )}
-      
+
       <Box
         sx={{
           overflow: "auto",

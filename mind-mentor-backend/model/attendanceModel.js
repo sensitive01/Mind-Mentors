@@ -1,34 +1,30 @@
 const mongoose = require("mongoose");
 
 const AttendanceSchema = new mongoose.Schema({
-  attendanceDate: {
+  date: {
     type: Date,
-    required: true,
-    validate: {
-      validator: function (value) {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Reset time to midnight
-        return value.getTime() === today.getTime();
-      },
-      message: "Attendance can only be marked for today's date.",
-    },
   },
-  time: {
-    type: Date, // Store the exact time as a Date object
-    required: true,
-  },
-  employeeEmail: {
+  loginTime: {
     type: String,
   },
-  employeeName: {
+  logoutTime: {
     type: String,
-    required: true,
+  },
+  empId: {
+    type: String,
+  },
+  empName: {
+    type: String,
+  },
+  department: {
+    type: String,
   },
   status: {
     type: String,
-    required: true,
-    enum: ["Present", "Absent"], // Attendance status
+    enum: ["Present", "Absent", "Late"],
   },
+  isLoginMarked: { type: Boolean, default: false },
+  isLogoutMarked: { type: Boolean, default: false },
 });
 
-module.exports = mongoose.model("attendance", AttendanceSchema);
+module.exports = mongoose.model("Attendance", AttendanceSchema);

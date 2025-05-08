@@ -518,9 +518,7 @@ const updateProspectData = async (req, res) => {
       {
         employeeId: empId,
         employeeName: empData.firstName,
-        action: `Enquiry moved to prospects by ${
-          empData.firstName
-        }`,
+        action: `Enquiry moved to prospects by ${empData.firstName}`,
         createdAt: new Date(),
       },
     ];
@@ -1707,58 +1705,73 @@ const createLeave = async (req, res) => {
   }
 };
 
+const formatDate = (inputDate) => {
+  const dateObj = new Date(inputDate);
+  const dd = String(dateObj.getDate()).padStart(2, "0");
+  const mm = String(dateObj.getMonth() + 1).padStart(2, "0");
+  const yy = String(dateObj.getFullYear()).slice(-2);
+  return `${dd}-${mm}-${yy}`;
+};
+
 const createAttendance = async (req, res) => {
   try {
-    const { employeeName, email } = req.body; // Get employee name from the request body
+    const { empId } = req.params;
+    const { status } = req.body;
+    console.log("status", status);
 
-    // Get the current date
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Reset time to midnight for the attendanceDate
+    const empData = await Employee.findOne(
+      { _id: empId },
+      { firstName: 1, department: 1 }
+    );
 
-    // Set allowed time range (5:00 PM to 8:00 PM)
-    const startTime = new Date(today);
-    startTime.setHours(0, 0, 0, 0); // 5:00 PM
+    const now = new Date();
+    const time = now.toLocaleTimeString();
 
-    const endTime = new Date(today);
-    endTime.setHours(24, 0, 0, 0); // 8:00 PM
+    if (status === "Logout") {
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+      const endOfToday = new Date(startOfToday);
+      endOfToday.setDate(startOfToday.getDate() + 1);
 
-    // Check if current time is within the allowed window
-    const currentTime = new Date();
-    if (currentTime < startTime || currentTime > endTime) {
-      return res.status(400).json({
-        success: false,
-        message: "Attendance can only be marked between 5:00 PM and 8:00 PM.",
+      const todayAttendance = await attendance.findOne({
+        empId,
+        date: { $gte: startOfToday, $lt: endOfToday },
+      });
+
+      if (!todayAttendance) {
+        return res.status(404).json({
+          success: false,
+          message: "Login record not found for today to mark logout.",
+        });
+      }
+
+      todayAttendance.logoutTime = time;
+      todayAttendance.isLogoutMarked = true;
+
+      await todayAttendance.save();
+
+      return res.status(201).json({
+        success: true,
+        message: "Logout marked successfully.",
+        data: todayAttendance,
       });
     }
 
-    // Check if attendance for today is already recorded
-    const existingAttendance = await attendance.findOne({
-      attendanceDate: today,
-      employeeEmail: email,
+    const newAttendance = new attendance({
+      date: now,
+      loginTime: time,
+      empId,
+      empName: empData.firstName,
+      department: empData.department,
+      status,
+      isLoginMarked: true,
     });
-    console.log(existingAttendance, email);
-    if (existingAttendance) {
-      // If attendance is already marked, return an error message
-      return res.status(400).json({
-        success: false,
-        message: "Attendance for today has already been recorded.",
-      });
-    }
 
-    // Create new attendance entry
-    const attendanceData = {
-      attendanceDate: today,
-      time: currentTime, // Use current time for the attendance
-      employeeName,
-      status: "Present",
-      employeeEmail: email,
-    };
+    await newAttendance.save();
 
-    const newAttendance = await attendance.create(attendanceData);
-    console.log(newAttendance, email);
     res.status(201).json({
       success: true,
-      message: "Attendance recorded successfully.",
+      message: "Login attendance recorded successfully.",
       data: newAttendance,
     });
   } catch (error) {
@@ -2901,8 +2914,6 @@ const saveDemoClassData = async (req, res) => {
     // Wait for all updates to finish
     await Promise.all(updatedKidsDataPromises);
 
-
-
     // Update logs for each student
     const logUpdatePromises = kidsData.map(async (kid) => {
       if (students.includes(kid.kidId)) {
@@ -3653,7 +3664,224 @@ const getEmployeeData = async (req, res) => {
   }
 };
 
+const isAttendanceMarked = async (req, res) => {
+  try {
+    const { empId } = req.params;
+
+    const now = new Date();
+    const startOfTodayUTC = new Date(
+      Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())
+    );
+    const startOfTomorrowUTC = new Date(
+      Date.UTC(now.getFullYear(), now.getMonth(), now.getDate() + 1)
+    );
+
+    const todayAttendance = await attendance.findOne({
+      empId: empId,
+      date: { $gte: startOfTodayUTC, $lt: startOfTomorrowUTC },
+    });
+
+    console.log("Today's Attendance:", todayAttendance);
+
+    if (!todayAttendance) {
+      return res.status(200).json({ nextAction: "login" });
+    }
+
+    const { isLoginMarked, isLogoutMarked } = todayAttendance;
+
+    if (!isLoginMarked && !isLogoutMarked) {
+      return res.status(200).json({ nextAction: "login" });
+    } else if (isLoginMarked && !isLogoutMarked) {
+      return res.status(200).json({ nextAction: "logout" });
+    } else {
+      return res.status(200).json({ nextAction: "attendance marked" });
+    }
+  } catch (err) {
+    console.error("Error in checking attendance:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// const getMyAttendanceData = async (req, res) => {
+//   try {
+//     const { empId } = req.params;
+
+//     const now = new Date();
+//     const year = now.getFullYear();
+//     const month = now.getMonth();
+
+//     const daysInMonth = new Date(year, month + 1, 0).getDate();
+//     const startOfMonth = new Date(year, month, 1);
+//     const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999);
+
+//     const attendanceRecords = await attendance.find({
+//       empId,
+//       date: {
+//         $gte: startOfMonth,
+//         $lte: endOfMonth,
+//       },
+//     });
+
+//     const attendanceMap = {};
+//     attendanceRecords.forEach(record => {
+//       const dateStr = new Date(record.date).toISOString().split("T")[0];
+//       attendanceMap[dateStr] = {
+//         status: record.status,
+//         loginTime: record.loginTime,
+//         logoutTime: record.logoutTime || null,
+//       };
+//     });
+
+//     let presentCount = 0;
+//     let lateCount = 0;
+//     let absentCount = 0;
+//     let workingDaysCount = 0;
+
+//     const attendanceSummary = [];
+
+//     for (let day = 1; day <= daysInMonth; day++) {
+//       const dateObj = new Date(year, month, day);
+//       const dateStr = dateObj.toISOString().split("T")[0];
+
+//       const isWeekday = dateObj.getDay() !== 0 && dateObj.getDay() !== 6;
+//       if (isWeekday) workingDaysCount++;
+
+//       if (attendanceMap[dateStr]) {
+//         const { status } = attendanceMap[dateStr];
+//         attendanceSummary.push({
+//           date: dateStr,
+//           status,
+//           loginTime: attendanceMap[dateStr].loginTime,
+//           logoutTime: attendanceMap[dateStr].logoutTime,
+//         });
+
+//         if (status === "Present") presentCount++;
+//         if (status === "Late") lateCount++;
+//       } else {
+//         attendanceSummary.push({
+//           date: dateStr,
+//           status: "Absent",
+//           loginTime: null,
+//           logoutTime: null,
+//         });
+//         absentCount++;
+//       }
+//     }
+
+//     console.log("workingDaysCount",workingDaysCount)
+//     console.log("present",presentCount)
+//     console.log("late",lateCount)
+//     console.log("absent",absentCount)
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Monthly attendance fetched successfully.",
+//       data: {
+//         attendanceSummary,
+//         counts: {
+//           totalWorkingDays: workingDaysCount,
+//           present: presentCount,
+//           late: lateCount,
+//           absent: absentCount,
+//         },
+//       },
+//     });
+
+//   } catch (err) {
+//     console.log("Error in getting my attendance data", err);
+//     res.status(500).json({
+//       success: false,
+//       message: "Server error while fetching attendance.",
+//     });
+//   }
+// };
+
+const getMyAttendanceData = async (req, res) => {
+  try {
+    const { empId } = req.params;
+
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const startOfMonth = new Date(year, month, 1);
+    const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999);
+
+    const attendanceRecords = await attendance.find({
+      empId,
+      date: {
+        $gte: startOfMonth,
+        $lte: endOfMonth,
+      },
+    });
+
+    const attendanceMap = {};
+    attendanceRecords.forEach((record) => {
+      const dateStr = new Date(record.date).toISOString().split("T")[0];
+      attendanceMap[dateStr] = {
+        status: record.status,
+        loginTime: record.loginTime,
+        logoutTime: record.logoutTime || null,
+      };
+    });
+
+    let presentCount = 0;
+    let lateCount = 0;
+    let absentCount = 0;
+
+    const attendanceSummary = [];
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateObj = new Date(year, month, day);
+      const dateStr = dateObj.toISOString().split("T")[0];
+
+      if (attendanceMap[dateStr]) {
+        const { status, loginTime, logoutTime } = attendanceMap[dateStr];
+        attendanceSummary.push({
+          date: dateStr,
+          status,
+        });
+
+        if (status === "Present") presentCount++;
+        if (status === "Late") lateCount++;
+      } else {
+        attendanceSummary.push({
+          date: dateStr,
+          status: "Absent",
+        });
+        absentCount++;
+      }
+    }
+
+    console.log("workingDaysCount", daysInMonth);
+    console.log("present", presentCount);
+    console.log("late", lateCount);
+    console.log("absent", absentCount);
+
+    res.status(200).json({
+      success: true,
+      message: "Monthly attendance summary fetched successfully.",
+        attendanceSummary,
+        counts: {
+          totalWorkingDays: daysInMonth,
+          present: presentCount,
+          late: lateCount,
+          absent: absentCount,
+        },
+    });
+  } catch (err) {
+    console.log("Error in getting attendance data", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching attendance.",
+    });
+  }
+};
+
 module.exports = {
+  getMyAttendanceData,
+  isAttendanceMarked,
   getEmployeeData,
   makeaCallToParent,
   updatePaymentData,

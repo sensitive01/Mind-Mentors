@@ -27,6 +27,10 @@ operationRoute.get("/get-package-data", operationController.getPackageData);
 operationRoute.get("/get-discount-vouchers/:enqId", operationController.getDiscountVouchers);
 operationRoute.get("/get-the-physical-center-name", operationController.getThePhysicalCenterName);
 operationRoute.get("/get-employee-data/:empId", operationController.getEmployeeData);
+operationRoute.get("/is-attandance-marked/:empId", operationController.isAttendanceMarked);
+operationRoute.get("/get-my-attandance-data/:empId", operationController.getMyAttendanceData);
+
+
 
 
 
@@ -40,6 +44,7 @@ operationRoute.post("/send-payment-package-data/:enqId", operationController.sav
 operationRoute.post("/department-paynow-option", operationController.departmentPayNowOption);
 operationRoute.post("/update-payment-data", operationController.updatePaymentData);
 operationRoute.post("/make-a-call-to-parent", operationController.makeaCallToParent);
+operationRoute.post("/save-employee-attance-data/:empId", operationController.createAttendance);
 
 
 
@@ -81,7 +86,6 @@ operationRoute.get("/get-attandance-data/:id",operationController.getAllAttandan
 
 operationRoute.post("/register",operationController.registerEmployee)
 operationRoute.post("/leaves-form", operationController.createLeave);
-operationRoute.post("/attendance/mark", operationController.createAttendance);
 operationRoute.post("/tasks", operationController.createTask);
 
 

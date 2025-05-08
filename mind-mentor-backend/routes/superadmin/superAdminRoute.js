@@ -106,6 +106,9 @@ userRoute.delete('/delete-selected-class-data/:classId', userController.deleteSe
 userRoute.get('/get-selected-class-data/:classId', userController.getClassDataForEdit);
 userRoute.put('/update-selected-class-data/:classId', userController.updateSelectedClassData);
 
+userRoute.get('/get-all-employee-attandance', userController.getAllEmployeeAttandance);
+
+
 
 
 

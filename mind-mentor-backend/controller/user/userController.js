@@ -21,6 +21,7 @@ const {
 const PhysicalCenter = require("../../model/physicalcenter/physicalCenterShema");
 const ProgramData = require("../../model/programe/programeDataSchema");
 const ClassSchedule = require("../../model/classSheduleModel");
+const attendanceModel = require("../../model/attendanceModel");
 
 const createUser = async (req, res) => {
   try {
@@ -1766,7 +1767,61 @@ const updateSelectedClassData = async (req, res) => {
   }
 };
 
+
+const getAllEmployeeAttandance = async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    // Get today's attendance records
+    const todaysAttendance = await attendanceModel.find({
+      date: { $gte: today, $lt: tomorrow },
+    });
+
+    // Transform the attendance records into the desired structure
+    const result = todaysAttendance.map(record => ({
+      employeeId: record.empId,
+      name: record.empName,
+      email: record.email || "N/A", // Add email in your attendance model if needed
+      department: record.department,
+      status: record.status.toLowerCase(), // present / late
+      checkInTime: record.loginTime || null,
+    }));
+
+    res.status(200).json({
+      success: true,
+      message: "Today's attendance fetched successfully.",
+      data: result,
+    });
+  } catch (err) {
+    console.error("Error fetching today's employee attendance:", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch attendance data.",
+    });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 module.exports = {
+  getAllEmployeeAttandance,
   updateSelectedClassData,
   getClassDataForEdit,
   deleteSelectedClass,

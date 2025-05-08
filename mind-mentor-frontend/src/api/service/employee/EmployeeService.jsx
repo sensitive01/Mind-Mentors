@@ -377,6 +377,12 @@ export const adminDeleteProgramme = async (id) => {
   return response.data;
 };
 
+export const fetchAllEmployeeAttandance = async () => {
+  const response = await userInstance.get(`/get-all-employee-attandance`);
+
+  return response.data;
+};
+
 export const adminUpdateProgramme = async (programData) => {
   const response = await userInstance.put("/update-programData", programData);
 
@@ -708,6 +714,28 @@ export const makeCallToParent = async (mobile) => {
 export const getEmployeeData = async (empId) => {
   const response = await operationDeptInstance.get(
     `/get-employee-data/${empId}`
+  );
+  return response;
+};
+
+
+export const markEmployeeAttandance = async (empId,status) => {
+  const response = await operationDeptInstance.post(
+    `/save-employee-attance-data/${empId}`,{status}
+  );
+  return response;
+};
+
+export const isAttandaceMarked = async (empId) => {
+  const response = await operationDeptInstance.get(
+    `/is-attandance-marked/${empId}`
+  );
+  return response;
+};
+
+export const getMyAttandanceData = async (empId) => {
+  const response = await operationDeptInstance.get(
+    `/get-my-attandance-data/${empId}`
   );
   return response;
 };

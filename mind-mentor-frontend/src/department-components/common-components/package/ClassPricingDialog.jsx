@@ -53,25 +53,33 @@ function TabPanel(props) {
   );
 }
 
-// Class-Amount input row component
-const ClassAmountRow = ({ index, data, onChange, onDelete, disableDelete }) => {
-
-  console.log(" index, data", index, data)
+// Modified ClassAmountRow component
+const ClassAmountRow = ({
+  index,
+  data,
+  onChange,
+  onDelete,
+  disableDelete,
+  isHybrid = false,
+}) => {
   return (
     <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-      
-      <FormControl variant="outlined" size="small" sx={{ width: 150, mr: 2 }}>
-        <InputLabel>Mode</InputLabel>
-        <Select
-          value={data.mode || ""}
-          onChange={(e) => onChange(index, "mode", e.target.value)}
-          label="Mode"
-        >
-          <MenuItem value="online">Online</MenuItem>
-          <MenuItem value="offline">Offline</MenuItem>
-        </Select>
-      </FormControl>
-      
+      {/* Only show Mode dropdown when isHybrid is true */}
+      {isHybrid && (
+        <FormControl variant="outlined" size="small" sx={{ width: 150, mr: 2 }}>
+          <InputLabel>Mode</InputLabel>
+          <Select
+            value={data.mode || ""}
+            onChange={(e) => onChange(index, "mode", e.target.value)}
+            label="Mode"
+          >
+            <MenuItem value="online">Online</MenuItem>
+            <MenuItem value="offline">Offline</MenuItem>
+          </Select>
+        </FormControl>
+      )}
+
+      {/* This Time dropdown is always shown */}
       <FormControl variant="outlined" size="small" sx={{ width: 150, mr: 2 }}>
         <InputLabel>Time</InputLabel>
         <Select
@@ -83,7 +91,7 @@ const ClassAmountRow = ({ index, data, onChange, onDelete, disableDelete }) => {
           <MenuItem value="night">Night</MenuItem>
         </Select>
       </FormControl>
-      
+
       <TextField
         label="Number of Classes"
         type="number"
@@ -105,7 +113,7 @@ const ClassAmountRow = ({ index, data, onChange, onDelete, disableDelete }) => {
         variant="outlined"
         size="small"
       />
-      
+
       {!disableDelete && (
         <IconButton color="error" onClick={() => onDelete(index)}>
           <DeleteIcon />
@@ -395,6 +403,7 @@ const ClassPricingDialog = ({
                     onChange={handleOnlineClassPriceChange}
                     onDelete={deleteOnlineClassPrice}
                     disableDelete={onlineClassPrices.length === 1}
+                    isHybrid={false} // Explicitly set to false for online classes
                   />
                 ))}
 
@@ -479,6 +488,7 @@ const ClassPricingDialog = ({
                         onChange={handlePhysicalClassPriceChange}
                         onDelete={deletePhysicalClassPrice}
                         disableDelete={physicalClassPrices.length === 1}
+                        isHybrid={false} // Explicitly set to false for physical classes
                       />
                     ))}
 
@@ -613,6 +623,7 @@ const ClassPricingDialog = ({
                                       physicalClassPrices
                                     ).length === 1
                                   }
+                                  isHybrid={false} // Explicitly set to false
                                 />
                               ))}
 
@@ -737,6 +748,7 @@ const ClassPricingDialog = ({
                     onChange={handleHybridClassPriceChange}
                     onDelete={deleteHybridClassPrice}
                     disableDelete={hybridClassPrices.length === 1}
+                    isHybrid={true} // Set to true for hybrid classes
                   />
                 ))}
 
