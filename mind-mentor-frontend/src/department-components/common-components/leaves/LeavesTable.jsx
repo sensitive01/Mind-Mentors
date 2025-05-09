@@ -1,10 +1,12 @@
 import EditIcon from "@mui/icons-material/Edit";
 import HistoryIcon from "@mui/icons-material/History";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
 
 import {
   Box,
   Button,
+  Chip,
   CircularProgress,
   createTheme,
   Dialog,
@@ -42,22 +44,125 @@ const theme = createTheme({
   },
 });
 
+// Function to get status color
+const getStatusColor = (status) => {
+  switch (status) {
+    case "Approved":
+      return "#10B981"; // Green
+    case "Rejected":
+      return "#EF4444"; // Red
+    case "Pending":
+      return "#F59E0B"; // Amber
+    default:
+      return "#6B7280"; // Gray
+  }
+};
+
+// Function to format date for display
+const formatDisplayDate = (dateString) => {
+  if (!dateString) return "N/A";
+  // Parse date from MM/DD/YYYY format
+  const parts = dateString.split("/");
+  if (parts.length !== 3) return dateString;
+
+  const month = parseInt(parts[0], 10);
+  const day = parseInt(parts[1], 10);
+  const year = parseInt(parts[2], 10);
+
+  // Format as "Month Day, Year"
+  const date = new Date(year, month - 1, day);
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+
 const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog) => [
   {
     field: "slNo",
     headerName: "Sl No",
-    width: 100,
+    width: 70,
     renderCell: (params) => params.value,
   },
-  { field: "employeeName", headerName: "Employee", width: 150 },
-  { field: "leaveType", headerName: "Leave Type", width: 150 },
-  { field: "leaveStartDate", headerName: "Leave Start Date", width: 180 },
-  { field: "leaveEndDate", headerName: "Leave End Date", width: 180 },
-  { field: "status", headerName: "Status", width: 120 },
+  { field: "employeeName", headerName: "Employee", width: 130 },
+  {
+    field: "category",
+    headerName: "Category",
+    width: 110,
+    renderCell: (params) => (
+      <Chip
+        label={params.value === "leave" ? "Leave" : "Permission"}
+        size="small"
+        sx={{
+          backgroundColor:
+            params.value === "leave"
+              ? alpha(theme.palette.primary.main, 0.1)
+              : alpha(theme.palette.secondary.main, 0.1),
+          color:
+            params.value === "leave"
+              ? theme.palette.primary.main
+              : theme.palette.secondary.main,
+        }}
+      />
+    ),
+  },
+  { field: "leaveType", headerName: "Type", width: 130 },
+  {
+    field: "leaveStartDate",
+    headerName: "Start Date",
+    width: 110,
+    renderCell: (params) => formatDisplayDate(params.row.leaveStartDate),
+  },
+  {
+    field: "leaveEndDate",
+    headerName: "End Date",
+    width: 110,
+    renderCell: (params) => formatDisplayDate(params.row.leaveEndDate),
+  },
+  {
+    field: "time",
+    headerName: "Time",
+    width: 130,
+    renderCell: (params) =>
+      params.row.category === "permission" && params.row.startTime ? (
+        <Box display="flex" alignItems="center">
+          <AccessTimeIcon
+            sx={{
+              fontSize: 16,
+              mr: 0.5,
+              mt: 2,
+              color: theme.palette.primary.main,
+            }}
+          />
+          <Typography variant="body2" sx={{ fontSize: 16, mr: 0.5, mt: 2 }}>
+            {params.row.startTime} - {params.row.endTime}
+          </Typography>
+        </Box>
+      ) : (
+        "N/A"
+      ),
+  },
+  {
+    field: "status",
+    headerName: "Status",
+    width: 110,
+    renderCell: (params) => (
+      <Chip
+        label={params.value}
+        size="small"
+        sx={{
+          backgroundColor: alpha(getStatusColor(params.value), 0.1),
+          color: getStatusColor(params.value),
+          fontWeight: 600,
+        }}
+      />
+    ),
+  },
   {
     field: "notes",
     headerName: "Notes",
-    width: 120,
+    width: 100,
     renderCell: (params) => (
       <Button
         onClick={() =>
@@ -69,6 +174,7 @@ const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog) => [
         }
         variant="text"
         color="secondary"
+        size="small"
       >
         View
       </Button>
@@ -77,7 +183,7 @@ const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog) => [
   {
     field: "actions",
     headerName: "Actions",
-    width: 150,
+    width: 120,
     renderCell: (params) => (
       <>
         <GridActionsCellItem
@@ -98,7 +204,7 @@ const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog) => [
         />
         <GridActionsCellItem
           icon={<EditIcon />}
-          label="Approve"
+          label="Edit"
           onClick={() => handleStatusToggle(params.row._id)}
           sx={{
             color: "#642b8f",
@@ -113,7 +219,7 @@ const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog) => [
   {
     field: "proof",
     headerName: "Proof",
-    width: 200,
+    width: 100,
     renderCell: (params) =>
       params.row.proof ? (
         <a href={params.row.proof} target="_blank" rel="noopener noreferrer">
@@ -130,62 +236,301 @@ const columns = (theme, handleStatusToggle, setViewDialog, setNoteDialog) => [
         "No Proof"
       ),
   },
-  { field: "createdAt", headerName: "Created At", width: 180 },
+  {
+    field: "createdAt",
+    headerName: "Created",
+    width: 110,
+    renderCell: (params) => formatDisplayDate(params.row.createdAt),
+  },
 ];
 
 const DetailView = ({ data }) => {
   // Function to format date
   const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
+    if (!dateString) return "N/A";
+
+    // Parse date from MM/DD/YYYY format
+    const parts = dateString.split("/");
+    if (parts.length !== 3) return dateString;
+
+    const month = parseInt(parts[0], 10);
+    const day = parseInt(parts[1], 10);
+    const year = parseInt(parts[2], 10);
+
+    // Format as "Month Day, Year"
+    const date = new Date(year, month - 1, day);
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
     });
   };
 
-  // Specific fields to display
-  const fieldsToShow = [
-    { key: 'employeeName', label: 'Employee Name' },
-    { key: 'leaveType', label: 'Leave Type' },
-    { key: 'leaveStartDate', label: 'Leave Start Date' },
-    { key: 'leaveEndDate', label: 'Leave End Date' },
-    { key: 'notes', label: 'Notes' },
-    { key: 'proof', label: 'Proof' },
-    { key: 'createdAt', label: 'Created At' }
-  ];
+  // Function to display proof
+  const ProofDisplay = ({ url }) => {
+    if (!url) return <Typography>No proof provided</Typography>;
+
+    // Check if it's an image (simple check)
+    const isImage = url.match(/\.(jpeg|jpg|gif|png)$/i);
+
+    return (
+      <Box>
+        {isImage ? (
+          <Box sx={{ mt: 1 }}>
+            <img
+              src={url}
+              alt="Proof"
+              style={{
+                maxWidth: "100%",
+                maxHeight: "200px",
+                borderRadius: "8px",
+              }}
+            />
+          </Box>
+        ) : (
+          <Button
+            variant="outlined"
+            color="primary"
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            sx={{ mt: 1 }}
+          >
+            View Document
+          </Button>
+        )}
+      </Box>
+    );
+  };
 
   return (
     <Grid container spacing={3} sx={{ p: 2 }}>
-      {fieldsToShow.map((field) => (
-        <Grid item xs={12} sm={6} md={6} key={field.key}>
-          <Box
-            sx={{
-              p: 2,
-              borderRadius: 2,
-              bgcolor: alpha(theme.palette.primary.main, 0.04),
-              height: "100%",
-            }}
+      <Grid item xs={12}>
+        <Box
+          sx={{
+            p: 2,
+            borderRadius: 2,
+            bgcolor: alpha(theme.palette.primary.main, 0.04),
+            mb: 2,
+          }}
+        >
+          <Typography
+            variant="h6"
+            color={theme.palette.primary.main}
+            gutterBottom
           >
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ mb: 1, display: "block" }}
-            >
-              {field.label}
-            </Typography>
-            <Typography variant="body1" color="text.primary">
-              {field.key === 'createdAt' 
-                ? formatDate(data[field.key])
-                : (data[field.key] || 'N/A')}
-            </Typography>
-          </Box>
-        </Grid>
-      ))}
+            {data.employeeName || "N/A"} -{" "}
+            {data.category === "leave" ? "Leave" : "Permission"} Request
+          </Typography>
+          <Chip
+            label={data.status || "N/A"}
+            size="small"
+            sx={{
+              backgroundColor: alpha(getStatusColor(data.status), 0.1),
+              color: getStatusColor(data.status),
+              fontWeight: 600,
+            }}
+          />
+        </Box>
+      </Grid>
+
+      <Grid item xs={12} sm={6} md={4}>
+        <Box
+          sx={{
+            p: 2,
+            borderRadius: 2,
+            bgcolor: alpha(theme.palette.primary.main, 0.04),
+            height: "100%",
+          }}
+        >
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ mb: 1, display: "block" }}
+          >
+            Category
+          </Typography>
+          <Typography variant="body1" color="text.primary">
+            {data.category === "leave" ? "Leave" : "Permission"}
+          </Typography>
+        </Box>
+      </Grid>
+
+      <Grid item xs={12} sm={6} md={4}>
+        <Box
+          sx={{
+            p: 2,
+            borderRadius: 2,
+            bgcolor: alpha(theme.palette.primary.main, 0.04),
+            height: "100%",
+          }}
+        >
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ mb: 1, display: "block" }}
+          >
+            Type
+          </Typography>
+          <Typography variant="body1" color="text.primary">
+            {data.leaveType || "N/A"}
+          </Typography>
+        </Box>
+      </Grid>
+
+      <Grid item xs={12} sm={6} md={4}>
+        <Box
+          sx={{
+            p: 2,
+            borderRadius: 2,
+            bgcolor: alpha(theme.palette.primary.main, 0.04),
+            height: "100%",
+          }}
+        >
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ mb: 1, display: "block" }}
+          >
+            Employee Name
+          </Typography>
+          <Typography variant="body1" color="text.primary">
+            {data.employeeName || "N/A"}
+          </Typography>
+        </Box>
+      </Grid>
+
+      <Grid item xs={12} sm={6} md={4}>
+        <Box
+          sx={{
+            p: 2,
+            borderRadius: 2,
+            bgcolor: alpha(theme.palette.primary.main, 0.04),
+            height: "100%",
+          }}
+        >
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ mb: 1, display: "block" }}
+          >
+            Start Date
+          </Typography>
+          <Typography variant="body1" color="text.primary">
+            {data.leaveStartDate || "N/A"}
+          </Typography>
+        </Box>
+      </Grid>
+
+      <Grid item xs={12} sm={6} md={4}>
+        <Box
+          sx={{
+            p: 2,
+            borderRadius: 2,
+            bgcolor: alpha(theme.palette.primary.main, 0.04),
+            height: "100%",
+          }}
+        >
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ mb: 1, display: "block" }}
+          >
+            End Date
+          </Typography>
+          <Typography variant="body1" color="text.primary">
+            {data.leaveEndDate || "N/A"}
+          </Typography>
+        </Box>
+      </Grid>
+
+      <Grid item xs={12} sm={6} md={4}>
+        <Box
+          sx={{
+            p: 2,
+            borderRadius: 2,
+            bgcolor: alpha(theme.palette.primary.main, 0.04),
+            height: "100%",
+          }}
+        >
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ mb: 1, display: "block" }}
+          >
+            Time (For Permission)
+          </Typography>
+          <Typography variant="body1" color="text.primary">
+            {data.startTime && data.endTime
+              ? `${data.startTime} - ${data.endTime}`
+              : "N/A"}
+          </Typography>
+        </Box>
+      </Grid>
+
+      <Grid item xs={12} sm={6} md={6}>
+        <Box
+          sx={{
+            p: 2,
+            borderRadius: 2,
+            bgcolor: alpha(theme.palette.primary.main, 0.04),
+            height: "100%",
+          }}
+        >
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ mb: 1, display: "block" }}
+          >
+            Notes
+          </Typography>
+          <Typography variant="body1" color="text.primary">
+            {data.notes || "No notes provided"}
+          </Typography>
+        </Box>
+      </Grid>
+
+      <Grid item xs={12} sm={6} md={6}>
+        <Box
+          sx={{
+            p: 2,
+            borderRadius: 2,
+            bgcolor: alpha(theme.palette.primary.main, 0.04),
+            height: "100%",
+          }}
+        >
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ mb: 1, display: "block" }}
+          >
+            Created At
+          </Typography>
+          <Typography variant="body1" color="text.primary">
+            {formatDate(data.createdAt)}
+          </Typography>
+        </Box>
+      </Grid>
+
+      <Grid item xs={12}>
+        <Box
+          sx={{
+            p: 2,
+            borderRadius: 2,
+            bgcolor: alpha(theme.palette.primary.main, 0.04),
+          }}
+        >
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ mb: 1, display: "block" }}
+          >
+            Proof
+          </Typography>
+          <ProofDisplay url={data.proof} />
+        </Box>
+      </Grid>
     </Grid>
   );
 };
@@ -301,6 +646,40 @@ const EmployeeLeaveManagement = () => {
     </Box>
   );
 
+  // Error message component
+  const ErrorMessage = () => (
+    <Box
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      justifyContent="center"
+      height="400px"
+      sx={{
+        backgroundColor: alpha("#EF4444", 0.04),
+        borderRadius: 2,
+      }}
+    >
+      <Typography variant="h6" color="error" gutterBottom>
+        Error Loading Data
+      </Typography>
+      <Typography
+        variant="body2"
+        color="text.secondary"
+        align="center"
+        sx={{ mb: 3 }}
+      >
+        {error}
+      </Typography>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => window.location.reload()}
+      >
+        Retry
+      </Button>
+    </Box>
+  );
+
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ width: "100%", height: "100%", p: 3 }}>
@@ -325,7 +704,7 @@ const EmployeeLeaveManagement = () => {
               gutterBottom
               sx={{ color: "#000", fontWeight: 600, mb: 3 }}
             >
-              Employee Leave Management
+              My Leaves & Permissions
             </Typography>
             <Button
               variant="contained"
@@ -346,6 +725,8 @@ const EmployeeLeaveManagement = () => {
             >
               <CircularProgress />
             </Box>
+          ) : error ? (
+            <ErrorMessage />
           ) : rows.length === 0 ? (
             <NoLeavesMessage />
           ) : (
@@ -392,39 +773,42 @@ const EmployeeLeaveManagement = () => {
 
           {/* View Dialog */}
           <Dialog
-  open={viewDialog.open}
-  onClose={() => setViewDialog({ open: false, rowData: null })}
-  maxWidth="md"
-  fullWidth
->
-  <DialogTitle
-    sx={{
-      background: "linear-gradient(#642b8f, #642b8f)",
-      color: "#ffffff",
-      fontWeight: 600,
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      paddingRight: "24px !important",
-    }}
-  >
-    Leave Request Details
-    <Button
-      onClick={() => setViewDialog({ open: false, rowData: null })}
-      variant="outlined"
-      sx={{ 
-        color: "#f8a213", 
-        borderColor: "#f8a213",
-        marginLeft: 2
-      }}
-    >
-      Close
-    </Button>
-  </DialogTitle>
-  <DialogContent>
-    <DetailView data={viewDialog.rowData || {}} />
-  </DialogContent>
-</Dialog>
+            open={viewDialog.open}
+            onClose={() => setViewDialog({ open: false, rowData: null })}
+            maxWidth="md"
+            fullWidth
+          >
+            <DialogTitle
+              sx={{
+                background: "linear-gradient(#642b8f, #642b8f)",
+                color: "#ffffff",
+                fontWeight: 600,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                paddingRight: "24px !important",
+              }}
+            >
+              {viewDialog.rowData?.category === "permission"
+                ? "Permission"
+                : "Leave"}{" "}
+              Request Details
+              <Button
+                onClick={() => setViewDialog({ open: false, rowData: null })}
+                variant="outlined"
+                sx={{
+                  color: "#f8a213",
+                  borderColor: "#f8a213",
+                  marginLeft: 2,
+                }}
+              >
+                Close
+              </Button>
+            </DialogTitle>
+            <DialogContent>
+              <DetailView data={viewDialog.rowData || {}} />
+            </DialogContent>
+          </Dialog>
 
           {/* Notes Dialog */}
           <Dialog
@@ -437,12 +821,12 @@ const EmployeeLeaveManagement = () => {
           >
             <DialogTitle
               sx={{
-                background: "linear-gradient(#6366F1, #818CF8)",
+                background: "linear-gradient(#642b8f, #642b8f)",
                 color: "#ffffff",
                 fontWeight: 600,
               }}
             >
-              Add Note
+              View Notes
             </DialogTitle>
             <DialogContent>
               <TextField
@@ -458,24 +842,20 @@ const EmployeeLeaveManagement = () => {
                 rows={4}
                 fullWidth
                 sx={{ mt: 1 }}
+                InputProps={{
+                  readOnly: true,
+                }}
               />
             </DialogContent>
             <DialogActions>
-              <Button
-                onClick={handleNoteSave}
-                variant="contained"
-                sx={{ backgroundColor: "#EC4899" }}
-              >
-                Save
-              </Button>
               <Button
                 onClick={() =>
                   setNoteDialog({ open: false, rowData: null, noteText: "" })
                 }
                 variant="outlined"
-                sx={{ color: "#6366F1", borderColor: "#6366F1" }}
+                sx={{ color: "#642b8f", borderColor: "#642b8f" }}
               >
-                Cancel
+                Close
               </Button>
             </DialogActions>
           </Dialog>

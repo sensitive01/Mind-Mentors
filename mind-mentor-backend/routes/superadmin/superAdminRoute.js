@@ -97,6 +97,9 @@ userRoute.get('/get-all-parent-data', userController.getAllParentData);
 
 
 userRoute.get('/get-programme-data', userController.getAllProgrameData);
+userRoute.get('/get-available-programme-data', userController.getAvailableProgramData);
+
+
 userRoute.post('/add-new-programme', userController.addNewProgrammeData);
 userRoute.put('/update-programData', userController.updateProgrameData);
 userRoute.delete('/delete-programData/:pgmId', userController.deleteProgrameData);
@@ -110,6 +113,11 @@ userRoute.get('/get-all-employee-attandance', userController.getAllEmployeeAttan
 
 userRoute.get('/get-all-task-data', userController.superAdminGetAllTaskData);
 userRoute.delete('/super-admin-delete-task/:taskId', userController.superAdminDeleteTask);
+
+userRoute.get('/super-admin-get-all-leaves', userController.superAdminGetAllLeaves);
+userRoute.put('/super-admin-update-leave-status/:leaveId', userController.superAdminUpdateLeaveStatus);
+
+
 
 
 

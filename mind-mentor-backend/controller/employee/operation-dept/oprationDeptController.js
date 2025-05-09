@@ -1669,12 +1669,23 @@ const referToFriend = async (req, res) => {
 };
 const createLeave = async (req, res) => {
   try {
-    console.log("Create leave", req.body);
-    const leaveData = req.body;
-    const { empId } = req.body;
-    const empData = await Employee.findOne({ _id: empId }, { firstName: 1 });
-    const newLeave = await leaves.create(leaveData);
-    newLeave.employeeName = empData.firstName;
+    console.log("Eelcome to create leave",req.body)
+    const { empId, ...leaveData } = req.body;
+
+    const emp = await Employee.findById(empId).select("firstName");
+    if (!emp) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found",
+      });
+    }
+
+    const newLeave = new leaves({
+      ...leaveData,
+      empId,
+      employeeName: emp.firstName,
+    });
+
     await newLeave.save();
 
     const formatDate = (date) => {
@@ -1688,7 +1699,7 @@ const createLeave = async (req, res) => {
     const formattedLeave = {
       ...newLeave._doc,
       leaveStartDate: formatDate(newLeave.leaveStartDate),
-      leaveEndDate: formatDate(newLeave.leaveEndDate),
+      leaveEndDate: newLeave.leaveEndDate ? formatDate(newLeave.leaveEndDate) : null,
     };
 
     res.status(201).json({
@@ -1704,6 +1715,7 @@ const createLeave = async (req, res) => {
     });
   }
 };
+
 
 const formatDate = (inputDate) => {
   const dateObj = new Date(inputDate);
@@ -1846,25 +1858,43 @@ const getMyIndividualLeave = async (req, res) => {
 
 const updateLeave = async (req, res) => {
   try {
-    console.log("Welcome to update leaves", req.params);
     const { id } = req.params;
-    console.log(id, req.body);
-    const updatedLeave = await leaves.findByIdAndUpdate(
-      id,
-      req.body.updatedData,
-      {
-        new: true,
-      }
-    );
-    console.log("updatedLeave", updatedLeave);
-    if (!updatedLeave) {
-      return res.status(404).json({ message: "Leave not found" });
+    const { updatedData } = req.body;
+
+    // Check if leave exists
+    const existingLeave = await leaves.findById(id);
+    if (!existingLeave) {
+      return res.status(404).json({ success: false, message: "Leave not found" });
     }
-    res.status(200).json(updatedLeave);
+
+    // Delete the existing leave
+    await leaves.findByIdAndDelete(id);
+
+    // Get employee name from empId
+    const emp = await Employee.findById(updatedData.empId).select("firstName");
+    if (!emp) {
+      return res.status(404).json({ success: false, message: "Employee not found" });
+    }
+
+    // Create a new leave record
+    const newLeave = new leaves({
+      ...updatedData,
+      employeeName: emp.firstName,
+    });
+
+    await newLeave.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Leave updated successfully by replacing the old one",
+      data: newLeave,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Error updating leave" });
+    console.error("Error updating leave", error);
+    res.status(500).json({ success: false, message: "Error updating leave" });
   }
 };
+
 const deleteLeave = async (req, res) => {
   try {
     const { id } = req.params;

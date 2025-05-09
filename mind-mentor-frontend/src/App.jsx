@@ -301,6 +301,8 @@ import SuperAdminEmployeeAttandancePage from "./pages/employee/superadmin/SuperA
 import EmployeeAttendance from "./department-components/common-components/attandance/EmployeeAttandance";
 import SuperAdminMarkAttandance from "./pages/employee/superadmin/SuperAdminMarkAttandance";
 import SuperAdminShowAllTask from "./pages/employee/superadmin/SuperAdminShowAllTask";
+import SuperAdminShowAllLeaves from "./pages/employee/superadmin/SuperAdminShowAllLeaves";
+import SuperAdminLeaveForm from "./pages/employee/superadmin/SuperAdminLeaveForm";
 
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
@@ -999,27 +1001,24 @@ function App() {
           <Route path="/super-admin/department/edit-physical-center/:id" element={<EditPhysicalCenterData />} />
           <Route path="/super-admin/department/employees" element={<EmployeeTable />}/>
           <Route path="/super-admin/department/employee/edit/:empId" element={<EditEmployee />}/>
+          <Route path="/super-admin/department/coachAvailabilityForm" element={<SuperAdminCoachAvailabilityForm />}/>
           <Route path="/super-admin/department/coachAvailabilityTable" element={<SuperAdminCoachAvailabilityTable />}/>
           <Route path="/super-admin/department/employee/add" element={<EmployeeForm />} />        
           <Route path="/super-admin/department/class-timetable-list"  element={<SuperadminScheduleClass />}/>
           <Route path="/super-admin/department/class-shedules"  element={<SuperAdminAddTimeTable />}/>
           <Route path="/super-admin/department/edit-class-shedules/:classId"  element={<SuperAdminEditClassShedule />}/>
-          <Route path="/super-admin/department/package-table"  element={<SuperAdminPackageTableList />} />   
-          <Route path="/super-admin/department/attendance" element={<SuperadminAttendance />}/>
-
           <Route path="/super-admin/department/employee-mark-attandance" element={<SuperAdminMarkAttandance />}/>
           <Route path="/super-admin/department/employee-attandance-list" element={<SuperAdminEmployeeAttandancePage />}/>
-
           <Route path="/super-admin/department/assign-new-task"  element={<SuperadminMyAssignTasks />}/>
           <Route path="/super-admin/department/task-table" element={<SuperadminMyTasks />}/>
-          <Route path="/super-admin/department/show-all-task" element={<SuperAdminShowAllTask />}/>
-
-
-            
+          <Route path="/super-admin/department/taskslogs/:id"  element={<SuperAdminTaskAllLogs />}/>
+          <Route path="/super-admin/department/show-all-task" element={<SuperAdminShowAllTask />}/>        
           <Route path="/super-admin/department/leaves/add" element={<SuperadminLeavesAdd />}/>    
           <Route path="/super-admin/department/leaves"  element={<SuperadminLeaves />} />
-          <Route path="/super-admin/department/show-all-leaves"  element={<SuperadminLeaves />} />
+          <Route path="/super-admin/department/show-all-leaves"  element={<SuperAdminShowAllLeaves />} />
+          <Route path="/super-admin/department/edit-leaves/:id" element={<SuperadminLeavesAdd />} />
 
+          <Route path="/super-admin/department/new-leave-form" element={<SuperAdminLeaveForm />} />
 
 
 
@@ -1027,32 +1026,34 @@ function App() {
 
 
           <Route path="/super-admin/department/dashboard"  element={<SuperadminDashboard />}/>     
+          <Route path="/super-admin/department/enquiry-form" element={<SuperAdminAddNewEnquiryForm />}/>
           <Route path="/super-admin/department/enrollment-data"  element={<SuperAdminEnquiryProspectsTab />}/>
-          {/* <Route path="/super-admin/department/show-complete-enquiry-logs/:id" element={<ShowAllEnquiryLogs />} /> */}
           <Route path="/super-admin/department/show-complete-enquiry-logs/:id"  element={<SuperAdminAllEnquiryLogs />} />
           <Route path="/super-admin/department/show-complete-status-logs/:id"  element={<SuperAdminAllStatusLogs />}/>
-          <Route path="/super-admin/department/enquiry-form" element={<SuperAdminAddNewEnquiryForm />}/>
-          <Route path="/super-admin/department/schedule-demo-class-list-individually/:enqId/:isSheduled" element={<SuperAdminAssignNewClass />}/>
           <Route path="/super-admin/department/parents-data" element={<SuperadminParents />}/>
           <Route path="/super-admin/department/kids-data" element={<SuperadminKids />}/>
-          <Route path="/super-admin/department/coachAvailabilityForm" element={<SuperAdminCoachAvailabilityForm />}/>
-          <Route path="/super-admin/department/allowdeduct" element={<AllowDeductTable />} />
           <Route path="/super-admin/department/active-kid-data" element={<SuperAdminActiveKidData />}/>
-          <Route path="/super-admin/department/assign-whole-plan-class/:enqId" element={<SuperAdminAssignWholeClassToKid />} />
-          <Route path="/super-admin/department/list-task-assigned-me" element={<SuperadminMyAssignTasksTable />}/>        
-          <Route path="/super-admin/department/taskslogs/:id"  element={<SuperAdminTaskAllLogs />}/>
-          <Route path="/super-admin/department/edit-leaves/:id" element={<SuperadminLeavesAdd />} />
-          <Route path="/super-admin/department/discount-form" element={<DiscountFormPage />}/>
           <Route path="/super-admin/department/discount-table" element={<VoucherTablePage />}/>
+          <Route path="/super-admin/department/discount-form" element={<DiscountFormPage />}/>
           <Route path="/super-admin/department/add-package-form" element={<SuperAdminAddPackageForm />}/>
+          <Route path="/super-admin/department/package-table"  element={<SuperAdminPackageTableList />} />   
+
+
+          <Route path="/super-admin/department/schedule-demo-class-list-individually/:enqId/:isSheduled" element={<SuperAdminAssignNewClass />}/>
+          <Route path="/super-admin/department/assign-whole-plan-class/:enqId" element={<SuperAdminAssignWholeClassToKid />} />
           <Route path="/super-admin/department/display-whole-selectedClass/:enqId"  element={<SuperAdminDisplayWholeClassKid />}/>
 
+          <Route path="/super-admin/department/allowdeduct" element={<AllowDeductTable />} />
+          {/* <Route path="/super-admin/department/show-complete-enquiry-logs/:id" element={<ShowAllEnquiryLogs />} /> */}
+          {/* <Route path="/super-admin/department/list-task-assigned-me" element={<SuperadminMyAssignTasksTable />}/>         */}
+          {/* <Route path="/super-admin/department/attendance" element={<SuperadminAttendance />}/> */}
+          {/* <Route path="/superadminEnquiries" element={<SuperadminEnquiries />} /> */}
 
-          
           <Route path="/superadminRenewals" element={<SuperadminRenewal />} />
-          <Route path="/superadminEnquiries" element={<SuperadminEnquiries />} />
           <Route path="/superadminInvoices" element={<SuperadminInvoice />} />
           <Route path="/chessKids/" element={<ChessKid />} />
+
+          
           <Route path="/superadminFeedback" element={<SuperadminFeedback />} />
           <Route path="/superadminAttendanceReport" element={<SuperadminAttendanceReport />}/>
           <Route path="/superadminSupport/"  element={<SuperadminSupportRequest />}/>

@@ -60,6 +60,16 @@ export const fetchLeaveById = async (levId) => {
   return response;
 };
 
+export const fetchAllLeavesSuperAdmin = async () => {
+  const response = await userInstance.get(`/super-admin-get-all-leaves`);
+  return response;
+};
+
+export const updateLeaveStatus = async (leaveId,status) => {
+  const response = await userInstance.put(`/super-admin-update-leave-status/${leaveId}`,{status});
+  return response;
+};
+
 // Get All Leaves
 export const fetchAllLeaves = async (empEmail) => {
   const response = await operationDeptInstance.get(
@@ -434,6 +444,12 @@ export const adminAddNewProgramme = async (programmeData) => {
 
 export const getAllProgrameData = async () => {
   const response = await userInstance.get("/get-programme-data");
+
+  return response;
+};
+
+export const getAvailableCentersForProgram = async () => {
+  const response = await userInstance.get("/get-available-programme-data");
 
   return response;
 };

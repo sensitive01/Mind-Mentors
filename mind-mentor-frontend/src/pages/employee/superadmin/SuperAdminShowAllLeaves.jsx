@@ -1,4 +1,4 @@
-import LeavesTable from "../../../department-components/common-components/leaves/LeavesTable";
+import ShowAllLeaves from "../../../department-components/common-components/leaves/ShowAllLeaves";
 import Topbar from '../../../component/parent-component/parent-dashboard/layout/Topbar';
 import Sidebar from "../../../department-components/superadmin/Layout/Sidebar";
 
@@ -15,7 +15,7 @@ const SuperAdminShowAllLeaves = () => {
       <div className="flex-1 overflow-hidden relative z-10">
         <div className="h-full w-full overflow-auto scrollbar-hide bg-gray-50">
           <div className="min-w-full p-4">
-            <LeavesTable />
+            <ShowAllLeaves />
           </div>
         </div>
       </div>

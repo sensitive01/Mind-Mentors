@@ -9,6 +9,7 @@ const upload = multer(); // You can configure storage options if needed
 const bcrypt = require("bcryptjs");
 const Voucher = require("../../model/discount_voucher/voucherModel");
 const parentModel = require("../../model/parentModel");
+const leavesModel = require("../../model/leavesModel");
 const {
   Tournament,
   Notification,
@@ -1768,7 +1769,6 @@ const updateSelectedClassData = async (req, res) => {
   }
 };
 
-
 const getAllEmployeeAttandance = async (req, res) => {
   try {
     const today = new Date();
@@ -1782,7 +1782,7 @@ const getAllEmployeeAttandance = async (req, res) => {
     });
 
     // Transform the attendance records into the desired structure
-    const result = todaysAttendance.map(record => ({
+    const result = todaysAttendance.map((record) => ({
       employeeId: record.empId,
       name: record.empName,
       email: record.email || "N/A", // Add email in your attendance model if needed
@@ -1840,8 +1840,6 @@ const superAdminGetAllTaskData = async (req, res) => {
   }
 };
 
-
-
 const superAdminDeleteTask = async (req, res) => {
   try {
     const { taskId } = req.params;
@@ -1869,18 +1867,113 @@ const superAdminDeleteTask = async (req, res) => {
   }
 };
 
+const superAdminGetAllLeaves = async (req, res) => {
+  try {
+    console.log("Welcome to fetch the leaves");
+    const empLeaves = await leavesModel.find();
 
+    if (empLeaves && empLeaves.length > 0) {
+      // Format the dates before sending the response
+      const formattedLeaves = empLeaves.map((leave) => ({
+        ...leave._doc,
+        leaveStartDate: new Date(leave.leaveStartDate).toLocaleDateString(
+          "en-US"
+        ),
+        leaveEndDate: new Date(leave.leaveEndDate).toLocaleDateString("en-US"),
+        createdAt: new Date(leave.createdAt).toLocaleDateString("en-US"),
+      }));
 
+      res.status(200).json({
+        success: true,
+        message: "Employee leave data fetched successfully",
+        formattedLeaves,
+      });
+    } else {
+      res.status(401).json({
+        success: false,
+        message: "No leave data found for this employee",
+      });
+    }
+  } catch (err) {
+    console.error("Error in fetching my leaves", err);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching leave data",
+      error: err.message,
+    });
+  }
+};
 
+const superAdminUpdateLeaveStatus = async (req, res) => {
+  try {
+    const { leaveId } = req.params;
+    const { status } = req.body;
 
+    const updatedLeave = await leavesModel.findByIdAndUpdate(
+      leaveId,
+      { status },
+      { new: true } // return the updated document
+    );
 
+    if (!updatedLeave) {
+      return res.status(404).json({
+        success: false,
+        message: "Leave request not found.",
+      });
+    }
 
+    res.status(200).json({
+      success: true,
+      message: "Leave status updated successfully.",
+      data: updatedLeave,
+    });
+  } catch (err) {
+    console.error("Error updating leave status:", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update leave status. Please try again later.",
+    });
+  }
+};
 
+const getAvailableProgramData = async (req, res) => {
+  try {
+    const availableProgramsData = await PhysicalCenter.find({}, { centerName: 1, programLevels: 1 });
+    const allPrograms = await ProgramData.find({}, { _id: 1, programName: 1 });
 
+    const programMap = {};
+    allPrograms.forEach(program => {
+      programMap[program._id.toString()] = program.programName;
+    });
 
+    const formattedData = availableProgramsData.map(center => ({
+      _id: center._id,
+      centerName: center.centerName,
+      programLevels: center.programLevels.map(pl => ({
+        program: programMap[pl.program.toString()] || "Unknown Program",
+        levels: pl.levels,
+      }))
+    }));
+
+    res.status(200).json({
+      success: true,
+      message: "Available program data fetched successfully.",
+      data: formattedData
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch available program data.",
+    });
+  }
+};
 
 
 module.exports = {
+  getAvailableProgramData,
+  superAdminUpdateLeaveStatus,
+  superAdminGetAllLeaves,
   superAdminDeleteTask,
   superAdminGetAllTaskData,
   getAllEmployeeAttandance,

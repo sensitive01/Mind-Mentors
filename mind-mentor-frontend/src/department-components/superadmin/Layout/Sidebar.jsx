@@ -75,6 +75,8 @@ const ModernSidebar = () => {
   const [openEmployees, setOpenEmployees] = useState(false);
   const [openEnquiries, setOpenEnquiries] = useState(false);
   const [openParticipants, setOpenParticipants] = useState(false);
+  const [openLeave, setOpenLeave] = useState(false);
+
   const [openTournaments, setOpenTournaments] = useState(false);
   const [activeItem, setActiveItem] = useState("");
   const [empData, setEmpData] = useState({});
@@ -269,9 +271,9 @@ const ModernSidebar = () => {
     setOpenClass(!openClass);
   };
 
-  const handleTasksClick = (e) => {
+  const handleLeaves = (e) => {
     if (e) e.preventDefault();
-    setOpenTasks(!openTasks);
+    setOpenLeave(!openLeave);
   };
 
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
@@ -465,6 +467,25 @@ const ModernSidebar = () => {
       ],
       open: openReports,
       onClick: handleReportsClick,
+    },
+    {
+      icon: <TournamentsIcon />,
+      text: "Leaves",
+      color: iconColors.reports,
+      subItems: [
+        {
+          icon: <TournamentsIcon />,
+          text: "All Leaves",
+          link: "/super-admin/department/show-all-leaves",
+        },
+        {
+          icon: <ParticipantsIcon />,
+          text: "Apply for Leave",
+          link: "/super-admin/department/leaves",
+        },
+      ],
+      open: openLeave,
+      onClick: handleLeaves,
     },
     {
       icon: <ChessKidIcon />,
