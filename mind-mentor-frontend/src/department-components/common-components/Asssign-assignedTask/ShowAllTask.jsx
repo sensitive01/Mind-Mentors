@@ -15,6 +15,7 @@ import {
   ThemeProvider,
   Typography,
   IconButton,
+  DialogContentText,
   Tooltip,
 } from "@mui/material";
 import FormControl from "@mui/material/FormControl";
@@ -25,16 +26,18 @@ import { alpha } from "@mui/material/styles";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import AssignmentIcon from "@mui/icons-material/Assignment";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import HistoryIcon from "@mui/icons-material/History";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import DeleteIcon from "@mui/icons-material/Delete";
+import ListAltIcon from "@mui/icons-material/ListAlt";
 
-import columns from "./TaskColumn";
 import {
   addNotesToTasks,
-  fetchMyPendingTask,
+  superAdminDeleteTask,
+  superAdminGetAllTask,
   updateTaskStatus,
+  // deleteTask,
 } from "../../../api/service/employee/EmployeeService";
+import columns from "../task/TaskColumn";
 
 const theme = createTheme({
   palette: {
@@ -143,11 +146,15 @@ const DetailView = ({ data }) => (
   </Grid>
 );
 
-const MyTaskTable = () => {
+const ShowAllTask = () => {
   const [rows, setRows] = useState([]);
   const navigate = useNavigate();
   const [logDialog, setLogDialog] = useState({ open: false, rowData: null });
-  const [taskDetailDialog, setTaskDetailDialog] = useState({
+  const [deleteDialog, setDeleteDialog] = useState({
+    open: false,
+    rowData: null,
+  });
+  const [previewDialog, setPreviewDialog] = useState({
     open: false,
     rowData: null,
   });
@@ -156,7 +163,7 @@ const MyTaskTable = () => {
   useEffect(() => {
     const fetchTask = async () => {
       try {
-        const response = await fetchMyPendingTask(empId);
+        const response = await superAdminGetAllTask();
         console.log(response);
 
         const formattedData = response.map((task, index) => ({
@@ -181,15 +188,23 @@ const MyTaskTable = () => {
     open: false,
     rowData: null,
     noteText: "",
+    enquiryStage: "",
+    notesTo: "",
   });
+
   const [viewDialog, setViewDialog] = useState({
     open: false,
     rowData: null,
   });
+
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
     pageSize: 5,
   });
+
+  const handleGoBack = () => {
+    navigate(-1);
+  };
 
   const handleStatusToggle = async (id, newStatus) => {
     console.log("Toggle");
@@ -234,6 +249,30 @@ const MyTaskTable = () => {
     } catch (error) {
       console.error("Error updating task status:", error);
     }
+  };
+
+  const handleViewLogs = (rowData) => {
+    const department = localStorage.getItem("department");
+    navigate(`/${department}/department/taskslogs/${rowData._id}`);
+  };
+
+  const handleDeleteTask = async () => {
+    if (deleteDialog.rowData) {
+      try {
+        const response = await superAdminDeleteTask(deleteDialog.rowData.id);
+        if (response.status === 200) {
+          setRows(rows.filter((row) => row.id !== deleteDialog.rowData.id));
+
+          setDeleteDialog({ open: false, rowData: null });
+        }
+      } catch (error) {
+        console.error("Error deleting task:", error);
+      }
+    }
+  };
+
+  const handleRowClick = (params) => {
+    setPreviewDialog({ open: true, rowData: params.row });
   };
 
   const handleNoteSave = async () => {
@@ -291,66 +330,83 @@ const MyTaskTable = () => {
     }
   };
 
-  const handleViewLogs = (row) => {
-    const department = localStorage.getItem("department");
-    navigate(`/${department}/department/taskslogs/${row._id}`);
-  };
-
-  // Define additional column for actions
+  // Define action column
   const actionColumn = {
     field: "actions",
     headerName: "Actions",
     width: 150,
     sortable: false,
+    disableClickEventBubbling: true,
     renderCell: (params) => (
-      <Box sx={{ display: "flex", gap: 1 }}>
-        <Tooltip title="View Task Details">
-          <IconButton
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation();
-              setTaskDetailDialog({ open: true, rowData: params.row });
-            }}
-            sx={{ color: theme.palette.primary.main }}
-          >
-            <VisibilityIcon />
-          </IconButton>
-        </Tooltip>
+      <Box
+        sx={{ display: "flex", justifyContent: "space-between", width: "100%" }}
+      >
         <Tooltip title="View Logs">
           <IconButton
-            size="small"
             onClick={(e) => {
               e.stopPropagation();
               handleViewLogs(params.row);
             }}
-            sx={{ color: theme.palette.warm.main }}
+            sx={{
+              color: theme.palette.warm.main,
+              "&:hover": {
+                backgroundColor: alpha(theme.palette.warm.main, 0.1),
+              },
+            }}
+            size="small"
           >
-            <HistoryIcon />
+            <ListAltIcon />
+          </IconButton>
+        </Tooltip>
+
+        <Tooltip title="Delete">
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              setDeleteDialog({ open: true, rowData: params.row });
+            }}
+            sx={{
+              color: theme.palette.secondary.main,
+              "&:hover": {
+                backgroundColor: alpha(theme.palette.secondary.main, 0.1),
+              },
+            }}
+            size="small"
+          >
+            <DeleteIcon />
           </IconButton>
         </Tooltip>
       </Box>
     ),
   };
 
-  // Get the original columns from TaskColumn file and add our action column
-  const allColumns = [
-    ...columns(
+  // Combine with original columns
+  const getColumns = () => {
+    // Get the original columns
+    const originalColumns = columns(
       theme,
       handleStatusToggle,
       setViewDialog,
       setNoteDialog,
       setLogDialog,
       navigate
-    ),
-    actionColumn,
-  ];
+    );
 
-  console.log("row", rows);
+    // Filter out any existing action columns to avoid duplicates
+    const filteredColumns = originalColumns.filter(
+      (col) => col.field !== "actions"
+    );
+
+    // Return the combined columns
+    return [...filteredColumns, actionColumn];
+  };
 
   return (
     <ThemeProvider theme={theme}>
       <Fade in={true}>
         <Box sx={{ width: "100%", height: "100%", p: 3 }}>
+  
+
           <Paper
             elevation={0}
             sx={{
@@ -363,15 +419,13 @@ const MyTaskTable = () => {
           >
             <DataGrid
               rows={rows}
-              columns={allColumns}
+              columns={getColumns()}
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel}
               pageSizeOptions={[5, 10, 25]}
               disableRowSelectionOnClick
+              onRowClick={handleRowClick}
               slots={{ toolbar: GridToolbar }}
-              onRowClick={(params) => {
-                setTaskDetailDialog({ open: true, rowData: params.row });
-              }}
               slotProps={{
                 toolbar: {
                   showQuickFilter: true,
@@ -383,9 +437,11 @@ const MyTaskTable = () => {
                 "& .MuiDataGrid-cell:focus": {
                   outline: "none",
                 },
+                "& .MuiDataGrid-row": {
+                  cursor: "pointer",
+                },
                 "& .MuiDataGrid-row:hover": {
                   backgroundColor: alpha(theme.palette.primary.main, 0.04),
-                  cursor: "pointer", // Add cursor pointer to indicate clickable rows
                 },
                 "& .MuiDataGrid-columnHeader": {
                   backgroundColor: "#642b8f",
@@ -401,64 +457,7 @@ const MyTaskTable = () => {
               }}
             />
 
-            {/* Task Detail Dialog */}
-            <Dialog
-              open={taskDetailDialog.open}
-              onClose={() =>
-                setTaskDetailDialog({ open: false, rowData: null })
-              }
-              maxWidth="md"
-              fullWidth
-              TransitionComponent={Slide}
-              TransitionProps={{ direction: "up" }}
-            >
-              <DialogTitle
-                sx={{
-                  background: "linear-gradient(#642b8f, #aa88be)",
-                  color: "#ffffff",
-                  fontWeight: 600,
-                }}
-              >
-                Task Details
-              </DialogTitle>
-              <Divider />
-              <DialogContent>
-                <DetailView data={taskDetailDialog.rowData || {}} />
-              </DialogContent>
-              <Divider sx={{ borderColor: "#aa88be" }} />
-              <DialogActions sx={{ p: 2.5 }}>
-                <Button
-                  onClick={() => handleViewLogs(taskDetailDialog.rowData)}
-                  variant="contained"
-                  sx={{
-                    bgcolor: "#f8a213",
-                    "&:hover": {
-                      bgcolor: "#d88c11",
-                    },
-                  }}
-                >
-                  View Logs
-                </Button>
-                <Button
-                  onClick={() =>
-                    setTaskDetailDialog({ open: false, rowData: null })
-                  }
-                  variant="outlined"
-                  sx={{
-                    color: "#642b8f",
-                    borderColor: "#642b8f",
-                    "&:hover": {
-                      borderColor: "#aa88be",
-                      color: "#aa88be",
-                    },
-                  }}
-                >
-                  Close
-                </Button>
-              </DialogActions>
-            </Dialog>
-
-            {/* Existing Student Details Dialog */}
+            {/* View Dialog */}
             <Dialog
               open={viewDialog.open}
               onClose={() => setViewDialog({ open: false, rowData: null })}
@@ -495,7 +494,46 @@ const MyTaskTable = () => {
               </DialogActions>
             </Dialog>
 
-            {/* Existing Note Dialog */}
+            {/* Preview Dialog */}
+            <Dialog
+              open={previewDialog.open}
+              onClose={() => setPreviewDialog({ open: false, rowData: null })}
+              maxWidth="md"
+              fullWidth
+              TransitionComponent={Slide}
+              TransitionProps={{ direction: "up" }}
+            >
+              <DialogTitle
+                sx={{
+                  background: "linear-gradient(#642b8f, #aa88be)",
+                  color: "#ffffff",
+                  fontWeight: 600,
+                }}
+              >
+                Task Preview
+              </DialogTitle>
+              <Divider />
+              <DialogContent>
+                <DetailView data={previewDialog.rowData || {}} />
+              </DialogContent>
+              <Divider sx={{ borderColor: "#aa88be" }} />
+              <DialogActions sx={{ p: 2.5 }}>
+                <Button
+                  onClick={() =>
+                    setPreviewDialog({ open: false, rowData: null })
+                  }
+                  variant="outlined"
+                  sx={{
+                    color: "#f8a213",
+                    borderColor: "#f8a213",
+                  }}
+                >
+                  Close
+                </Button>
+              </DialogActions>
+            </Dialog>
+
+            {/* Note Dialog */}
             <Dialog
               open={noteDialog.open}
               onClose={() =>
@@ -505,7 +543,6 @@ const MyTaskTable = () => {
                   noteText: "",
                   enquiryStage: "",
                   notesTo: "",
-                  parents: "",
                 })
               }
               maxWidth="sm"
@@ -611,6 +648,61 @@ const MyTaskTable = () => {
                 </Button>
               </DialogActions>
             </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog
+              open={deleteDialog.open}
+              onClose={() => setDeleteDialog({ open: false, rowData: null })}
+              maxWidth="sm"
+              TransitionComponent={Slide}
+              TransitionProps={{ direction: "up" }}
+              BackdropProps={{
+                sx: {
+                  backgroundColor: "rgba(0, 0, 0, 0.5)",
+                  backdropFilter: "blur(4px)",
+                },
+              }}
+            >
+              <DialogTitle
+                sx={{
+                  color: "#ffffff",
+                  fontWeight: 600,
+                  background: "linear-gradient(to right, #EC4899, #F472B6)",
+                }}
+              >
+                Confirm Delete
+              </DialogTitle>
+              <DialogContent sx={{ pt: 2, mt: 1 }}>
+                <DialogContentText>
+                  Are you sure you want to delete this task? This action cannot
+                  be undone.
+                </DialogContentText>
+              </DialogContent>
+              <DialogActions sx={{ p: 2 }}>
+                <Button
+                  onClick={() =>
+                    setDeleteDialog({ open: false, rowData: null })
+                  }
+                  variant="outlined"
+                  sx={{
+                    color: "text.primary",
+                    borderColor: "divider",
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleDeleteTask}
+                  variant="contained"
+                  sx={{
+                    bgcolor: theme.palette.secondary.main,
+                    "&:hover": { bgcolor: theme.palette.secondary.dark },
+                  }}
+                >
+                  Delete
+                </Button>
+              </DialogActions>
+            </Dialog>
           </Paper>
         </Box>
       </Fade>
@@ -618,4 +710,4 @@ const MyTaskTable = () => {
   );
 };
 
-export default MyTaskTable;
+export default ShowAllTask;

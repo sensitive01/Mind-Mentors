@@ -376,11 +376,7 @@ const ModernSidebar = () => {
           text: "Allowances / Deductions",
           link: "/super-admin/department/allowdeduct",
         },
-        {
-          icon: <TasksIcon />,
-          text: "Task",
-          link: "/super-admin/department/task-table",
-        },
+
         {
           icon: <LeavesIcon />,
           text: "Leaves",
@@ -425,6 +421,13 @@ const ModernSidebar = () => {
       color: iconColors.invoices,
       link: "/superadminInvoices",
     },
+    {
+      icon: <InvoicesIcon />,
+      text: "Show All Task",
+      color: iconColors.invoices,
+      link: "/super-admin/department/show-all-task",
+    },
+
     {
       icon: <ReportsIcon />,
       text: "Attandance",

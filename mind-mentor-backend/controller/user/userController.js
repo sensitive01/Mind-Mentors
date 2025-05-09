@@ -22,6 +22,7 @@ const PhysicalCenter = require("../../model/physicalcenter/physicalCenterShema")
 const ProgramData = require("../../model/programe/programeDataSchema");
 const ClassSchedule = require("../../model/classSheduleModel");
 const attendanceModel = require("../../model/attendanceModel");
+const taskModel = require("../../model/taskModel");
 
 const createUser = async (req, res) => {
   try {
@@ -1804,10 +1805,69 @@ const getAllEmployeeAttandance = async (req, res) => {
   }
 };
 
+const superAdminGetAllTaskData = async (req, res) => {
+  try {
+    // Fetch all tasks and populate 'assignedBy'
+    const tasks = await taskModel.find().populate("assignedBy", "name email");
+    console.log("Task==>", tasks);
+
+    // Format date and time to dd/mm/yy HH:mm
+    const formatDateTime = (date) => {
+      const d = new Date(date);
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const year = String(d.getFullYear()).slice(-2);
+      const hours = String(d.getHours()).padStart(2, "0");
+      const minutes = String(d.getMinutes()).padStart(2, "0");
+      return `${day}/${month}/${year} ${hours}:${minutes}`;
+    };
+
+    const formattedTasks = tasks.map((task) => ({
+      ...task._doc, // Spread the original task document
+      taskTime: formatDateTime(task.taskTime),
+      createdAt: formatDateTime(task.createdAt),
+      updatedAt: formatDateTime(task.updatedAt),
+      assignedBy: task.assignedBy || { name: "No assigned person", email: "" }, // Keep it as an object
+    }));
+
+    res.status(200).json(formattedTasks);
+  } catch (error) {
+    console.error("Error fetching tasks", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch tasks. Please try again later.",
+    });
+  }
+};
 
 
 
+const superAdminDeleteTask = async (req, res) => {
+  try {
+    const { taskId } = req.params;
 
+    const deletedTask = await taskModel.findByIdAndDelete(taskId);
+
+    if (!deletedTask) {
+      return res.status(404).json({
+        success: false,
+        message: "Task not found.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Task deleted successfully.",
+      data: deletedTask,
+    });
+  } catch (err) {
+    console.error("Error deleting task:", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete task. Please try again later.",
+    });
+  }
+};
 
 
 
@@ -1821,6 +1881,8 @@ const getAllEmployeeAttandance = async (req, res) => {
 
 
 module.exports = {
+  superAdminDeleteTask,
+  superAdminGetAllTaskData,
   getAllEmployeeAttandance,
   updateSelectedClassData,
   getClassDataForEdit,

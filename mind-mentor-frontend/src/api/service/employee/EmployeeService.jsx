@@ -151,6 +151,36 @@ export const fetchMyPendingTask = async (empId) => {
   }
 };
 
+export const superAdminGetAllTask = async () => {
+  try {
+    const response = await userInstance.get(
+      `/get-all-task-data`,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching tasks:", error);
+    throw error;
+  }
+};
+
+
+export const superAdminDeleteTask = async (taskId) => {
+  try {
+    const response = await userInstance.delete(
+      `/super-admin-delete-task/${taskId}`,
+    );
+    return response;
+  } catch (error) {
+    console.error("Error fetching tasks:", error);
+    throw error;
+  }
+};
+
+
+
+
+
+
 export const fetchTaskAmAssignedToOthers = async (empId) => {
   try {
     const response = await operationDeptInstance.get(

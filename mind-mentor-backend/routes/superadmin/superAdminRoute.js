@@ -83,30 +83,37 @@ userRoute.post('/add-new-voucher', userController.addNewVoucher);
 
 
 userRoute.get('/get-physcical-center-data', userController.getPhysicalCenterData);
+userRoute.get('/get-physcial-center-timings', userController.getPhysicalCenterTimings);
 userRoute.get('/get-individual-physcical-center-data/:centerId', userController.getIndividualPhysicalCenterData);
+userRoute.post('/save-physcical-center-data', userController.savePhysicalCenterData);
 userRoute.put('/update-individual-physcical-center-data/:centerId', userController.updatePhysicalCenterData);
 userRoute.delete('/delete-physcical-center-data/:centerId', userController.deletePhysicalCenterData);
-userRoute.get('/get-physcial-center-timings', userController.getPhysicalCenterTimings);
 
 
 
 
-userRoute.post('/save-physcical-center-data', userController.savePhysicalCenterData);
 
 userRoute.get('/get-all-parent-data', userController.getAllParentData);
 
 
-userRoute.post('/add-new-programme', userController.addNewProgrammeData);
 userRoute.get('/get-programme-data', userController.getAllProgrameData);
+userRoute.post('/add-new-programme', userController.addNewProgrammeData);
 userRoute.put('/update-programData', userController.updateProgrameData);
 userRoute.delete('/delete-programData/:pgmId', userController.deleteProgrameData);
 
 
-userRoute.delete('/delete-selected-class-data/:classId', userController.deleteSelectedClass);
 userRoute.get('/get-selected-class-data/:classId', userController.getClassDataForEdit);
 userRoute.put('/update-selected-class-data/:classId', userController.updateSelectedClassData);
+userRoute.delete('/delete-selected-class-data/:classId', userController.deleteSelectedClass);
 
 userRoute.get('/get-all-employee-attandance', userController.getAllEmployeeAttandance);
+
+userRoute.get('/get-all-task-data', userController.superAdminGetAllTaskData);
+userRoute.delete('/super-admin-delete-task/:taskId', userController.superAdminDeleteTask);
+
+
+
+
 
 
 
