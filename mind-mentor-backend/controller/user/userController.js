@@ -10,6 +10,7 @@ const bcrypt = require("bcryptjs");
 const Voucher = require("../../model/discount_voucher/voucherModel");
 const parentModel = require("../../model/parentModel");
 const leavesModel = require("../../model/leavesModel");
+const ClassPricing = require("../../model/class/classPricePackage")
 const {
   Tournament,
   Notification,
@@ -1805,6 +1806,109 @@ const getAllEmployeeAttandance = async (req, res) => {
   }
 };
 
+const getIndividualEmployeeAttendance = async (req, res) => {
+  try {
+    const { empId } = req.params;
+
+    const empData = await Employee.findOne({ _id: empId });
+
+    if (!empData) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found",
+      });
+    }
+
+    const empAttendance = await attendanceModel
+      .find({ empId })
+      .sort({ date: -1 });
+
+    const formattedAttendance = empAttendance.map((record) => {
+      const dateObj = new Date(record.date);
+      const formattedDate = dateObj.toISOString().split("T")[0];
+
+      const login = record.loginTime || "";
+      const logout = record.logoutTime || "";
+
+      let totalHours = "0h 00m";
+      let lateBy = "0h 00m";
+
+      if (login && logout) {
+        const [loginHour, loginMin, loginSec] = convertTo24Hour(login)
+          .split(":")
+          .map(Number);
+        const [logoutHour, logoutMin, logoutSec] = convertTo24Hour(logout)
+          .split(":")
+          .map(Number);
+
+        const loginDate = new Date(dateObj);
+        loginDate.setHours(loginHour, loginMin, loginSec || 0);
+
+        const logoutDate = new Date(dateObj);
+        logoutDate.setHours(logoutHour, logoutMin, logoutSec || 0);
+
+        const diffMs = logoutDate - loginDate;
+        const hours = Math.floor(diffMs / (1000 * 60 * 60));
+        const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+        totalHours = `${hours}h ${mins}m`;
+
+        const shiftStart = new Date(dateObj);
+        shiftStart.setHours(9, 30, 0); // Shift time is 9:30 AM
+
+        const lateMs = loginDate - shiftStart;
+        if (lateMs > 0) {
+          const lateHours = Math.floor(lateMs / (1000 * 60 * 60));
+          const lateMinutes = Math.floor(
+            (lateMs % (1000 * 60 * 60)) / (1000 * 60)
+          );
+          const lateSeconds = Math.floor((lateMs % (1000 * 60)) / 1000);
+          lateBy = `${lateHours}h ${lateMinutes}m ${lateSeconds}s`;
+        } else {
+          lateBy = "0h 00m 00s"; // No late time if login is on time or before shift time
+        }
+      }
+
+      return {
+        date: formattedDate,
+        loginTime: login,
+        logoutTime: logout,
+        lateBy,
+        status: record.status,
+        totalHours,
+      };
+    });
+
+    const employeeData = {
+      empId,
+      name: empData.firstName || "N/A",
+      department: empData.department || "N/A",
+      position: empData.role || "N/A",
+      profileImage: empData.profileImage || "/api/placeholder/120/120",
+      attendance: formattedAttendance,
+    };
+
+    res.status(200).json(employeeData);
+  } catch (err) {
+    console.error("Error fetching employee data:", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch employee data.",
+    });
+  }
+};
+
+function convertTo24Hour(timeStr) {
+  const [time, modifier] = timeStr.split(" ");
+  let [hours, minutes, seconds] = time.split(":").map(Number);
+  if (modifier.toLowerCase() === "pm" && hours !== 12) hours += 12;
+  if (modifier.toLowerCase() === "am" && hours === 12) hours = 0;
+  return [
+    hours.toString().padStart(2, "0"),
+    minutes.toString().padStart(2, "0"),
+    (seconds || 0).toString().padStart(2, "0"),
+  ].join(":");
+}
+
 const superAdminGetAllTaskData = async (req, res) => {
   try {
     // Fetch all tasks and populate 'assignedBy'
@@ -1830,7 +1934,11 @@ const superAdminGetAllTaskData = async (req, res) => {
       assignedBy: task.assignedBy || { name: "No assigned person", email: "" }, // Keep it as an object
     }));
 
-    res.status(200).json(formattedTasks);
+    res.status(200).json({
+      success: true,
+      message: "Task deleted successfully.",
+      data: formattedTasks,
+    });
   } catch (error) {
     console.error("Error fetching tasks", error);
     res.status(500).json({
@@ -1938,29 +2046,31 @@ const superAdminUpdateLeaveStatus = async (req, res) => {
 
 const getAvailableProgramData = async (req, res) => {
   try {
-    const availableProgramsData = await PhysicalCenter.find({}, { centerName: 1, programLevels: 1 });
+    const availableProgramsData = await PhysicalCenter.find(
+      {},
+      { centerName: 1, programLevels: 1 }
+    );
     const allPrograms = await ProgramData.find({}, { _id: 1, programName: 1 });
 
     const programMap = {};
-    allPrograms.forEach(program => {
+    allPrograms.forEach((program) => {
       programMap[program._id.toString()] = program.programName;
     });
 
-    const formattedData = availableProgramsData.map(center => ({
+    const formattedData = availableProgramsData.map((center) => ({
       _id: center._id,
       centerName: center.centerName,
-      programLevels: center.programLevels.map(pl => ({
+      programLevels: center.programLevels.map((pl) => ({
         program: programMap[pl.program.toString()] || "Unknown Program",
         levels: pl.levels,
-      }))
+      })),
     }));
 
     res.status(200).json({
       success: true,
       message: "Available program data fetched successfully.",
-      data: formattedData
+      data: formattedData,
     });
-
   } catch (err) {
     res.status(500).json({
       success: false,
@@ -1969,8 +2079,59 @@ const getAvailableProgramData = async (req, res) => {
   }
 };
 
+const saveOnlineClassPackage = async (req, res) => {
+  try {
+    const { onlinePackage } = req.body;
+
+    const physicalCenterData = await PhysicalCenter.find(
+      { centerType: "online" },
+      { centerName: 1 }
+    );
+    const programList = await ProgramData.find();
+
+    // Create a map of programId to programName
+    const programMap = programList.reduce((map, program) => {
+      map[program._id.toString()] = program.programName;
+      return map;
+    }, {});
+
+    // Transform onlinePackage into proper format
+    const onlineClassPrices = onlinePackage.map((pkg) => ({
+      classPackageName: `Online ${pkg.classes} Classes`,
+      classes: Number(pkg.classes),
+      amount: Number(pkg.amount),
+      program: programMap[pkg.program] || pkg.program,
+      level: pkg.level,
+      time: pkg.time.charAt(0).toUpperCase() + pkg.time.slice(1), // "day" => "Day"
+      mode: "Online",
+    }));
+
+    // Create empty centerPrices if needed
+    const centerPrices = physicalCenterData.map((center) => ({
+      centerId: center._id.toString(),
+      centerName: center.centerName,
+    }));
+
+    const payload = {
+      onlineClassPrices,
+      centerPrices,
+    };
+
+    const saved = await ClassPricing.create(payload);
+
+    console.log("saved",saved)
+    res
+      .status(201)
+      .json({ message: "Online class package saved", data: saved });
+  } catch (err) {
+    console.error("Error in saving the online package:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 module.exports = {
+  saveOnlineClassPackage,
+  getIndividualEmployeeAttendance,
   getAvailableProgramData,
   superAdminUpdateLeaveStatus,
   superAdminGetAllLeaves,

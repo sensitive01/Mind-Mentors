@@ -303,6 +303,7 @@ import SuperAdminMarkAttandance from "./pages/employee/superadmin/SuperAdminMark
 import SuperAdminShowAllTask from "./pages/employee/superadmin/SuperAdminShowAllTask";
 import SuperAdminShowAllLeaves from "./pages/employee/superadmin/SuperAdminShowAllLeaves";
 import SuperAdminLeaveForm from "./pages/employee/superadmin/SuperAdminLeaveForm";
+import SuperAdminIndividualAttandaceData from "./pages/employee/superadmin/SuperAdminIndividualAttandaceData";
 
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
@@ -1009,6 +1010,8 @@ function App() {
           <Route path="/super-admin/department/edit-class-shedules/:classId"  element={<SuperAdminEditClassShedule />}/>
           <Route path="/super-admin/department/employee-mark-attandance" element={<SuperAdminMarkAttandance />}/>
           <Route path="/super-admin/department/employee-attandance-list" element={<SuperAdminEmployeeAttandancePage />}/>
+          <Route path="/super-admin/department/individual-employee-attandance-data/:employeeId" element={<SuperAdminIndividualAttandaceData />}/>
+
           <Route path="/super-admin/department/assign-new-task"  element={<SuperadminMyAssignTasks />}/>
           <Route path="/super-admin/department/task-table" element={<SuperadminMyTasks />}/>
           <Route path="/super-admin/department/taskslogs/:id"  element={<SuperAdminTaskAllLogs />}/>

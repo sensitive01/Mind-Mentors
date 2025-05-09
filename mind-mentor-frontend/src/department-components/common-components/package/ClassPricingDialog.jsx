@@ -1,5 +1,4 @@
-// ClassPricingDialog.jsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -21,7 +20,6 @@ import {
   Switch,
   FormControlLabel,
   IconButton,
-  Tooltip,
   FormControl,
   InputLabel,
   Select,
@@ -35,6 +33,7 @@ import {
   Sync as SyncIcon,
   LocalShipping as KitIcon,
 } from "@mui/icons-material";
+import { getAllProgrameData, submitOnlineClassPrice } from "../../../api/service/employee/EmployeeService";
 
 // TabPanel component
 function TabPanel(props) {
@@ -53,7 +52,7 @@ function TabPanel(props) {
   );
 }
 
-// Modified ClassAmountRow component
+// ClassAmountRow with Program and Level dropdowns added
 const ClassAmountRow = ({
   index,
   data,
@@ -61,12 +60,49 @@ const ClassAmountRow = ({
   onDelete,
   disableDelete,
   isHybrid = false,
+  programs,
 }) => {
+  const programObj = programs.find((p) => p._id === data.program);
+
   return (
-    <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-      {/* Only show Mode dropdown when isHybrid is true */}
+    <Box sx={{ display: "flex", alignItems: "center", mb: 2, flexWrap: "wrap" }}>
+      {/* Program dropdown */}
+      <FormControl variant="outlined" size="small" sx={{ width: 150, mr: 2, mb: 1 }}>
+        <InputLabel>Program</InputLabel>
+        <Select
+          value={data.program || ""}
+          onChange={(e) => onChange(index, "program", e.target.value)}
+          label="Program"
+        >
+          {programs.map((program) => (
+            <MenuItem key={program._id} value={program._id}>
+              {program.programName}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+
+      {/* Level dropdown */}
+      <FormControl variant="outlined" size="small" sx={{ width: 150, mr: 2, mb: 1 }}>
+        <InputLabel>Level</InputLabel>
+        <Select
+          value={data.level || ""}
+          onChange={(e) => onChange(index, "level", e.target.value)}
+          label="Level"
+          disabled={!programObj}
+        >
+          {programObj &&
+            programObj.programLevel.map((level, idx) => (
+              <MenuItem key={idx} value={level}>
+                {level}
+              </MenuItem>
+            ))}
+        </Select>
+      </FormControl>
+
+      {/* Mode dropdown (only for hybrid) */}
       {isHybrid && (
-        <FormControl variant="outlined" size="small" sx={{ width: 150, mr: 2 }}>
+        <FormControl variant="outlined" size="small" sx={{ width: 150, mr: 2, mb: 1 }}>
           <InputLabel>Mode</InputLabel>
           <Select
             value={data.mode || ""}
@@ -79,8 +115,8 @@ const ClassAmountRow = ({
         </FormControl>
       )}
 
-      {/* This Time dropdown is always shown */}
-      <FormControl variant="outlined" size="small" sx={{ width: 150, mr: 2 }}>
+      {/* Time dropdown (always shown) */}
+      <FormControl variant="outlined" size="small" sx={{ width: 150, mr: 2, mb: 1 }}>
         <InputLabel>Time</InputLabel>
         <Select
           value={data.time || ""}
@@ -97,7 +133,7 @@ const ClassAmountRow = ({
         type="number"
         value={data.classes || ""}
         onChange={(e) => onChange(index, "classes", e.target.value)}
-        sx={{ width: 150, mr: 2 }}
+        sx={{ width: 150, mr: 2, mb: 1 }}
         variant="outlined"
         size="small"
       />
@@ -109,7 +145,7 @@ const ClassAmountRow = ({
         InputProps={{
           startAdornment: <InputAdornment position="start">₹</InputAdornment>,
         }}
-        sx={{ width: 150, mr: 2 }}
+        sx={{ width: 150, mr: 2, mb: 1 }}
         variant="outlined"
         size="small"
       />
@@ -137,31 +173,43 @@ const ClassPricingDialog = ({
 }) => {
   const [tabValue, setTabValue] = useState(0);
 
+  // State for programs fetched from API
+  const [programs, setPrograms] = useState([]);
+
   // State for online classes with multiple price points
   const [onlineClassPrices, setOnlineClassPrices] = useState([
-    { classes: 1, amount: onlinePrice || "" },
+    { classes: 1, amount: onlinePrice || "", program: "", level: "", time: "", mode: "" },
   ]);
 
-  // State for hybrid classes
   const [hybridClassPrices, setHybridClassPrices] = useState([
-    { classes: 1, amount: "" },
+    { classes: 1, amount: "", program: "", level: "", time: "", mode: "" },
   ]);
 
-  // State for kit price
   const [kitPrice, setKitPrice] = useState("");
 
-  // State for "apply to all" toggles
   const [applyPhysicalToAll, setApplyPhysicalToAll] = useState(true);
   const [applyHybridToAll, setApplyHybridToAll] = useState(true);
 
-  // State for center-specific prices
   const [centerPhysicalPrices, setCenterPhysicalPrices] = useState({});
   const [centerHybridPrices, setCenterHybridPrices] = useState({});
 
-  // State for physical center classes with multiple price points (when "Apply to all" is ON)
   const [physicalClassPrices, setPhysicalClassPrices] = useState([
-    { classes: 1, amount: "" },
+    { classes: 1, amount: "", program: "", level: "", time: "", mode: "" },
   ]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await getAllProgrameData();
+        if (response.status===200) {
+          setPrograms(response.data.programs);
+        }
+      } catch (error) {
+        console.error("Failed to fetch programs:", error);
+      }
+    };
+    fetchData();
+  }, []);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
@@ -171,6 +219,10 @@ const ClassPricingDialog = ({
   const handleOnlineClassPriceChange = (index, field, value) => {
     const newPrices = [...onlineClassPrices];
     newPrices[index] = { ...newPrices[index], [field]: value };
+    // Reset level if program changed
+    if (field === "program") {
+      newPrices[index].level = "";
+    }
     setOnlineClassPrices(newPrices);
   };
 
@@ -178,17 +230,26 @@ const ClassPricingDialog = ({
   const handleHybridClassPriceChange = (index, field, value) => {
     const newPrices = [...hybridClassPrices];
     newPrices[index] = { ...newPrices[index], [field]: value };
+    if (field === "program") {
+      newPrices[index].level = "";
+    }
     setHybridClassPrices(newPrices);
   };
 
   // Add new row for online prices
   const addOnlineClassPrice = () => {
-    setOnlineClassPrices([...onlineClassPrices, { classes: "", amount: "" }]);
+    setOnlineClassPrices([
+      ...onlineClassPrices,
+      { classes: "", amount: "", program: "", level: "", time: "", mode: "" },
+    ]);
   };
 
   // Add new row for hybrid prices
   const addHybridClassPrice = () => {
-    setHybridClassPrices([...hybridClassPrices, { classes: "", amount: "" }]);
+    setHybridClassPrices([
+      ...hybridClassPrices,
+      { classes: "", amount: "", program: "", level: "", time: "", mode: "" },
+    ]);
   };
 
   // Delete row for online prices
@@ -207,17 +268,20 @@ const ClassPricingDialog = ({
   const handlePhysicalClassPriceChange = (index, field, value) => {
     const newPrices = [...physicalClassPrices];
     newPrices[index] = { ...newPrices[index], [field]: value };
+    if (field === "program") {
+      newPrices[index].level = "";
+    }
     setPhysicalClassPrices(newPrices);
   };
 
   // Handler for center-specific physical prices
   const handleCenterPhysicalPriceChange = (centerId, index, field, value) => {
-    const centerPrices = centerPhysicalPrices[centerId] || [
-      ...physicalClassPrices,
-    ];
+    const centerPrices = centerPhysicalPrices[centerId] || [...physicalClassPrices];
     const newPrices = [...centerPrices];
     newPrices[index] = { ...newPrices[index], [field]: value };
-
+    if (field === "program") {
+      newPrices[index].level = "";
+    }
     setCenterPhysicalPrices({
       ...centerPhysicalPrices,
       [centerId]: newPrices,
@@ -229,7 +293,9 @@ const ClassPricingDialog = ({
     const centerPrices = centerHybridPrices[centerId] || [...hybridClassPrices];
     const newPrices = [...centerPrices];
     newPrices[index] = { ...newPrices[index], [field]: value };
-
+    if (field === "program") {
+      newPrices[index].level = "";
+    }
     setCenterHybridPrices({
       ...centerHybridPrices,
       [centerId]: newPrices,
@@ -240,7 +306,7 @@ const ClassPricingDialog = ({
   const addPhysicalClassPrice = () => {
     setPhysicalClassPrices([
       ...physicalClassPrices,
-      { classes: "", amount: "" },
+      { classes: "", amount: "", program: "", level: "", time: "", mode: "" },
     ]);
   };
 
@@ -252,12 +318,10 @@ const ClassPricingDialog = ({
 
   // Add new row for center-specific physical prices
   const addCenterPhysicalClassPrice = (centerId) => {
-    const centerPrices = centerPhysicalPrices[centerId] || [
-      ...physicalClassPrices,
-    ];
+    const centerPrices = centerPhysicalPrices[centerId] || [...physicalClassPrices];
     setCenterPhysicalPrices({
       ...centerPhysicalPrices,
-      [centerId]: [...centerPrices, { classes: "", amount: "" }],
+      [centerId]: [...centerPrices, { classes: "", amount: "", program: "", level: "", time: "", mode: "" }],
     });
   };
 
@@ -266,15 +330,13 @@ const ClassPricingDialog = ({
     const centerPrices = centerHybridPrices[centerId] || [...hybridClassPrices];
     setCenterHybridPrices({
       ...centerHybridPrices,
-      [centerId]: [...centerPrices, { classes: "", amount: "" }],
+      [centerId]: [...centerPrices, { classes: "", amount: "", program: "", level: "", time: "", mode: "" }],
     });
   };
 
   // Delete row for center-specific physical prices
   const deleteCenterPhysicalClassPrice = (centerId, index) => {
-    const centerPrices = centerPhysicalPrices[centerId] || [
-      ...physicalClassPrices,
-    ];
+    const centerPrices = centerPhysicalPrices[centerId] || [...physicalClassPrices];
     const newPrices = centerPrices.filter((_, i) => i !== index);
     setCenterPhysicalPrices({
       ...centerPhysicalPrices,
@@ -293,9 +355,16 @@ const ClassPricingDialog = ({
   };
 
   // Mock submit handlers for new functionality
-  const handleSubmitOnlineClasses = () => {
-    console.log("Submitting online classes pricing:", onlineClassPrices);
-    // Implement actual API call here
+  const handleSubmitOnlineClasses = async() => {
+    console.log("Submitting online classes pricing:", onlineClassPrices)
+    try{
+      const respose = await submitOnlineClassPrice(onlineClassPrices)
+      console.log("response",respose)
+
+    }catch(err){
+      console.log("errorin submittingthe online class price",err)
+
+    }
   };
 
   const handleSubmitPhysicalClasses = () => {
@@ -388,8 +457,7 @@ const ClassPricingDialog = ({
                 Online Class Pricing
               </Typography>
               <Typography variant="body2" color="text.secondary" paragraph>
-                Set prices for different numbers of online classes (including
-                GST)
+                Set prices for different numbers of online classes (including GST)
               </Typography>
               <Divider sx={{ my: 2 }} />
 
@@ -404,6 +472,7 @@ const ClassPricingDialog = ({
                     onDelete={deleteOnlineClassPrice}
                     disableDelete={onlineClassPrices.length === 1}
                     isHybrid={false} // Explicitly set to false for online classes
+                    programs={programs}
                   />
                 ))}
 
@@ -430,7 +499,14 @@ const ClassPricingDialog = ({
                     onClick={handleSubmitOnlineClasses}
                     disabled={
                       loading ||
-                      onlineClassPrices.some((p) => !p.classes || !p.amount)
+                      onlineClassPrices.some(
+                        (p) =>
+                          !p.classes ||
+                          !p.amount ||
+                          !p.program ||
+                          !p.level ||
+                          !p.time
+                      )
                     }
                   >
                     {loading ? <CircularProgress size={24} /> : "Save Changes"}
@@ -489,6 +565,7 @@ const ClassPricingDialog = ({
                         onDelete={deletePhysicalClassPrice}
                         disableDelete={physicalClassPrices.length === 1}
                         isHybrid={false} // Explicitly set to false for physical classes
+                        programs={programs}
                       />
                     ))}
 
@@ -516,7 +593,12 @@ const ClassPricingDialog = ({
                         disabled={
                           loading ||
                           physicalClassPrices.some(
-                            (p) => !p.classes || !p.amount
+                            (p) =>
+                              !p.classes ||
+                              !p.amount ||
+                              !p.program ||
+                              !p.level ||
+                              !p.time
                           )
                         }
                       >
@@ -624,6 +706,7 @@ const ClassPricingDialog = ({
                                     ).length === 1
                                   }
                                   isHybrid={false} // Explicitly set to false
+                                  programs={programs}
                                 />
                               ))}
 
@@ -657,7 +740,14 @@ const ClassPricingDialog = ({
                                     (
                                       centerPhysicalPrices[center.id] ||
                                       physicalClassPrices
-                                    ).some((p) => !p.classes || !p.amount)
+                                    ).some(
+                                      (p) =>
+                                        !p.classes ||
+                                        !p.amount ||
+                                        !p.program ||
+                                        !p.level ||
+                                        !p.time
+                                    )
                                   }
                                   size="medium"
                                 >
@@ -733,8 +823,7 @@ const ClassPricingDialog = ({
                 />
               </Box>
               <Typography variant="body2" color="text.secondary" paragraph>
-                Set prices for different numbers of hybrid classes (including
-                GST)
+                Set prices for different numbers of hybrid classes (including GST)
               </Typography>
               <Divider sx={{ my: 2 }} />
 
@@ -748,7 +837,8 @@ const ClassPricingDialog = ({
                     onChange={handleHybridClassPriceChange}
                     onDelete={deleteHybridClassPrice}
                     disableDelete={hybridClassPrices.length === 1}
-                    isHybrid={true} // Set to true for hybrid classes
+                    isHybrid={true}
+                    programs={programs}
                   />
                 ))}
 
@@ -775,7 +865,14 @@ const ClassPricingDialog = ({
                     onClick={handleSubmitHybridClasses}
                     disabled={
                       loading ||
-                      hybridClassPrices.some((p) => !p.classes || !p.amount)
+                      hybridClassPrices.some(
+                        (p) =>
+                          !p.classes ||
+                          !p.amount ||
+                          !p.program ||
+                          !p.level ||
+                          !p.time
+                      )
                     }
                   >
                     {loading ? <CircularProgress size={24} /> : "Save Changes"}
@@ -836,9 +933,7 @@ const ClassPricingDialog = ({
 
                             {/* Center-specific Hybrid Class-Amount Rows */}
                             {(
-                              centerHybridPrices[center.id] || [
-                                ...hybridClassPrices,
-                              ]
+                              centerHybridPrices[center.id] || [...hybridClassPrices]
                             ).map((price, index) => (
                               <ClassAmountRow
                                 key={index}
@@ -857,10 +952,11 @@ const ClassPricingDialog = ({
                                 }
                                 disableDelete={
                                   (
-                                    centerHybridPrices[center.id] ||
-                                    hybridClassPrices
+                                    centerHybridPrices[center.id] || hybridClassPrices
                                   ).length === 1
                                 }
+                                isHybrid={true}
+                                programs={programs}
                               />
                             ))}
 
@@ -892,17 +988,19 @@ const ClassPricingDialog = ({
                                 disabled={
                                   loading ||
                                   (
-                                    centerHybridPrices[center.id] ||
-                                    hybridClassPrices
-                                  ).some((p) => !p.classes || !p.amount)
+                                    centerHybridPrices[center.id] || hybridClassPrices
+                                  ).some(
+                                    (p) =>
+                                      !p.classes ||
+                                      !p.amount ||
+                                      !p.program ||
+                                      !p.level ||
+                                      !p.time
+                                  )
                                 }
                                 size="medium"
                               >
-                                {loading ? (
-                                  <CircularProgress size={20} />
-                                ) : (
-                                  "Save"
-                                )}
+                                {loading ? <CircularProgress size={20} /> : "Save"}
                               </Button>
                             </Box>
                           </CardContent>
@@ -977,3 +1075,5 @@ const ClassPricingDialog = ({
 };
 
 export default ClassPricingDialog;
+
+

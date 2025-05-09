@@ -18,8 +18,10 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { fetchAllEmployeeAttandance } from "../../../api/service/employee/EmployeeService";
+import { useNavigate } from "react-router-dom";
 
 const SuperAdminEmployeeAttandaceList = () => {
+  const navigate = useNavigate()
   const [viewMode, setViewMode] = useState("daily"); // daily, weekly, monthly
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [employeeAttendance, setEmployeeAttendance] = useState([]);
@@ -49,15 +51,20 @@ const SuperAdminEmployeeAttandaceList = () => {
     try {
       const response = await fetchAllEmployeeAttandance();
       console.log("API response:", response);
-      
+
       if (response.data) {
         const attendanceData = response.data || [];
-        console.log('attendanceData',attendanceData)
-        
+        console.log("attendanceData", attendanceData);
+
         // Extract unique departments for filter dropdown
-        const departments = ["All", ...new Set(attendanceData.map(emp => emp.department).filter(Boolean))];
+        const departments = [
+          "All",
+          ...new Set(
+            attendanceData.map((emp) => emp.department).filter(Boolean)
+          ),
+        ];
         setDepartmentList(departments);
-        
+
         // Filter by department if needed
         let filteredData = [...attendanceData];
         if (selectedDepartment !== "All") {
@@ -70,10 +77,16 @@ const SuperAdminEmployeeAttandaceList = () => {
         if (searchQuery) {
           filteredData = filteredData.filter(
             (employee) =>
-              employee.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-              employee.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              employee.name
+                ?.toLowerCase()
+                .includes(searchQuery.toLowerCase()) ||
+              employee.email
+                ?.toLowerCase()
+                .includes(searchQuery.toLowerCase()) ||
               (employee.department &&
-                employee.department.toLowerCase().includes(searchQuery.toLowerCase()))
+                employee.department
+                  .toLowerCase()
+                  .includes(searchQuery.toLowerCase()))
           );
         }
 
@@ -476,22 +489,22 @@ const SuperAdminEmployeeAttandaceList = () => {
   // Generate department breakdown data from actual attendance data
   const generateDepartmentBreakdown = () => {
     const departments = {};
-    
-    employeeAttendance.forEach(emp => {
-      const dept = emp.department || 'Unassigned';
-      
+
+    employeeAttendance.forEach((emp) => {
+      const dept = emp.department || "Unassigned";
+
       if (!departments[dept]) {
         departments[dept] = { present: 0, absent: 0, late: 0 };
       }
-      
-      if (emp.status === 'present') departments[dept].present++;
-      else if (emp.status === 'absent') departments[dept].absent++;
-      else if (emp.status === 'late') departments[dept].late++;
+
+      if (emp.status === "present") departments[dept].present++;
+      else if (emp.status === "absent") departments[dept].absent++;
+      else if (emp.status === "late") departments[dept].late++;
     });
-    
+
     return Object.entries(departments).map(([department, stats]) => ({
       department,
-      ...stats
+      ...stats,
     }));
   };
 
@@ -644,7 +657,9 @@ const SuperAdminEmployeeAttandaceList = () => {
                 <div className="space-y-4">
                   {chartData.length === 0 ? (
                     <div className="flex items-center justify-center h-full">
-                      <p className="text-gray-500">No department data available</p>
+                      <p className="text-gray-500">
+                        No department data available
+                      </p>
                     </div>
                   ) : (
                     chartData.map((dept) => (
@@ -942,11 +957,8 @@ const SuperAdminEmployeeAttandaceList = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <div className="flex space-x-2">
-                          <button className="text-primary hover:text-indigo-900">
+                          <button className="text-primary hover:text-indigo-900" onClick={()=>navigate(`/super-admin/department/individual-employee-attandance-data/${employee.employeeId}`)} >
                             View
-                          </button>
-                          <button className="text-gray-600 hover:text-gray-900">
-                            History
                           </button>
                         </div>
                       </td>
@@ -985,54 +997,7 @@ const SuperAdminEmployeeAttandaceList = () => {
           </div>
         </div>
 
-        {/* Recent Activity Section */}
-        {/* <div className="bg-white rounded-xl shadow-md overflow-hidden">
-          <div className="p-5 bg-primary">
-            <div className="flex items-center text-white">
-              <Clock className="w-5 h-5 mr-2" />
-              <h2 className="text-lg font-semibold">Recent Activity</h2>
-            </div>
-          </div>
 
-          <div className="p-5">
-            <div className="space-y-4">
-              <div className="border-l-2 border-indigo-500 pl-4 py-1">
-                <p className="text-sm font-medium">
-                  Employee John Doe checked in
-                </p>
-                <p className="text-xs text-gray-500">Today, 9:00 AM</p>
-              </div>
-              <div className="border-l-2 border-yellow-500 pl-4 py-1">
-                <p className="text-sm font-medium">Jane Smith arrived late</p>
-                <p className="text-xs text-gray-500">Today, 9:45 AM</p>
-              </div>
-              <div className="border-l-2 border-red-500 pl-4 py-1">
-                <p className="text-sm font-medium">
-                  Robert Johnson marked as absent
-                </p>
-                <p className="text-xs text-gray-500">Today, 10:30 AM</p>
-              </div>
-              <div className="border-l-2 border-gray-300 pl-4 py-1">
-                <p className="text-sm font-medium">
-                  Attendance report generated by Admin
-                </p>
-                <p className="text-xs text-gray-500">Today, 10:45 AM</p>
-              </div>
-              <div className="border-l-2 border-green-500 pl-4 py-1">
-                <p className="text-sm font-medium">
-                  Emma Wilson updated check-in method to biometric
-                </p>
-                <p className="text-xs text-gray-500">Yesterday, 3:30 PM</p>
-              </div>
-            </div>
-
-            <div className="mt-4 text-center">
-              <button className="text-primary text-sm hover:underline">
-                View All Activity
-              </button>
-            </div>
-          </div>
-        </div> */}
       </div>
     </div>
   );

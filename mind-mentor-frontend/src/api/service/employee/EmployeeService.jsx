@@ -65,6 +65,13 @@ export const fetchAllLeavesSuperAdmin = async () => {
   return response;
 };
 
+
+export const getEmployeeAttandanceRecord = async (empId) => {
+  const response = await userInstance.get(`/super-admin-get-individial-employee-attandance/${empId}`);
+  return response;
+};
+
+
 export const updateLeaveStatus = async (leaveId,status) => {
   const response = await userInstance.put(`/super-admin-update-leave-status/${leaveId}`,{status});
   return response;
@@ -782,6 +789,14 @@ export const isAttandaceMarked = async (empId) => {
 export const getMyAttandanceData = async (empId) => {
   const response = await operationDeptInstance.get(
     `/get-my-attandance-data/${empId}`
+  );
+  return response;
+};
+
+
+export const submitOnlineClassPrice = async (onlinePackage) => {
+  const response = await userInstance.post(
+    `/save-online-package-data`,{onlinePackage}
   );
   return response;
 };

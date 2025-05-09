@@ -110,12 +110,17 @@ userRoute.put('/update-selected-class-data/:classId', userController.updateSelec
 userRoute.delete('/delete-selected-class-data/:classId', userController.deleteSelectedClass);
 
 userRoute.get('/get-all-employee-attandance', userController.getAllEmployeeAttandance);
+userRoute.get('/super-admin-get-individial-employee-attandance/:empId', userController.getIndividualEmployeeAttendance);
+
 
 userRoute.get('/get-all-task-data', userController.superAdminGetAllTaskData);
 userRoute.delete('/super-admin-delete-task/:taskId', userController.superAdminDeleteTask);
 
 userRoute.get('/super-admin-get-all-leaves', userController.superAdminGetAllLeaves);
 userRoute.put('/super-admin-update-leave-status/:leaveId', userController.superAdminUpdateLeaveStatus);
+
+userRoute.post('/save-online-package-data', userController.saveOnlineClassPackage);
+
 
 
 
