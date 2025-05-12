@@ -7,8 +7,8 @@ const dbConnect = () => {
   mongoose
     .connect(
           
-          // `mongodb+srv://${MONGO_USERNAME}:${MONGO_PASSWORD}@cluster0.jczad.mongodb.net/${MONGO_DATABASE_NAME}`
-          `mongodb+srv://${MONGO_USERNAME}:${MONGO_PASSWORD}@cluster0.f5db1.mongodb.net/${MONGO_DATABASE_NAME}`
+          `mongodb+srv://${MONGO_USERNAME}:${MONGO_PASSWORD}@cluster0.jczad.mongodb.net/${MONGO_DATABASE_NAME}`
+          // `mongodb+srv://${MONGO_USERNAME}:${MONGO_PASSWORD}@cluster0.f5db1.mongodb.net/${MONGO_DATABASE_NAME}`
           
       , {
       serverSelectionTimeoutMS: 30000, 
