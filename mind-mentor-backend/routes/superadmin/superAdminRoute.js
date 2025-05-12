@@ -120,6 +120,8 @@ userRoute.get('/super-admin-get-all-leaves', userController.superAdminGetAllLeav
 userRoute.put('/super-admin-update-leave-status/:leaveId', userController.superAdminUpdateLeaveStatus);
 
 userRoute.post('/save-online-package-data', userController.saveOnlineClassPackage);
+userRoute.post('/save-offline-package-data', userController.saveOfflineClassPackage);
+
 
 
 

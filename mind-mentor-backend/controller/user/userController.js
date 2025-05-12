@@ -10,7 +10,7 @@ const bcrypt = require("bcryptjs");
 const Voucher = require("../../model/discount_voucher/voucherModel");
 const parentModel = require("../../model/parentModel");
 const leavesModel = require("../../model/leavesModel");
-const ClassPricing = require("../../model/class/classPricePackage")
+const OnlineClass = require("../../model/class/onlineClassPackage")
 const {
   Tournament,
   Notification,
@@ -2085,51 +2085,76 @@ const saveOnlineClassPackage = async (req, res) => {
 
     const physicalCenterData = await PhysicalCenter.find(
       { centerType: "online" },
-      { centerName: 1 }
+      { _id: 1, centerName: 1 }
     );
-    const programList = await ProgramData.find();
 
-    // Create a map of programId to programName
+    const programList = await ProgramData.find({}, { _id: 1, programName: 1 });
+
     const programMap = programList.reduce((map, program) => {
       map[program._id.toString()] = program.programName;
       return map;
     }, {});
 
-    // Transform onlinePackage into proper format
-    const onlineClassPrices = onlinePackage.map((pkg) => ({
-      classPackageName: `Online ${pkg.classes} Classes`,
-      classes: Number(pkg.classes),
-      amount: Number(pkg.amount),
-      program: programMap[pkg.program] || pkg.program,
-      level: pkg.level,
-      time: pkg.time.charAt(0).toUpperCase() + pkg.time.slice(1), // "day" => "Day"
-      mode: "Online",
-    }));
-
-    // Create empty centerPrices if needed
-    const centerPrices = physicalCenterData.map((center) => ({
+    const centers = physicalCenterData.map(center => ({
       centerId: center._id.toString(),
-      centerName: center.centerName,
+      centerName: center.centerName
     }));
 
-    const payload = {
-      onlineClassPrices,
-      centerPrices,
-    };
+    const savedPackages = await Promise.all(
+      onlinePackage.map(async (pkg) => {
+        const newOnlineClass = new OnlineClass({
+          packageName: `Online ${pkg.classes} ${pkg.time.charAt(0).toUpperCase() + pkg.time.slice(1)} Classes`,
+          classes: Number(pkg.classes),
+          amount: Number(pkg.amount),
+          programName: programMap[pkg.program] || pkg.program,
+          programLevel: pkg.level,
+          mode: "Online",
+          time: pkg.time.charAt(0).toUpperCase() + pkg.time.slice(1),
+          centers,
+        });
 
-    const saved = await ClassPricing.create(payload);
+        return await newOnlineClass.save();
+      })
+    );
 
-    console.log("saved",saved)
-    res
-      .status(201)
-      .json({ message: "Online class package saved", data: saved });
+    res.status(201).json({
+      message: "Online class packages saved successfully",
+      data: savedPackages,
+    });
+
   } catch (err) {
     console.error("Error in saving the online package:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
+
+
+const saveOfflineClassPackage  = async(req,res)=>{
+  try{
+    console.log("Welcome to offline package",req.body)
+
+  }catch(err){
+    console.log("error in saving the offline package",err)
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 module.exports = {
+  saveOfflineClassPackage,
   saveOnlineClassPackage,
   getIndividualEmployeeAttendance,
   getAvailableProgramData,
