@@ -4,6 +4,7 @@ import { Box, Grid, Typography } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import {
   fetchThePhysicalCenters,
+  getThePaymentId,
   savepaymentInfoOperation,
   updateEnquiry,
 } from "../../../../api/service/employee/EmployeeService";
@@ -104,132 +105,140 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
     handleCloseEdit();
   };
 
-  const handleUpdatePayment = async (link) => {
-    try {
-      console.log(link);
+  // const handleUpdatePayment = async (link) => {
+  //   try {
+  //     console.log(link);
 
-      const cleanUrl = link?.replace("/payment-details/", "") || "";
-      if (!cleanUrl) return null;
+  //     const cleanUrl = link?.replace("/payment-details/", "") || "";
+  //     if (!cleanUrl) return null;
 
-      const parsedData = JSON.parse(atob(cleanUrl));
-      console.log("parsedData", parsedData);
+  //     const parsedData = JSON.parse(atob(cleanUrl));
+  //     console.log("parsedData", parsedData);
 
-      const paymentData = {
-        enqId: parsedData.enqId || null,
-        kidId: parsedData.kidId,
-        kidName: parsedData.kidName,
-        amount: parsedData.totalAmount,
-        classDetails: {
-          name:
-            parsedData.selectionType === "class"
-              ? `${parsedData.selectedCenter} - ${parsedData.selectedClass}`
-              : parsedData.kitItem,
-          coach: "Not Specified",
-          day: parsedData.selectedClass || "Not Specified",
-          classType: parsedData.selectedPackage,
-          numberOfClasses: parsedData.offlineClasses + parsedData.onlineClasses,
-          centerId: parsedData.centerId,
-          centerName: parsedData.centerName,
-          classMode:parsedData.classMode
-        },
-        whatsappNumber: parsedData.whatsappNumber,
-        selectionType: parsedData.selectionType,
-        kitItem: parsedData.kitItem,
-        baseAmount: parsedData.baseAmount,
-        gstAmount: parsedData.gstAmount,
-        programs: parsedData.programs,
-        offlineClasses: parsedData.offlineClasses,
-        onlineClasses: parsedData.onlineClasses,
-        selectedCenter: parsedData.selectedCenter,
-        selectedClass: parsedData.selectedClass,
-        selectedPackage: parsedData.selectedPackage,
-      };
+  //     const paymentData = {
+  //       enqId: parsedData.enqId || null,
+  //       kidId: parsedData.kidId,
+  //       kidName: parsedData.kidName,
+  //       amount: parsedData.totalAmount,
+  //       classDetails: {
+  //         name:
+  //           parsedData.selectionType === "class"
+  //             ? `${parsedData.selectedCenter} - ${parsedData.selectedClass}`
+  //             : parsedData.kitItem,
+  //         coach: "Not Specified",
+  //         day: parsedData.selectedClass || "Not Specified",
+  //         classType: parsedData.selectedPackage,
+  //         numberOfClasses: parsedData.offlineClasses + parsedData.onlineClasses,
+  //         centerId: parsedData.centerId,
+  //         centerName: parsedData.centerName,
+  //         classMode:parsedData.classMode
+  //       },
+  //       whatsappNumber: parsedData.whatsappNumber,
+  //       selectionType: parsedData.selectionType,
+  //       kitItem: parsedData.kitItem,
+  //       baseAmount: parsedData.baseAmount,
+  //       gstAmount: parsedData.gstAmount,
+  //       programs: parsedData.programs,
+  //       offlineClasses: parsedData.offlineClasses,
+  //       onlineClasses: parsedData.onlineClasses,
+  //       selectedCenter: parsedData.selectedCenter,
+  //       selectedClass: parsedData.selectedClass,
+  //       selectedPackage: parsedData.selectedPackage,
+  //     };
 
-      console.log("paymentData", paymentData);
+  //     console.log("paymentData", paymentData);
 
-      const amountInPaise = Math.round(paymentData.amount * 100);
-      console.log(amountInPaise);
+  //     const amountInPaise = Math.round(paymentData.amount * 100);
+  //     console.log(amountInPaise);
 
-      const options = {
-        key: RAZORPAY_KEY,
-        amount: amountInPaise,
-        currency: "INR",
-        name: "MindMentorz",
-        description:
-          paymentData.selectionType === "class"
-            ? "Class Payment"
-            : `Kit Payment - ${paymentData.kitItem}`,
-        image: logo,
-        handler: async (response) => {
-          try {
-            console.log("Response", response);
-            const { razorpay_payment_id } = response;
+  //     const options = {
+  //       key: RAZORPAY_KEY,
+  //       amount: amountInPaise,
+  //       currency: "INR",
+  //       name: "MindMentorz",
+  //       description:
+  //         paymentData.selectionType === "class"
+  //           ? "Class Payment"
+  //           : `Kit Payment - ${paymentData.kitItem}`,
+  //       image: logo,
+  //       handler: async (response) => {
+  //         try {
+  //           console.log("Response", response);
+  //           const { razorpay_payment_id } = response;
 
-            const savepayment = await savepaymentInfoOperation(
-              {
-                ...paymentData,
-                razorpay_payment_id: razorpay_payment_id,
-              },
-              razorpay_payment_id
-            );
-            console.log("Payment save response:", savepayment);
+  //           const savepayment = await savepaymentInfoOperation(
+  //             {
+  //               ...paymentData,
+  //               razorpay_payment_id: razorpay_payment_id,
+  //             },
+  //             razorpay_payment_id
+  //           );
+  //           console.log("Payment save response:", savepayment);
 
-            if (savepayment.status === 201) {
-              Swal.fire({
-                title: "Payment Done Successfully",
-                icon: "success",
-                confirmButtonText: "OK",
-              }).then(() => {
-                navigate(`/${department}/department/enrollment-data`);
-              });
-            } else {
-              Swal.fire({
-                title: "Payment Success, but failed to record!",
-                text: "Please contact support.",
-                icon: "warning",
-                confirmButtonText: "OK",
-              });
-            }
-          } catch (err) {
-            console.error(
-              "Error in verifying payment or updating status:",
-              err
-            );
-            Swal.fire({
-              title: "Payment Success, but an error occurred!",
-              text: "Please contact support.",
-              icon: "error",
-              confirmButtonText: "OK",
-            });
-          }
-        },
-        theme: {
-          color: "#3399cc",
-        },
-      };
+  //           if (savepayment.status === 201) {
+  //             Swal.fire({
+  //               title: "Payment Done Successfully",
+  //               icon: "success",
+  //               confirmButtonText: "OK",
+  //             }).then(() => {
+  //               navigate(`/${department}/department/enrollment-data`);
+  //             });
+  //           } else {
+  //             Swal.fire({
+  //               title: "Payment Success, but failed to record!",
+  //               text: "Please contact support.",
+  //               icon: "warning",
+  //               confirmButtonText: "OK",
+  //             });
+  //           }
+  //         } catch (err) {
+  //           console.error(
+  //             "Error in verifying payment or updating status:",
+  //             err
+  //           );
+  //           Swal.fire({
+  //             title: "Payment Success, but an error occurred!",
+  //             text: "Please contact support.",
+  //             icon: "error",
+  //             confirmButtonText: "OK",
+  //           });
+  //         }
+  //       },
+  //       theme: {
+  //         color: "#3399cc",
+  //       },
+  //     };
 
-      const razorpay = new window.Razorpay(options);
+  //     const razorpay = new window.Razorpay(options);
 
-      razorpay.on("payment.failed", (response) => {
-        Swal.fire({
-          title: "Payment Failed",
-          text: `Reason: ${response.error.description}`,
-          icon: "error",
-          confirmButtonText: "Retry",
-        });
-      });
+  //     razorpay.on("payment.failed", (response) => {
+  //       Swal.fire({
+  //         title: "Payment Failed",
+  //         text: `Reason: ${response.error.description}`,
+  //         icon: "error",
+  //         confirmButtonText: "Retry",
+  //       });
+  //     });
 
-      razorpay.open();
-    } catch (error) {
-      console.error("Error in fetching order URL:", error);
-      Swal.fire({
-        title: "Error",
-        text: "Unable to initiate payment. Please try again later.",
-        icon: "error",
-        confirmButtonText: "OK",
-      });
+  //     razorpay.open();
+  //   } catch (error) {
+  //     console.error("Error in fetching order URL:", error);
+  //     Swal.fire({
+  //       title: "Error",
+  //       text: "Unable to initiate payment. Please try again later.",
+  //       icon: "error",
+  //       confirmButtonText: "OK",
+  //     });
+  //   }
+  // };
+
+  const handleGetPaymentId = async(id)=>{
+    const response = await getThePaymentId(id)
+    console.log("update",response)
+    if(response.status===200){
+      navigate(`/super-admin/department/payment-details/${response?.data?.paymentData?.paymentId}`)
     }
-  };
+  }
 
   if (!data) return null;
   return (
@@ -316,7 +325,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
             <SectionTitle>Status Information</SectionTitle>
             <Grid container spacing={3}>
               <Grid item xs={12} md={3}>
-                <DetailCard title="PAYMENT STATUS" value={data.payment} />
+                <DetailCard title="PAYMENT STATUS" value={data.paymentStatus} />
               </Grid>
               <Grid item xs={12} md={3}>
                 <DetailCard title="SOURCE" value={data.source} />
@@ -379,17 +388,17 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                 </Grid>
               )}
 
-              {(data.payment !== "Pending" || data.payment === "Requested") && (
+              {( data.paymentStatus === "Pending"|| data.paymentStatus === "Success") && (
                 <Grid item xs={12} md={3} style={{ overflow: "visible" }}>
                   <DetailCard
                     title={
-                      data.payment === "Pending"
+                      data.paymentStatus === "Pending"
                         ? "CHOOSE CLASS PACKAGE"
-                        : "UPDATE PAYMENT STATUS"
+                        : "VIEW PAYMENT"
                     }
                     value={
                       <div className="flex flex-col gap-1 w-full">
-                        {data.payment === "Pending" ? (
+                        {data.paymentStatus === "Pending" ? (
                           <button
                             onClick={() => setIsPaymentDialogOpen(true)}
                             className="w-full px-2 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:text-white hover:border-primary/80 transition-all duration-200 text-sm font-medium rounded-md shadow-sm"
@@ -399,25 +408,13 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                         ) : (
                           <>
                             <button
-                              onClick={() => setIsVerifyPaymentDialogOpen(true)}
+                              onClick={() => handleGetPaymentId(data._id)}
                               className="w-full px-2 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:text-white hover:border-primary/80 transition-all duration-200 text-sm font-medium rounded-md shadow-sm"
                             >
-                              Update
+                              View Payment
                             </button>
-                            <button
-                              onClick={() => setIsVerifyPaymentDialogOpen(true)}
-                              className="w-full px-2 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:text-white hover:border-primary/80 transition-all duration-200 text-sm font-medium rounded-md shadow-sm"
-                            >
-                              Resend Payment Link
-                            </button>
-                            <button
-                              onClick={() =>
-                                handleUpdatePayment(data.paymentLink)
-                              }
-                              className="w-full px-2 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:text-white hover:border-primary/80 transition-all duration-200 text-sm font-medium rounded-md shadow-sm"
-                            >
-                              Pay Now
-                            </button>
+                            
+                           
                           </>
                         )}
                       </div>

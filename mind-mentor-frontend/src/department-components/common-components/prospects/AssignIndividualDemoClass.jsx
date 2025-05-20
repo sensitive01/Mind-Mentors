@@ -46,14 +46,11 @@ const AssignDemoClass = () => {
       try {
         if (isSheduled === "true") {
           setIsEditing(true);
-          // Get both the current demo class and available class schedules
           const [demoClassResponse, availableClassesResponse] =
             await Promise.all([getDemoClassById(enqId), getDemoSheduleClass()]);
 
-          // Set available classes for rescheduling
           setClassData(availableClassesResponse.data.scheduleData || []);
 
-          // Set current class details
           const currentClass = demoClassResponse.data.classData[0];
 
           setSelectedClass(currentClass);

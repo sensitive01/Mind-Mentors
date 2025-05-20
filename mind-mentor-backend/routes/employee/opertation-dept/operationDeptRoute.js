@@ -29,6 +29,15 @@ operationRoute.get("/get-the-physical-center-name", operationController.getThePh
 operationRoute.get("/get-employee-data/:empId", operationController.getEmployeeData);
 operationRoute.get("/is-attandance-marked/:empId", operationController.isAttendanceMarked);
 operationRoute.get("/get-my-attandance-data/:empId", operationController.getMyAttendanceData);
+operationRoute.get("/leaves-form", operationController.getAllLeaves);
+operationRoute.get("/attendance/", operationController.fetchAttendance);
+operationRoute.get("/tasks", operationController.getAllTasks);
+operationRoute.get("/all-task", operationController.getAllTasks);
+operationRoute.get("/my-pending-tasks/:id", operationController.getMyPendingTasks);
+operationRoute.get("/assign-task-to-others/:id", operationController.assignTaskToOthers);
+operationRoute.get("/tasks/:id", operationController.getTaskById);
+operationRoute.get("/taskslogs/:id", operationController.getActivityLogsByTaskId);
+operationRoute.get("/get-attandance-data/:id",operationController.getAllAttandanceData);
 
 
 
@@ -72,15 +81,6 @@ operationRoute.put("/reshedule-demo-class-for-a-kid/:classId/:empId", operationC
 operationRoute.delete("/enquiry-form/:id", operationController.deleteEnquiry);
 
 
-operationRoute.get("/leaves-form", operationController.getAllLeaves);
-operationRoute.get("/attendance/", operationController.fetchAttendance);
-operationRoute.get("/tasks", operationController.getAllTasks);
-operationRoute.get("/all-task", operationController.getAllTasks);
-operationRoute.get("/my-pending-tasks/:id", operationController.getMyPendingTasks);
-operationRoute.get("/assign-task-to-others/:id", operationController.assignTaskToOthers);
-operationRoute.get("/tasks/:id", operationController.getTaskById);
-operationRoute.get("/taskslogs/:id", operationController.getActivityLogsByTaskId);
-operationRoute.get("/get-attandance-data/:id",operationController.getAllAttandanceData);
 
 
 

@@ -328,8 +328,7 @@ const AssigningWholeClassToKid = () => {
         currentIndex++;
       };
 
-      // Generate sessions for the required number of classes
-      const totalClasses = numberOfClasses || 8; // Default to 8 if not specified
+      const totalClasses = numberOfClasses || 8; 
 
       for (let i = 0; i < totalClasses; i++) {
         const classItem = classes[currentIndex % classes.length];

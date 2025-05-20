@@ -75,6 +75,24 @@ userRoute.delete('/chats/:id', userController.deleteChat);
 userRoute.post('/package', userController.insertPackage);
 userRoute.post('/add-new-package-data', userController.addNewPackageData);
 userRoute.get('/get-package-data', userController.getAllPackageData);
+userRoute.post('/edit-package-data', userController.editPackageData);
+userRoute.put('/delete-package-data', userController.deletePackageData);
+
+userRoute.post('/send-selected-package-data/:enqId', userController.sendSelectedPackageData);
+userRoute.get('/get-payment-details/:paymentId', userController.getThePaymentData);
+userRoute.post('/update-payment-details', userController.updatePaymentDetails);
+userRoute.get('/get-Payment-id/:enqId', userController.getThePaymentId);
+
+
+
+
+
+
+
+
+userRoute.get('/get-voucher-data/:voucherId', userController.getTheVoucherData);
+userRoute.put('/update-voucher-data/:voucherId', userController.updateTheVoucherData);
+userRoute.delete('/delete-voucher-data/:voucherId', userController.deleteTheVoucherData);
 
 
 
@@ -94,6 +112,8 @@ userRoute.delete('/delete-physcical-center-data/:centerId', userController.delet
 
 
 userRoute.get('/get-all-parent-data', userController.getAllParentData);
+
+userRoute.get('/get-programme-data-table', userController.getAllProgrameDataTable);
 
 
 userRoute.get('/get-programme-data', userController.getAllProgrameData);
@@ -120,9 +140,14 @@ userRoute.get('/super-admin-get-all-leaves', userController.superAdminGetAllLeav
 userRoute.put('/super-admin-update-leave-status/:leaveId', userController.superAdminUpdateLeaveStatus);
 
 userRoute.post('/save-online-package-data', userController.saveOnlineClassPackage);
-userRoute.post('/save-offline-package-data', userController.saveOfflineClassPackage);
+userRoute.post('/save-offline-package-data', userController.submitPhysicalCenterClassPrice);
+userRoute.post('/save-hybrid-package-data', userController.submitHybridClassPrice);
+userRoute.post('/save-kit-price-data', userController.submitKitPriceData);
 
 
+
+
+userRoute.get('/get-invoice-data', userController.getInvoiceData);
 
 
 

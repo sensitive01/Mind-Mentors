@@ -69,7 +69,6 @@ const ModernSidebar = () => {
   const [openAttandance, setOpenAttandance] = useState(false);
 
   const [openClass, setOpenClass] = useState(false);
-  const [openTasks, setOpenTasks] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [openCRM, setOpenCRM] = useState(false);
   const [openEmployees, setOpenEmployees] = useState(false);
@@ -421,7 +420,7 @@ const ModernSidebar = () => {
       icon: <InvoicesIcon />,
       text: "Invoices",
       color: iconColors.invoices,
-      link: "/superadminInvoices",
+      link: "/super-admin/department/invoice-table",
     },
     {
       icon: <InvoicesIcon />,

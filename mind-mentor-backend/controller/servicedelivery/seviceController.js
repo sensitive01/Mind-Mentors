@@ -12,7 +12,7 @@ const convertTo12HourFormat = require("../../utils/convertTo12HourFormat");
 const axios = require("axios");
 const jwt = require("jsonwebtoken");
 const { generateZoomMeeting } = require("../../utils/generateZoomLink");
-const classPaymentModel = require("../../model/classPaymentModel");
+const classPaymentModel = require("../../model/packagePaymentModel");
 const SelectedClass = require("../../model/wholeClassAssignedModel");
 const moment = require("moment"); // Import moment.js for date formatting
 const PhysicalCenter = require("../../model/physicalcenter/physicalCenterShema");
@@ -25,7 +25,7 @@ const getAllActiveEnquiries = async (req, res) => {
   try {
     const enquiries = await operationDeptModel.find({
       enquiryField: "prospects",
-      status: "Active",
+      enquiryStatus: "Active",
     });
 
     const customizedEnquiries = await Promise.all(
@@ -634,13 +634,15 @@ const timeTableShedules = async (req, res) => {
 
 
 
+
 const getActiveKidAndClassData = async (req, res) => {
   try {
     const { enqId } = req.params;
-    const paymentClassData = await classPaymentModel.findOne(
-      { enqId: enqId },
-      { baseAmount: 0, gstAmount: 0, totalAmount: 0, raz_transaction_id: 0 }
-    );
+
+    const paymentClassData = await classPaymentModel.findOne({
+      enqId: enqId,
+      paymentStatus: "Success",
+    });
 
     if (!paymentClassData) {
       return res.status(404).json({
@@ -649,37 +651,32 @@ const getActiveKidAndClassData = async (req, res) => {
       });
     }
 
-    console.log("PaymentData", paymentClassData);
+    const programData = paymentClassData.programs[0]; // assuming one program per payment
+    let classData = {};
 
-    const { classDetails } = paymentClassData;
-
-    // Check if offlineClasses and onlineClasses are present
-    let classData;
-    if (classDetails.offlineClasses && classDetails.onlineClasses) {
-      // If both offlineClasses and onlineClasses exist
-      classData = {
-        offlineClasses: classDetails.offlineClasses,
-        onlineClasses: classDetails.onlineClasses,
-      };
-    } else {
-      // If offlineClasses or onlineClasses are missing, fall back to numberOfClasses
-      classData = {
-        numberOfClasses: classDetails.numberOfClasses,
-      };
+    // Assign offline/online class counts
+    if (
+      paymentClassData.offlineClasses !== undefined &&
+      paymentClassData.onlineClasses !== undefined
+    ) {
+      classData.offlineClasses = paymentClassData.offlineClasses;
+      classData.onlineClasses = paymentClassData.onlineClasses;
+    } else if (paymentClassData.numberOfClasses !== undefined) {
+      classData.numberOfClasses = paymentClassData.numberOfClasses;
     }
 
-    // Include other class-related data
+    // Include additional class details
     classData = {
       ...classData,
-      selectedCenter: classDetails.selectedCenter,
-      selectedClass: classDetails.selectedClass,
-      selectedPackage: classDetails.selectedPackage,
-      classType: classDetails.classType,
-      day: classDetails.day,
-      classMode:classDetails.classMode
+      selectedCenter: paymentClassData.centerId,
+      selectedPackage: paymentClassData.selectedPackage,
+      classMode: paymentClassData.classMode,
+      centerType: programData?.centerType,
+      level: programData?.level,
+      program: programData?.program,
     };
 
-    // Format dates using moment.js
+    // Format dates
     const formattedTimestamp = moment(paymentClassData.timestamp).format(
       "YYYY-MM-DD HH:mm:ss"
     );
@@ -690,7 +687,6 @@ const getActiveKidAndClassData = async (req, res) => {
       "YYYY-MM-DD HH:mm:ss"
     );
 
-    // Send the response with the necessary class details along with other info
     return res.status(200).json({
       success: true,
       message: "Active class data fetched successfully",
@@ -701,7 +697,11 @@ const getActiveKidAndClassData = async (req, res) => {
         whatsappNumber: paymentClassData.whatsappNumber,
         parentId: paymentClassData.parentId,
         enqId: paymentClassData.enqId,
+        paymentId: paymentClassData.paymentId,
         classDetails: classData,
+        createdAt: formattedCreatedAt,
+        updatedAt: formattedUpdatedAt,
+        timestamp: formattedTimestamp,
       },
     });
   } catch (err) {
@@ -713,6 +713,7 @@ const getActiveKidAndClassData = async (req, res) => {
     });
   }
 };
+
 
 const assignWholeClass = async (req, res) => {
   try {
@@ -802,7 +803,7 @@ const getScheduledClassData = async (req, res) => {
 
     // Fetch enrollment data
     const enqData = await operationDeptModel.findOne(
-      { _id: enqId, payment: "Success", status: "Active" },
+      { _id: enqId, paymentStatus: "Success", enquiryStatus: "Active" },
       { programs: 1 }
     );
 

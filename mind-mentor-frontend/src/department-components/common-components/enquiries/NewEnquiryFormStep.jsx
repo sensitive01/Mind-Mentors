@@ -6,7 +6,7 @@ import "react-phone-input-2/lib/style.css";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import { operationDeptInstance } from "../../../api/axios/operationDeptInstance";
-import { getAllProgrameData } from "../../../api/service/employee/EmployeeService";
+import { getAllProgrameDataEnquiry } from "../../../api/service/employee/EmployeeService";
 
 const NewEnquiryFormStep = () => {
   const navigate = useNavigate();
@@ -18,7 +18,8 @@ const NewEnquiryFormStep = () => {
   const [pincode, setPincode] = useState("");
   const [error, setError] = useState("");
   const [isSameAsContact, setIsSameAsContact] = useState(false);
-  const [programData,setProgrameData]=useState([])
+  const [programData, setProgramData] = useState([]);
+  const [centerOptions, setCenterOptions] = useState([]);
 
   const [formData, setFormData] = useState({
     parentFirstName: "",
@@ -31,7 +32,14 @@ const NewEnquiryFormStep = () => {
     kidsAge: "",
     message: "",
     kidsGender: "",
-    programs: [{ program: "", level: "" }],
+    programs: [
+      {
+        centerType: "",
+        centerName: "",
+        program: "",
+        level: "",
+      },
+    ],
     schoolName: "",
     address: "",
     schoolPincode: "",
@@ -43,17 +51,16 @@ const NewEnquiryFormStep = () => {
     pincode: "",
   });
 
-  useEffect(()=>{
-    const fetchProgramData = async()=>{
-      const response = await getAllProgrameData()
-      console.log(response)
-      if(response.status===200){
-        setProgrameData(response?.data?.programs)
+  useEffect(() => {
+    const fetchProgramData = async () => {
+      const response = await getAllProgrameDataEnquiry();
+      console.log(response);
+      if (response.status === 200) {
+        setProgramData(response?.data?.programs);
       }
-    }
-    fetchProgramData()
-
-  },[])
+    };
+    fetchProgramData();
+  }, []);
 
   const fetchCityDetails = async (pin) => {
     try {
@@ -135,7 +142,7 @@ const NewEnquiryFormStep = () => {
 
   const handleCheckboxChange = () => {
     setIsSameAsContact((prev) => !prev);
-    if (isSameAsContact) {
+    if (!isSameAsContact) {
       setFormData((prevData) => ({
         ...prevData,
         whatsappNumber: formData.contactNumber,
@@ -150,14 +157,73 @@ const NewEnquiryFormStep = () => {
 
   const handleProgramChange = (index, field, value) => {
     const newPrograms = [...formData.programs];
-    newPrograms[index][field] = value;
+
+    // When center type changes, reset dependent fields
+    if (field === "centerType") {
+      newPrograms[index] = {
+        ...newPrograms[index],
+        centerType: value,
+        centerName: "",
+        program: "",
+        level: "",
+      };
+
+      // Update center options based on selected center type
+      const filteredCenters = programData.filter(
+        (center) => center.centerType === value
+      );
+      setCenterOptions(filteredCenters);
+    }
+    // When center name changes, reset program and level
+    else if (field === "centerName") {
+      newPrograms[index] = {
+        ...newPrograms[index],
+        centerName: value,
+        program: "",
+        level: "",
+      };
+    } else {
+      newPrograms[index][field] = value;
+    }
+
     setFormData((prev) => ({ ...prev, programs: newPrograms }));
+  };
+
+  const getAvailablePrograms = (index) => {
+    const { centerName } = formData.programs[index];
+    if (!centerName) return [];
+
+    const selectedCenter = programData.find(
+      (center) => center._id === centerName
+    );
+    if (!selectedCenter) return [];
+
+    // Extract unique program IDs from the selected center
+    return selectedCenter.programLevels.map((pl) => pl.program);
+  };
+
+  const getAvailableLevels = (index) => {
+    const { centerName, program } = formData.programs[index];
+    if (!centerName || !program) return [];
+
+    const selectedCenter = programData.find(
+      (center) => center._id === centerName
+    );
+    if (!selectedCenter) return [];
+
+    const programLevel = selectedCenter.programLevels.find(
+      (pl) => pl.program === program
+    );
+    return programLevel ? programLevel.levels : [];
   };
 
   const addProgram = () => {
     setFormData((prev) => ({
       ...prev,
-      programs: [...prev.programs, { program: "", level: "" }],
+      programs: [
+        ...prev.programs,
+        { centerType: "", centerName: "", program: "", level: "" },
+      ],
     }));
   };
 
@@ -174,19 +240,27 @@ const NewEnquiryFormStep = () => {
         return (
           formData.parentFirstName.trim() &&
           formData.contactNumber &&
-          (isSameAsContact
-            ? formData.whatsappNumber && formData.whatsappNumber.length >= 10
-            : true)
+          formData.contactNumber.length >= 10 &&
+          (!isSameAsContact ||
+            (formData.whatsappNumber && formData.whatsappNumber.length >= 10))
         );
       case 1:
         return (
           formData.kidFirstName.trim() &&
           formData.kidsAge &&
           formData.kidsGender &&
-          formData.relationship
+          formData.relationship &&
+          (formData.relationship !== "other" ||
+            formData.otherRelationship.trim())
         );
       case 2:
-        return formData.programs[0].program && formData.programs[0].level;
+        return formData.programs.every(
+          (program) =>
+            program.centerType &&
+            program.centerName &&
+            program.program &&
+            program.level
+        );
       default:
         return true;
     }
@@ -302,13 +376,13 @@ const NewEnquiryFormStep = () => {
           <div className="space-y-8 ">
             <div className="space-y-4">
               <h3 className="text-[#642b8f] font-semibold text-lg pb-2 border-b-2 border-[#f8a213]">
-                Gaurdian Information
+                Guardian Information
               </h3>
               <div className="space-y-4">
                 <div className="flex gap-4">
                   <input
                     type="text"
-                    placeholder="Gaurdian Name *"
+                    placeholder="Guardian Name *"
                     className="flex-1 p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors"
                     value={formData.parentFirstName}
                     onChange={(e) =>
@@ -323,7 +397,7 @@ const NewEnquiryFormStep = () => {
               {/* Contact Number Input */}
               <div className="flex-1">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Gaurdian's Contact Number{" "}
+                  Guardian's Contact Number{" "}
                   <span className="text-red-500">*</span>
                 </label>
                 <PhoneInput
@@ -331,10 +405,9 @@ const NewEnquiryFormStep = () => {
                   value={formData.contactNumber}
                   onChange={(value) => {
                     handleInputChange("contactNumber", value);
-                    // Add logic to enable WhatsApp input/checkbox after contact number is entered
                   }}
                   inputProps={{
-                    placeholder: "Enter Gaurdian contact number",
+                    placeholder: "Enter Guardian contact number",
                     required: true,
                     className:
                       "w-full p-4 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:ring-2 focus:ring-[#642b8f] focus:ring-opacity-50 outline-none placeholder-gray-400",
@@ -368,7 +441,7 @@ const NewEnquiryFormStep = () => {
                   {isSameAsContact && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Gaurdian's WhatsApp Number{" "}
+                        Guardian's WhatsApp Number{" "}
                         <span className="text-red-500">*</span>
                       </label>
                       <PhoneInput
@@ -378,7 +451,7 @@ const NewEnquiryFormStep = () => {
                           handleInputChange("whatsappNumber", value)
                         }
                         inputProps={{
-                          placeholder: "Enter Gaurdian whatsApp number",
+                          placeholder: "Enter Guardian whatsApp number",
                           required: true,
                           className:
                             "w-full p-4 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:ring-2 focus:ring-[#642b8f] focus:ring-opacity-50 outline-none placeholder-gray-400",
@@ -399,13 +472,13 @@ const NewEnquiryFormStep = () => {
             </div>
             <div className="space-y-4">
               <label className="block text-sm font-medium text-[#642b8f]">
-                Gaurdian's Email ID
+                Guardian's Email ID
               </label>
               <div className="relative">
                 <input
                   type="email"
                   className="w-full p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors pl-4 pr-10"
-                  placeholder="Enter Gaurdian email id"
+                  placeholder="Enter Guardian email id"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
                 />
@@ -590,88 +663,159 @@ const NewEnquiryFormStep = () => {
           </div>
         );
 
-        case 2:
-          return (
-            <div className="space-y-8">
-              <div className="space-y-4">
-                <h3 className="text-[#642b8f] font-semibold text-lg pb-2 border-b-2 border-[#f8a213]">
-                  Program Selection
-                </h3>
-                {formData.programs.map((program, index) => (
-                  <div key={index} className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-medium text-[#642b8f]">
-                        Program {index + 1}
-                      </label>
-                      {formData.programs.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeProgram(index)}
-                          className="text-red-500 hover:text-red-700 transition-colors"
-                        >
-                          <Trash className="h-5 w-5" />
-                        </button>
-                      )}
-                    </div>
-                    <div className="flex gap-4">
-                      <select
-                        className="flex-1 p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors bg-white"
-                        value={program.program}
-                        onChange={(e) =>
-                          handleProgramChange(index, "program", e.target.value)
-                        }
-                        required
-                      >
-                        <option value="">-Select Program-</option>
-                        {programData.map((pgm) => (
-                          <option key={pgm._id} value={pgm.programName}>
-                            {pgm.programName}
-                          </option>
-                        ))}
-                      </select>
-                      <select
-                        className="flex-1 p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors bg-white"
-                        value={program.level}
-                        onChange={(e) =>
-                          handleProgramChange(index, "level", e.target.value)
-                        }
-                        required
-                      >
-                        <option value="">-Select Level-</option>
-                        {program.program && programData
-                          .find(pgm => pgm.programName === program.program)
-                          ?.programLevel.map((level) => (
-                            <option key={level} value={level}>
-                              {level}
-                            </option>
-                          ))}
-                      </select>
-                    </div>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={addProgram}
-                  className="text-[#642b8f] hover:text-[#aa88be] font-medium text-sm transition-colors"
-                >
-                  + Add Program
-                </button>
-              </div>
-        
-              <div className="space-y-4">
-                <label className="block text-sm font-medium text-[#642b8f]">
-                  Remarks
-                </label>
-                <textarea
-                  rows={4}
-                  className="w-full p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors resize-none"
-                  placeholder="Enter your Message here..."
-                  value={formData.message}
-                  onChange={(e) => handleInputChange("message", e.target.value)}
-                />
-              </div>
+      case 2:
+        return (
+      <div className="bg-white rounded-lg shadow-sm p-6">
+  <div className="space-y-6">
+    {/* Header */}
+    <div className="flex items-center justify-between">
+      <h3 className="text-[#642b8f] font-semibold text-lg border-b-2 border-[#f8a213] pb-2">
+        Program Selection
+      </h3>
+    </div>
+
+    {/* Programs List */}
+    <div className="space-y-4">
+      {formData.programs.map((program, index) => (
+        <div 
+          key={index} 
+          className="border border-[#aa88be] rounded-lg p-4 bg-white hover:shadow-md transition-shadow"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="text-[#642b8f] font-medium">Program {index + 1}</h4>
+            {formData.programs.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeProgram(index)}
+                className="text-red-500 hover:text-red-700 transition-colors"
+                aria-label="Remove program"
+              >
+                <Trash className="h-5 w-5" />
+              </button>
+            )}
+          </div>
+
+          {/* Program Form Fields - Grid Layout */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Center Type */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-[#642b8f]">
+                Center Type <span className="text-red-500">*</span>
+              </label>
+              <select
+                className="w-full p-2 rounded-md border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors bg-white"
+                value={program.centerType}
+                onChange={(e) => handleProgramChange(index, "centerType", e.target.value)}
+                required
+              >
+                <option value="">-Select Center Type-</option>
+                <option value="online">Online</option>
+                <option value="offline">Offline</option>
+              </select>
             </div>
-          );
+
+            {/* Center Name - Only show if center type is selected */}
+            {program.centerType && (
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-[#642b8f]">
+                  Center Name <span className="text-red-500">*</span>
+                </label>
+                <select
+                  className="w-full p-2 rounded-md border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors bg-white"
+                  value={program.centerName}
+                  onChange={(e) => handleProgramChange(index, "centerName", e.target.value)}
+                  required
+                >
+                  <option value="">-Select Center-</option>
+                  {programData
+                    .filter(center => center.centerType === program.centerType)
+                    .map(center => (
+                      <option key={center._id} value={center._id}>
+                        {center.centerName}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            )}
+
+            {/* Program - Only show if center is selected */}
+            {program.centerName && (
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-[#642b8f]">
+                  Program <span className="text-red-500">*</span>
+                </label>
+                <select
+                  className="w-full p-2 rounded-md border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors bg-white"
+                  value={program.program}
+                  onChange={(e) => handleProgramChange(index, "program", e.target.value)}
+                  required
+                >
+                  <option value="">-Select Program-</option>
+                  {programData
+                    .find(center => center._id === program.centerName)
+                    ?.programLevels.map((pl, idx) => (
+                      <option key={idx} value={pl.program}>
+                        {pl.program}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            )}
+
+            {/* Level - Only show if program is selected */}
+            {program.program && (
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-[#642b8f]">
+                  Level <span className="text-red-500">*</span>
+                </label>
+                <select
+                  className="w-full p-2 rounded-md border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors bg-white"
+                  value={program.level}
+                  onChange={(e) => handleProgramChange(index, "level", e.target.value)}
+                  required
+                >
+                  <option value="">-Select Level-</option>
+                  {programData
+                    .find(center => center._id === program.centerName)
+                    ?.programLevels.find(pl => pl.program === program.program)
+                    ?.levels.map((level, idx) => (
+                      <option key={idx} value={level}>
+                        {level}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+
+    {/* Add Program Button */}
+    <button
+      type="button"
+      onClick={addProgram}
+      className="flex items-center text-[#642b8f] hover:text-[#aa88be] font-medium text-sm transition-colors"
+    >
+      <span className="mr-1 text-lg">+</span> Add Program
+    </button>
+
+    {/* Remarks */}
+    <div className="pt-4">
+      <label className="block text-sm font-medium text-[#642b8f] mb-2">
+        Remarks
+      </label>
+      <textarea
+        rows={3}
+        className="w-full p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors resize-none"
+        placeholder="Enter your Message here..."
+        value={formData.message}
+        onChange={(e) => handleInputChange("message", e.target.value)}
+      />
+    </div>
+  </div>
+</div>
+        );
 
       default:
         return null;

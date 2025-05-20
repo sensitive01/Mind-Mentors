@@ -1,11 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { TextField, MenuItem } from "@mui/material";
-import { addNewVoucher } from "../../../api/service/employee/EmployeeService";
+import {
+  getVoucherData,
+  updateVoucherData,
+} from "../../../api/service/employee/EmployeeService";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
-const EmployeeLeaveForm = () => {
-    const navigate = useNavigate()
+const EditDiscount = () => {
+  const { voucherId } = useParams();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     voucherId: "",
     code: "",
@@ -20,6 +25,48 @@ const EmployeeLeaveForm = () => {
     status: "active",
   });
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const response = await getVoucherData(voucherId);
+        console.log("Voucher resposne",response)
+
+        if (response.status===200) {
+          const startDate = response.data.startDate
+            ? new Date(response.data.startDate).toISOString().split("T")[0]
+            : "";
+          const expiry = response.data.expiry
+            ? new Date(response.data.expiry).toISOString().split("T")[0]
+            : "";
+
+          setFormData({
+            voucherId: response.data.voucherId || "",
+            code: response.data.code || "",
+            mmKidId: Array.isArray(response.data.mmKidId)
+              ? response.data.mmKidId.join(", ")
+              : "",
+            remarks: response.data.remarks || "",
+            type: response.data.type || "amount",
+            value: response.data.value || "",
+            condition: response.data.condition || "new user",
+            slots: response.data.slots || "",
+            startDate: startDate,
+            expiry: expiry,
+            status: response.data.status || "active",
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching voucher data:", error);
+        toast.error("Failed to load voucher data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [voucherId]);
+
   const typeOptions = ["amount", "class"];
   const conditionOptions = ["new user", "existing user"];
   const statusOptions = ["active", "inactive", "expired"];
@@ -32,25 +79,44 @@ const EmployeeLeaveForm = () => {
     }));
   };
 
-  const handleSubmit = async(e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form Data:", formData);
-    const response = await addNewVoucher(formData) 
-    console.log(response)
-    if(response.status===201){
-        toast.success(response.data.message)
+    try {
+      const submitData = {
+        ...formData,
+        mmKidId: formData.mmKidId
+          .split(",")
+          .map((id) => id.trim())
+          .filter((id) => id),
+      };
+
+      const response = await updateVoucherData(voucherId, submitData);
+
+      if (response.status === 200) {
+        toast.success("Voucher updated successfully");
         setTimeout(() => {
-            navigate("/super-admin/department/discount-table")
-            
+          navigate("/super-admin/department/discount-table");
         }, 1500);
+      }
+    } catch (error) {
+      console.error("Error updating voucher:", error);
+      toast.error("Failed to update voucher");
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen p-6 flex items-center justify-center">
+        <div className="text-xl text-gray-600">Loading voucher data...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-6">
       <div className="max-w-9xl mx-auto bg-white rounded-xl shadow-xl overflow-hidden">
         <div className="bg-gradient-to-r from-[#642b8f] to-[#aa88be] p-8 text-white flex justify-between items-center">
-          <div>Voucher Form</div>
+          <div>Edit Voucher</div>
         </div>
 
         <form className="p-8" onSubmit={handleSubmit}>
@@ -62,7 +128,6 @@ const EmployeeLeaveForm = () => {
                 value={formData.voucherId}
                 onChange={handleChange}
                 fullWidth
-                multiline
               />
 
               <TextField
@@ -71,7 +136,6 @@ const EmployeeLeaveForm = () => {
                 value={formData.code}
                 onChange={handleChange}
                 fullWidth
-                multiline
               />
 
               <TextField
@@ -80,7 +144,7 @@ const EmployeeLeaveForm = () => {
                 value={formData.mmKidId}
                 onChange={handleChange}
                 fullWidth
-                multiline
+                helperText="Separate multiple IDs with commas"
               />
 
               <TextField
@@ -187,10 +251,11 @@ const EmployeeLeaveForm = () => {
               type="submit"
               className="px-8 py-3 bg-[#642b8f] text-white rounded-lg font-medium hover:bg-[#aa88be] transition-colors shadow-lg hover:shadow-xl disabled:opacity-50"
             >
-              Submit
+              Update
             </button>
             <button
               type="button"
+              onClick={() => navigate("/super-admin/department/discount-table")}
               className="px-8 py-3 bg-white border-2 border-[#642b8f] text-[#642b8f] rounded-lg font-medium hover:bg-[#efe8f0] transition-colors"
             >
               Cancel
@@ -202,4 +267,4 @@ const EmployeeLeaveForm = () => {
   );
 };
 
-export default EmployeeLeaveForm;
+export default EditDiscount;

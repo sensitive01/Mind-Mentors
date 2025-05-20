@@ -161,7 +161,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
             <SectionTitle>Status Information</SectionTitle>
             <Grid container spacing={3}>
               <Grid item xs={12} md={3}>
-                <DetailCard title="PAYMENT STATUS" value={data.payment} />
+                <DetailCard title="PAYMENT STATUS" value={data.paymentStatus} />
               </Grid>
               <Grid item xs={12} md={3}>
                 <DetailCard title="SOURCE" value={data.source} />
@@ -183,7 +183,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
               <Grid item xs={12} md={3}>
                 <DetailCard title="ENQUIRY FIELD" value={data.enquiryField} />
               </Grid>
-              {data.status === "Active" && (
+              {data.enquiryStatus === "Active" && (
                 <Grid item xs={12} md={3} style={{ overflow: "visible" }}>
                   <DetailCard
                     title={"ASSIGN CLASS"}

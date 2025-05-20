@@ -10,7 +10,7 @@ const bcrypt = require("bcryptjs");
 const Voucher = require("../../model/discount_voucher/voucherModel");
 const parentModel = require("../../model/parentModel");
 const leavesModel = require("../../model/leavesModel");
-const OnlineClass = require("../../model/class/onlineClassPackage")
+const OnlineClass = require("../../model/class/onlineClassPackage");
 const {
   Tournament,
   Notification,
@@ -25,6 +25,13 @@ const ProgramData = require("../../model/programe/programeDataSchema");
 const ClassSchedule = require("../../model/classSheduleModel");
 const attendanceModel = require("../../model/attendanceModel");
 const taskModel = require("../../model/taskModel");
+const offlineclassPackage = require("../../model/class/offlineClassPackage");
+const hybridClassSchema = require("../../model/class/hybridClassPackage");
+const KitPrice = require("../../model/class/kitPrice");
+const packagePaymentData = require("../../model/packagePaymentModel");
+const { v4: uuidv4 } = require("uuid");
+const kidSchema = require("../../model/kidModel");
+const enquiryData = require("../../model/operationDeptModel")
 
 const createUser = async (req, res) => {
   try {
@@ -1055,6 +1062,48 @@ const getAllVouchers = async (req, res) => {
   }
 };
 
+const getTheVoucherData = async (req, res) => {
+  try {
+    const { voucherId } = req.params;
+
+    const vouchers = await Voucher.findOne({ _id: voucherId });
+    res.status(200).json(vouchers);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error fetching vouchers", error: error.message });
+  }
+};
+
+const updateTheVoucherData = async (req, res) => {
+  try {
+    const { voucherId } = req.params;
+    const { data } = req.body;
+
+    const updatedVoucher = await Voucher.findByIdAndUpdate(
+      voucherId,
+      data,
+      { new: true } // Return the updated document
+    );
+
+    if (!updatedVoucher) {
+      return res.status(404).json({ message: "Voucher not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Voucher updated successfully",
+      voucher: updatedVoucher,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error updating voucher",
+      error: error.message,
+    });
+  }
+};
+
 const savePhysicalCenterData = async (req, res) => {
   try {
     const formData = req.body;
@@ -1133,6 +1182,33 @@ const getPhysicalCenterData = async (req, res) => {
       success: false,
       message: "Failed to retrieve physical center data",
       error: err.message,
+    });
+  }
+};
+
+const deleteTheVoucherData = async (req, res) => {
+  try {
+    const { voucherId } = req.params;
+
+    const deletedVoucher = await Voucher.findByIdAndDelete(voucherId);
+
+    if (!deletedVoucher) {
+      return res.status(404).json({
+        success: false,
+        message: "Voucher not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Voucher deleted successfully",
+      deletedVoucher,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error deleting voucher",
+      error: error.message,
     });
   }
 };
@@ -1332,15 +1408,86 @@ const getAllPackageData = async (req, res) => {
   try {
     console.log("Welcome to get all package data");
 
-    const packagesData = await Package.find();
+    const onlinePackageData = await OnlineClass.find();
+    const offlinePackageData = await offlineclassPackage.find();
+    const hybridPackageData = await hybridClassSchema.find();
+    const kitData = await KitPrice.find();
 
-    if (!packagesData.length) {
-      return res.status(404).json({ message: "No packages found" });
-    }
+    // Flatten online classes
+    const onlinePackages = onlinePackageData.map((item) => ({
+      packageType: "Online",
+      centerName: item.centers[0]?.centerName || "N/A",
+      packageName: item.packageName,
+      programName: item.programName,
+      programLevel: item.programLevel,
+      classes: item.classes,
+      amount: item.amount,
+      time: item.time,
+      mode: item.mode,
+      quantity: null,
+      kitPrice: null,
+    }));
 
-    return res
-      .status(200)
-      .json({ message: "Packages retrieved successfully", packagesData });
+    // Flatten offline classes
+    const offlinePackages = offlinePackageData.flatMap((item) =>
+      item.centers.map((center) => ({
+        packageType: "Offline",
+        centerName: center.centerName,
+        packageName: center.packageName,
+        programName: center.programName,
+        programLevel: center.programLevel,
+        classes: center.classes,
+        amount: center.amount,
+        time: center.time,
+        mode: item.mode,
+        quantity: null,
+        kitPrice: null,
+      }))
+    );
+
+    // Flatten hybrid classes
+    const hybridPackages = hybridPackageData.flatMap((item) =>
+      item.centers.map((center) => ({
+        packageType: "Hybrid",
+        centerName: center.centerName,
+        packageName: center.packageName,
+        programName: center.programName,
+        programLevel: center.programLevel,
+        classes: center.classes,
+        amount: center.amount,
+        time: center.time,
+        mode: center.mode,
+        quantity: null,
+        kitPrice: null,
+      }))
+    );
+
+    // Flatten kit data
+    const kitPackages = kitData.map((item) => ({
+      packageType: "Kit",
+      centerName: null,
+      packageName: null,
+      programName: null,
+      programLevel: null,
+      classes: null,
+      amount: null,
+      time: null,
+      mode: "Kit",
+      quantity: item.quantity,
+      kitPrice: item.kitPrice,
+    }));
+
+    const packagesData = [
+      ...onlinePackages,
+      ...offlinePackages,
+      ...hybridPackages,
+      ...kitPackages,
+    ];
+
+    return res.status(200).json({
+      message: "Packages retrieved successfully",
+      packagesData,
+    });
   } catch (err) {
     console.error("Error in getting the package", err);
     return res.status(500).json({ error: "Internal Server Error" });
@@ -1443,6 +1590,56 @@ const addNewProgrammeData = async (req, res) => {
 };
 
 const getAllProgrameData = async (req, res) => {
+  try {
+    const programDataWithCentre = await PhysicalCenter.find(
+      {},
+      {
+        programLevels: 1,
+        centerName: 1,
+        centerType: 1,
+      }
+    );
+
+    const programData = await ProgramData.find();
+
+    // Create a lookup map from program _id to programName
+    const programMap = new Map();
+    programData.forEach((program) => {
+      programMap.set(program._id.toString(), program.programName);
+    });
+
+    // Convert each center and its programLevels into plain JS object
+    const modifiedCenters = programDataWithCentre.map((centerDoc) => {
+      const center = centerDoc.toObject(); // Convert full center to plain JS object
+
+      center.programLevels = center.programLevels.map((pl) => {
+        return {
+          ...pl,
+          program: programMap.get(pl.program.toString()) || "Unknown Program",
+        };
+      });
+
+      return center;
+    });
+    modifiedCenters.map((item) => {
+      console.log("map", item);
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Program data fetched successfully",
+      programs: modifiedCenters,
+    });
+  } catch (err) {
+    console.error("Error in getting the program data", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch program data",
+    });
+  }
+};
+
+const getAllProgrameDataTable = async (req, res) => {
   try {
     const programs = await ProgramData.find();
     console.log("programs", programs);
@@ -2095,15 +2292,17 @@ const saveOnlineClassPackage = async (req, res) => {
       return map;
     }, {});
 
-    const centers = physicalCenterData.map(center => ({
+    const centers = physicalCenterData.map((center) => ({
       centerId: center._id.toString(),
-      centerName: center.centerName
+      centerName: center.centerName,
     }));
 
     const savedPackages = await Promise.all(
       onlinePackage.map(async (pkg) => {
         const newOnlineClass = new OnlineClass({
-          packageName: `Online ${pkg.classes} ${pkg.time.charAt(0).toUpperCase() + pkg.time.slice(1)} Classes`,
+          packageName: `Online ${pkg.classes} ${
+            pkg.time.charAt(0).toUpperCase() + pkg.time.slice(1)
+          } Classes`,
           classes: Number(pkg.classes),
           amount: Number(pkg.amount),
           programName: programMap[pkg.program] || pkg.program,
@@ -2121,24 +2320,745 @@ const saveOnlineClassPackage = async (req, res) => {
       message: "Online class packages saved successfully",
       data: savedPackages,
     });
-
   } catch (err) {
     console.error("Error in saving the online package:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
+const submitPhysicalCenterClassPrice = async (req, res) => {
+  try {
+    console.log("Welcome to offline package", req.body);
 
+    const { offlinePackageData, applyToAll, centerId } = req.body;
 
-const saveOfflineClassPackage  = async(req,res)=>{
-  try{
-    console.log("Welcome to offline package",req.body)
+    if (!Array.isArray(offlinePackageData) || offlinePackageData.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "offlinePackageData is required" });
+    }
 
-  }catch(err){
-    console.log("error in saving the offline package",err)
+    const programDataList = await ProgramData.find();
+
+    const getProgramNameById = (id) => {
+      const program = programDataList.find(
+        (p) => p._id.toString() === id.toString()
+      );
+      return program ? program.programName : "";
+    };
+
+    const saveOrUpdateCenterPackage = async (centerId, centerName, pkg) => {
+      const { program, level, time, classes, amount } = pkg;
+
+      if (
+        !program ||
+        !level ||
+        !time ||
+        isNaN(parseInt(classes)) ||
+        isNaN(parseFloat(amount))
+      ) {
+        console.error("Invalid package data:", pkg);
+        return;
+      }
+
+      const parsedClasses = parseInt(classes);
+      const parsedAmount = parseFloat(amount);
+      const programName = getProgramNameById(program);
+      const packageName = `Offline ${parsedClasses} ${
+        time === "day" ? "Day" : "Night"
+      } Class`;
+
+      const newEntry = {
+        centerId,
+        centerName,
+        packageName,
+        programName,
+        programLevel: level,
+        classes: parsedClasses,
+        amount: parsedAmount,
+        status: "Active",
+        time: time === "day" ? "Day" : "Night",
+      };
+
+      let existingPackage = await offlineclassPackage.findOne({
+        mode: "Offline",
+      });
+
+      if (existingPackage) {
+        console.log("Am inside the existing entry");
+
+        // Find match based on programName instead of program id
+        const matchIndex = existingPackage.centers.findIndex(
+          (c) =>
+            c &&
+            c.centerId?.toString() == centerId.toString() &&
+            c.programName == programName && // Match by programName here
+            c.programLevel == level &&
+            c.classes == parsedClasses &&
+            c.time == newEntry.time
+        );
+
+        console.log("matchIndex", matchIndex);
+
+        if (matchIndex !== -1) {
+          console.log("Updating existing entry");
+          existingPackage.centers[matchIndex].amount = parsedAmount;
+          existingPackage.centers[matchIndex].packageName = packageName;
+        } else {
+          console.log("Creating new entry");
+          existingPackage.centers.push(newEntry);
+        }
+
+        await existingPackage.save();
+      } else {
+        console.log("Creating new offlineclassPackage document");
+        const newOfflinePackage = new offlineclassPackage({
+          mode: "Offline",
+          centers: [newEntry],
+        });
+
+        await newOfflinePackage.save();
+      }
+    };
+
+    if (applyToAll) {
+      const centerList = await PhysicalCenter.find(
+        { centerType: "offline" },
+        { _id: 1, centerName: 1 }
+      );
+
+      for (const center of centerList) {
+        for (const pkg of offlinePackageData) {
+          await saveOrUpdateCenterPackage(center._id, center.centerName, pkg);
+        }
+      }
+    } else {
+      if (!centerId) {
+        return res.status(400).json({ message: "Center ID is required" });
+      }
+
+      const center = await PhysicalCenter.findById(centerId);
+      if (!center) {
+        return res.status(404).json({ message: "Center not found" });
+      }
+
+      for (const pkg of offlinePackageData) {
+        await saveOrUpdateCenterPackage(center._id, center.centerName, pkg);
+      }
+    }
+
+    return res
+      .status(200)
+      .json({ message: "Offline package saved/updated successfully." });
+  } catch (err) {
+    console.error("Error in saving the offline package", err);
+    return res.status(500).json({ message: "Server error" });
   }
-}
+};
 
+const submitHybridClassPrice = async (req, res) => {
+  try {
+    console.log("Welcome to saving the hybrid class package", req.body);
+
+    const { hybridPackageData, applyToAll, centerId } = req.body;
+
+    if (!Array.isArray(hybridPackageData) || hybridPackageData.length === 0) {
+      return res.status(400).json({ message: "hybridPackageData is required" });
+    }
+
+    const programDataList = await ProgramData.find();
+
+    const getProgramNameById = (id) => {
+      const program = programDataList.find(
+        (p) => p._id.toString() === id.toString()
+      );
+      return program ? program.programName : "";
+    };
+
+    const saveOrUpdateHybridPackage = async (centerId, centerName, pkg) => {
+      const { program, level, time, classes, amount, mode } = pkg;
+
+      if (
+        !program ||
+        !level ||
+        !time ||
+        !mode ||
+        isNaN(parseInt(classes)) ||
+        isNaN(parseFloat(amount))
+      ) {
+        console.error("Invalid package data:", pkg);
+        return;
+      }
+
+      const parsedClasses = parseInt(classes);
+      const parsedAmount = parseFloat(amount);
+      const oneClassPrice = parsedAmount / parsedClasses;
+      const programName = getProgramNameById(program);
+      const packageName = `Hybrid ${parsedClasses} ${
+        time === "day" ? "Day" : "Night"
+      } Class`;
+
+      const newEntry = {
+        centerId,
+        centerName,
+        packageName,
+        programName,
+        programLevel: level,
+        classes: parsedClasses,
+        amount: parsedAmount,
+        oneClassPrice,
+        time: time === "day" ? "Day" : "Night",
+        status: "Active",
+        mode,
+      };
+
+      let existingPackage = await hybridClassSchema.findOne({
+        mode: "Hybrid",
+      });
+
+      if (existingPackage) {
+        const matchIndex = existingPackage.centers.findIndex(
+          (c) =>
+            c &&
+            c.centerId?.toString() === centerId.toString() &&
+            c.programName === programName &&
+            c.programLevel === level &&
+            c.classes === parsedClasses &&
+            c.time === newEntry.time
+        );
+
+        if (matchIndex !== -1) {
+          console.log("Updating existing hybrid entry");
+          existingPackage.centers[matchIndex] = {
+            ...existingPackage.centers[matchIndex],
+            ...newEntry,
+          };
+        } else {
+          console.log("Creating new hybrid entry");
+          existingPackage.centers.push(newEntry);
+        }
+
+        await existingPackage.save();
+      } else {
+        const newHybridPackage = new hybridClassSchema({
+          mode: "Hybrid",
+          centers: [newEntry],
+        });
+
+        await newHybridPackage.save();
+      }
+    };
+
+    if (applyToAll === true) {
+      const centerList = await PhysicalCenter.find(
+        { centerType: "offline" },
+        { _id: 1, centerName: 1 }
+      );
+
+      for (const center of centerList) {
+        for (const pkg of hybridPackageData) {
+          await saveOrUpdateHybridPackage(center._id, center.centerName, pkg);
+        }
+      }
+    } else {
+      if (!centerId) {
+        return res.status(400).json({ message: "Center ID is required" });
+      }
+
+      const center = await PhysicalCenter.findById(centerId);
+      if (!center) {
+        return res.status(404).json({ message: "Center not found" });
+      }
+
+      for (const pkg of hybridPackageData) {
+        await saveOrUpdateHybridPackage(center._id, center.centerName, pkg);
+      }
+    }
+
+    return res
+      .status(200)
+      .json({ message: "Hybrid package saved/updated successfully." });
+  } catch (err) {
+    console.error("Error in saving the hybrid package", err);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+const submitKitPriceData = async (req, res) => {
+  try {
+    console.log("welcome to set the kit price data", req.body);
+
+    const { quantity, kitPrice } = req.body;
+
+    if (!quantity || !kitPrice) {
+      return res
+        .status(400)
+        .json({ message: "Quantity and kit price are required" });
+    }
+
+    const newKitPrice = new KitPrice({
+      quantity: Number(quantity),
+      kitPrice: Number(kitPrice),
+    });
+
+    await newKitPrice.save();
+
+    res.status(201).json({
+      message: "Kit price saved successfully",
+      data: newKitPrice,
+    });
+  } catch (err) {
+    console.error("Error in setting the kit price", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+const editPackageData = async (req, res) => {
+  try {
+    console.log("Welcome to updating the package", req.body);
+
+    const editPackage = req.body.editPackage;
+
+    if (!editPackage) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No package data provided" });
+    }
+
+    const { mode, packageName, classes, amount, originalData, packageType } =
+      editPackage;
+
+    if (!mode || !originalData) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Mode or original data missing" });
+    }
+
+    let Model;
+    if (packageType === "Hybrid") {
+      Model = hybridClassSchema;
+    } else if (mode === "Online") {
+      Model = OnlineClass;
+    } else if (mode === "Offline") {
+      Model = offlineclassPackage;
+    } else {
+      return res.status(400).json({ success: false, message: "Invalid mode" });
+    }
+
+    let doc;
+
+    // 📦 Hybrid Package Update Logic
+    if (packageType === "Hybrid") {
+      doc = await Model.findOne({
+        mode: "Hybrid",
+        centers: {
+          $elemMatch: {
+            packageName: originalData.packageName,
+            classes: originalData.classes,
+            amount: originalData.amount,
+            time: originalData.time,
+            programName: originalData.programName,
+            programLevel: originalData.programLevel,
+            centerName: originalData.centerName,
+            mode: originalData.mode, // 'online' or 'offline'
+          },
+        },
+      });
+
+      if (!doc) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Hybrid center not found" });
+      }
+
+      const centerToUpdate = doc.centers.find(
+        (center) =>
+          center.packageName === originalData.packageName &&
+          center.classes === originalData.classes &&
+          center.amount === originalData.amount &&
+          center.time === originalData.time &&
+          center.programName === originalData.programName &&
+          center.programLevel === originalData.programLevel &&
+          center.centerName === originalData.centerName &&
+          center.mode === originalData.mode
+      );
+
+      if (!centerToUpdate) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Center to update not found" });
+      }
+
+      centerToUpdate.packageName = packageName;
+      centerToUpdate.classes = classes;
+      centerToUpdate.amount = amount;
+
+      await doc.save();
+
+      return res.json({
+        success: true,
+        message: "Hybrid package updated successfully",
+        data: doc,
+      });
+    }
+
+    // 💻 Online Package Update
+    else if (mode === "Online") {
+      doc = await Model.findOne({
+        packageName: originalData.packageName,
+        classes: originalData.classes,
+        amount: originalData.amount,
+        time: originalData.time,
+        programName: originalData.programName,
+        programLevel: originalData.programLevel,
+        mode: "Online",
+      });
+
+      if (!doc) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Online package not found" });
+      }
+
+      doc.packageName = packageName;
+      doc.classes = classes;
+      doc.amount = amount;
+
+      await doc.save();
+
+      return res.json({
+        success: true,
+        message: "Online package updated successfully",
+        data: doc,
+      });
+    }
+
+    // 🏫 Offline Package Update
+    else if (mode === "Offline") {
+      doc = await Model.findOne({
+        centers: {
+          $elemMatch: {
+            packageName: originalData.packageName,
+            classes: originalData.classes,
+            amount: originalData.amount,
+            time: originalData.time,
+            programName: originalData.programName,
+            programLevel: originalData.programLevel,
+            centerName: originalData.centerName,
+          },
+        },
+      });
+
+      if (!doc) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Offline center not found" });
+      }
+
+      const centerToUpdate = doc.centers.find(
+        (center) =>
+          center.packageName === originalData.packageName &&
+          center.classes === originalData.classes &&
+          center.amount === originalData.amount &&
+          center.time === originalData.time &&
+          center.programName === originalData.programName &&
+          center.programLevel === originalData.programLevel &&
+          center.centerName === originalData.centerName
+      );
+
+      if (!centerToUpdate) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Center to update not found" });
+      }
+
+      centerToUpdate.packageName = packageName;
+      centerToUpdate.classes = classes;
+      centerToUpdate.amount = amount;
+
+      await doc.save();
+
+      return res.json({
+        success: true,
+        message: "Offline package updated successfully",
+        data: doc,
+      });
+    }
+  } catch (err) {
+    console.error("Error in updating the package:", err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
+
+const deletePackageData = async (req, res) => {
+  try {
+    console.log("Welcome to delete the data", req.body);
+
+    const deleteItems = req.body.deletePackage;
+
+    if (!deleteItems || deleteItems.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No data to delete" });
+    }
+
+    for (const item of deleteItems) {
+      let { mode, originalData, packageType } = item;
+
+      if (!mode || !originalData) continue;
+
+      // Normalize mode (Online, Offline, Hybrid)
+      mode = mode.charAt(0).toUpperCase() + mode.slice(1).toLowerCase();
+
+      if (packageType === "Hybrid") {
+        console.log("Am inside hybrid");
+        console.log("originalData", originalData);
+
+        const centerMode = originalData.mode.toLowerCase(); // normalize for exact match
+
+        const result = await hybridClassSchema.updateOne(
+          {
+            mode: "Hybrid",
+          },
+          {
+            $pull: {
+              centers: {
+                packageName: originalData.packageName,
+                classes: originalData.classes,
+                amount: originalData.amount,
+                time: originalData.time,
+                programName: originalData.programName,
+                programLevel: originalData.programLevel,
+                centerName: originalData.centerName,
+                mode: centerMode,
+              },
+            },
+          }
+        );
+
+        if (result.modifiedCount > 0) {
+          console.log(
+            `✅ Deleted hybrid center from '${originalData.centerName}'`
+          );
+        } else {
+          console.log("❌ No matching hybrid center found to delete");
+        }
+      }
+
+      if (mode === "Online") {
+        console.log("");
+        // Delete from OnlineClass collection
+        await OnlineClass.findOneAndDelete({
+          packageName: originalData.packageName,
+          classes: originalData.classes,
+          amount: originalData.amount,
+          time: originalData.time,
+          programName: originalData.programName,
+          programLevel: originalData.programLevel,
+          mode: "Online",
+        });
+      } else if (mode === "Offline") {
+        // Delete from offlineclassPackage centers array
+        const doc = await offlineclassPackage.findOne({
+          mode: "Offline",
+          centers: {
+            $elemMatch: {
+              packageName: originalData.packageName,
+              classes: originalData.classes,
+              amount: originalData.amount,
+              time: originalData.time,
+              programName: originalData.programName,
+              programLevel: originalData.programLevel,
+              centerName: originalData.centerName,
+            },
+          },
+        });
+
+        if (doc) {
+          doc.centers = doc.centers.filter(
+            (center) =>
+              !(
+                center.packageName === originalData.packageName &&
+                center.classes === originalData.classes &&
+                center.amount === originalData.amount &&
+                center.time === originalData.time &&
+                center.programName === originalData.programName &&
+                center.programLevel === originalData.programLevel &&
+                center.centerName === originalData.centerName
+              )
+          );
+          await doc.save();
+        }
+      }
+    }
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Package(s) deleted successfully" });
+  } catch (err) {
+    console.log("Error in deleting the data", err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
+
+const sendSelectedPackageData = async (req, res) => {
+  try {
+    console.log("Selected package data", req.body);
+    const { enqId } = req.params;
+    const { packageData } = req.body;
+
+    if (!packageData) {
+      return res.status(400).json({ message: "Package data is required." });
+    }
+
+    const paymentId = `PAY-${uuidv4().slice(0, 8).toUpperCase()}`;
+
+    const newPackage = new packagePaymentData({
+      paymentId,
+      enqId: packageData.enqId || enqId,
+      kidName: packageData.kidName,
+      kidId: packageData.kidId,
+      whatsappNumber: packageData.whatsappNumber,
+      programs: packageData.programs,
+      classMode: packageData.classMode,
+      discount: packageData.discount,
+      baseAmount: packageData.baseAmount,
+      totalAmount: packageData.totalAmount,
+      packageId: packageData.packageId,
+      selectedPackage: packageData.selectedPackage,
+      onlineClasses: packageData.onlineClasses,
+      offlineClasses: packageData.offlineClasses,
+      centerId: packageData.centerId || null,
+      centerName: packageData.centerName,
+    });
+
+    const savedPackage = await newPackage.save();
+
+    res.status(201).json({
+      message: "Package data saved successfully.",
+      paymentId,
+      data: savedPackage,
+    });
+  } catch (err) {
+    console.error("Error in saving the selected package data", err);
+    res
+      .status(500)
+      .json({ message: "Failed to save package data.", error: err.message });
+  }
+};
+
+const getThePaymentData = async (req, res) => {
+  try {
+    const { paymentId } = req.params;
+
+    const paymentDetails = await packagePaymentData.findOne({
+      paymentId: paymentId,
+    });
+
+    if (!paymentDetails) {
+      return res.status(404).json({ message: "Payment not found" });
+    }
+
+    res.status(200).json(paymentDetails);
+  } catch (err) {
+    console.log("Error in getting the payment data", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+const updatePaymentDetails = async (req, res) => {
+  try {
+    const { data } = req.body;
+    console.log("data", data);
+
+    const newData = await packagePaymentData.findOne(
+      { paymentId: data.paymentId },
+      { kidId: 1, enqId: 1 }
+    );
+
+    if (!newData) {
+      return res.status(404).json({ message: "No data found with given paymentId" });
+    }
+
+    const updatedPackage = await packagePaymentData.findOneAndUpdate(
+      { paymentId: data.paymentId },
+      {
+        paymentStatus: data.status,
+        transactionId: data.transactionId,
+        paymentMode: data.paymentMode,
+        remarks: data.remarks,
+        documentUrl: data.documentUrl,
+      },
+      { new: true }
+    );
+
+    if (data.status === "Success") {
+      await kidSchema.findOneAndUpdate(
+        { _id: newData.kidId },
+        { $set: { status: "Active" } }
+      );
+
+      await enquiryData.findOneAndUpdate(
+        { _id: newData.enqId },
+        { $set: { enquiryStatus: "Active", paymentStatus: "Success" } }
+      );
+    }
+
+    if (!updatedPackage) {
+      return res
+        .status(404)
+        .json({ message: "Package not found with given paymentId" });
+    }
+
+    res.status(200).json({
+      message: "Manual payment data stored for verification",
+      updatedPackage,
+    });
+  } catch (err) {
+    console.error("Error in updating the payment data", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const getInvoiceData = async (req, res) => {
+  try {
+    const invoiceData = await packagePaymentData.find();
+
+    if (!invoiceData || invoiceData.length === 0) {
+      return res.status(404).json({ message: "No invoice data found" });
+    }
+
+    res.status(200).json({
+      message: "Invoice data fetched successfully",
+      data: invoiceData,
+    });
+  } catch (err) {
+    console.error("Error fetching invoice data", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+const getThePaymentId = async (req, res) => {
+  try {
+    const { enqId } = req.params;
+
+    const paymentData = await packagePaymentData.findOne({ enqId:enqId },{paymentId:1});
+
+    if (!paymentData) {
+      return res.status(404).json({ message: "Payment data not found" });
+    }
+
+    res.status(200).json({ message: "Payment data retrieved successfully", paymentData });
+  } catch (err) {
+    console.error("Error in getting the payment id", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 
 
@@ -2154,7 +3074,19 @@ const saveOfflineClassPackage  = async(req,res)=>{
 
 
 module.exports = {
-  saveOfflineClassPackage,
+  getThePaymentId,
+  getInvoiceData,
+  getAllProgrameDataTable,
+  updatePaymentDetails,
+  getThePaymentData,
+  sendSelectedPackageData,
+  deleteTheVoucherData,
+  getTheVoucherData,
+  deletePackageData,
+  editPackageData,
+  submitKitPriceData,
+  submitHybridClassPrice,
+  submitPhysicalCenterClassPrice,
   saveOnlineClassPackage,
   getIndividualEmployeeAttendance,
   getAvailableProgramData,
@@ -2183,6 +3115,7 @@ module.exports = {
   getPhysicalCenterData,
   savePhysicalCenterData,
   getAllVouchers,
+  updateTheVoucherData,
   addNewVoucher,
   insertPackage,
   createUser,

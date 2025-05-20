@@ -21,8 +21,11 @@ const Voucher = require("../../../model/discount_voucher/voucherModel");
 const PhysicalCenters = require("../../../model/physicalcenter/physicalCenterShema");
 const classPaymentModel = require("../../../model/classPaymentModel");
 const { CALLING_API } = require("../../../config/variables/variables");
+const onlineClassPackage = require("../../../model/class/onlineClassPackage")
+const offlineClassPackage  = require("../../../model/class/offlineClassPackage")
+const hybridClassPackage = require("../../../model/class/hybridClassPackage")
+const kitPackages = require("../../../model/class/kitPrice")
 
-// Email Verification
 
 const registerEmployee = async (req, res) => {
   try {
@@ -2679,7 +2682,7 @@ const getAllAttandanceData = async (req, res) => {
 
 const getAllSheduleClass = async (req, res) => {
   try {
-    const scheduleData = await ClassSchedule.find({ classType: "Demo" });
+    const scheduleData = await ClassSchedule.find({ isDemoAdded:true });
     console.log("Demo Class Schedule Data:", scheduleData);
 
     res.status(200).json({
@@ -2762,8 +2765,8 @@ const getDemoClassAndStudentsData = async (req, res) => {
     // Find class data matching program and level
     const classData = await ClassSchedule.find({
       $or: programFilters, // Match any program and level from kidsData
-      classType: "Demo", // Ensure the class type is "Demo"
-      status: "Scheduled", // Match only scheduled classes
+      isDemoAdded:true, // Ensure the class type is "Demo"
+      // status: "Scheduled", // Match only scheduled classes
     });
 
     if (!classData.length) {
@@ -2805,7 +2808,7 @@ const getSheduledDemoClassDataOfKid = async (req, res) => {
     // Iterate over each program and level and fetch classes
     const classData = await ClassSchedule.find({
       $and: [
-        { classType: "Demo" }, // Match classType
+        { isDemoAdded:true }, // Match classType
         { status: "Scheduled" }, // Match status
         { selectedStudents: { $elemMatch: { kidId } } }, // Match kidId in selectedStudents
         {
@@ -3371,15 +3374,31 @@ const savePaymentData = async (req, res) => {
 
 const getPackageData = async (req, res) => {
   try {
-    const packageData = await packageSchema.find();
-    res.status(200).json({ success: true, data: packageData });
+    const onlinePackageData = await onlineClassPackage.find();
+    const offlineClassPackageData = await offlineClassPackage.find();
+    const hybridClassPackageData = await hybridClassPackage.find();
+    const kitPrice = await kitPackages.find();
+
+    res.status(200).json({
+      success: true,
+      message: "All package data fetched successfully",
+      data: {
+        onlinePackageData,
+        offlineClassPackageData,
+        hybridClassPackageData,
+        kitPrice,
+      },
+    });
   } catch (err) {
     console.error("Error fetching package data:", err);
-    res
-      .status(500)
-      .json({ success: false, error: "Failed to fetch package data" });
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch package data",
+      error: err.message,
+    });
   }
 };
+
 
 const getDiscountVouchers = async (req, res) => {
   try {
@@ -3664,12 +3683,13 @@ const makeaCallToParent = async (req, res) => {
     const { mobile } = req.body;
 
     // Make the request to the external API
-    const response = await fetch(`${CALLING_API}=${mobile}`, {
-      method: "POST",
-    });
+    // const response = await fetch(`${CALLING_API}=${mobile}`, {
+    //   method: "POST",
+    // });
 
-    const data = await response.json();
-    res.json(data);
+    // const data = await response.json();
+    // res.json(data);
+    res.status(200).json()
   } catch (error) {
     console.error("Error calling external API:", error);
     res.status(500).json({ success: false, message: error.message });

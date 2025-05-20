@@ -304,6 +304,9 @@ import SuperAdminShowAllTask from "./pages/employee/superadmin/SuperAdminShowAll
 import SuperAdminShowAllLeaves from "./pages/employee/superadmin/SuperAdminShowAllLeaves";
 import SuperAdminLeaveForm from "./pages/employee/superadmin/SuperAdminLeaveForm";
 import SuperAdminIndividualAttandaceData from "./pages/employee/superadmin/SuperAdminIndividualAttandaceData";
+import EditDiscountPage from "./pages/employee/superadmin/EditDiscountPage";
+import PaymentVerificationPage from "./pages/employee/superadmin/package/PaymentVerificationPage";
+import SuperAdminInvoicePage from "./pages/employee/superadmin/SuperAdminInvoicePage";
 
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
@@ -1011,7 +1014,6 @@ function App() {
           <Route path="/super-admin/department/employee-mark-attandance" element={<SuperAdminMarkAttandance />}/>
           <Route path="/super-admin/department/employee-attandance-list" element={<SuperAdminEmployeeAttandancePage />}/>
           <Route path="/super-admin/department/individual-employee-attandance-data/:employeeId" element={<SuperAdminIndividualAttandaceData />}/>
-
           <Route path="/super-admin/department/assign-new-task"  element={<SuperadminMyAssignTasks />}/>
           <Route path="/super-admin/department/task-table" element={<SuperadminMyTasks />}/>
           <Route path="/super-admin/department/taskslogs/:id"  element={<SuperAdminTaskAllLogs />}/>
@@ -1020,8 +1022,11 @@ function App() {
           <Route path="/super-admin/department/leaves"  element={<SuperadminLeaves />} />
           <Route path="/super-admin/department/show-all-leaves"  element={<SuperAdminShowAllLeaves />} />
           <Route path="/super-admin/department/edit-leaves/:id" element={<SuperadminLeavesAdd />} />
-
           <Route path="/super-admin/department/new-leave-form" element={<SuperAdminLeaveForm />} />
+          <Route path="/super-admin/department/package-table"  element={<SuperAdminPackageTableList />} />   
+          <Route path="/super-admin/department/payment-details/:encodedData" element={<PaymentVerificationPage />}/> 
+          <Route path="/super-admin/department/invoice-table" element={<SuperAdminInvoicePage />}/> 
+
 
 
 
@@ -1038,8 +1043,9 @@ function App() {
           <Route path="/super-admin/department/active-kid-data" element={<SuperAdminActiveKidData />}/>
           <Route path="/super-admin/department/discount-table" element={<VoucherTablePage />}/>
           <Route path="/super-admin/department/discount-form" element={<DiscountFormPage />}/>
+          <Route path="/super-admin/department/edit-discount-form/:voucherId" element={<EditDiscountPage />}/>
+
           <Route path="/super-admin/department/add-package-form" element={<SuperAdminAddPackageForm />}/>
-          <Route path="/super-admin/department/package-table"  element={<SuperAdminPackageTableList />} />   
 
 
           <Route path="/super-admin/department/schedule-demo-class-list-individually/:enqId/:isSheduled" element={<SuperAdminAssignNewClass />}/>

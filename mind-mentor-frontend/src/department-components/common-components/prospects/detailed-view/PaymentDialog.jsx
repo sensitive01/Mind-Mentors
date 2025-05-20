@@ -4,358 +4,206 @@ import { formatWhatsAppNumber } from "../../../../utils/formatContacts";
 import {
   fetchPackageDetails,
   getDiscountAmount,
-  sendPaymentDetailsLink,
+  sendPackageSelection,
 } from "../../../../api/service/employee/EmployeeService";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useNavigate } from "react-router-dom"; // Import navigate hook for React Router
 
-const PaymentDialog = ({ open, onClose, data, enqId }) => {
+const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
+  const navigate = useNavigate(); // Initialize navigate hook
+  const [packageType, setPackageType] = useState("");
+  const [packages, setPackages] = useState({
+    online: [],
+    offline: [],
+    hybrid: [],
+    kit: [],
+  });
+
   const [selectedPackage, setSelectedPackage] = useState("");
+  const [selectedProgram, setSelectedProgram] = useState("");
+  const [selectedLevel, setSelectedLevel] = useState("");
+  const [selectedCenter, setSelectedCenter] = useState("");
+  const [centersList, setCentersList] = useState([]);
+
   const [onlineClasses, setOnlineClasses] = useState(0);
   const [offlineClasses, setOfflineClasses] = useState(0);
-  const [customAmount, setCustomAmount] = useState(0);
+  const [onlineRate, setOnlineRate] = useState(100);
+  const [offlineRate, setOfflineRate] = useState(125);
+
   const [kitItems, setKitItems] = useState([{ name: "", quantity: 0 }]);
-  const [packages, setPackages] = useState([]);
   const [kitItemsList, setKitItemsList] = useState([]);
+
   const [discount, setDiscount] = useState(0);
-  const [physicalCenters, setPhysicalCenters] = useState([]);
-  const [selectedCenter, setSelectedCenter] = useState("");
-  const [availableCenters, setAvailableCenters] = useState([]);
-  const [groupedPackages, setGroupedPackages] = useState([]);
-  const [showCenterSelection, setShowCenterSelection] = useState(false);
+  const [baseAmount, setBaseAmount] = useState(0);
+  const [totalAmount, setTotalAmount] = useState(0);
 
-  const GST_RATE = 0.18;
-  const DEFAULT_ONLINE_RATE = 400;
-  const DEFAULT_OFFLINE_RATE = 600;
+  const [paymentId, setPaymentId] = useState("");
 
   useEffect(() => {
-    const fetchPackage = async () => {
-      const response = await fetchPackageDetails();
-      if (response.status === 200) {
-        const hybridPricing = {
-          online:
-            response.data.data.find(
-              (pkg) => pkg.type === "hybrid" && pkg.onlineClasses === 1
-            )?.pricing?.amount || DEFAULT_ONLINE_RATE,
-          offline:
-            response.data.data.find(
-              (pkg) => pkg.type === "hybrid" && pkg.physicalClasses === 1
-            )?.pricing?.amount || DEFAULT_OFFLINE_RATE,
-        };
+    const fetchData = async () => {
+      try {
+        const packageResponse = await fetchPackageDetails();
+        if (packageResponse.status === 200) {
+          const packageData = packageResponse.data.data;
 
-        const packageGroups = response.data.data.reduce((groups, pkg) => {
-      
-          const normalizedName = pkg.packageName.toLowerCase();
-          const key = `${pkg.type}:${normalizedName}`;
+          setPackages({
+            online: packageData.onlinePackageData || [],
+            offline: packageData.offlineClassPackageData || [],
+            hybrid: packageData.hybridClassPackageData || [],
+            kit: packageData.kitPrice || [],
+          });
 
-          if (!groups[key]) {
-            groups[key] = {
-              ...pkg,
-              centers:
-                pkg.type === "offline"
-                  ? [
-                      {
-                        centerId: pkg.centerId,
-                        centerName: pkg.centerName,
-                        packageId: pkg.packageId,
-                        _id: pkg._id,
-                        pricing: pkg.pricing,
-                      },
-                    ]
-                  : [],
-            };
-          } else if (pkg.type === "offline" && pkg.centerId) {
-          
-            groups[key].centers.push({
-              centerId: pkg.centerId,
-              centerName: pkg.centerName,
-              packageId: pkg.packageId,
-              _id: pkg._id,
-              pricing: pkg.pricing,
-            });
+          if (packageData.kitPrice && packageData.kitPrice.length > 0) {
+            setKitItemsList(packageData.kitPrice);
           }
-          return groups;
-        }, {});
+        }
 
-        const groupedPackagesArray = Object.values(packageGroups);
-        setGroupedPackages(groupedPackagesArray);
-
-        const allCenters = response.data.data
-          .filter((pkg) => pkg.type === "offline" && pkg.centerId)
-          .map((pkg) => ({
-            centerId: pkg.centerId,
-            centerName: pkg.centerName,
-          }));
-
-        // Remove duplicates based on centerId
-        const uniqueCenters = Array.from(
-          new Map(
-            allCenters.map((center) => [center.centerId, center])
-          ).values()
-        );
-        setPhysicalCenters(uniqueCenters);
-
-        // Filter out hybrid packages with the same name
-        const uniquePackages = response.data.data.reduce((acc, curr) => {
-          if (
-            curr.type === "hybrid" &&
-            curr.packageName === "Hybrid day classes"
-          ) {
-            const existingPackage = acc.find(
-              (p) => p.packageName === curr.packageName
-            );
-            if (!existingPackage) {
-              return [
-                ...acc,
-                {
-                  ...curr,
-                  hybridPricing,
-                },
-              ];
-            }
-            return acc;
-          }
-          return [...acc, curr];
-        }, []);
-
-        const kitItems = response.data.data.filter((pkg) => pkg.type === "kit");
-        setKitItemsList(kitItems);
-
-        const updatedPackages = [
-          ...groupedPackagesArray,
-          {
-            _id: "CUSTOM",
-            type: "custom",
-            packageName: "Custom Package",
-            onlineClasses: 0,
-            physicalClasses: 0,
-            hybridPricing,
-          },
-          {
-            _id: "KIT",
-            type: "kit",
-            packageName: "Kit/Items",
-          },
-        ];
-        setPackages(updatedPackages);
+        const discountResponse = await getDiscountAmount(enqId);
+        if (discountResponse.status === 200) {
+          setDiscount(discountResponse.data.vouchers || 0);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        toast.error("Failed to load package data");
       }
     };
-    fetchPackage();
-  }, []);
 
-  useEffect(() => {
-    const fetchDiscount = async () => {
-      const response = await getDiscountAmount(enqId);
-      if (response.status === 200) {
-        setDiscount(response.data.vouchers);
-     
-        if (
-          response.data.physicalCenter &&
-          response.data.physicalCenter.length > 0
-        ) {
-          setPhysicalCenters(response.data.physicalCenter);
-        }
-      }
-    };
-    fetchDiscount();
-  }, []);
+    fetchData();
+  }, [enqId]);
 
+  const handlePackageTypeChange = (type) => {
+    setPackageType(type);
+    resetSelections();
 
-  useEffect(() => {
-    const selected = packages.find((pkg) => pkg._id === selectedPackage);
-
-    if (selected) {
-      // If the selected package has centers property, use those centers
-      if (selected.centers && selected.centers.length > 0) {
-        setAvailableCenters(selected.centers);
-        // Auto-select the first center if none is selected
-        if (!selectedCenter && selected.centers.length > 0) {
-          setSelectedCenter(selected.centers[0].centerId);
-        }
-        setShowCenterSelection(true);
-      } else if (selected.type === "offline") {
-        // For backwards compatibility with old offline packages
-        const centerInfo = {
-          centerId: selected.centerId,
-          centerName: selected.centerName,
-        };
-        setAvailableCenters([centerInfo]);
-        setSelectedCenter(selected.centerId);
-        setShowCenterSelection(true);
-      } else if (selected.type === "custom" && offlineClasses > 0) {
-        // For custom package with offline classes, use all available centers
-        setAvailableCenters(physicalCenters);
-        setShowCenterSelection(true);
-        // Auto-select first center if none selected and centers are available
-        if (!selectedCenter && physicalCenters.length > 0) {
-          setSelectedCenter(physicalCenters[0].centerId);
-        }
-      } else {
-        // For other package types with no offline classes
-        setShowCenterSelection(false);
-        setAvailableCenters([]);
-        setSelectedCenter("");
-      }
+    if (type === "offline" && packages.offline.length > 0) {
+      const centersList = packages.offline[0].centers.map((center) => ({
+        centerId: center.centerId,
+        centerName: center.centerName,
+      }));
+      const uniqueCenters = [
+        ...new Map(centersList.map((item) => [item.centerId, item])).values(),
+      ];
+      setCentersList(uniqueCenters);
+    } else if (type === "hybrid" && packages.hybrid.length > 0) {
+      const centersList = packages.hybrid[0].centers.map((center) => ({
+        centerId: center.centerId,
+        centerName: center.centerName,
+      }));
+      const uniqueCenters = [
+        ...new Map(centersList.map((item) => [item.centerId, item])).values(),
+      ];
+      setCentersList(uniqueCenters);
+    } else if (type === "online" && packages.online.length > 0) {
+      setCentersList(packages.online[0].centers || []);
     } else {
-      setAvailableCenters([]);
-      setShowCenterSelection(false);
+      setCentersList([]);
     }
-  }, [selectedPackage, packages, physicalCenters]);
-
-  // Effect to show/hide center selection when offline classes change
-  useEffect(() => {
-    if (offlineClasses > 0) {
-      setShowCenterSelection(true);
-      setAvailableCenters(physicalCenters);
-      // Auto-select first center if none selected and centers are available
-      if (!selectedCenter && physicalCenters.length > 0) {
-        setSelectedCenter(physicalCenters[0].centerId);
-      }
-    } else {
-      // For online-only packages, hide center selection
-      const selected = packages.find((pkg) => pkg._id === selectedPackage);
-      if (selected && selected.type !== "offline") {
-        setShowCenterSelection(false);
-        setSelectedCenter("");
-      }
-    }
-  }, [offlineClasses, physicalCenters, selectedPackage, packages]);
-
-  // Function to determine if center selection should be shown
-  const shouldShowCenterSelection = () => {
-    const selected = packages.find((pkg) => pkg._id === selectedPackage);
-
-    return (
-      selected?.type === "offline" ||
-      (selected?.type === "hybrid" && offlineClasses > 0) ||
-      (selected?.type === "custom" && offlineClasses > 0)
-    );
   };
 
-  const calculateTotalAmount = () => {
-    const selected = packages.find((pkg) => pkg._id === selectedPackage);
-    if (!selected)
-      return { baseAmount: 0, gstAmount: 0, discountAmount: 0, totalAmount: 0 };
+  const resetSelections = () => {
+    setSelectedPackage("");
+    setSelectedProgram("");
+    setSelectedLevel("");
+    setSelectedCenter("");
+    setOnlineClasses(0);
+    setOfflineClasses(0);
+    setKitItems([{ name: "", quantity: 0 }]);
+    setBaseAmount(0);
+    setTotalAmount(0);
+    setPaymentId("");
+  };
 
-    let baseAmount = 0;
-    if (selected.type === "hybrid" || selected.type === "custom") {
-      const onlineRate = selected.hybridPricing?.online || DEFAULT_ONLINE_RATE;
-      const offlineRate =
-        selected.hybridPricing?.offline || DEFAULT_OFFLINE_RATE;
-      const classesAmount =
-        onlineClasses * onlineRate + offlineClasses * offlineRate;
+  const calculateAmounts = () => {
+    let base = 0;
 
-      if (selected.type === "custom") {
-        baseAmount = classesAmount + customAmount;
-      } else {
-        baseAmount = classesAmount;
+    if (packageType === "online" || packageType === "offline") {
+      if (selectedPackage) {
+        if (packageType === "online") {
+          const pkg = packages.online.find((p) => p._id === selectedPackage);
+          if (pkg) base = pkg.amount;
+        } else {
+          const foundPackage = packages.offline[0]?.centers.find(
+            (c) => c._id === selectedPackage
+          );
+          if (foundPackage) base = foundPackage.amount;
+        }
       }
-    } else if (selected.type === "kit") {
-      baseAmount = kitItems.reduce((total, item) => {
-        const kitPackage = kitItemsList.find(
-          (kit) => kit.packageName === item.name
+    } else if (packageType === "hybrid") {
+      if (selectedCenter && packages.hybrid.length > 0) {
+        const centerPackages = packages.hybrid[0].centers.filter(
+          (c) => c.centerId === selectedCenter
         );
-        return total + item.quantity * (kitPackage?.pricing?.amount || 0);
+
+        const onlinePkg = centerPackages.find((c) => c.mode === "online");
+        const offlinePkg = centerPackages.find((c) => c.mode === "offline");
+
+        const currentOnlineRate = onlinePkg
+          ? onlinePkg.oneClassPrice
+          : onlineRate;
+        const currentOfflineRate = offlinePkg
+          ? offlinePkg.oneClassPrice
+          : offlineRate;
+
+        setOnlineRate(currentOnlineRate);
+        setOfflineRate(currentOfflineRate);
+
+        base =
+          onlineClasses * currentOnlineRate +
+          offlineClasses * currentOfflineRate;
+      } else {
+        base = onlineClasses * onlineRate + offlineClasses * offlineRate;
+      }
+    } else if (packageType === "kit") {
+      base = kitItems.reduce((total, item) => {
+        const kitItem = kitItemsList.find((k) => k._id === item.name);
+        return total + (kitItem ? kitItem.amount * item.quantity : 0);
       }, 0);
-    } else if (
-      selected.type === "offline" &&
-      selected.centers &&
-      selected.centers.length > 0
-    ) {
-      // For grouped offline packages, get price from the selected center
-      const selectedCenterDetails = selected.centers.find(
-        (center) => center.centerId === selectedCenter
-      );
-      baseAmount =
-        selectedCenterDetails?.pricing?.amount || selected.pricing.amount;
-    } else {
-      baseAmount = selected.pricing.amount;
     }
 
-    const discountAmount = discount || 0;
-    const discountedBaseAmount = Math.max(baseAmount - discountAmount, 0);
-    const gstAmount = discountedBaseAmount * GST_RATE;
-    const totalAmount = discountedBaseAmount + gstAmount;
+    const discountedTotal = Math.max(base - discount, 0);
 
-    return {
-      baseAmount,
-      discountAmount,
-      gstAmount,
-      totalAmount,
-    };
+    setBaseAmount(base);
+    setTotalAmount(discountedTotal);
+
+    return { baseAmount: base, totalAmount: discountedTotal };
   };
 
-  const generatePaymentLink = async () => {
-    const selected = packages.find((pkg) => pkg._id === selectedPackage);
-    if (!selected) return;
+  const handlePackageChange = (e) => {
+    setSelectedPackage(e.target.value);
 
-    // Check if a center is selected when it should be
-    const needsCenter = shouldShowCenterSelection();
-
-    if (needsCenter && !selectedCenter && availableCenters.length > 0) {
-      toast.error("Please select a physical center for offline classes");
-      return;
-    }
-
-    // Find selected center details
-    const centerDetails =
-      availableCenters.find((center) => center.centerId === selectedCenter) ||
-      physicalCenters.find((center) => center.centerId === selectedCenter);
-
-    const paymentData = {
-      packageId:selected._id,
-      enqId,
-      selectedPackage: selected.packageName,
-      onlineClasses: Number(onlineClasses) || Number(selected.onlineClasses),
-      offlineClasses:
-        Number(offlineClasses) || Number(selected.physicalClasses),
-      kidName: data?.kidName,
-      kidId: data.kidId,
-      whatsappNumber: data?.whatsappNumber,
-      programs: data?.programs,
-      classMode:selected.type,
-      customAmount: selected.type === "custom" ? customAmount : 0,
-      kitItems: selected.type === "kit" ? kitItems : [],
-      discount: discount,
-      centerId: selectedCenter || "",
-      centerName: centerDetails?.centerName || "",
-      
-      ...calculateTotalAmount(),
-    };
-
-    // Log all selected data to console
-    console.log("Payment Data:", paymentData);
-
-    const encodedData = btoa(JSON.stringify(paymentData));
-    const baseUrl = window.location.origin;
-    const link = `${baseUrl}/payment-details/${encodedData}`;
-    const parentLink = `/payment-details/${encodedData}`;
-
-    console.log("Payment Link:", link);
-
-    try {
-      const response = await sendPaymentDetailsLink(paymentData, data._id,parentLink);
-      if (response.status === 200) {
-        toast.success("Payment request submitted successfully");
-        setTimeout(() => {
-          onClose();
-          window.location.reload(); // Refresh the page
-        }, 1500);
-      } else {
-        toast.error("Failed to submit payment request");
+    if (packageType === "online") {
+      const pkg = packages.online.find((p) => p._id === e.target.value);
+      if (pkg) {
+        setSelectedProgram(pkg.programName);
+        setSelectedLevel(pkg.programLevel);
       }
-      
-    } catch (error) {
-      toast.error("An error occurred: " + error.message);
+    } else if (packageType === "offline") {
+      const pkg = packages.offline[0]?.centers.find(
+        (c) => c._id === e.target.value
+      );
+      if (pkg) {
+        setSelectedProgram(pkg.programName);
+        setSelectedLevel(pkg.programLevel);
+        setSelectedCenter(pkg.centerId);
+      }
     }
   };
 
-  const selectedPackageDetails = packages.find(
-    (pkg) => pkg._id === selectedPackage
-  );
+  const handleCenterChange = (e) => {
+    setSelectedCenter(e.target.value);
 
-  const addKitItem = () => {
-    setKitItems([...kitItems, { name: "", quantity: 0 }]);
+    if (packageType === "hybrid" && packages.hybrid.length > 0) {
+      const centerPackages = packages.hybrid[0].centers.filter(
+        (c) => c.centerId === e.target.value
+      );
+
+      const onlinePkg = centerPackages.find((c) => c.mode === "online");
+      const offlinePkg = centerPackages.find((c) => c.mode === "offline");
+
+      if (onlinePkg) setOnlineRate(onlinePkg.oneClassPrice);
+      if (offlinePkg) setOfflineRate(offlinePkg.oneClassPrice);
+    }
   };
 
   const updateKitItem = (index, field, value) => {
@@ -364,91 +212,161 @@ const PaymentDialog = ({ open, onClose, data, enqId }) => {
     setKitItems(newKitItems);
   };
 
+  const addKitItem = () => {
+    setKitItems([...kitItems, { name: "", quantity: 0 }]);
+  };
+
   const removeKitItem = (index) => {
-    const newKitItems = kitItems.filter((_, i) => i !== index);
-    setKitItems(newKitItems);
-  };
-
-  // Handle offline classes input change
-  const handleOfflineClassesChange = (value) => {
-    const newValue = Number(value);
-    setOfflineClasses(newValue);
-
-    // Show or hide center selection based on offline classes value
-    if (newValue > 0) {
-      setShowCenterSelection(true);
-      setAvailableCenters(physicalCenters);
-      if (!selectedCenter && physicalCenters.length > 0) {
-        setSelectedCenter(physicalCenters[0].centerId);
-      }
-    } else {
-      // Only hide if not an offline package
-      const selected = packages.find((pkg) => pkg._id === selectedPackage);
-      if (selected && selected.type !== "offline") {
-        setShowCenterSelection(false);
-        setSelectedCenter("");
-      }
+    if (kitItems.length > 1) {
+      const newKitItems = kitItems.filter((_, i) => i !== index);
+      setKitItems(newKitItems);
     }
   };
 
-  // Handle package selection change
-  const handlePackageChange = (e) => {
-    const packageId = e.target.value;
-    setSelectedPackage(packageId);
-    const selected = packages.find((pkg) => pkg._id === packageId);
+  const sendPackageDetails = async () => {
+    try {
+      if (!packageType) {
+        toast.error("Please select a package type");
+        return;
+      }
 
-    // Reset all input states
-    setOnlineClasses(selected?.onlineClasses || 0);
-    setOfflineClasses(selected?.physicalClasses || 0);
-    setCustomAmount(0);
-    setKitItems([{ name: "", quantity: 0 }]);
-
-    // Handle centers for offline packages
-    if (selected) {
       if (
-        selected.type === "offline" &&
-        selected.centers &&
-        selected.centers.length > 0
+        (packageType === "online" || packageType === "offline") &&
+        !selectedPackage
       ) {
-        setShowCenterSelection(true);
-        setAvailableCenters(selected.centers);
-        setSelectedCenter(selected.centers[0].centerId);
-      } else if (selected.type === "offline") {
-        setShowCenterSelection(true);
-        setAvailableCenters([
-          {
-            centerId: selected.centerId,
-            centerName: selected.centerName,
-          },
-        ]);
-        setSelectedCenter(selected.centerId);
-      } else {
-        // For non-offline packages, hide center selection
-        setShowCenterSelection(false);
-        setSelectedCenter("");
+        toast.error("Please select a package");
+        return;
       }
+
+      if (packageType === "hybrid" && onlineClasses + offlineClasses === 0) {
+        toast.error("Please enter number of classes");
+        return;
+      }
+
+      if (
+        packageType === "kit" &&
+        (!kitItems[0].name || kitItems[0].quantity === 0)
+      ) {
+        toast.error("Please select at least one kit item");
+        return;
+      }
+
+      if (
+        (packageType === "offline" || packageType === "hybrid") &&
+        !selectedCenter
+      ) {
+        toast.error("Please select a center");
+        return;
+      }
+
+      const amounts = calculateAmounts();
+
+      let packageData = {
+        enqId,
+        kidName: data?.kidName,
+        kidId: data.kidId,
+        whatsappNumber: data?.whatsappNumber,
+        programs: data?.programs,
+        classMode: packageType,
+        discount: discount,
+        ...amounts,
+      };
+
+      if (packageType === "online" || packageType === "offline") {
+        const selectedPkg =
+          packageType === "online"
+            ? packages.online.find((p) => p._id === selectedPackage)
+            : packages.offline[0]?.centers.find(
+                (c) => c._id === selectedPackage
+              );
+
+        packageData = {
+          ...packageData,
+          packageId: selectedPackage,
+          selectedPackage: selectedPkg?.packageName || "",
+          onlineClasses:
+            packageType === "online" ? selectedPkg?.classes || 0 : 0,
+          offlineClasses:
+            packageType === "offline" ? selectedPkg?.classes || 0 : 0,
+          centerId: selectedCenter,
+          centerName:
+            centersList.find((c) => c.centerId === selectedCenter)
+              ?.centerName || "",
+        };
+      } else if (packageType === "hybrid") {
+        packageData = {
+          ...packageData,
+          packageId: "HYBRID-CUSTOM",
+          selectedPackage: "Custom Hybrid Package",
+          onlineClasses: Number(onlineClasses),
+          offlineClasses: Number(offlineClasses),
+          centerId: selectedCenter,
+          centerName:
+            centersList.find((c) => c.centerId === selectedCenter)
+              ?.centerName || "",
+        };
+      } else if (packageType === "kit") {
+        packageData = {
+          ...packageData,
+          packageId: "KIT-ITEMS",
+          selectedPackage: "Kit Items",
+          kitItems: kitItems.map((item) => ({
+            name:
+              kitItemsList.find((k) => k._id === item.name)?.packageName || "",
+            quantity: item.quantity,
+          })),
+        };
+      }
+
+      const response = await sendPackageSelection(packageData, data._id);
+
+      if (response.status === 201) {
+        const receivedPaymentId = response.data.paymentId;
+        setPaymentId(receivedPaymentId);
+        toast.success("Package selection submitted successfully");
+
+        // Redirect to payment-details page after 1.5 seconds
+        setTimeout(() => {
+          onClose();
+          // Redirect to payment details page with the payment ID
+          navigate(`/super-admin/department/payment-details/${receivedPaymentId}`);
+        }, 1500);
+      } else {
+        toast.error("Failed to submit package selection");
+      }
+    } catch (error) {
+      console.error("Error sending package details:", error);
+      toast.error(`Error: ${error.message}`);
     }
   };
+
+  useEffect(() => {
+    calculateAmounts();
+  }, [
+    packageType,
+    selectedPackage,
+    onlineClasses,
+    offlineClasses,
+    kitItems,
+    selectedCenter,
+  ]);
 
   return (
     <div
-      className={`fixed inset-y-0 right-0 w-full max-w-sm transform ${
+      className={`fixed inset-y-0 right-0 w-full max-w-md transform ${
         open ? "translate-x-0" : "translate-x-full"
       } transition-transform duration-300 ease-in-out bg-white shadow-lg mt-8`}
     >
-      <div className="flex flex-col h-full ">
-        {/* Header */}
-        <div className="flex-none bg-gradient-to-r from-[#642b8f] to-[#aa88be] px-6 py-4 flex justify-between items-center">
-          <h2 className="text-white text-xl font-semibold">Pay</h2>
+      <div className="flex flex-col h-full">
+        <div className="flex-none bg-gradient-to-r from-purple-700 to-purple-400 px-6 py-4 flex justify-between items-center">
+          <h2 className="text-white text-xl font-semibold">Select Package</h2>
           <button onClick={onClose} className="text-white hover:opacity-80">
             <X className="w-6 h-6" />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto bg-[#f8f9fa]">
+        <div className="flex-1 overflow-y-auto bg-gray-50">
           <div className="p-6 space-y-4">
-            {/* Kid Details Section */}
             <div className="bg-white p-4 rounded-lg shadow-sm">
               <div className="flex gap-6">
                 <div className="flex-1">
@@ -485,38 +403,175 @@ const PaymentDialog = ({ open, onClose, data, enqId }) => {
               </div>
             </div>
 
-            {/* Package Selection */}
             <div className="bg-white p-4 rounded-lg shadow-sm">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Select Package
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Package Type
               </label>
-              <select
-                value={selectedPackage}
-                onChange={handlePackageChange}
-                className="block w-full rounded-md border border-gray-300 px-4 py-2"
-              >
-                <option value="">Select package</option>
-                {packages.map((pkg) => (
-                  <option key={pkg._id} value={pkg._id}>
-                    {pkg.packageName}
-                    {pkg.centers && pkg.centers.length > 1
-                      ? ` (${pkg.centers.length} centers)`
-                      : ""}
-                  </option>
-                ))}
-              </select>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => handlePackageTypeChange("online")}
+                  className={`flex-1 py-2 px-3 rounded-md ${
+                    packageType === "online"
+                      ? "bg-purple-600 text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  Online
+                </button>
+                <button
+                  onClick={() => handlePackageTypeChange("offline")}
+                  className={`flex-1 py-2 px-3 rounded-md ${
+                    packageType === "offline"
+                      ? "bg-purple-600 text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  Offline
+                </button>
+                <button
+                  onClick={() => handlePackageTypeChange("hybrid")}
+                  className={`flex-1 py-2 px-3 rounded-md ${
+                    packageType === "hybrid"
+                      ? "bg-purple-600 text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  Hybrid
+                </button>
+                <button
+                  onClick={() => handlePackageTypeChange("kit")}
+                  className={`flex-1 py-2 px-3 rounded-md ${
+                    packageType === "kit"
+                      ? "bg-purple-600 text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  Kit
+                </button>
+              </div>
             </div>
 
-            {/* Hybrid Package Class Inputs */}
-            {(selectedPackageDetails?.type === "hybrid" ||
-              selectedPackageDetails?.type === "custom") && (
+            {packageType === "online" && (
+              <div className="bg-white p-4 rounded-lg shadow-sm">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select Online Package
+                </label>
+                <select
+                  value={selectedPackage}
+                  onChange={handlePackageChange}
+                  className="block w-full rounded-md border border-gray-300 px-4 py-2 mb-4"
+                >
+                  <option value="">Select a package</option>
+                  {packages.online.map((pkg) => (
+                    <option key={pkg._id} value={pkg._id}>
+                      {pkg.packageName} - {pkg.classes} Classes - ₹{pkg.amount}
+                    </option>
+                  ))}
+                </select>
+
+                {selectedPackage && (
+                  <div className="mt-3 space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Program:</span>
+                      <span className="font-medium">{selectedProgram}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Level:</span>
+                      <span className="font-medium">{selectedLevel}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Center:</span>
+                      <span className="font-medium">
+                        {packages.online.find((p) => p._id === selectedPackage)
+                          ?.centers?.[0]?.centerName || "Online"}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {packageType === "offline" && (
               <div className="bg-white p-4 rounded-lg shadow-sm space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Number of Online Classes (₹
-                    {selectedPackageDetails.hybridPricing?.online ||
-                      DEFAULT_ONLINE_RATE}
-                    /class)
+                    Select Center
+                  </label>
+                  <select
+                    value={selectedCenter}
+                    onChange={handleCenterChange}
+                    className="block w-full rounded-md border border-gray-300 px-4 py-2"
+                  >
+                    <option value="">Select a center</option>
+                    {centersList.map((center) => (
+                      <option key={center.centerId} value={center.centerId}>
+                        {center.centerName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {selectedCenter && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Select Package
+                    </label>
+                    <select
+                      value={selectedPackage}
+                      onChange={handlePackageChange}
+                      className="block w-full rounded-md border border-gray-300 px-4 py-2"
+                    >
+                      <option value="">Select a package</option>
+                      {packages.offline[0]?.centers
+                        .filter((center) => center.centerId === selectedCenter)
+                        .map((pkg) => (
+                          <option key={pkg._id} value={pkg._id}>
+                            {pkg.packageName} - {pkg.classes} Classes - ₹
+                            {pkg.amount}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                )}
+
+                {selectedPackage && (
+                  <div className="mt-3 space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Program:</span>
+                      <span className="font-medium">{selectedProgram}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Level:</span>
+                      <span className="font-medium">{selectedLevel}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {packageType === "hybrid" && (
+              <div className="bg-white p-4 rounded-lg shadow-sm space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select Center
+                  </label>
+                  <select
+                    value={selectedCenter}
+                    onChange={handleCenterChange}
+                    className="block w-full rounded-md border border-gray-300 px-4 py-2"
+                  >
+                    <option value="">Select a center</option>
+                    {centersList.map((center) => (
+                      <option key={center.centerId} value={center.centerId}>
+                        {center.centerName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Number of Online Classes (₹{onlineRate}/class)
                   </label>
                   <input
                     type="number"
@@ -526,17 +581,15 @@ const PaymentDialog = ({ open, onClose, data, enqId }) => {
                     min="0"
                   />
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Number of Offline Classes (₹
-                    {selectedPackageDetails.hybridPricing?.offline ||
-                      DEFAULT_OFFLINE_RATE}
-                    /class)
+                    Number of Offline Classes (₹{offlineRate}/class)
                   </label>
                   <input
                     type="number"
                     value={offlineClasses}
-                    onChange={(e) => handleOfflineClassesChange(e.target.value)}
+                    onChange={(e) => setOfflineClasses(Number(e.target.value))}
                     className="block w-full rounded-md border border-gray-300 px-4 py-2"
                     min="0"
                   />
@@ -544,57 +597,7 @@ const PaymentDialog = ({ open, onClose, data, enqId }) => {
               </div>
             )}
 
-            {/* Physical Center Selection */}
-            {showCenterSelection && availableCenters.length > 0 && (
-              <div className="bg-white p-4 rounded-lg shadow-sm">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Physical Center
-                </label>
-                <select
-                  value={selectedCenter}
-                  onChange={(e) => setSelectedCenter(e.target.value)}
-                  className="block w-full rounded-md border border-gray-300 px-4 py-2"
-                >
-                  <option value="">Select a center</option>
-                  {availableCenters.map((center) => (
-                    <option key={center.centerId} value={center.centerId}>
-                      {center.centerName}
-                    </option>
-                  ))}
-                </select>
-                {selectedCenter && (
-                  <p className="mt-2 text-sm text-gray-600">
-                    Selected center:{" "}
-                    {
-                      availableCenters.find(
-                        (center) => center.centerId === selectedCenter
-                      )?.centerName
-                    }
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* Custom Package Input */}
-            {selectedPackageDetails?.type === "custom" && (
-              <div className="bg-white p-4 rounded-lg shadow-sm space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Additional Custom Amount
-                  </label>
-                  <input
-                    type="number"
-                    value={customAmount}
-                    onChange={(e) => setCustomAmount(Number(e.target.value))}
-                    className="block w-full rounded-md border border-gray-300 px-4 py-2"
-                    min="0"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Kit/Items Input */}
-            {selectedPackageDetails?.type === "kit" && (
+            {packageType === "kit" && (
               <div className="bg-white p-4 rounded-lg shadow-sm space-y-4">
                 {kitItems.map((item, index) => (
                   <div key={index} className="flex space-x-2 items-center">
@@ -607,8 +610,8 @@ const PaymentDialog = ({ open, onClose, data, enqId }) => {
                     >
                       <option value="">Select Item</option>
                       {kitItemsList.map((kit) => (
-                        <option key={kit._id} value={kit.packageName}>
-                          {kit.packageName} (₹{kit.pricing.amount})
+                        <option key={kit._id} value={kit._id}>
+                          {kit.packageName} (₹{kit.amount})
                         </option>
                       ))}
                     </select>
@@ -641,41 +644,48 @@ const PaymentDialog = ({ open, onClose, data, enqId }) => {
               </div>
             )}
 
-            {/* Financial Calculations */}
-            <div className="bg-white p-4 rounded-lg shadow-sm">
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Base Amount</span>
-                  <span className="font-bold">
-                    ₹{calculateTotalAmount().baseAmount.toFixed(2)}
-                  </span>
-                </div>
-                {discount > 0 && (
-                  <div className="flex justify-between text-green-600">
-                    <span>Discount Applied</span>
-                    <span>
-                      -₹{calculateTotalAmount().discountAmount.toFixed(2)}
+            {packageType && (
+              <div className="bg-white p-4 rounded-lg shadow-sm">
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">
+                      Base Amount (GST Included)
+                    </span>
+                    <span className="font-bold">₹{baseAmount.toFixed(2)}</span>
+                  </div>
+                  {discount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Discount Applied</span>
+                      <span>-₹{discount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between border-t pt-3">
+                    <span className="text-gray-600 font-semibold">
+                      Total Amount
+                    </span>
+                    <span className="font-bold text-purple-600">
+                      ₹{totalAmount.toFixed(2)}
                     </span>
                   </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-gray-600">GST (18%)</span>
-                  <span>₹{calculateTotalAmount().gstAmount.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between border-t pt-3">
-                  <span className="text-gray-600 font-semibold">
-                    Total Amount
-                  </span>
-                  <span className="font-bold text-purple-600">
-                    ₹{calculateTotalAmount().totalAmount.toFixed(2)}
-                  </span>
                 </div>
               </div>
-            </div>
+            )}
+
+            {/* Display payment ID if available */}
+            {paymentId && (
+              <div className="bg-white p-4 rounded-lg shadow-sm">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium text-gray-700">Payment ID:</span>
+                  <span className="font-bold text-purple-600">{paymentId}</span>
+                </div>
+                <p className="mt-2 text-sm text-gray-600">
+                  Redirecting to payment details page...
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Footer */}
         <div className="flex-none border-t border-gray-200 p-4 bg-white">
           <div className="flex justify-end space-x-4">
             <button
@@ -685,17 +695,12 @@ const PaymentDialog = ({ open, onClose, data, enqId }) => {
               Cancel
             </button>
             <button
-              onClick={generatePaymentLink}
-              disabled={
-                !selectedPackage ||
-                (shouldShowCenterSelection() &&
-                  availableCenters.length > 0 &&
-                  !selectedCenter)
-              }
+              onClick={sendPackageDetails}
+              disabled={!packageType}
               className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             >
               <Send className="w-4 h-4 mr-2" />
-              Send Payment Request
+              Submit Package Selection
             </button>
           </div>
         </div>
@@ -715,4 +720,4 @@ const PaymentDialog = ({ open, onClose, data, enqId }) => {
   );
 };
 
-export default PaymentDialog;
+export default PackageSelectionDialog;

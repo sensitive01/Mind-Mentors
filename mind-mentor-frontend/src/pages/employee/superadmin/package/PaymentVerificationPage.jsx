@@ -1,9 +1,9 @@
-import PackageForm from "../../../../department-components/common-components/package/PackageForm";
+import EnqRelatedTask from "../../../../department-components/common-components/prospects/detailed-view/PaymentDecode";
+
 
 import Sidebar from "../../../../department-components/superadmin/Layout/Sidebar";
 import Topbar from '../../../../component/parent-component/parent-dashboard/layout/Topbar';
-
-const SuperAdminAddPackageForm = () => {
+const PaymentVerificationPage = () => {
   return (
     <div className="flex h-screen w-screen overflow-hidden">
       <div className="z-30">
@@ -14,8 +14,8 @@ const SuperAdminAddPackageForm = () => {
           <Topbar />
         </div>
         <div className="flex-1 overflow-hidden relative z-10">
-          <div className="h-full overflow-y-auto scrollbar-hide bg-gray-50">
-            <PackageForm />
+          <div className="h-full overflow-y-auto scrollbar-hide">
+            <EnqRelatedTask />
           </div>
         </div>
       </div>
@@ -23,5 +23,4 @@ const SuperAdminAddPackageForm = () => {
   );
 };
 
-
-export default SuperAdminAddPackageForm;
+export default PaymentVerificationPage;
