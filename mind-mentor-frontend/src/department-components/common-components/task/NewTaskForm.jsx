@@ -265,7 +265,7 @@ const NewTaskForm = () => {
               type="reset"
               className="px-8 py-3 bg-white border-2 border-[#642b8f] text-[#642b8f] rounded-lg font-medium hover:bg-[#efe8f0] transition-colors"
             >
-              Reset Form
+              Reset Forms
             </button>
           </div>
         </form>

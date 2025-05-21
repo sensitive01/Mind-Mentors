@@ -733,7 +733,7 @@ const assignWholeClass = async (req, res) => {
       cancelledSessions,
     } = submissionData;
     const enqData = await operationDeptModel.findOne(
-      { _id: studentId, payment: "Success", status: "Active" },
+      { _id: studentId, paymentStatus: "Success", enquiryStatus: "Active" },
       { kidId: 1 }
     );
     console.log("EnqId==>", enqData);

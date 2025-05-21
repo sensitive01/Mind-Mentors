@@ -334,12 +334,12 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                 <DetailCard title="DISPOSITION" value={data.disposition} />
               </Grid>
 
-              <Grid item xs={12} md={3}>
+              {/* <Grid item xs={12} md={3}>
                 <DetailCard
                   title="ENROLLMENT STATUS"
                   value={data.enquiryStatus}
                 />
-              </Grid>
+              </Grid> */}
 
               <Grid item xs={12} md={3}>
                 <DetailCard title="ENQUIRY TYPE" value={data.enquiryType} />

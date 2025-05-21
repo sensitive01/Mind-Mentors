@@ -3175,13 +3175,17 @@ const specificKidAssignTask = async (req, res) => {
       "service-delivery",
       "marketing",
       "renewal",
+      "coach"
     ];
     const employeeData = await Employee.find(
       { department: { $in: allowedDepartments } },
       { _id: 1, firstName: 1, email: 1, department: 1 }
     );
+    console.log("kidsData",kidsData)
+    console.log("employeeData",employeeData)
 
-    // Send the response
+
+
     res.status(200).json({
       success: true,
       message: "Dropdown data fetched successfully.",

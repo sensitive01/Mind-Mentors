@@ -31,12 +31,12 @@ const columns = (
     filterable: false, // Disable filtering for serial numbers
   },
 
-  {
-    field: "parentFirstName",
-    headerName: "Parent  Name",
-    width: 180,
-    editable: true,
-  },
+  // {
+  //   field: "parentFirstName",
+  //   headerName: "Parent  Name",
+  //   width: 180,
+  //   editable: true,
+  // },
 
   {
     field: "kidFirstName",
@@ -44,8 +44,29 @@ const columns = (
     width: 180,
     editable: true,
   },
+  {
+    field: "programs",
+    headerName: "Programs",
+    width: 250,
+    renderCell: (params) => (
+      <Box in={true}>
+        {params.value.map((prog, index) => (
+          <Chip
+            key={index}
+            label={`${prog.program} (${prog.level})`}
+            size="small"
+            sx={{
+              bgcolor: alpha(theme.palette.primary.main, 0.1),
+              color: theme.palette.primary.main,
+              marginRight: 1,
+            }}
+          />
+        ))}
+      </Box>
+    ),
+  },
 
- {
+  {
     field: "contact",
     headerName: "Contact",
 
@@ -119,6 +140,7 @@ const columns = (
       </Box>
     ),
   },
+
   {
     field: "lastNoteAction",
     headerName: "Status",
@@ -256,46 +278,46 @@ const columns = (
       );
     },
   },
-  {
-    field: "enquiryType",
-    headerName: "Type",
-    width: 150,
-    renderCell: (params) => (
-      <Fade in={true}>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            color: params.value === "warm" ? "#F59E0B" : "#642b8f",
-            padding: "4px 12px",
-            borderRadius: "20px",
-            transition: "all 0.3s ease",
-          }}
-        >
-          {params.value}
-          <Switch
-            size="small"
-            checked={params.value === "warm"}
-            onChange={() => handleStatusToggle(params.row._id)}
-            onClick={(e) => e.stopPropagation()}
-            className="status-update-btn"
-            sx={{
-              "& .MuiSwitch-switchBase.Mui-checked": {
-                color: "#642b8f",
-                "&:hover": {
-                  // backgroundColor: alpha(theme.palette.warm.main, 0.1),
-                },
-              },
-              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                // backgroundColor: theme.palette.warm.main,
-              },
-            }}
-          />
-        </Box>
-      </Fade>
-    ),
-  },
+  // {
+  //   field: "enquiryType",
+  //   headerName: "Type",
+  //   width: 150,
+  //   renderCell: (params) => (
+  //     <Fade in={true}>
+  //       <Box
+  //         sx={{
+  //           display: "flex",
+  //           alignItems: "center",
+  //           gap: 1,
+  //           color: params.value === "warm" ? "#F59E0B" : "#642b8f",
+  //           padding: "4px 12px",
+  //           borderRadius: "20px",
+  //           transition: "all 0.3s ease",
+  //         }}
+  //       >
+  //         {params.value}
+  //         <Switch
+  //           size="small"
+  //           checked={params.value === "warm"}
+  //           onChange={() => handleStatusToggle(params.row._id)}
+  //           onClick={(e) => e.stopPropagation()}
+  //           className="status-update-btn"
+  //           sx={{
+  //             "& .MuiSwitch-switchBase.Mui-checked": {
+  //               color: "#642b8f",
+  //               "&:hover": {
+  //                 // backgroundColor: alpha(theme.palette.warm.main, 0.1),
+  //               },
+  //             },
+  //             "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+  //               // backgroundColor: theme.palette.warm.main,
+  //             },
+  //           }}
+  //         />
+  //       </Box>
+  //     </Fade>
+  //   ),
+  // },
 
   {
     field: "disposition",
@@ -426,28 +448,6 @@ const columns = (
     headerName: "Created At",
     width: 200,
     valueFormatter: (params) => params.value,
-  },
-
-  {
-    field: "programs",
-    headerName: "Programs",
-    width: 250,
-    renderCell: (params) => (
-      <Box in={true}>
-        {params.value.map((prog, index) => (
-          <Chip
-            key={index}
-            label={`${prog.program} (${prog.level})`}
-            size="small"
-            sx={{
-              bgcolor: alpha(theme.palette.primary.main, 0.1),
-              color: theme.palette.primary.main,
-              marginRight: 1,
-            }}
-          />
-        ))}
-      </Box>
-    ),
   },
 ];
 export default columns;

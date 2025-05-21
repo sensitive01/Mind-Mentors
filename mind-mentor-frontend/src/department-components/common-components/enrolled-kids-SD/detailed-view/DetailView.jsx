@@ -204,7 +204,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                   />
                 </Grid>
               )}
-                {data.status === "Active" && (
+                {data.enquiryStatus === "Active" && (
                 <Grid item xs={12} md={3} style={{ overflow: "visible" }}>
                   <DetailCard
                     title={"VIEW ASSIGNED CLASS"}

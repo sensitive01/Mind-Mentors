@@ -310,7 +310,6 @@ const AssigningWholeClassToKid = () => {
       let currentIndex = 0;
 
       const addSession = (classItem, count) => {
-        // Ensure we're only adding classes that match the required type
         schedule.push({
           ...classItem,
           sessionId: `${classItem._id}-${count}`,
@@ -320,8 +319,7 @@ const AssigningWholeClassToKid = () => {
           status: "scheduled",
         });
 
-        // Move to next date (add days based on the class's day)
-        const daysToAdd = 7; // Default to weekly sessions
+        const daysToAdd = 7; 
         currentDate = new Date(
           currentDate.getTime() + daysToAdd * 24 * 60 * 60 * 1000
         );
