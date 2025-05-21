@@ -3686,14 +3686,13 @@ const makeaCallToParent = async (req, res) => {
   try {
     const { mobile } = req.body;
 
-    // Make the request to the external API
-    // const response = await fetch(`${CALLING_API}=${mobile}`, {
-    //   method: "POST",
-    // });
+    const response = await fetch(`${CALLING_API}=${mobile}`, {
+      method: "POST",
+    });
 
-    // const data = await response.json();
-    // res.json(data);
-    res.status(200).json()
+    const data = await response.json();
+    res.json(data);
+    // res.status(200).json()
   } catch (error) {
     console.error("Error calling external API:", error);
     res.status(500).json({ success: false, message: error.message });
