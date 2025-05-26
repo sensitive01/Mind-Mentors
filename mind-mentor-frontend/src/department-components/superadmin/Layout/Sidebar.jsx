@@ -41,6 +41,8 @@ import {
   AccountBalance as TransactionsAlternateIcon,
   Boy as BoyIcon,
   Email as EmailIcon,
+  Business as CenterIcon,
+  Subscriptions as SubscriptionsIcon,
 } from "@mui/icons-material";
 
 import {
@@ -65,15 +67,13 @@ import { getEmployeeData } from "../../../api/service/employee/EmployeeService";
 
 const ModernSidebar = () => {
   const location = useLocation();
-  const [openReports, setOpenReports] = useState(false);
-  const [openAttandance, setOpenAttandance] = useState(false);
-  const [openClass, setOpenClass] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [openCRM, setOpenCRM] = useState(false);
-  const [openEmployees, setOpenEmployees] = useState(false);
   const [openEnquiries, setOpenEnquiries] = useState(false);
-  const [openLeave, setOpenLeave] = useState(false);
+  const [openEmployees, setOpenEmployees] = useState(false);
+  const [openClasses, setOpenClasses] = useState(false);
+  const [openCenters, setOpenCenters] = useState(false);
+  const [openSubscriptions, setOpenSubscriptions] = useState(false);
   const [openTournaments, setOpenTournaments] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeItem, setActiveItem] = useState("");
   const [empData, setEmpData] = useState({});
 
@@ -107,55 +107,55 @@ const ModernSidebar = () => {
   useEffect(() => {
     setActiveItem(location.pathname);
     const currentPath = location.pathname;
-    
+
     // Close all submenus first
     closeAllSubmenus();
-    
+
     // Then open the appropriate submenu based on the current path
     if (
+      currentPath.includes("/super-admin/department/enrollment-data") ||
       currentPath.includes("/super-admin/department/parents-data") ||
       currentPath.includes("/super-admin/department/kids-data") ||
-      currentPath.includes("/super-admin/department/enrollment-data") ||
-      currentPath.includes("/super-admin/department/active-kid-data") ||
-      currentPath.includes("/superadminRenewals")
+      currentPath.includes("/super-admin/department/active-kid-data")
     ) {
       setOpenEnquiries(true);
     } else if (
       currentPath.includes("/super-admin/department/employees") ||
-      currentPath.includes("/super-admin/department/task-table") ||
+      currentPath.includes(
+        "/super-admin/department/employee-mark-attandance"
+      ) ||
+      currentPath.includes(
+        "/super-admin/department/employee-attandance-list"
+      ) ||
       currentPath.includes("/super-admin/department/leaves") ||
-      currentPath.includes("/super-admin/department/physical-centerlist") ||
-      currentPath.includes("/superadminAttendance") ||
-      currentPath.includes("/super-admin/department/allowdeduct") ||
-      currentPath.includes("/payroll")
+      currentPath.includes("/super-admin/department/show-all-leaves") ||
+      currentPath.includes("/super-admin/department/coachAvailabilityTable")
     ) {
       setOpenEmployees(true);
     } else if (
+      currentPath.includes("/super-admin/department/class-timetable-list") ||
+      currentPath.includes("/super-admin/department/discount-table") ||
+      currentPath.includes("/super-admin/department/package-table") ||
+      currentPath.includes("/super-admin/department/list-all-programme") ||
       currentPath.includes("/superadminFeedback") ||
-      currentPath.includes("/superadminAttendanceReport")
+      currentPath.includes("/super-admin/department/student-attandace-report") ||
+      currentPath.includes("/super-admin/department/get-class-recordings")
     ) {
-      setOpenReports(true);
+      setOpenClasses(true);
+    } else if (
+      currentPath.includes("/super-admin/department/physical-centerlist")
+    ) {
+      setOpenCenters(true);
+    } else if (
+      currentPath.includes("/superadminRenewals") ||
+      currentPath.includes("/super-admin/department/invoice-table")
+    ) {
+      setOpenSubscriptions(true);
     } else if (
       currentPath.includes("/tournaments") ||
       currentPath.includes("/participents")
     ) {
       setOpenTournaments(true);
-    } else if (
-      currentPath.includes("/super-admin/department/class-timetable-list") ||
-      currentPath.includes("/super-admin/department/discount-table") ||
-      currentPath.includes("/super-admin/department/package-table")
-    ) {
-      setOpenClass(true);
-    } else if (
-      currentPath.includes("/super-admin/department/show-all-leaves") ||
-      currentPath.includes("/super-admin/department/leaves")
-    ) {
-      setOpenLeave(true);
-    } else if (
-      currentPath.includes("/super-admin/department/employee-mark-attandance") ||
-      currentPath.includes("/super-admin/department/employee-attandance-list") 
-    ) {
-      setOpenAttandance(true);
     }
   }, [location.pathname]);
 
@@ -283,47 +283,19 @@ const ModernSidebar = () => {
 
   // Function to close all open submenus
   const closeAllSubmenus = () => {
-    setOpenReports(false);
-    setOpenAttandance(false);
-    setOpenClass(false);
-    setOpenLeave(false);
-    setOpenCRM(false);
-    setOpenEmployees(false);
     setOpenEnquiries(false);
+    setOpenEmployees(false);
+    setOpenClasses(false);
+    setOpenCenters(false);
+    setOpenSubscriptions(false);
     setOpenTournaments(false);
   };
 
   // Event handlers for toggling submenus
-  const handleReportsClick = (e) => {
+  const handleEnquiriesClick = (e) => {
     if (e) e.preventDefault();
     closeAllSubmenus();
-    setOpenReports(true);
-  };
-
-  const handleAttandanceClick = (e) => {
-    if (e) e.preventDefault();
-    closeAllSubmenus();
-    setOpenAttandance(true);
-  };
-
-  const handleClassClick = (e) => {
-    if (e) e.preventDefault();
-    closeAllSubmenus();
-    setOpenClass(true);
-  };
-
-  const handleLeaves = (e) => {
-    if (e) e.preventDefault();
-    closeAllSubmenus();
-    setOpenLeave(true);
-  };
-
-  const toggleSidebar = () => setIsCollapsed(!isCollapsed);
-
-  const handleCRMClick = (e) => {
-    if (e) e.preventDefault();
-    closeAllSubmenus();
-    setOpenCRM(true);
+    setOpenEnquiries(true);
   };
 
   const handleEmployeesClick = (e) => {
@@ -332,10 +304,22 @@ const ModernSidebar = () => {
     setOpenEmployees(true);
   };
 
-  const handleEnquiriesClick = (e) => {
+  const handleClassesClick = (e) => {
     if (e) e.preventDefault();
     closeAllSubmenus();
-    setOpenEnquiries(true);
+    setOpenClasses(true);
+  };
+
+  const handleCentersClick = (e) => {
+    if (e) e.preventDefault();
+    closeAllSubmenus();
+    setOpenCenters(true);
+  };
+
+  const handleSubscriptionsClick = (e) => {
+    if (e) e.preventDefault();
+    closeAllSubmenus();
+    setOpenSubscriptions(true);
   };
 
   const handleTournamentsClick = (e) => {
@@ -344,13 +328,15 @@ const ModernSidebar = () => {
     setOpenTournaments(true);
   };
 
+  const toggleSidebar = () => setIsCollapsed(!isCollapsed);
+
   // Check if a menu item is currently active
   const isItemActive = (link, subItems, isOpen) => {
     // If this is a main menu with open submenu, highlight it
     if (isOpen && subItems && subItems.length > 0) {
       return true;
     }
-    
+
     // If this exact link is active
     if (link && activeItem === link) {
       return true;
@@ -384,24 +370,19 @@ const ModernSidebar = () => {
           link: "/super-admin/department/enrollment-data",
         },
         {
-          icon: <EnquiriesIcon />,
-          text: "Active Kids",
-          link: "/super-admin/department/active-kid-data",
-        },
-        {
           icon: <ParentsIcon />,
           text: "Parents",
           link: "/super-admin/department/parents-data",
         },
         {
           icon: <KidsIcon />,
-          text: "Kids",
+          text: "Kids (All / Active / Paused)",
           link: "/super-admin/department/kids-data",
         },
         {
-          icon: <RenewalsIcon />,
-          text: "Renewals",
-          link: "/superadminRenewals",
+          icon: <ActiveIcon />,
+          text: "Active Kids",
+          link: "/super-admin/department/active-kid-data",
         },
       ],
       open: openEnquiries,
@@ -413,18 +394,18 @@ const ModernSidebar = () => {
       subItems: [
         {
           icon: <EmployeesIcon />,
-          text: "Employee List",
+          text: "Employees",
           link: "/super-admin/department/employees",
         },
         {
-          icon: <DashboardIcon />,
-          text: "Centers",
-          link: "/super-admin/department/physical-centerlist",
+          icon: <AttendanceIcon />,
+          text: "My Attendance",
+          link: "/super-admin/department/employee-mark-attandance",
         },
         {
-          icon: <ExpensesIcon />,
-          text: "Allowances / Deductions",
-          link: "/super-admin/department/allowdeduct",
+          icon: <AttendanceIcon />,
+          text: "Employee Attendance",
+          link: "/super-admin/department/employee-attandance-list",
         },
         {
           icon: <LeavesIcon />,
@@ -433,7 +414,12 @@ const ModernSidebar = () => {
         },
         {
           icon: <LeavesIcon />,
-          text: "Coach Availability Table",
+          text: "All Leaves",
+          link: "/super-admin/department/show-all-leaves",
+        },
+        {
+          icon: <ProfileIcon />,
+          text: "Coach Availability",
           link: "/super-admin/department/coachAvailabilityTable",
         },
       ],
@@ -442,110 +428,97 @@ const ModernSidebar = () => {
     },
     {
       icon: <ClassScheduleIcon />,
-      text: "Class",
+      text: "Classes",
       subItems: [
         {
           icon: <ClassScheduleIcon />,
-          text: "Class Schedules",
+          text: "Schedules",
           link: "/super-admin/department/class-timetable-list",
         },
         {
           icon: <ReportsIcon />,
-          text: "Voucher_Discounts",
+          text: "Vouchers / Discounts",
           link: "/super-admin/department/discount-table",
         },
         {
           icon: <ReportsIcon />,
-          text: "Class / Kit Package",
+          text: "Packages",
           link: "/super-admin/department/package-table",
         },
-      ],
-      open: openClass,
-      onClick: handleClassClick,
-    },
-    {
-      icon: <InvoicesIcon />,
-      text: "Invoices",
-      link: "/super-admin/department/invoice-table",
-    },
-    {
-      icon: <InvoicesIcon />,
-      text: "Show All Task",
-      link: "/super-admin/department/show-all-task",
-    },
-    {
-      icon: <ReportsIcon />,
-      text: "Attendance",
-      subItems: [
         {
-          icon: <ReportsIcon />,
-          text: "My Attendance",
-          link: "/super-admin/department/employee-mark-attandance",
+          icon: <ProgramsIcon />,
+          text: "Programs & Levels",
+          link: "/super-admin/department/list-all-programme",
         },
         {
           icon: <ReportsIcon />,
-          text: "Employee Attendance",
-          link: "/super-admin/department/employee-attandance-list",
-        },
-      ],
-      open: openAttandance,
-      onClick: handleAttandanceClick,
-    },
-    {
-      icon: <ReportsIcon />,
-      text: "Reports",
-      subItems: [
-        {
-          icon: <ReportsIcon />,
-          text: "Students Feedback",
+          text: "Coach Feedback",
           link: "/superadminFeedback",
         },
         {
           icon: <ReportsIcon />,
-          text: "Student Attendance Report",
-          link: "/superadminAttendanceReport",
+          text: "Student Class Attendance Report",
+          link: "/super-admin/department/student-attandace-report",
+        },
+        {
+          icon: <ReportsIcon />,
+          text: "Get Class Recordings",
+          link: "/super-admin/department/get-class-recordings",
         },
       ],
-      open: openReports,
-      onClick: handleReportsClick,
+      open: openClasses,
+      onClick: handleClassesClick,
     },
     {
-      icon: <TournamentsIcon />,
-      text: "Leaves",
+      icon: <CenterIcon />,
+      text: "Centers",
       subItems: [
         {
-          icon: <TournamentsIcon />,
-          text: "All Leaves",
-          link: "/super-admin/department/show-all-leaves",
-        },
-        {
-          icon: <ParticipantsIcon />,
-          text: "Apply for Leave",
-          link: "/super-admin/department/leaves",
+          icon: <CenterIcon />,
+          text: "Centers",
+          link: "/super-admin/department/physical-centerlist",
         },
       ],
-      open: openLeave,
-      onClick: handleLeaves,
+      open: openCenters,
+      onClick: handleCentersClick,
+    },
+    {
+      icon: <SubscriptionsIcon />,
+      text: "Subscriptions",
+      subItems: [
+        {
+          icon: <RenewalsIcon />,
+          text: "Renewals",
+          link: "/superadminRenewals",
+        },
+        {
+          icon: <InvoicesIcon />,
+          text: "Pending Invoices",
+          link: "/super-admin/department/invoice-table",
+        },
+      ],
+      open: openSubscriptions,
+      onClick: handleSubscriptionsClick,
     },
     {
       icon: <ChessKidIcon />,
-      text: "ChessKid",
+      text: "Chesskid",
       link: "/chessKids",
     },
     {
-      icon: <ProgramsIcon />,
-      text: "Programs",
-      link: "/super-admin/department/list-all-programme",
-    },
-    {
-      icon: <SupportIcon />,
-      text: "Support",
-      link: "/superadminSupport",
+      icon: <TasksIcon />,
+      text: "Tasks",
+      link: "/super-admin/department/show-all-task",
     },
     {
       icon: <NotificationsIcon />,
       text: "Notifications",
       link: "/notifications",
+    },
+    {
+      icon: <SupportIcon />,
+      text: "Support",
+      link: "/superadminSupport",
     },
     {
       icon: <DocumentsIcon />,
@@ -572,23 +545,39 @@ const ModernSidebar = () => {
     },
     {
       icon: <HolidayIcon />,
-      text: "Holiday Management",
+      text: "Holidays",
       link: "/holiday",
     },
     {
       icon: <MarketingIcon />,
-      text: "Marketing Management",
+      text: "Marketing",
       link: "#",
     },
     {
       icon: <ExpensesIcon />,
       text: "Expenses",
-      link: "/expenses",
+      subItems: [
+        {
+          icon: <ExpensesIcon />,
+          text: "Expenses",
+          link: "/expenses",
+        },
+        {
+          icon: <ExpensesIcon />,
+          text: "Allowances / Deductions",
+          link: "/super-admin/department/allowdeduct",
+        },
+      ],
     },
     {
       icon: <TransactionsIcon />,
       text: "Transactions",
       link: "/transactions",
+    },
+    {
+      icon: <PayrollIcon />,
+      text: "Payroll",
+      link: "/payroll",
     },
     {
       icon: <LogoutIcon />,
@@ -613,44 +602,98 @@ const ModernSidebar = () => {
       </Box>
 
       {!isCollapsed && (
-        <Box px={2} mb={2}>
+        <Box
+          px={4}
+          py={3}
+          mb={3}
+          sx={{
+            backgroundColor: "background.paper",
+            borderRadius: 2,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+            transition: "box-shadow 0.3s ease",
+            "&:hover": {
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+            },
+          }}
+        >
           <Link to="/superadminProfile" style={{ textDecoration: "none" }}>
-            <ProfileBox>
-              <Box display="flex" alignItems="center" mb={1.5}>
-                <AvatarStyled>{getInitials(empData.firstName)}</AvatarStyled>
+            <Box>
+              <Box display="flex" alignItems="center" mb={2}>
+                <Avatar
+                  sx={{
+                    bgcolor: themeColor,
+                    width: 48,
+                    height: 48,
+                    fontWeight: "bold",
+                  }}
+                >
+                  {getInitials(empData.firstName)}
+                </Avatar>
                 <Box ml={2}>
                   <Typography
                     variant="h6"
                     color={themeColor}
-                    fontWeight="bold"
+                    fontWeight="600"
                     sx={{ fontSize: "1.1rem", lineHeight: 1.2 }}
                   >
                     {empData?.firstName || "Loading..."}
                   </Typography>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      mt: 0.5,
-                      fontSize: "0.75rem",
-                    }}
-                  >
-                    <EmailIcon
-                      sx={{ fontSize: 14, mr: 0.5, color: themeColor }}
-                    />
-                    {empData?.email || "loading@example.com"}
-                  </Typography>
                 </Box>
               </Box>
-              <Box display="flex" gap={1} flexWrap="wrap">
-                <Badge>{empData?.department || "Dept"}</Badge>
-                <Badge>{empData?.role || "Role"}</Badge>
+
+              <Box
+                display="flex"
+                gap={1.5}
+                flexWrap="wrap"
+                alignItems="center"
+                mt={1}
+              >
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    fontSize: "0.75rem",
+                  }}
+                >
+                  <EmailIcon
+                    sx={{ fontSize: 14, mr: 0.5, color: themeColor }}
+                  />
+                  {empData?.email || "loading@example.com"}
+                </Typography>
+                <Box display="flex" gap={1}>
+                  <Badge
+                    sx={{
+                      backgroundColor: `${themeColor}20`,
+                      color: themeColor,
+                      borderRadius: "4px",
+                      px: 1,
+                      py: 0.5,
+                      fontSize: "0.7rem",
+                      fontWeight: 500,
+                    }}
+                  >
+                    {empData?.department || "Dept"}
+                  </Badge>
+                  <Badge
+                    sx={{
+                      backgroundColor: `${themeColor}20`,
+                      color: themeColor,
+                      borderRadius: "4px",
+                      px: 1,
+                      py: 0.5,
+                      fontSize: "0.7rem",
+                      fontWeight: 500,
+                    }}
+                  >
+                    {empData?.role || "Role"}
+                  </Badge>
+                </Box>
               </Box>
-            </ProfileBox>
+            </Box>
           </Link>
-          <Divider sx={{ mb: 2 }} />
+          <Divider sx={{ mt: 2, mb: 1 }} />
         </Box>
       )}
 

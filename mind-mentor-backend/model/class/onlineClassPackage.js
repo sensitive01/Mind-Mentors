@@ -14,7 +14,10 @@ const OnlineClassSchema = new mongoose.Schema(
     packageName: {
       type: String,
     },
-    classes: {
+    classStartFrom: {
+      type: Number,
+    },
+    classUpTo: {
       type: Number,
     },
     amount: {
@@ -34,6 +37,8 @@ const OnlineClassSchema = new mongoose.Schema(
       type: String,
       enum: ["Day", "Night"],
     },
+    oneClassPrice: { type: Number },
+
     centers: [CenterInfoSchema],
   },
   {

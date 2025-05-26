@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const logEntrySchema = new mongoose.Schema({
   employeeId: { type: String },
   employeeName: { type: String },
+  department:{type:String},
   comment: { type: String },
   action: { type: String },
   createdAt: { type: Date, default: Date.now },

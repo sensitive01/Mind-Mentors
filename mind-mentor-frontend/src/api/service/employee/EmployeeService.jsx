@@ -1,3 +1,4 @@
+import { hrInstance } from "../../axios/hrInstance";
 import { operationDeptInstance } from "../../axios/operationDeptInstance";
 import { userInstance } from "../../axios/userInstance";
 
@@ -189,7 +190,19 @@ export const deleteEnquiry = async (id) => {
 // ..........................................Create Enquiry Data.......................................................................
 
 
+export const getClassRecodingsLink = async (meetingIDs) => {
+  const response = await hrInstance.post("/api/new-class/get-recordings-link",{meetingIDs});
+  return response;
+};
 
+export const getLearningDashboardAttandanceData = async (meetingID) => {
+  const response = await hrInstance.get(`/api/new-class/get-learning-statistic-data/${meetingID}`);
+  return response;
+};
+export const getAttandanceReport = async () => {
+  const response = await hrInstance.get(`/api/new-class/get-attandance-report`);
+  return response;
+};
 
 
 
@@ -950,5 +963,11 @@ export const updatePaymentStatus = async (data) => {
 
 export const getThePaymentId = async (enqId) => {
   const response = await userInstance.get(`/get-Payment-id/${enqId}`);
+  return response;
+};
+
+
+export const changePassword = async (currentPassword,newPassword,empId) => {
+  const response = await userInstance.put(`/change-the-employee-password/${empId}`,{currentPassword,newPassword});
   return response;
 };

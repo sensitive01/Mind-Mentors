@@ -8,7 +8,7 @@ const CenterInfoSchema = new mongoose.Schema({
     type: String,
   },
   packageName: {
-    type: String, 
+    type: String,
   },
   programName: {
     type: String,
@@ -16,8 +16,11 @@ const CenterInfoSchema = new mongoose.Schema({
   programLevel: {
     type: String,
   },
-  classes: {
-    type: Number, 
+  classUpTo: {
+    type: Number,
+  },
+  classStartFrom: {
+    type: Number,
   },
   amount: {
     type: Number,
@@ -25,15 +28,14 @@ const CenterInfoSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ["Active", "Inactive"],
-    default: "Active", 
+    default: "Active",
   },
   time: {
     type: String,
-    enum: ["Day", "Night"], 
+    enum: ["Day", "Night"],
   },
+  oneClassPrice:{type:Number}
 });
-
-
 
 const OfflineClassSchema = new mongoose.Schema(
   {
@@ -41,7 +43,7 @@ const OfflineClassSchema = new mongoose.Schema(
       type: String,
       default: "Offline",
     },
-    centers: [CenterInfoSchema], 
+    centers: [CenterInfoSchema],
   },
   {
     timestamps: true,

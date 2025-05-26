@@ -34,10 +34,10 @@ const NewEnquiryFormStep = () => {
     kidsGender: "",
     programs: [
       {
-        centerType: "",
-        centerName: "",
         program: "",
         level: "",
+        centerType: "",
+        centerName: "",
       },
     ],
     schoolName: "",
@@ -158,29 +158,31 @@ const NewEnquiryFormStep = () => {
   const handleProgramChange = (index, field, value) => {
     const newPrograms = [...formData.programs];
 
-    // When center type changes, reset dependent fields
-    if (field === "centerType") {
+    // When program changes, reset dependent fields
+    if (field === "program") {
+      newPrograms[index] = {
+        ...newPrograms[index],
+        program: value,
+        level: "",
+        centerType: "",
+        centerName: "",
+      };
+    }
+    // When level changes, reset center type and center name
+    else if (field === "level") {
+      newPrograms[index] = {
+        ...newPrograms[index],
+        level: value,
+        centerType: "",
+        centerName: "",
+      };
+    }
+    // When center type changes, reset center name
+    else if (field === "centerType") {
       newPrograms[index] = {
         ...newPrograms[index],
         centerType: value,
         centerName: "",
-        program: "",
-        level: "",
-      };
-
-      // Update center options based on selected center type
-      const filteredCenters = programData.filter(
-        (center) => center.centerType === value
-      );
-      setCenterOptions(filteredCenters);
-    }
-    // When center name changes, reset program and level
-    else if (field === "centerName") {
-      newPrograms[index] = {
-        ...newPrograms[index],
-        centerName: value,
-        program: "",
-        level: "",
       };
     } else {
       newPrograms[index][field] = value;
@@ -189,32 +191,60 @@ const NewEnquiryFormStep = () => {
     setFormData((prev) => ({ ...prev, programs: newPrograms }));
   };
 
-  const getAvailablePrograms = (index) => {
-    const { centerName } = formData.programs[index];
-    if (!centerName) return [];
-
-    const selectedCenter = programData.find(
-      (center) => center._id === centerName
-    );
-    if (!selectedCenter) return [];
-
-    // Extract unique program IDs from the selected center
-    return selectedCenter.programLevels.map((pl) => pl.program);
+  // Get all unique programs from all centers
+  const getAvailablePrograms = () => {
+    const allPrograms = new Set();
+    programData.forEach((center) => {
+      center.programLevels.forEach((pl) => {
+        allPrograms.add(pl.program);
+      });
+    });
+    return Array.from(allPrograms);
   };
 
+  // Get available levels for selected program
   const getAvailableLevels = (index) => {
-    const { centerName, program } = formData.programs[index];
-    if (!centerName || !program) return [];
+    const { program } = formData.programs[index];
+    if (!program) return [];
 
-    const selectedCenter = programData.find(
-      (center) => center._id === centerName
-    );
-    if (!selectedCenter) return [];
+    const allLevels = new Set();
+    programData.forEach((center) => {
+      center.programLevels.forEach((pl) => {
+        if (pl.program === program) {
+          pl.levels.forEach((level) => allLevels.add(level));
+        }
+      });
+    });
+    return Array.from(allLevels);
+  };
 
-    const programLevel = selectedCenter.programLevels.find(
-      (pl) => pl.program === program
-    );
-    return programLevel ? programLevel.levels : [];
+  // Get available center types for selected program and level
+  const getAvailableCenterTypes = (index) => {
+    const { program, level } = formData.programs[index];
+    if (!program || !level) return [];
+
+    const centerTypes = new Set();
+    programData.forEach((center) => {
+      center.programLevels.forEach((pl) => {
+        if (pl.program === program && pl.levels.includes(level)) {
+          centerTypes.add(center.centerType);
+        }
+      });
+    });
+    return Array.from(centerTypes);
+  };
+
+  // Get available centers for selected program, level, and center type
+  const getAvailableCenters = (index) => {
+    const { program, level, centerType } = formData.programs[index];
+    if (!program || !level || !centerType) return [];
+
+    return programData.filter((center) => {
+      if (center.centerType !== centerType) return false;
+      return center.programLevels.some(
+        (pl) => pl.program === program && pl.levels.includes(level)
+      );
+    });
   };
 
   const addProgram = () => {
@@ -222,7 +252,7 @@ const NewEnquiryFormStep = () => {
       ...prev,
       programs: [
         ...prev.programs,
-        { centerType: "", centerName: "", program: "", level: "" },
+        { program: "", level: "", centerType: "", centerName: "" },
       ],
     }));
   };
@@ -256,10 +286,10 @@ const NewEnquiryFormStep = () => {
       case 2:
         return formData.programs.every(
           (program) =>
-            program.centerType &&
-            program.centerName &&
             program.program &&
-            program.level
+            program.level &&
+            program.centerType &&
+            program.centerName
         );
       default:
         return true;
@@ -665,156 +695,185 @@ const NewEnquiryFormStep = () => {
 
       case 2:
         return (
-      <div className="bg-white rounded-lg shadow-sm p-6">
-  <div className="space-y-6">
-    {/* Header */}
-    <div className="flex items-center justify-between">
-      <h3 className="text-[#642b8f] font-semibold text-lg border-b-2 border-[#f8a213] pb-2">
-        Program Selection
-      </h3>
-    </div>
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="space-y-6">
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <h3 className="text-[#642b8f] font-semibold text-lg border-b-2 border-[#f8a213] pb-2">
+                  Program Selectionss
+                </h3>
+              </div>
 
-    {/* Programs List */}
-    <div className="space-y-4">
-      {formData.programs.map((program, index) => (
-        <div 
-          key={index} 
-          className="border border-[#aa88be] rounded-lg p-4 bg-white hover:shadow-md transition-shadow"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="text-[#642b8f] font-medium">Program {index + 1}</h4>
-            {formData.programs.length > 1 && (
+              {/* Programs List */}
+              <div className="space-y-4">
+                {formData.programs.map((program, index) => (
+                  <div
+                    key={index}
+                    className="border border-[#aa88be] rounded-lg p-4 bg-white hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="text-[#642b8f] font-medium">
+                        Program {index + 1}
+                      </h4>
+                      {formData.programs.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeProgram(index)}
+                          className="text-red-500 hover:text-red-700 transition-colors"
+                          aria-label="Remove program"
+                        >
+                          <Trash className="h-5 w-5" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Program Form Fields - Grid Layout */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Program - First Selection */}
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-[#642b8f]">
+                          Program <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          className="w-full p-2 rounded-md border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors bg-white"
+                          value={program.program}
+                          onChange={(e) =>
+                            handleProgramChange(
+                              index,
+                              "program",
+                              e.target.value
+                            )
+                          }
+                          required
+                        >
+                          <option value="">-Select Program-</option>
+                          {getAvailablePrograms().map((programName, idx) => (
+                            <option key={idx} value={programName}>
+                              {programName}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Level - Show only if program is selected */}
+                      {program.program && (
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-[#642b8f]">
+                            Level <span className="text-red-500">*</span>
+                          </label>
+                          <select
+                            className="w-full p-2 rounded-md border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors bg-white"
+                            value={program.level}
+                            onChange={(e) =>
+                              handleProgramChange(
+                                index,
+                                "level",
+                                e.target.value
+                              )
+                            }
+                            required
+                          >
+                            <option value="">-Select Level-</option>
+                            {getAvailableLevels(index).map((level, idx) => (
+                              <option key={idx} value={level}>
+                                {level}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
+                      {/* Center Type - Show only if program and level are selected */}
+                      {program.program && program.level && (
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-[#642b8f]">
+                            Preferred Type{" "}
+                            <span className="text-red-500">*</span>
+                          </label>
+                          <select
+                            className="w-full p-2 rounded-md border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors bg-white"
+                            value={program.centerType}
+                            onChange={(e) =>
+                              handleProgramChange(
+                                index,
+                                "centerType",
+                                e.target.value
+                              )
+                            }
+                            required
+                          >
+                            <option value="">-Select Preferred Type-</option>
+                            {getAvailableCenterTypes(index).map(
+                              (centerType, idx) => (
+                                <option key={idx} value={centerType}>
+                                  {centerType.charAt(0).toUpperCase() +
+                                    centerType.slice(1)}
+                                </option>
+                              )
+                            )}
+                          </select>
+                        </div>
+                      )}
+
+                      {/* Center Name - Show only if all previous fields are selected */}
+                      {program.program &&
+                        program.level &&
+                        program.centerType && (
+                          <div className="space-y-2">
+                            <label className="block text-sm font-medium text-[#642b8f]">
+                              Preferred Center{" "}
+                              <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                              className="w-full p-2 rounded-md border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors bg-white"
+                              value={program.centerName}
+                              onChange={(e) =>
+                                handleProgramChange(
+                                  index,
+                                  "centerName",
+                                  e.target.value
+                                )
+                              }
+                              required
+                            >
+                              <option value="">-Select Center-</option>
+                              {getAvailableCenters(index).map((center) => (
+                                <option key={center._id} value={center._id}>
+                                  {center.centerName}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Add Program Button */}
               <button
                 type="button"
-                onClick={() => removeProgram(index)}
-                className="text-red-500 hover:text-red-700 transition-colors"
-                aria-label="Remove program"
+                onClick={addProgram}
+                className="flex items-center text-[#642b8f] hover:text-[#aa88be] font-medium text-sm transition-colors"
               >
-                <Trash className="h-5 w-5" />
+                <span className="mr-1 text-lg">+</span> Add Program
               </button>
-            )}
-          </div>
 
-          {/* Program Form Fields - Grid Layout */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Center Type */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-[#642b8f]">
-                Center Type <span className="text-red-500">*</span>
-              </label>
-              <select
-                className="w-full p-2 rounded-md border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors bg-white"
-                value={program.centerType}
-                onChange={(e) => handleProgramChange(index, "centerType", e.target.value)}
-                required
-              >
-                <option value="">-Select Center Type-</option>
-                <option value="online">Online</option>
-                <option value="offline">Offline</option>
-              </select>
+              {/* Remarks */}
+              <div className="pt-4">
+                <label className="block text-sm font-medium text-[#642b8f] mb-2">
+                  Remarks
+                </label>
+                <textarea
+                  rows={3}
+                  className="w-full p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors resize-none"
+                  placeholder="Enter your Message here..."
+                  value={formData.message}
+                  onChange={(e) => handleInputChange("message", e.target.value)}
+                />
+              </div>
             </div>
-
-            {/* Center Name - Only show if center type is selected */}
-            {program.centerType && (
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#642b8f]">
-                  Center Name <span className="text-red-500">*</span>
-                </label>
-                <select
-                  className="w-full p-2 rounded-md border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors bg-white"
-                  value={program.centerName}
-                  onChange={(e) => handleProgramChange(index, "centerName", e.target.value)}
-                  required
-                >
-                  <option value="">-Select Center-</option>
-                  {programData
-                    .filter(center => center.centerType === program.centerType)
-                    .map(center => (
-                      <option key={center._id} value={center._id}>
-                        {center.centerName}
-                      </option>
-                    ))}
-                </select>
-              </div>
-            )}
-
-            {/* Program - Only show if center is selected */}
-            {program.centerName && (
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#642b8f]">
-                  Program <span className="text-red-500">*</span>
-                </label>
-                <select
-                  className="w-full p-2 rounded-md border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors bg-white"
-                  value={program.program}
-                  onChange={(e) => handleProgramChange(index, "program", e.target.value)}
-                  required
-                >
-                  <option value="">-Select Program-</option>
-                  {programData
-                    .find(center => center._id === program.centerName)
-                    ?.programLevels.map((pl, idx) => (
-                      <option key={idx} value={pl.program}>
-                        {pl.program}
-                      </option>
-                    ))}
-                </select>
-              </div>
-            )}
-
-            {/* Level - Only show if program is selected */}
-            {program.program && (
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#642b8f]">
-                  Level <span className="text-red-500">*</span>
-                </label>
-                <select
-                  className="w-full p-2 rounded-md border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors bg-white"
-                  value={program.level}
-                  onChange={(e) => handleProgramChange(index, "level", e.target.value)}
-                  required
-                >
-                  <option value="">-Select Level-</option>
-                  {programData
-                    .find(center => center._id === program.centerName)
-                    ?.programLevels.find(pl => pl.program === program.program)
-                    ?.levels.map((level, idx) => (
-                      <option key={idx} value={level}>
-                        {level}
-                      </option>
-                    ))}
-                </select>
-              </div>
-            )}
           </div>
-        </div>
-      ))}
-    </div>
-
-    {/* Add Program Button */}
-    <button
-      type="button"
-      onClick={addProgram}
-      className="flex items-center text-[#642b8f] hover:text-[#aa88be] font-medium text-sm transition-colors"
-    >
-      <span className="mr-1 text-lg">+</span> Add Program
-    </button>
-
-    {/* Remarks */}
-    <div className="pt-4">
-      <label className="block text-sm font-medium text-[#642b8f] mb-2">
-        Remarks
-      </label>
-      <textarea
-        rows={3}
-        className="w-full p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors resize-none"
-        placeholder="Enter your Message here..."
-        value={formData.message}
-        onChange={(e) => handleInputChange("message", e.target.value)}
-      />
-    </div>
-  </div>
-</div>
         );
 
       default:

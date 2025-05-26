@@ -29,6 +29,7 @@ import {
   fetchAllEmployees,
   // updateEmployeeStatus,
 } from "../../../../api/service/employee/EmployeeService";
+import { CircleOff } from "lucide-react";
 
 const theme = createTheme({
   palette: {
@@ -210,7 +211,7 @@ const EmployeeMasterList = () => {
         <GridActionsCellItem
           icon={
             params.row.status === "Active" ? (
-              <Delete color="error" />
+              <span style={{color:"red"}} >🚫</span>
             ) : (
               <CheckCircle color="success" />
             )

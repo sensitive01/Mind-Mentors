@@ -31,7 +31,7 @@ const KitPrice = require("../../model/class/kitPrice");
 const packagePaymentData = require("../../model/packagePaymentModel");
 const { v4: uuidv4 } = require("uuid");
 const kidSchema = require("../../model/kidModel");
-const enquiryData = require("../../model/operationDeptModel")
+const enquiryData = require("../../model/operationDeptModel");
 
 const createUser = async (req, res) => {
   try {
@@ -1420,7 +1420,9 @@ const getAllPackageData = async (req, res) => {
       packageName: item.packageName,
       programName: item.programName,
       programLevel: item.programLevel,
-      classes: item.classes,
+      classStartFrom: item.classStartFrom,
+      classUpTo: item.classUpTo,
+
       amount: item.amount,
       time: item.time,
       mode: item.mode,
@@ -1436,7 +1438,8 @@ const getAllPackageData = async (req, res) => {
         packageName: center.packageName,
         programName: center.programName,
         programLevel: center.programLevel,
-        classes: center.classes,
+        classStartFrom: center.classStartFrom,
+        classUpTo: center.classUpTo,
         amount: center.amount,
         time: center.time,
         mode: item.mode,
@@ -1453,7 +1456,8 @@ const getAllPackageData = async (req, res) => {
         packageName: center.packageName,
         programName: center.programName,
         programLevel: center.programLevel,
-        classes: center.classes,
+        classStartFrom: center.classStartFrom,
+        classUpTo: center.classUpTo,
         amount: center.amount,
         time: center.time,
         mode: center.mode,
@@ -1469,7 +1473,8 @@ const getAllPackageData = async (req, res) => {
       packageName: null,
       programName: null,
       programLevel: null,
-      classes: null,
+      classStartFrom: item.classStartFrom,
+      classUpTo: item.classUpTo,
       amount: null,
       time: null,
       mode: "Kit",
@@ -2300,10 +2305,13 @@ const saveOnlineClassPackage = async (req, res) => {
     const savedPackages = await Promise.all(
       onlinePackage.map(async (pkg) => {
         const newOnlineClass = new OnlineClass({
-          packageName: `Online ${pkg.classes} ${
+          packageName: `Online ${pkg.classUpTo} ${
             pkg.time.charAt(0).toUpperCase() + pkg.time.slice(1)
           } Classes`,
-          classes: Number(pkg.classes),
+          classUpTo: Number(pkg.classUpTo),
+          classStartFrom: Number(pkg.classStartFrom),
+          oneClassPrice: Number(pkg.amount) / Number(pkg.classUpTo),
+
           amount: Number(pkg.amount),
           programName: programMap[pkg.program] || pkg.program,
           programLevel: pkg.level,
@@ -2348,23 +2356,25 @@ const submitPhysicalCenterClassPrice = async (req, res) => {
     };
 
     const saveOrUpdateCenterPackage = async (centerId, centerName, pkg) => {
-      const { program, level, time, classes, amount } = pkg;
+      const { program, level, time, classStartFrom, classUpTo, amount } = pkg;
 
       if (
         !program ||
         !level ||
         !time ||
-        isNaN(parseInt(classes)) ||
+        isNaN(parseInt(classUpTo)) ||
         isNaN(parseFloat(amount))
       ) {
         console.error("Invalid package data:", pkg);
         return;
       }
 
-      const parsedClasses = parseInt(classes);
+      const parsedClassesUpTo = parseInt(classUpTo);
+      const parsedClassStartFrom = parseInt(classStartFrom);
+
       const parsedAmount = parseFloat(amount);
       const programName = getProgramNameById(program);
-      const packageName = `Offline ${parsedClasses} ${
+      const packageName = `Offline ${parsedClassesUpTo} ${
         time === "day" ? "Day" : "Night"
       } Class`;
 
@@ -2374,8 +2384,11 @@ const submitPhysicalCenterClassPrice = async (req, res) => {
         packageName,
         programName,
         programLevel: level,
-        classes: parsedClasses,
+        classUpTo: parsedClassesUpTo,
+        classStartFrom: parsedClassStartFrom,
         amount: parsedAmount,
+        oneClassPrice: parsedAmount / parsedClassesUpTo,
+
         status: "Active",
         time: time === "day" ? "Day" : "Night",
       };
@@ -2394,7 +2407,7 @@ const submitPhysicalCenterClassPrice = async (req, res) => {
             c.centerId?.toString() == centerId.toString() &&
             c.programName == programName && // Match by programName here
             c.programLevel == level &&
-            c.classes == parsedClasses &&
+            c.classUpTo == parsedClassesUpTo &&
             c.time == newEntry.time
         );
 
@@ -2476,21 +2489,23 @@ const submitHybridClassPrice = async (req, res) => {
     };
 
     const saveOrUpdateHybridPackage = async (centerId, centerName, pkg) => {
-      const { program, level, time, classes, amount, mode } = pkg;
+      const { program, level, time, upToClasses, amount, mode, classFrom } =
+        pkg;
 
       if (
         !program ||
         !level ||
         !time ||
         !mode ||
-        isNaN(parseInt(classes)) ||
+        isNaN(parseInt(upToClasses)) ||
         isNaN(parseFloat(amount))
       ) {
         console.error("Invalid package data:", pkg);
         return;
       }
 
-      const parsedClasses = parseInt(classes);
+      const classNumFrom = pareseInt(classFrom);
+      const parsedClasses = parseInt(upToClasses);
       const parsedAmount = parseFloat(amount);
       const oneClassPrice = parsedAmount / parsedClasses;
       const programName = getProgramNameById(program);
@@ -2504,7 +2519,8 @@ const submitHybridClassPrice = async (req, res) => {
         packageName,
         programName,
         programLevel: level,
-        classes: parsedClasses,
+        upToClasses: parsedClasses,
+        classFrom,
         amount: parsedAmount,
         oneClassPrice,
         time: time === "day" ? "Day" : "Night",
@@ -2523,7 +2539,7 @@ const submitHybridClassPrice = async (req, res) => {
             c.centerId?.toString() === centerId.toString() &&
             c.programName === programName &&
             c.programLevel === level &&
-            c.classes === parsedClasses &&
+            c.upToClasses === parsedClasses &&
             c.time === newEntry.time
         );
 
@@ -2625,8 +2641,15 @@ const editPackageData = async (req, res) => {
         .json({ success: false, message: "No package data provided" });
     }
 
-    const { mode, packageName, classes, amount, originalData, packageType } =
-      editPackage;
+    const {
+      mode,
+      packageName,
+      classStartFrom,
+      classUpTo,
+      amount,
+      originalData,
+      packageType,
+    } = editPackage;
 
     if (!mode || !originalData) {
       return res
@@ -2654,7 +2677,8 @@ const editPackageData = async (req, res) => {
         centers: {
           $elemMatch: {
             packageName: originalData.packageName,
-            classes: originalData.classes,
+            classStartFrom: originalData.classStartFrom,
+            classUpTo: originalData.classUpTo,
             amount: originalData.amount,
             time: originalData.time,
             programName: originalData.programName,
@@ -2674,7 +2698,7 @@ const editPackageData = async (req, res) => {
       const centerToUpdate = doc.centers.find(
         (center) =>
           center.packageName === originalData.packageName &&
-          center.classes === originalData.classes &&
+          center.classUpTo === originalData.classUpTo &&
           center.amount === originalData.amount &&
           center.time === originalData.time &&
           center.programName === originalData.programName &&
@@ -2690,8 +2714,9 @@ const editPackageData = async (req, res) => {
       }
 
       centerToUpdate.packageName = packageName;
-      centerToUpdate.classes = classes;
+      centerToUpdate.classUpTo = classUpTo;
       centerToUpdate.amount = amount;
+      centerToUpdate.classStartFrom = classStartFrom;
 
       await doc.save();
 
@@ -2706,7 +2731,8 @@ const editPackageData = async (req, res) => {
     else if (mode === "Online") {
       doc = await Model.findOne({
         packageName: originalData.packageName,
-        classes: originalData.classes,
+        classStartFrom: originalData.classStartFrom,
+        classUpTo: originalData.classUpTo,
         amount: originalData.amount,
         time: originalData.time,
         programName: originalData.programName,
@@ -2721,8 +2747,9 @@ const editPackageData = async (req, res) => {
       }
 
       doc.packageName = packageName;
-      doc.classes = classes;
+      doc.classUpTo = classUpTo;
       doc.amount = amount;
+      doc.classStartFrom = classStartFrom;
 
       await doc.save();
 
@@ -2739,7 +2766,8 @@ const editPackageData = async (req, res) => {
         centers: {
           $elemMatch: {
             packageName: originalData.packageName,
-            classes: originalData.classes,
+            classStartFrom: originalData.classStartFrom,
+            classUpTo: originalData.classUpTo,
             amount: originalData.amount,
             time: originalData.time,
             programName: originalData.programName,
@@ -2758,7 +2786,8 @@ const editPackageData = async (req, res) => {
       const centerToUpdate = doc.centers.find(
         (center) =>
           center.packageName === originalData.packageName &&
-          center.classes === originalData.classes &&
+          center.classStartFrom === originalData.classStartFrom &&
+          center.classUpTo === originalData.classUpTo &&
           center.amount === originalData.amount &&
           center.time === originalData.time &&
           center.programName === originalData.programName &&
@@ -2773,8 +2802,9 @@ const editPackageData = async (req, res) => {
       }
 
       centerToUpdate.packageName = packageName;
-      centerToUpdate.classes = classes;
+      centerToUpdate.classUpTo = classUpTo;
       centerToUpdate.amount = amount;
+      centerToUpdate.classStartFrom = classStartFrom;
 
       await doc.save();
 
@@ -2826,7 +2856,7 @@ const deletePackageData = async (req, res) => {
             $pull: {
               centers: {
                 packageName: originalData.packageName,
-                classes: originalData.classes,
+                classUpTo: originalData.classUpTo,
                 amount: originalData.amount,
                 time: originalData.time,
                 programName: originalData.programName,
@@ -2852,7 +2882,7 @@ const deletePackageData = async (req, res) => {
         // Delete from OnlineClass collection
         await OnlineClass.findOneAndDelete({
           packageName: originalData.packageName,
-          classes: originalData.classes,
+          classUpTo: originalData.classUpTo,
           amount: originalData.amount,
           time: originalData.time,
           programName: originalData.programName,
@@ -2866,7 +2896,7 @@ const deletePackageData = async (req, res) => {
           centers: {
             $elemMatch: {
               packageName: originalData.packageName,
-              classes: originalData.classes,
+              classUpTo: originalData.classUpTo,
               amount: originalData.amount,
               time: originalData.time,
               programName: originalData.programName,
@@ -2881,7 +2911,7 @@ const deletePackageData = async (req, res) => {
             (center) =>
               !(
                 center.packageName === originalData.packageName &&
-                center.classes === originalData.classes &&
+                center.classUpTo === originalData.classUpTo &&
                 center.amount === originalData.amount &&
                 center.time === originalData.time &&
                 center.programName === originalData.programName &&
@@ -2981,7 +3011,9 @@ const updatePaymentDetails = async (req, res) => {
     );
 
     if (!newData) {
-      return res.status(404).json({ message: "No data found with given paymentId" });
+      return res
+        .status(404)
+        .json({ message: "No data found with given paymentId" });
     }
 
     const updatedPackage = await packagePaymentData.findOneAndUpdate(
@@ -3042,38 +3074,60 @@ const getInvoiceData = async (req, res) => {
   }
 };
 
-
 const getThePaymentId = async (req, res) => {
   try {
     const { enqId } = req.params;
 
-    const paymentData = await packagePaymentData.findOne({ enqId:enqId },{paymentId:1});
+    const paymentData = await packagePaymentData.findOne(
+      { enqId: enqId },
+      { paymentId: 1 }
+    );
 
     if (!paymentData) {
       return res.status(404).json({ message: "Payment data not found" });
     }
 
-    res.status(200).json({ message: "Payment data retrieved successfully", paymentData });
+    res
+      .status(200)
+      .json({ message: "Payment data retrieved successfully", paymentData });
   } catch (err) {
     console.error("Error in getting the payment id", err);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
+const changeThePassword = async (req, res) => {
+  try {
+    console.log("Welcome to change password", req.body);
 
+    const { currentPassword, newPassword } = req.body;
+    const { empId } = req.params;
 
+    // Fetch employee
+    const empData = await Employee.findById(empId).select("password");
+    console.log("empData", empData);
+    if (!empData) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
 
+    // Check if old password matches
+    if (empData.password != currentPassword) {
+      return res.status(400).json({ message: "Current password is incorrect" });
+    }
 
+    // Update password
+    empData.password = newPassword;
+    await empData.save();
 
-
-
-
-
-
-
-
+    return res.status(200).json({ message: "Password updated successfully" });
+  } catch (err) {
+    console.error("Error updating password:", err);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
 
 module.exports = {
+  changeThePassword,
   getThePaymentId,
   getInvoiceData,
   getAllProgrameDataTable,

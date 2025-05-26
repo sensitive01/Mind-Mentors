@@ -17,8 +17,8 @@ const PackageForm = () => {
     centerName: "",
     centerId: "",
     pricing: {
-      amount: "",  // Changed from 0 to empty string to allow placeholder
-      tax: "",     // Changed from 0 to empty string for tax percentage
+      amount: "", 
+      tax: "",     
       total: 0,
     },
   });
@@ -45,7 +45,6 @@ const PackageForm = () => {
     const { name, value } = e.target;
 
     if (name === "amount") {
-      // When amount changes, recalculate total based on amount and tax percentage
       const amount = parseFloat(value) || 0;
       const taxPercentage = parseFloat(formData.pricing.tax) || 0;
       const taxAmount = (amount * taxPercentage) / 100;
@@ -55,12 +54,11 @@ const PackageForm = () => {
         ...prevData,
         pricing: {
           ...prevData.pricing,
-          amount: value, // Keep as string to allow empty field
+          amount: value, 
           total: total,
         },
       }));
     } else if (name === "tax") {
-      // When tax percentage changes, recalculate total
       const amount = parseFloat(formData.pricing.amount) || 0;
       const taxPercentage = parseFloat(value) || 0;
       const taxAmount = (amount * taxPercentage) / 100;
@@ -70,12 +68,11 @@ const PackageForm = () => {
         ...prevData,
         pricing: {
           ...prevData.pricing,
-          tax: value, // Keep as string to allow empty field
+          tax: value,
           total: total,
         },
       }));
     } else if (name.includes("pricing.")) {
-      // For other pricing fields
       const pricingField = name.split(".")[1];
       setFormData((prevData) => ({
         ...prevData,
@@ -85,7 +82,6 @@ const PackageForm = () => {
         },
       }));
     } else if (name === "centerSelection") {
-      // Handle center selection
       const selectedCenter = physicalCenters.find(
         (center) => center._id === value
       );
@@ -95,14 +91,12 @@ const PackageForm = () => {
         centerId: value,
       }));
     } else if (name === "type") {
-      // When type changes, reset center-related fields if needed
       const newValue = value;
       const needsPhysicalCenter = ["offline", "hybrid"].includes(newValue);
 
       setFormData((prevData) => ({
         ...prevData,
         [name]: newValue,
-        // Reset center values if changing to a type that doesn't need a center
         ...(!needsPhysicalCenter
           ? {
               centerName: "",
@@ -112,7 +106,6 @@ const PackageForm = () => {
           : {}),
       }));
     } else {
-      // For regular fields
       setFormData((prevData) => ({
         ...prevData,
         [name]: value,
@@ -123,7 +116,6 @@ const PackageForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Ensure we send numbers in the final submission
     const submissionData = {
       ...formData,
       pricing: {
@@ -151,7 +143,6 @@ const PackageForm = () => {
     }
   };
 
-  // Check if physical center options should be displayed
   const shouldShowPhysicalOptions = ["offline", "hybrid"].includes(
     formData.type
   );

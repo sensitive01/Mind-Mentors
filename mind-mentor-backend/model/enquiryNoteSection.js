@@ -15,6 +15,7 @@ const noteSchema = new mongoose.Schema(
       type: String,
     },
     updatedBy: { type: String },
+    department:{type:String},
     createdOn: { type: String },
   },
   {

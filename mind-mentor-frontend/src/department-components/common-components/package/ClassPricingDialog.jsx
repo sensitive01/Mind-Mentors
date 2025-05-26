@@ -1,38 +1,15 @@
 import React, { useEffect, useState } from "react";
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Typography,
-  Button,
   Box,
-  Card,
-  CardContent,
-  Divider,
-  Grid,
   TextField,
   InputAdornment,
-  CircularProgress,
-  Alert,
-  Tabs,
-  Tab,
-  Switch,
-  FormControlLabel,
   IconButton,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
 } from "@mui/material";
-import {
-  School,
-  LocationOn,
-  Add as AddIcon,
-  Delete as DeleteIcon,
-  Sync as SyncIcon,
-  LocalShipping as KitIcon,
-} from "@mui/icons-material";
+import { Delete as DeleteIcon } from "@mui/icons-material";
 import {
   getAllProgrameData,
   saveHybridClassPricing,
@@ -150,15 +127,51 @@ const ClassAmountRow = ({
         </Select>
       </FormControl>
 
-      <TextField
-        label="Number of Classes"
-        type="number"
-        value={data.classes || ""}
-        onChange={(e) => onChange(index, "classes", e.target.value)}
-        sx={{ width: 150, mr: 2, mb: 1 }}
-        variant="outlined"
-        size="small"
-      />
+      {isHybrid && (
+        <TextField
+          label="Number of class from"
+          type="number"
+          value={data.classStartFrom || ""}
+          onChange={(e) => onChange(index, "classStartFrom", e.target.value)}
+          sx={{ width: 150, mr: 2, mb: 1 }}
+          variant="outlined"
+          size="small"
+        />
+      )}
+
+      {isHybrid ? (
+        <TextField
+          label="Number of class upto"
+          type="number"
+          value={data.classUpTo || ""}
+          onChange={(e) => onChange(index, "classUpTo", e.target.value)}
+          sx={{ width: 150, mr: 2, mb: 1 }}
+          variant="outlined"
+          size="small"
+        />
+      ) : (
+        <>
+          <TextField
+            label="Class Start from"
+            type="number"
+            value={data.classStartFrom || ""}
+            onChange={(e) => onChange(index, "classStartFrom", e.target.value)}
+            sx={{ width: 150, mr: 2, mb: 1 }}
+            variant="outlined"
+            size="small"
+          />
+          <TextField
+            label="Classes Up To"
+            type="number"
+            value={data.classUpTo || ""}
+            onChange={(e) => onChange(index, "classUpTo", e.target.value)}
+            sx={{ width: 150, mr: 2, mb: 1 }}
+            variant="outlined"
+            size="small"
+          />
+        </>
+      )}
+
       <TextField
         label="Price"
         type="number"
@@ -190,6 +203,7 @@ const ClassPricingDialog = ({
   centerPrices,
   handleCenterPriceChange,
   existingCenters,
+  onDataUpdate, // Add this prop to handle data updates
 }) => {
   const [tabValue, setTabValue] = useState(0);
 
@@ -197,7 +211,8 @@ const ClassPricingDialog = ({
 
   const [onlineClassPrices, setOnlineClassPrices] = useState([
     {
-      classes: 1,
+      classStartFrom: 1,
+      classUpTo: 8,
       amount: onlinePrice || "",
       program: "",
       level: "",
@@ -207,7 +222,15 @@ const ClassPricingDialog = ({
   ]);
 
   const [hybridClassPrices, setHybridClassPrices] = useState([
-    { classes: 1, amount: "", program: "", level: "", time: "", mode: "" },
+    {
+      classStartFrom: 1,
+      classUpTo: 8,
+      amount: "",
+      program: "",
+      level: "",
+      time: "",
+      mode: "",
+    },
   ]);
 
   const [kitPrice, setKitPrice] = useState("");
@@ -220,7 +243,15 @@ const ClassPricingDialog = ({
   const [centerHybridPrices, setCenterHybridPrices] = useState({});
 
   const [physicalClassPrices, setPhysicalClassPrices] = useState([
-    { classes: 1, amount: "", program: "", level: "", time: "", mode: "" },
+    {
+      classStartFrom: 1,
+      classUpTo: 8,
+      amount: "",
+      program: "",
+      level: "",
+      time: "",
+      mode: "",
+    },
   ]);
 
   useEffect(() => {
@@ -237,6 +268,46 @@ const ClassPricingDialog = ({
     fetchData();
   }, []);
 
+  const resetForm = () => {
+    setOnlineClassPrices([
+      {
+        classStartFrom: 1,
+        classUpTo: 8,
+        amount: onlinePrice || "",
+        program: "",
+        level: "",
+        time: "",
+        mode: "",
+      },
+    ]);
+    setHybridClassPrices([
+      {
+        classStartFrom: 1,
+        classUpTo: 8,
+        amount: "",
+        program: "",
+        level: "",
+        time: "",
+        mode: "",
+      },
+    ]);
+    setPhysicalClassPrices([
+      {
+        classStartFrom: 1,
+        classUpTo: 8,
+        amount: "",
+        program: "",
+        level: "",
+        time: "",
+        mode: "",
+      },
+    ]);
+    setKitPrice("");
+    setQuantity(1);
+    setCenterPhysicalPrices({});
+    setCenterHybridPrices({});
+    setTabValue(0);
+  };
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
@@ -263,14 +334,30 @@ const ClassPricingDialog = ({
   const addOnlineClassPrice = () => {
     setOnlineClassPrices([
       ...onlineClassPrices,
-      { classes: "", amount: "", program: "", level: "", time: "", mode: "" },
+      {
+        classStartFrom: "",
+        classUpTo: "",
+        amount: "",
+        program: "",
+        level: "",
+        time: "",
+        mode: "",
+      },
     ]);
   };
 
   const addHybridClassPrice = () => {
     setHybridClassPrices([
       ...hybridClassPrices,
-      { classes: "", amount: "", program: "", level: "", time: "", mode: "" },
+      {
+        classStartFrom: "",
+        classUpTo: "",
+        amount: "",
+        program: "",
+        level: "",
+        time: "",
+        mode: "",
+      },
     ]);
   };
 
@@ -324,7 +411,15 @@ const ClassPricingDialog = ({
   const addPhysicalClassPrice = () => {
     setPhysicalClassPrices([
       ...physicalClassPrices,
-      { classes: "", amount: "", program: "", level: "", time: "", mode: "" },
+      {
+        classStartFrom: "",
+        classUpTo: "",
+        amount: "",
+        program: "",
+        level: "",
+        time: "",
+        mode: "",
+      },
     ]);
   };
 
@@ -341,7 +436,15 @@ const ClassPricingDialog = ({
       ...centerPhysicalPrices,
       [centerId]: [
         ...centerPrices,
-        { classes: "", amount: "", program: "", level: "", time: "", mode: "" },
+        {
+          classStartFrom: "",
+          classUpTo: "",
+          amount: "",
+          program: "",
+          level: "",
+          time: "",
+          mode: "",
+        },
       ],
     });
   };
@@ -352,7 +455,15 @@ const ClassPricingDialog = ({
       ...centerHybridPrices,
       [centerId]: [
         ...centerPrices,
-        { classes: "", amount: "", program: "", level: "", time: "", mode: "" },
+        {
+          classStartFrom: "",
+          classUpTo: "",
+          amount: "",
+          program: "",
+          level: "",
+          time: "",
+          mode: "",
+        },
       ],
     });
   };
@@ -381,59 +492,119 @@ const ClassPricingDialog = ({
     console.log("Submitting online classes pricing:", onlineClassPrices);
     try {
       const response = await submitOnlineClassPrice(onlineClassPrices);
-      if (response.status === 200) {
+      console.log("response", response);
+      if (response.status === 201) {
         toast.success(response.data.message);
+        setTimeout(() => {
+          resetForm();
+          onClose();
+          if (onDataUpdate) {
+            onDataUpdate();
+          }
+        }, 1500);
       }
     } catch (err) {
-      console.log("errorin submittingthe online class price", err);
+      console.log("error in submitting the online class price", err);
+      toast.error("Failed to submit online class pricing");
     }
   };
 
   const handleSubmitPhysicalClasses = async () => {
     console.log("Submitting physical classes pricing:", physicalClassPrices);
-    const response = await submitPhysicalCenterClassPrice(
-      physicalClassPrices,
-      applyPhysicalToAll
-    );
-    if (response.status === 200) {
-      toast.success(response.data.message);
+    try {
+      const response = await submitPhysicalCenterClassPrice(
+        physicalClassPrices,
+        applyPhysicalToAll
+      );
+      if (response.status === 200) {
+        toast.success(response.data.message);
+        setTimeout(() => {
+          resetForm();
+          onClose();
+          if (onDataUpdate) {
+            onDataUpdate();
+          }
+        }, 1500);
+      }
+    } catch (err) {
+      console.log("error in submitting physical class price", err);
+      toast.error("Failed to submit physical class pricing");
     }
   };
 
   const handleSubmitHybridClasses = async () => {
     console.log("Submitting hybrid classes pricing:", hybridClassPrices);
-    const response = await saveHybridClassPricing(
-      hybridClassPrices,
-      applyHybridToAll
-    );
-    if (response.status === 200) {
-      toast.success(response.data.message);
+    try {
+      const response = await saveHybridClassPricing(
+        hybridClassPrices,
+        applyHybridToAll
+      );
+      if (response.status === 200) {
+        toast.success(response.data.message);
+        resetForm();
+        onClose();
+        if (onDataUpdate) {
+          onDataUpdate();
+        }
+      }
+    } catch (err) {
+      console.log("error in submitting hybrid class price", err);
+      toast.error("Failed to submit hybrid class pricing");
     }
   };
 
   const handleSubmitKitPrice = async () => {
-    const response = await setKitPriceData(quantity, kitPrice);
+    try {
+      const response = await setKitPriceData(quantity, kitPrice);
+      if (response.status === 200) {
+        toast.success("Kit price updated successfully");
+        resetForm();
+        onClose();
+        if (onDataUpdate) {
+          onDataUpdate();
+        }
+      }
+    } catch (err) {
+      console.log("error in submitting kit price", err);
+      toast.error("Failed to submit kit price");
+    }
   };
 
   const handleSubmitCenterPhysicalPrices = async (centerId) => {
-    const response = await submitPhysicalCenterClassPriceWithCenter(
-      centerId,
-      centerPhysicalPrices[centerId],
-      applyPhysicalToAll
-    );
-    if (response.status === 200) {
-      toast.success(response.data.message);
+    try {
+      const response = await submitPhysicalCenterClassPriceWithCenter(
+        centerId,
+        centerPhysicalPrices[centerId],
+        applyPhysicalToAll
+      );
+      if (response.status === 200) {
+        toast.success(response.data.message);
+        if (onDataUpdate) {
+          onDataUpdate();
+        }
+      }
+    } catch (err) {
+      console.log("error in submitting center physical prices", err);
+      toast.error("Failed to submit center physical prices");
     }
   };
 
   const handleSubmitCenterHybridPrices = async (centerId) => {
-    const response = await submitHybridClassPriceWithCenter(
-      centerId,
-      centerHybridPrices[centerId],
-      applyPhysicalToAll
-    );
-    if (response.status === 200) {
-      toast.success(response.data.message);
+    try {
+      const response = await submitHybridClassPriceWithCenter(
+        centerId,
+        centerHybridPrices[centerId],
+        applyPhysicalToAll
+      );
+      if (response.status === 200) {
+        toast.success(response.data.message);
+        if (onDataUpdate) {
+          onDataUpdate();
+        }
+      }
+    } catch (err) {
+      console.log("error in submitting center hybrid prices", err);
+      toast.error("Failed to submit center hybrid prices");
     }
   };
 

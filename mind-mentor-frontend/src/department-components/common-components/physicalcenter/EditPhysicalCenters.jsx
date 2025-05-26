@@ -14,7 +14,7 @@ const EditPhysicalCenters = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    centerType: "offline", // Default to offline
+    centerType: "offline",
     centerName: "",
     address: "",
     city: "",
@@ -22,8 +22,8 @@ const EditPhysicalCenters = () => {
     pincode: "",
     email: "",
     phoneNumber: "",
-    programLevels: [], // Added program levels array
-    businessHours: [], // Added business hours array
+    programLevels: [], 
+    businessHours: [], 
     photos: [],
   });
 
@@ -88,7 +88,6 @@ const EditPhysicalCenters = () => {
     }
   };
 
-  // Handle program levels change
   const handleProgramLevelsChange = (updatedProgramLevels) => {
     setFormData((prev) => ({
       ...prev,
@@ -100,7 +99,6 @@ const EditPhysicalCenters = () => {
     }
   };
 
-  // Handle business hours change
   const handleBusinessHoursChange = (updatedHours) => {
     setFormData((prev) => ({
       ...prev,
@@ -155,7 +153,6 @@ const EditPhysicalCenters = () => {
     }));
   };
 
-  // Update this validate function in your EditPhysicalCenters component
   const validate = () => {
     const newErrors = {};
 
@@ -163,7 +160,6 @@ const EditPhysicalCenters = () => {
     if (!formData.centerName.trim())
       newErrors.centerName = "Center name is required";
 
-    // Only validate address, city, state, pincode for offline centers
     if (formData.centerType === "offline") {
       if (!formData.address.trim()) newErrors.address = "Address is required";
       if (!formData.city.trim()) newErrors.city = "City is required";
@@ -178,12 +174,10 @@ const EditPhysicalCenters = () => {
     if (!formData.phoneNumber.trim())
       newErrors.phoneNumber = "Phone number is required";
 
-    // Validate all program-level pairs
     if (!formData.programLevels || formData.programLevels.length === 0) {
       newErrors.programLevels =
         "At least one program and level must be selected";
     } else {
-      // Check if any program doesn't have a program ID or has empty levels array
       const invalidProgramLevels = formData.programLevels.some(
         (item) => !item.program || !item.levels || item.levels.length === 0
       );
@@ -204,7 +198,6 @@ const EditPhysicalCenters = () => {
     return newErrors;
   };
 
-  // Updated handleSubmit function with better error handling and console logs
   const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = validate();
@@ -219,7 +212,6 @@ const EditPhysicalCenters = () => {
     console.log("Submitting form data:", formData);
 
     try {
-      // Update existing center
       const response = await updatePhysicalCenterData(id, formData);
       console.log("API Response:", response);
 
@@ -229,7 +221,6 @@ const EditPhysicalCenters = () => {
           navigate("/super-admin/department/physical-centerlist");
         }, 1500);
       } else {
-        // Handle unsuccessful response
         toast.error(response.message || "Update failed. Please try again.");
       }
     } catch (error) {
@@ -264,7 +255,6 @@ const EditPhysicalCenters = () => {
       </div>
 
       <form onSubmit={handleSubmit}>
-        {/* Center Type - Radio Button */}
         <div className="mb-6">
           <label className="block text-gray-700 font-medium mb-2">
             Center Type*
@@ -298,7 +288,6 @@ const EditPhysicalCenters = () => {
           )}
         </div>
 
-        {/* Center Name */}
         <div className="mb-6">
           <label
             className="block text-gray-700 font-medium mb-2"
@@ -324,7 +313,6 @@ const EditPhysicalCenters = () => {
           )}
         </div>
 
-        {/* Address - Only show for offline centers */}
         {formData.centerType === "offline" && (
           <>
             <div className="mb-6">
@@ -352,9 +340,7 @@ const EditPhysicalCenters = () => {
               )}
             </div>
 
-            {/* Pincode, City, State in same line */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              {/* Pincode with auto-fetch */}
               <div>
                 <label
                   className="block text-gray-700 font-medium mb-2"
@@ -406,7 +392,6 @@ const EditPhysicalCenters = () => {
                 )}
               </div>
 
-              {/* City - Auto-populated */}
               <div>
                 <label
                   className="block text-gray-700 font-medium mb-2"
@@ -433,7 +418,6 @@ const EditPhysicalCenters = () => {
                 )}
               </div>
 
-              {/* State - Auto-populated */}
               <div>
                 <label
                   className="block text-gray-700 font-medium mb-2"
@@ -463,9 +447,7 @@ const EditPhysicalCenters = () => {
           </>
         )}
 
-        {/* Email and Phone in same line */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          {/* Email */}
           <div>
             <label
               className="block text-gray-700 font-medium mb-2"
@@ -491,7 +473,6 @@ const EditPhysicalCenters = () => {
             )}
           </div>
 
-          {/* Phone Number */}
           <div>
             <label
               className="block text-gray-700 font-medium mb-2"
@@ -518,7 +499,6 @@ const EditPhysicalCenters = () => {
           </div>
         </div>
 
-        {/* Program Levels Component */}
         <ProgramLevelSelector
           onChange={handleProgramLevelsChange}
           initialData={formData.programLevels}
@@ -530,7 +510,6 @@ const EditPhysicalCenters = () => {
           </p>
         )}
 
-        {/* Business Hours Component */}
         <BusinessHoursSelector
           onChange={handleBusinessHoursChange}
           initialData={formData.businessHours}
@@ -542,7 +521,6 @@ const EditPhysicalCenters = () => {
           </p>
         )}
 
-        {/* Photos Upload */}
         <div className="mb-6">
           <MultipleFileUpload
             fieldName="Physical Center Photos"
@@ -555,7 +533,6 @@ const EditPhysicalCenters = () => {
           )}
         </div>
 
-        {/* Submit Buttons */}
         <div className="mt-8 flex justify-end gap-4">
           <button
             type="button"
@@ -593,7 +570,7 @@ const EditPhysicalCenters = () => {
           </button>
         </div>
       </form>
-      <ToastContainer />
+      <ToastContainer style={{marginTop:"60px"}} />
     </div>
   );
 };

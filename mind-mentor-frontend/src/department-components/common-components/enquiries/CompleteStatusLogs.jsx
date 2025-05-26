@@ -24,7 +24,7 @@ import {
 import { useParams } from "react-router-dom";
 import { alpha } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
-import ArrowBackIcon from '@mui/icons-material/ArrowBack'; 
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 import {
   fetchAllStatusLogs,
@@ -33,7 +33,7 @@ import {
 
 const CompleteStatusLogs = () => {
   const empId = localStorage.getItem("empId");
-  const department = localStorage.getItem("department")
+  const department = localStorage.getItem("department");
   const navigate = useNavigate();
 
   const { id } = useParams();
@@ -44,6 +44,7 @@ const CompleteStatusLogs = () => {
     noteText: "",
     enquiryStatus: "",
     disposition: "",
+    department: "",
   });
 
   useEffect(() => {
@@ -57,11 +58,13 @@ const CompleteStatusLogs = () => {
           const totalCount = notes.length;
           const notesData = notes.map((note, index) => ({
             id: totalCount - index,
+            serialNumber: totalCount - index,
             createdAt: note.createdOn,
             enquiryStatus: note.enquiryStatus || "N/A",
             disposition: note.disposition || "N/A",
-            note: note.note || "N/A",
+            note: note.note === "undefined" ? "N/A" : note.note || "N/A",
             updatedBy: note.updatedBy || "N/A",
+            department: note.department || "N/A",
           }));
           setNotes(notesData.reverse());
         }
@@ -81,6 +84,7 @@ const CompleteStatusLogs = () => {
       noteText: "",
       enquiryStatus: "",
       disposition: "",
+      department: department || "",
     });
   };
 
@@ -90,11 +94,13 @@ const CompleteStatusLogs = () => {
       noteText: "",
       enquiryStatus: "",
       disposition: "",
+      department: "",
     });
   };
+
   const handleGoBack = () => {
     navigate(-1);
-  }
+  };
 
   const handleNoteSave = async () => {
     try {
@@ -102,6 +108,7 @@ const CompleteStatusLogs = () => {
         notes: noteDialog.noteText,
         enquiryStatus: noteDialog.enquiryStatus,
         disposition: noteDialog.disposition,
+        department: noteDialog.department,
       });
       if (response.status) {
         navigate(`/${department}/department/enrollment-data`);
@@ -113,37 +120,64 @@ const CompleteStatusLogs = () => {
 
   const columns = [
     {
-      field: "id",
-      headerName: "Sno",
+      field: "serialNumber",
+      headerName: "Sl. No",
       width: 80,
       minWidth: 80,
+      headerAlign: "center",
+      align: "center",
     },
-
     {
       field: "enquiryStatus",
       headerName: "Enquiry Status",
-      width: 200,
-      minWidth: 200,
-    },
-    {
-      field: "disposition",
-      headerName: "Disposition",
-      width: 200,
-      minWidth: 200,
-    },
-    {
-      field: "note",
-      headerName: "Note",
       flex: 1,
-      width: 300,
-      minWidth: 300,
+      minWidth: 150,
       renderCell: (params) => (
         <Box
           sx={{
             width: "100%",
-            padding: "8px 0",
+            padding: "12px 8px",
             whiteSpace: "normal",
-            lineHeight: "1.5",
+            lineHeight: "1.4",
+            fontWeight: 500,
+          }}
+        >
+          {params.value}
+        </Box>
+      ),
+    },
+    {
+      field: "disposition",
+      headerName: "Disposition",
+      flex: 1,
+      minWidth: 150,
+      renderCell: (params) => (
+        <Box
+          sx={{
+            width: "100%",
+            padding: "12px 8px",
+            whiteSpace: "normal",
+            lineHeight: "1.4",
+            fontWeight: 500,
+          }}
+        >
+          {params.value}
+        </Box>
+      ),
+    },
+    {
+      field: "note",
+      headerName: "Note",
+      flex: 2,
+      minWidth: 250,
+      renderCell: (params) => (
+        <Box
+          sx={{
+            width: "100%",
+            padding: "6px 4px",
+            whiteSpace: "normal",
+            lineHeight: "1.4",
+            wordWrap: "break-word",
           }}
         >
           {params.value}
@@ -152,18 +186,60 @@ const CompleteStatusLogs = () => {
     },
     {
       field: "updatedBy",
-      headerName: "Added By",
-      width: 300,
-      minWidth: 300,
+      headerName: "Action Taken By",
+      flex: 1,
+      minWidth: 180,
       renderCell: (params) => (
-        <Box>
-          <div>{params.value}</div> {/* Display "updatedBy" value */}
-          <div style={{ fontSize: "12px", color: "gray" }}>{params.row.createdAt}</div> {/* Display "createdAt" */}
+        <Box
+          sx={{
+            width: "100%",
+            padding: "12px 8px",
+            whiteSpace: "normal",
+            lineHeight: "1.4",
+          }}
+        >
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 500,
+              color: "text.primary",
+              mb: 0.5,
+            }}
+          >
+            {params.value}
+          </Typography>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              fontSize: "12px",
+            }}
+          >
+            {params.row.createdAt}
+          </Typography>
+        </Box>
+      ),
+    },
+    {
+      field: "department",
+      headerName: "Department",
+      flex: 1,
+      minWidth: 150,
+      renderCell: (params) => (
+        <Box
+          sx={{
+            width: "100%",
+            padding: "12px 8px",
+            whiteSpace: "normal",
+            lineHeight: "1.4",
+            fontWeight: 500,
+          }}
+        >
+          {params.value}
         </Box>
       ),
     },
   ];
-  
 
   const theme = createTheme({
     palette: {
@@ -223,31 +299,40 @@ const CompleteStatusLogs = () => {
           <Paper
             elevation={0}
             sx={{
+              p: 3,
               backgroundColor: "background.paper",
               borderRadius: 3,
               height: 650,
               boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.05)",
               overflow: "hidden",
-              p:3
             }}
           >
-              <Box
+            <Box
+              mb={3}
               display="flex"
-              justifyContent="space-between" // Changed to space-between to accommodate back button
+              justifyContent="space-between"
               alignItems="center"
-              mb={2} // Added margin bottom
             >
-              <IconButton 
-                onClick={handleGoBack}
-                sx={{
-                  color: "primary.main",
-                  "&:hover": {
-                    backgroundColor: alpha(theme.palette.primary.main, 0.1)
-                  }
-                }}
-              >
-                <ArrowBackIcon />
-              </IconButton>
+              <Box display="flex" alignItems="center">
+                <IconButton
+                  onClick={handleGoBack}
+                  sx={{
+                    mr: 2,
+                    color: "text.secondary",
+                    "&:hover": {
+                      backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                    },
+                  }}
+                >
+                  <ArrowBackIcon />
+                </IconButton>
+                <Typography
+                  variant="h5"
+                  sx={{ color: "text.primary", fontWeight: 600 }}
+                >
+                  Status Logs ({notes.length} entries)
+                </Typography>
+              </Box>
               <Button
                 variant="contained"
                 onClick={handleOpenNoteDialog}
@@ -261,7 +346,7 @@ const CompleteStatusLogs = () => {
                   py: 1,
                 }}
               >
-                Update call status log
+                Update Call Status Log
               </Button>
             </Box>
 
@@ -270,19 +355,7 @@ const CompleteStatusLogs = () => {
                 No notes available for this enquiry.
               </Alert>
             ) : (
-              <Box
-                sx={{
-                  height: 500,
-                  width: "100%",
-                  "& .MuiDataGrid-virtualScroller::-webkit-scrollbar": {
-                    display: "none",
-                  },
-                  "& .MuiDataGrid-virtualScroller": {
-                    msOverflowStyle: "none",
-                    scrollbarWidth: "none",
-                  },
-                }}
-              >
+              <Box sx={{ height: 500, width: "100%" }}>
                 <DataGrid
                   rows={notes}
                   columns={columns}
@@ -295,9 +368,11 @@ const CompleteStatusLogs = () => {
                   }}
                   pageSizeOptions={[10, 25, 50]}
                   disableRowSelectionOnClick
+                  getRowId={(row) => row.id}
                   slots={{ toolbar: GridToolbar }}
                   getRowHeight={() => "auto"}
                   loading={loading}
+                  rowCount={notes.length}
                   slotProps={{
                     toolbar: {
                       showQuickFilter: true,
@@ -305,21 +380,32 @@ const CompleteStatusLogs = () => {
                     },
                   }}
                   sx={{
-                    "& .MuiDataGrid-virtualScroller": {
+                    "& .MuiDataGrid-main": {
                       overflow: "auto",
                       "&::-webkit-scrollbar": {
-                        display: "none",
+                        height: 8,
+                        width: 8,
                       },
-                      scrollbarWidth: "none",
-                      msOverflowStyle: "none",
+                      "&::-webkit-scrollbar-track": {
+                        backgroundColor: "#f1f1f1",
+                      },
+                      "&::-webkit-scrollbar-thumb": {
+                        backgroundColor: "#888",
+                        borderRadius: 4,
+                      },
+                      "&::-webkit-scrollbar-thumb:hover": {
+                        backgroundColor: "#555",
+                      },
                     },
                     "& .MuiDataGrid-cell": {
                       whiteSpace: "normal !important",
-                      lineHeight: "1.5 !important",
-                      padding: "8px !important",
+                      lineHeight: "1.4 !important",
+                      padding: "12px 8px !important",
+                      borderRight: "1px solid rgba(224, 224, 224, 1)",
                     },
                     "& .MuiDataGrid-row": {
                       maxHeight: "none !important",
+                      minHeight: "60px !important",
                     },
                     "& .MuiDataGrid-cell:focus": {
                       outline: "none",
@@ -331,14 +417,12 @@ const CompleteStatusLogs = () => {
                       backgroundColor: "#642b8f",
                       color: "white",
                       fontWeight: 600,
+                      fontSize: "14px",
+                      padding: "12px 8px",
+                      borderRight: "1px solid rgba(255, 255, 255, 0.3)",
                     },
-                    "& .MuiDataGrid-main": {
-                      overflow: "auto",
-                      "&::-webkit-scrollbar": {
-                        display: "none",
-                      },
-                      scrollbarWidth: "none",
-                      msOverflowStyle: "none",
+                    "& .MuiDataGrid-columnSeparator": {
+                      display: "none",
                     },
                   }}
                 />
@@ -397,6 +481,27 @@ const CompleteStatusLogs = () => {
                   <MenuItem value="RnR">RnR</MenuItem>
                   <MenuItem value="Call Back">Call Back</MenuItem>
                   <MenuItem value="None">None</MenuItem>
+                </Select>
+              </FormControl>
+
+              <FormControl fullWidth sx={{ mt: 2 }}>
+                <InputLabel>Department</InputLabel>
+                <Select
+                  value={noteDialog.department}
+                  onChange={(e) =>
+                    setNoteDialog((prev) => ({
+                      ...prev,
+                      department: e.target.value,
+                    }))
+                  }
+                  label="Department"
+                >
+                  <MenuItem value="super-admin">Super Admin</MenuItem>
+                  <MenuItem value="sales">Sales</MenuItem>
+                  <MenuItem value="marketing">Marketing</MenuItem>
+                  <MenuItem value="support">Support</MenuItem>
+                  <MenuItem value="hr">HR</MenuItem>
+                  <MenuItem value="finance">Finance</MenuItem>
                 </Select>
               </FormControl>
 

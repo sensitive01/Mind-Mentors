@@ -85,14 +85,38 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
         ...new Map(centersList.map((item) => [item.centerId, item])).values(),
       ];
       setCentersList(uniqueCenters);
-    } else if (type === "hybrid" && packages.hybrid.length > 0) {
-      const centersList = packages.hybrid[0].centers.map((center) => ({
-        centerId: center.centerId,
-        centerName: center.centerName,
-      }));
+    } else if (type === "hybrid") {
+      // For hybrid, combine centers from both online and offline packages
+      let combinedCenters = [];
+
+      // Add online centers
+      if (packages.online.length > 0) {
+        const onlineCenters =
+          packages.online[0].centers?.map((center) => ({
+            centerId: center.centerId,
+            centerName: center.centerName,
+            type: "online",
+          })) || [];
+        combinedCenters = [...combinedCenters, ...onlineCenters];
+      }
+
+      // Add offline centers
+      if (packages.offline.length > 0) {
+        const offlineCenters = packages.offline[0].centers.map((center) => ({
+          centerId: center.centerId,
+          centerName: center.centerName,
+          type: "offline",
+        }));
+        combinedCenters = [...combinedCenters, ...offlineCenters];
+      }
+
+      // Remove duplicates based on centerId and keep unique centers
       const uniqueCenters = [
-        ...new Map(centersList.map((item) => [item.centerId, item])).values(),
+        ...new Map(
+          combinedCenters.map((item) => [item.centerId, item])
+        ).values(),
       ];
+
       setCentersList(uniqueCenters);
     } else if (type === "online" && packages.online.length > 0) {
       setCentersList(packages.online[0].centers || []);
@@ -193,16 +217,46 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
   const handleCenterChange = (e) => {
     setSelectedCenter(e.target.value);
 
-    if (packageType === "hybrid" && packages.hybrid.length > 0) {
-      const centerPackages = packages.hybrid[0].centers.filter(
-        (c) => c.centerId === e.target.value
-      );
+    if (packageType === "hybrid") {
+      // Find online and offline rates for the selected center
+      let onlinePrice = 100; // default
+      let offlinePrice = 125; // default
 
-      const onlinePkg = centerPackages.find((c) => c.mode === "online");
-      const offlinePkg = centerPackages.find((c) => c.mode === "offline");
+      // Check in online packages for this center
+      if (packages.online.length > 0) {
+        const onlineCenter = packages.online[0].centers?.find(
+          (c) => c.centerId === e.target.value
+        );
+        if (onlineCenter) {
+          onlinePrice = onlineCenter.oneClassPrice;
+        }
+      }
 
-      if (onlinePkg) setOnlineRate(onlinePkg.oneClassPrice);
-      if (offlinePkg) setOfflineRate(offlinePkg.oneClassPrice);
+      // Check in offline packages for this center
+      if (packages.offline.length > 0) {
+        const offlineCenter = packages.offline[0].centers.find(
+          (c) => c.centerId === e.target.value
+        );
+        if (offlineCenter) {
+          offlinePrice = offlineCenter.oneClassPrice;
+        }
+      }
+
+      // Also check hybrid package data if it exists
+      if (packages.hybrid.length > 0) {
+        const centerPackages = packages.hybrid[0].centers.filter(
+          (c) => c.centerId === e.target.value
+        );
+
+        const onlinePkg = centerPackages.find((c) => c.mode === "online");
+        const offlinePkg = centerPackages.find((c) => c.mode === "offline");
+
+        if (onlinePkg) onlinePrice = onlinePkg.oneClassPrice;
+        if (offlinePkg) offlinePrice = offlinePkg.oneClassPrice;
+      }
+
+      setOnlineRate(onlinePrice);
+      setOfflineRate(offlinePrice);
     }
   };
 
@@ -329,7 +383,9 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
         setTimeout(() => {
           onClose();
           // Redirect to payment details page with the payment ID
-          navigate(`/super-admin/department/payment-details/${receivedPaymentId}`);
+          navigate(
+            `/super-admin/department/payment-details/${receivedPaymentId}`
+          );
         }, 1500);
       } else {
         toast.error("Failed to submit package selection");

@@ -62,7 +62,9 @@ const CompleteEnquiryLogs = () => {
           const logData = sortedLogs.map((log, index) => ({
             id: index + 1,
             createdAt: formatDate(log.createdAt),
-            action: log.action.trim(),
+            comment: log.comment || "N/A",
+            empName: log.empName || "N/A",
+            department: log.department || "N/A",
           }));
 
           setLogs(logData);
@@ -81,11 +83,18 @@ const CompleteEnquiryLogs = () => {
   }, [id]);
 
   const formatDate = (dateStr) => {
-    const [day, month, year] = dateStr.split("-");
-    return `${day}/${month}/20${year}`;
+    // Handle different date formats
+    if (dateStr.includes(",")) {
+      // Format: "22-05-25 , 05:09 PM"
+      const [datePart] = dateStr.split(",");
+      const [day, month, year] = datePart.trim().split("-");
+      return `${day}/${month}/20${year}`;
+    } else {
+      // Format: "22-05-25"
+      const [day, month, year] = dateStr.split("-");
+      return `${day}/${month}/20${year}`;
+    }
   };
-
-
 
   const handleCloseNoteDialog = () => {
     setNoteDialog({
@@ -126,13 +135,15 @@ const CompleteEnquiryLogs = () => {
     navigate(-1);
   };
 
-  // New method to handle log download
+  // Updated method to handle log download with new columns
   const handleDownloadLogs = () => {
     // Prepare data for download
     const dataToExport = rows.map((row) => ({
       "Sl. No": row.id,
       Date: row.createdAt,
-      Action: row.action,
+      Comment: row.comment,
+      "Employee Name": row.empName,
+      Department: row.department,
     }));
 
     // Create a new workbook and worksheet
@@ -155,25 +166,68 @@ const CompleteEnquiryLogs = () => {
       headerName: "Sl. No",
       width: 80,
       minWidth: 80,
+      headerAlign: "center",
+      align: "center",
     },
     {
       field: "createdAt",
       headerName: "Date",
-      width: 150,
-      minWidth: 150,
+      width: 120,
+      minWidth: 120,
+      headerAlign: "center",
+      align: "center",
     },
     {
-      field: "action",
-      headerName: "Actions",
-      flex: 1,
-      minWidth: 400,
+      field: "comment",
+      headerName: "Comment",
+      flex: 2,
+      minWidth: 250,
       renderCell: (params) => (
         <Box
           sx={{
             width: "100%",
-            padding: "8px 0",
+            padding: "12px 8px",
             whiteSpace: "normal",
-            lineHeight: "1.5",
+            lineHeight: "1.4",
+            wordWrap: "break-word",
+          }}
+        >
+          {params.value}
+        </Box>
+      ),
+    },
+    {
+      field: "empName",
+      headerName: "Action Taken By",
+      flex: 1,
+      minWidth: 150,
+      renderCell: (params) => (
+        <Box
+          sx={{
+            width: "100%",
+            padding: "12px 8px",
+            whiteSpace: "normal",
+            lineHeight: "1.4",
+            fontWeight: 500,
+          }}
+        >
+          {params.value}
+        </Box>
+      ),
+    },
+    {
+      field: "department",
+      headerName: "Department",
+      flex: 1,
+      minWidth: 150,
+      renderCell: (params) => (
+        <Box
+          sx={{
+            width: "100%",
+            padding: "12px 8px",
+            whiteSpace: "normal",
+            lineHeight: "1.4",
+            textTransform: "capitalize",
           }}
         >
           {params.value}
@@ -336,11 +390,13 @@ const CompleteEnquiryLogs = () => {
                   },
                   "& .MuiDataGrid-cell": {
                     whiteSpace: "normal !important",
-                    lineHeight: "1.5 !important",
-                    padding: "8px !important",
+                    lineHeight: "1.4 !important",
+                    padding: "12px 8px !important",
+                    borderRight: "1px solid rgba(224, 224, 224, 1)",
                   },
                   "& .MuiDataGrid-row": {
                     maxHeight: "none !important",
+                    minHeight: "60px !important",
                   },
                   "& .MuiDataGrid-cell:focus": {
                     outline: "none",
@@ -352,13 +408,17 @@ const CompleteEnquiryLogs = () => {
                     backgroundColor: "#642b8f",
                     color: "white",
                     fontWeight: 600,
+                    fontSize: "14px",
+                    padding: "12px 8px",
+                    borderRight: "1px solid rgba(255, 255, 255, 0.3)",
+                  },
+                  "& .MuiDataGrid-columnSeparator": {
+                    display: "none",
                   },
                 }}
               />
             </Box>
           </Paper>
-
-   
         </Box>
       </Fade>
     </ThemeProvider>

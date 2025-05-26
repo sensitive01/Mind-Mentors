@@ -1,7 +1,9 @@
 const axios = require('axios');
 
-axios.post('https://live.mindmentorz.in/api/new-class/create-new-class', {
-  className: "Database Discussion",
+// axios.post('https://live.mindmentorz.in/api/new-class/create-new-class', {
+axios.post('http://localhost:3000/api/new-class/create-new-class', {
+
+  className: "Check For Statistic Data",
   coachName: "Aswinraj"
 }, {
   headers: {
@@ -12,5 +14,5 @@ axios.post('https://live.mindmentorz.in/api/new-class/create-new-class', {
   console.log('Response:', response.data);
 })
 .catch(error => {
-  console.error('Error:', error.response?.data || error.message);
+  console.error('Error:', error);
 });

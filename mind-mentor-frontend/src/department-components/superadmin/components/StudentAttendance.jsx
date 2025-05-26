@@ -4,15 +4,17 @@ import {
   ThemeProvider,
   Typography,
   createTheme,
+  Button,
 } from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { getAttandanceReport } from "../../../api/service/employee/EmployeeService";
+import { Visibility } from "@mui/icons-material";
 
 const theme = createTheme({
   palette: {
     primary: {
-      main: "#642b8f", // Indigo
-      // main: '#f8a213', // Indigo
+      main: "#642b8f",
       light: "#818CF8",
       dark: "#4F46E5",
     },
@@ -40,48 +42,135 @@ const theme = createTheme({
   },
 });
 
-const attendanceColumns = [
-  { field: "sno", headerName: "S.No", width: 80 },
-  { field: "studentID", headerName: "Student ID", width: 120 },
-  { field: "studentName", headerName: "Student Name", width: 180 },
-  { field: "grade", headerName: "Grade", width: 100 },
-  { field: "section", headerName: "Section", width: 100 },
-  { field: "presentDays", headerName: "Present Days", width: 120 },
-  { field: "absentDays", headerName: "Absent Days", width: 120 },
-  { field: "totalDays", headerName: "Total Days", width: 120 },
-  { field: "attendancePercentage", headerName: "Attendance %", width: 150 },
-];
-
-const attendanceData = [
-  {
-    id: 1,
-    sno: 1,
-    studentID: "ST001",
-    studentName: "Alice Johnson",
-    grade: "10",
-    section: "A",
-    presentDays: 18,
-    absentDays: 2,
-    totalDays: 20,
-    attendancePercentage: "90%",
-  },
-  {
-    id: 2,
-    sno: 2,
-    studentID: "ST002",
-    studentName: "Bob Williams",
-    grade: "9",
-    section: "B",
-    presentDays: 16,
-    absentDays: 4,
-    totalDays: 20,
-    attendancePercentage: "80%",
-  },
-  // Add more rows as needed
-];
-
 const StudentAttendance = () => {
-  const [rows, setRows] = useState(attendanceData);
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Function to format date
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  // Function to handle view statistics
+  const handleViewStatistics = (internalMeetingID) => {
+    const url = `https://class.mindmentorz.in/learning-analytics-dashboard/?meeting=${internalMeetingID}&lang=en`;
+    window.open(url, "_blank");
+  };
+
+  // Define columns for the DataGrid
+  const columns = [
+    {
+      field: "sno",
+      headerName: "S.No",
+      width: 80,
+      sortable: false,
+    },
+    {
+      field: "classAndCoach",
+      headerName: "Class & Coach",
+      width: 250,
+      flex: 1,
+      renderCell: (params) => (
+        <Box sx={{ py: 1 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              color: "text.primary",
+              lineHeight: 1.2,
+            }}
+          >
+            {params.row.className}
+          </Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "text.secondary",
+              fontSize: "0.875rem",
+              lineHeight: 1.2,
+              mt: 0.5,
+            }}
+          >
+            {params.row.coachName}
+          </Typography>
+        </Box>
+      ),
+    },
+    {
+      field: "startTime",
+      headerName: "Date & Time",
+      width: 180,
+    },
+    {
+      field: "meetingID",
+      headerName: "Meeting ID",
+      width: 180,
+    },
+    {
+      field: "actions",
+      headerName: "Action",
+      width: 120,
+      sortable: false,
+      filterable: false,
+      renderCell: (params) => (
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={<Visibility />}
+          onClick={() => handleViewStatistics(params.row.internalMeetingID)}
+          sx={{
+            backgroundColor: "#642b8f",
+            "&:hover": {
+              backgroundColor: "#4F46E5",
+            },
+            textTransform: "none",
+            fontSize: "0.75rem",
+          }}
+        >
+          View Stats
+        </Button>
+      ),
+    },
+  ];
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const response = await getAttandanceReport();
+        console.log(response);
+
+        if (response.status===200) {
+          // Transform the data to match DataGrid requirements
+          const transformedData = response.data.data.map((item, index) => ({
+            id: item._id,
+            sno: index + 1,
+            className: item.className,
+            coachName: item.coachName,
+            startTime: item.formattedStartTime,
+            meetingID: item.meetingID,
+            internalMeetingID: item.internalMeetingID,
+            classId: item.classId,
+          }));
+
+          setRows(transformedData);
+        }
+      } catch (error) {
+        console.error("Error fetching attendance data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <ThemeProvider theme={theme}>
@@ -105,11 +194,12 @@ const StudentAttendance = () => {
               mb: 3,
             }}
           >
-            Student Attendance Report
+            Class Sessions Report
           </Typography>
           <DataGrid
             rows={rows}
-            columns={attendanceColumns}
+            columns={columns}
+            loading={loading}
             disableRowSelectionOnClick
             slots={{ toolbar: GridToolbar }}
             slotProps={{
@@ -118,9 +208,14 @@ const StudentAttendance = () => {
                 quickFilterProps: { debounceMs: 500 },
               },
             }}
+            initialState={{
+              pagination: {
+                paginationModel: { page: 0, pageSize: 25 },
+              },
+            }}
+            pageSizeOptions={[25, 50, 100]}
             sx={{
-              height: 500, // Fixed height for the table
-
+              height: 500,
               "& .MuiDataGrid-cell:focus": {
                 outline: "none",
               },
@@ -137,6 +232,9 @@ const StudentAttendance = () => {
               },
               "& .MuiDataGrid-columnHeader .MuiCheckbox-root": {
                 color: "#FFFFFF",
+              },
+              "& .MuiDataGrid-row": {
+                minHeight: "60px !important",
               },
             }}
           />

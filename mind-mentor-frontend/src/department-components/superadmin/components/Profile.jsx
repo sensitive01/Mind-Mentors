@@ -1,6 +1,10 @@
 import { Calendar, Edit, Eye, EyeOff, Link as LinkIcon, Lock, Mail, MapPin, Save, X } from 'lucide-react';
 import React, { useState } from 'react';
+import {  changePassword } from '../../../api/service/employee/EmployeeService';
+
 const ProfileView = () => {
+  // Fixed typo in localStorage
+  const empId = localStorage.getItem("empId");
   const [isHovered, setIsHovered] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [showSaveMessage, setShowSaveMessage] = useState(false);
@@ -16,6 +20,9 @@ const ProfileView = () => {
     confirm: false
   });
   const [passwordResetError, setPasswordResetError] = useState('');
+  // Added success message state for password reset
+  const [passwordResetSuccess, setPasswordResetSuccess] = useState(false);
+  
   const initialProfile = {
     name: "Super Admin mindmentorz",
     role: "Super Admin Manager at mindmentorz",
@@ -34,28 +41,80 @@ const ProfileView = () => {
   
   const [profile, setProfile] = useState(initialProfile);
   const [editedProfile, setEditedProfile] = useState(initialProfile);
+  
+  // Validate password strength
+  const validatePasswordStrength = (password) => {
+    const minLength = 8;
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasLowercase = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+    
+    if (password.length < minLength) {
+      return "Password must be at least 8 characters long";
+    }
+    
+    if (!hasUppercase) {
+      return "Password must contain at least one uppercase letter";
+    }
+    
+    if (!hasLowercase) {
+      return "Password must contain at least one lowercase letter";
+    }
+    
+    if (!hasNumber) {
+      return "Password must contain at least one number";
+    }
+    
+    if (!hasSpecialChar) {
+      return "Password must contain at least one special character";
+    }
+    
+    return "";
+  };
+  
   const handleSave = () => {
     setProfile(editedProfile);
     setIsEditing(false);
     setShowSaveMessage(true);
     setTimeout(() => setShowSaveMessage(false), 3000);
   };
+  
   const handleCancel = () => {
     setEditedProfile(profile);
     setIsEditing(false);
   };
+  
   const handleChange = (field, value) => {
     setEditedProfile(prev => ({
       ...prev,
       [field]: value
     }));
   };
+  
   const handlePasswordResetChange = (field, value) => {
     setPasswordResetForm(prev => ({
       ...prev,
       [field]: value
     }));
+    
+    // Clear error when user starts typing
     setPasswordResetError('');
+    
+    // Real-time validation for new password field
+    if (field === 'newPassword' && value) {
+      const error = validatePasswordStrength(value);
+      if (error) {
+        setPasswordResetError(error);
+      }
+    }
+    
+    // Real-time validation for password match
+    if (field === 'confirmPassword' && value) {
+      if (passwordResetForm.newPassword !== value) {
+        setPasswordResetError('New passwords do not match');
+      }
+    }
   };
 
   const togglePasswordVisibility = (field) => {
@@ -65,8 +124,12 @@ const ProfileView = () => {
     }));
   };
 
-  const handlePasswordReset = (e) => {
+  const handlePasswordReset = async(e) => {
     e.preventDefault();
+    
+    // Reset any previous messages
+    setPasswordResetError('');
+    
     // Basic validation
     if (!passwordResetForm.currentPassword || !passwordResetForm.newPassword || !passwordResetForm.confirmPassword) {
       setPasswordResetError('All fields are required');
@@ -78,22 +141,36 @@ const ProfileView = () => {
       return;
     }
 
-    // Password strength check (example basic validation)
-    if (passwordResetForm.newPassword.length < 8) {
-      setPasswordResetError('Password must be at least 8 characters long');
+    // Password strength validation
+    const strengthError = validatePasswordStrength(passwordResetForm.newPassword);
+    if (strengthError) {
+      setPasswordResetError(strengthError);
       return;
     }
 
     // Here you would typically call an API to reset the password
-    console.log('Password reset submitted');
-    setIsPasswordResetModalOpen(false);
-    setPasswordResetForm({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
+    console.log('Password reset submitted', {
+      currentPassword: passwordResetForm.currentPassword,
+      newPassword: passwordResetForm.newPassword,
+      empId: empId
     });
-    setPasswordResetError('');
+
+    const response = await changePassword(passwordResetForm.currentPassword,passwordResetForm.newPassword,empId)
+    
+    // Show success message and close modal after a delay
+    setPasswordResetSuccess(true);
+    
+    setTimeout(() => {
+      setIsPasswordResetModalOpen(false);
+      setPasswordResetSuccess(false);
+      setPasswordResetForm({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+    }, 2000);
   };
+  
   return (
     <div className="w-full max-w-3xl mx-auto relative" style={{marginTop:'50px'}}>
     {/* Save Message Toast */}
@@ -113,89 +190,98 @@ const ProfileView = () => {
             <Lock className="w-6 h-6 mr-3 text-blue-500" />
             Reset Password
           </h2>
-          <form onSubmit={handlePasswordReset} className="space-y-4">
-            <div className="relative">
-              <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                Current Password
-              </label>
-              <div className="flex items-center">
-                <input
-                  type={passwordVisibility.current ? 'text' : 'password'}
-                  id="currentPassword"
-                  value={passwordResetForm.currentPassword}
-                  onChange={(e) => handlePasswordResetChange('currentPassword', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+          {passwordResetSuccess ? (
+            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+              Password reset successful!
+            </div>
+          ) : (
+            <form onSubmit={handlePasswordReset} className="space-y-4">
+              <div className="relative">
+                <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                  Current Password
+                </label>
+                <div className="flex items-center">
+                  <input
+                    type={passwordVisibility.current ? 'text' : 'password'}
+                    id="currentPassword"
+                    value={passwordResetForm.currentPassword}
+                    onChange={(e) => handlePasswordResetChange('currentPassword', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => togglePasswordVisibility('current')}
+                    className="ml-2 text-gray-500 hover:text-gray-700"
+                  >
+                    {passwordVisibility.current ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
+              <div className="relative">
+                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                  New Password
+                </label>
+                <div className="flex items-center">
+                  <input
+                    type={passwordVisibility.new ? 'text' : 'password'}
+                    id="newPassword"
+                    value={passwordResetForm.newPassword}
+                    onChange={(e) => handlePasswordResetChange('newPassword', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => togglePasswordVisibility('new')}
+                    className="ml-2 text-gray-500 hover:text-gray-700"
+                  >
+                    {passwordVisibility.new ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
+              <div className="relative">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                  Confirm New Password
+                </label>
+                <div className="flex items-center">
+                  <input
+                    type={passwordVisibility.confirm ? 'text' : 'password'}
+                    id="confirmPassword"
+                    value={passwordResetForm.confirmPassword}
+                    onChange={(e) => handlePasswordResetChange('confirmPassword', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => togglePasswordVisibility('confirm')}
+                    className="ml-2 text-gray-500 hover:text-gray-700"
+                  >
+                    {passwordVisibility.confirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
+              {passwordResetError && (
+                <div className="text-red-500 text-sm mt-2 p-2 bg-red-50 border border-red-200 rounded">
+                  {passwordResetError}
+                </div>
+              )}
+              <div className="flex space-x-4 mt-6">
+                <button
+                  type="submit"
+                  className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition-colors duration-300 flex items-center justify-center"
+                >
+                  <Lock className="w-4 h-4 mr-2" />
+                  Reset Password
+                </button>
                 <button
                   type="button"
-                  onClick={() => togglePasswordVisibility('current')}
-                  className="ml-2 text-gray-500 hover:text-gray-700"
+                  onClick={() => setIsPasswordResetModalOpen(false)}
+                  className="w-full bg-gray-200 text-gray-700 py-2 rounded-md hover:bg-gray-300 transition-colors duration-300"
                 >
-                  {passwordVisibility.current ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  Cancel
                 </button>
               </div>
-            </div>
-            <div className="relative">
-              <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                New Password
-              </label>
-              <div className="flex items-center">
-                <input
-                  type={passwordVisibility.new ? 'text' : 'password'}
-                  id="newPassword"
-                  value={passwordResetForm.newPassword}
-                  onChange={(e) => handlePasswordResetChange('newPassword', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button
-                  type="button"
-                  onClick={() => togglePasswordVisibility('new')}
-                  className="ml-2 text-gray-500 hover:text-gray-700"
-                >
-                  {passwordVisibility.new ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-            <div className="relative">
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                Confirm New Password
-              </label>
-              <div className="flex items-center">
-                <input
-                  type={passwordVisibility.confirm ? 'text' : 'password'}
-                  id="confirmPassword"
-                  value={passwordResetForm.confirmPassword}
-                  onChange={(e) => handlePasswordResetChange('confirmPassword', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button
-                  type="button"
-                  onClick={() => togglePasswordVisibility('confirm')}
-                  className="ml-2 text-gray-500 hover:text-gray-700"
-                >
-                  {passwordVisibility.confirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-            {passwordResetError && (
-              <div className="text-red-500 text-sm mt-2">{passwordResetError}</div>
-            )}
-            <div className="flex space-x-4 mt-6">
-              <button
-                type="submit"
-                className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition-colors duration-300"
-              >
-                Reset Password
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsPasswordResetModalOpen(false)}
-                className="w-full bg-gray-200 text-gray-700 py-2 rounded-md hover:bg-gray-300 transition-colors duration-300"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
+            </form>
+          )}
         </div>
       </div>
     )}
@@ -332,4 +418,5 @@ const ProfileView = () => {
   </div>
   );
 };
+
 export default ProfileView;

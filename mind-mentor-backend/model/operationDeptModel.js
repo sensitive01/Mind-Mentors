@@ -1,19 +1,15 @@
-
 const mongoose = require("mongoose");
 
 const ProgramSchema = new mongoose.Schema({
   program: { type: String },
   level: { type: String },
-  status: { type: String, default: "Enquiry Kid" }, // enquiry,Active kid, deactive kid 
-  enrolledDate:{type:Date},
-  totalClass:{type:Number,default:0},
-  attendedClass:{type:Number,default:0},
-  remainingClass:{type:Number,default:0},
-  centerName:{type:String},
-  centerType:{type:String}
-
-
-
+  status: { type: String, default: "Enquiry Kid" }, // enquiry,Active kid, deactive kid
+  enrolledDate: { type: Date },
+  totalClass: { type: Number, default: 0 },
+  attendedClass: { type: Number, default: 0 },
+  remainingClass: { type: Number, default: 0 },
+  centerName: { type: String },
+  centerType: { type: String },
 });
 
 const operationDeptSchema = new mongoose.Schema(
@@ -28,9 +24,8 @@ const operationDeptSchema = new mongoose.Schema(
     // otherRelationship: { type: String },
 
     source: { type: String },
-    message: { type: String },  //First Note in enq
-    // notes: { type: String },
-    
+    message: { type: String }, 
+    notes: { type: String ,default:"Empty"},
 
     kidFirstName: { type: String },
     kidLastName: { type: String },
@@ -44,41 +39,39 @@ const operationDeptSchema = new mongoose.Schema(
       type: [ProgramSchema],
     },
 
-
-
     schoolName: { type: String },
     address: { type: String },
     schoolPincode: { type: String },
     intentionOfParents: { type: String },
 
     enquiryType: { type: String, enum: ["warm", "cold"], default: "cold" },
-    
-  enquiryStatus: {
-  type: String,
-  enum: [
-    "Pending",
-    "Qualified Lead",
-    "Unqualified Lead",
-    "Unattended",
-    "Demo Interested",
-    "Demo Assigned",
-    "Demo Taken",
-    "Payment Link Sent",
-    "Enrolled",
-    "Need Clarification",
-    "Call Later",
-    "Not Interested",
-    "Not Answering",
-    "Wrong Number",
-    "Prospectus Sent"
-  ],
-  default: "Pending",
-},
+    enquiryStage: { type: String ,},
 
+    enquiryStatus: {
+      type: String,
+      // enum: [
+      //   "Pending",
+      //   "Qualified Lead",
+      //   "Unqualified Lead",
+      //   "Unattended",
+      //   "Demo Interested",
+      //   "Demo Assigned",
+      //   "Demo Taken",
+      //   "Payment Link Sent",
+      //   "Enrolled",
+      //   "Need Clarification",
+      //   "Call Later",
+      //   "Not Interested",
+      //   "Not Answering",
+      //   "Wrong Number",
+      //   "Prospectus Sent"
+      // ],
+      default: "Pending",
+    },
 
     disposition: {
       type: String,
-      enum: ["RnR", "Call Back", "None","Connected"],
+      enum: ["RnR", "Call Back", "None", "Connected"],
       default: "None",
     },
 
@@ -86,31 +79,32 @@ const operationDeptSchema = new mongoose.Schema(
     scheduleDemo: {
       status: {
         type: String,
-        enum: ["Pending", "Scheduled", "Conducted", "Cancelled","Attended"],
+        enum: ["Pending", "Scheduled", "Conducted", "Cancelled", "Attended"],
         default: "Pending",
       },
       sheduledDay: { type: String },
     },
-    
-    referral:[ {
-      referredTo: { type: String },
-      referredEmail: { type: String },
-    }],
+
+    referral: [
+      {
+        referredTo: { type: String },
+        referredEmail: { type: String },
+      },
+    ],
     logs: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Log",
     },
-    isNewUser :{type:Boolean,default:true},
-    paymentData:{type:String},
-
+    isNewUser: { type: Boolean, default: true },
+    paymentData: { type: String },
 
     // paymentLink: { type: String },
     paymentStatus: {
       type: String,
-      enum: ["Pending", "Success", "Requested","Processing"],
+      enum: ["Pending", "Success", "Requested", "Processing"],
       default: "Pending",
     },
-    paymentRenewal:{type:String}
+    paymentRenewal: { type: String },
   },
   { timestamps: true }
 );

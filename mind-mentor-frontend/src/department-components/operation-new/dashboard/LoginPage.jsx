@@ -7,6 +7,7 @@ import {
 } from "../../../api/service/employee/EmployeeService";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import mmLogo from "../../../assets/newLogo.png";
 
 const KidsLoginPage = () => {
   const [email, setEmail] = useState("");
@@ -99,7 +100,7 @@ const KidsLoginPage = () => {
         <div className="flex-grow flex flex-col justify-center">
           <h2 className="text-4xl font-bold leading-tight mb-4">Welcome to</h2>
           <img
-            src={"https://i.ibb.co/YNTRqkj/mindmentorz.png"}
+            src={mmLogo}
             alt="mindMentorImage"
             style={{ marginTop: "-50px" }}
           />

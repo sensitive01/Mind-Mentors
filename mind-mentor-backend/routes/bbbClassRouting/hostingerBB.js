@@ -3,12 +3,10 @@ const router = express.Router();
 const axios = require("axios");
 const Class = require("../../model/bbbClassModel/bbbClassModel");
 const { buildUrl } = require("../../utils/bigblue"); // Utility function to build signed BBB URLs
+const xml2js = require("xml2js");
 
 const BASE_URL = "https://class.mindmentorz.in";
 const SECRET = "T8g4qUus8uKCqBNFxu2hrXOIjbHO9GaLhIsudsu8g";
-
-
-
 
 // ✅ Route 1: Create a new class
 router.post("/create-new-class", async (req, res) => {
@@ -22,23 +20,26 @@ router.post("/create-new-class", async (req, res) => {
 
   const classId = Math.random().toString(36).substr(2, 8);
   const meetingID = `class-${classId}`;
-
-  // const createQuery = `name=${encodeURIComponent(
-  //   className
-  // )}&meetingID=${meetingID}&attendeePW=apwd&moderatorPW=mpwd&welcome=Welcome+to+${encodeURIComponent(
-  //   className
-  // )}!`;
-
   const createQuery = `name=${encodeURIComponent(
-  className
-)}&meetingID=${meetingID}&attendeePW=apwd&moderatorPW=mpwd&welcome=Welcome+to+${encodeURIComponent(
-  className
-)}!&record=true&autoStartRecording=true&allowStartStopRecording=false`;
+    className
+  )}&meetingID=${meetingID}&attendeePW=apwd&moderatorPW=mpwd&welcome=Welcome+to+${encodeURIComponent(
+    className
+  )}!&record=true&autoStartRecording=true&allowStartStopRecording=false`;
 
   const createUrl = buildUrl(BASE_URL, "create", createQuery, SECRET);
+  const parsedUrl = new URL(createUrl);
+  const newCheckSumData = parsedUrl.searchParams.get("checksum");
+  console.log("newCheckSumData",newCheckSumData)
 
   try {
-    await axios.get(createUrl); // Create BBB meeting
+    const data = await axios.get(createUrl); // Create BBB meeting
+    console.log("data",data)
+    const result = await xml2js.parseStringPromise(data.data, {
+      explicitArray: false,
+    });
+
+    console.log("result", result);
+    const internalMeetingID = result.response.internalMeetingID;
 
     // ✅ Save class info to MongoDB
     const newClass = new Class({
@@ -48,6 +49,8 @@ router.post("/create-new-class", async (req, res) => {
       meetingID,
       started: true,
       startTime: new Date(),
+      internalMeetingID,
+      checkSum:newCheckSumData
     });
 
     await newClass.save();
@@ -118,5 +121,146 @@ router.post("/new-sign-join-url", async (req, res) => {
     res.status(500).json({ error: "Failed to sign join URL" });
   }
 });
+
+router.post("/get-recordings-link", async (req, res) => {
+  console.log("Welcome to get meeting link",req.body)
+  const { meetingIDs } = req.body;
+  console.log("meetingIDs",meetingIDs)
+
+  try {
+    if (!Array.isArray(meetingIDs)) {
+      return res.status(400).json({ error: "meetingIDs should be an array" });
+    }
+
+    const recordingsLinks = [];
+
+    for (const meetingID of meetingIDs) {
+      const classRecord = await Class.findOne(
+        { meetingID },
+        { internalMeetingID: 1 }
+      );
+
+      if (classRecord && classRecord.internalMeetingID) {
+        const link = `https://class.mindmentorz.in/playback/presentation/2.3/${classRecord.internalMeetingID}`;
+        recordingsLinks.push(link);
+      }
+    }
+
+    console.log("recordingsLinks", recordingsLinks);
+
+    res.status(200).json({ links: recordingsLinks });
+  } catch (error) {
+    console.error("Error in getting the recordings:", error);
+    res.status(500).json({ error: "Failed to get the recordings" });
+  }
+});
+
+router.get("/get-learning-statistic-data/:meetingID", async (req, res) => {
+  console.log("Welcome to get-learning-statistic-data", req.body);
+  const { meetingID } = req.params;
+  console.log("meetingID:", meetingID);
+
+  // Construct the external URL
+  const url = `https://class.mindmentorz.in/learning-analytics-dashboard/?meeting=${meetingID}/zsur2sxyje0d/&lang=en`;
+
+  try {
+    const response = await axios.get(url);
+    console.log("Response status:", response);
+    console.log("Response content-type:", response.headers['content-type']);
+    
+    // Check if the response is HTML (which it is)
+    if (response.headers['content-type']?.includes('text/html')) {
+      console.log("Received HTML content, not XML/JSON",response);
+      
+      // Option 1: Return the HTML as is
+      return res.status(200).json({ 
+        success: true,
+        contentType: 'html',
+        data: response.data,
+        message: "Received HTML content from learning analytics dashboard"
+      });
+      
+      // Option 2: If you need to extract data from the HTML, you could use a library like cheerio
+      // const cheerio = require('cheerio');
+      // const $ = cheerio.load(response.data);
+      // // Extract specific data from the HTML
+      // const title = $('title').text();
+      // return res.status(200).json({ title, html: response.data });
+    }
+    
+    // If it's actually XML/JSON, parse accordingly
+    const contentType = response.headers['content-type'];
+    if (contentType?.includes('application/xml') || contentType?.includes('text/xml')) {
+      // Only try to parse as XML if content-type indicates XML
+      xml2js.parseString(response.data, { explicitArray: false }, (err, result) => {
+        if (err) {
+          console.error("XML parsing error:", err);
+          return res.status(500).json({ error: "Failed to parse XML response" });
+        }
+        return res.status(200).json(result);
+      });
+    } else if (contentType?.includes('application/json')) {
+      // If it's JSON, return as is
+      return res.status(200).json(response.data);
+    } else {
+      // For other content types, return raw data with info
+      return res.status(200).json({
+        success: true,
+        contentType: contentType,
+        data: response.data
+      });
+    }
+    
+  } catch (error) {
+    console.error("Error in getting the learning analytics data:", error.message);
+    return res.status(500).json({ 
+      error: "Failed to get the learning analytics data",
+      details: error.message 
+    });
+  }
+});
+
+
+
+
+router.get("/get-attandance-report", async (req, res) => {
+  try {
+    let classData = await Class.find(
+      { internalMeetingID: { $exists: true, $ne: null, $ne: "" } }
+    ).lean(); // use .lean() for plain JS objects
+
+    // Format and sort data
+    classData = classData
+      .map(item => ({
+        ...item,
+        formattedStartTime: new Date(item.startTime).toLocaleString("en-IN", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        }),
+      }))
+      .sort((a, b) => new Date(b.startTime) - new Date(a.startTime)); // latest first
+
+    res.status(200).json({ success: true, data: classData });
+  } catch (error) {
+    console.error("Error in getting the recordings:", error);
+    res.status(500).json({ success: false, error: "Failed to get the recordings" });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
 
 module.exports = router;

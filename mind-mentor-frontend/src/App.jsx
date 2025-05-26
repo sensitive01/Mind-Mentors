@@ -307,6 +307,8 @@ import SuperAdminIndividualAttandaceData from "./pages/employee/superadmin/Super
 import EditDiscountPage from "./pages/employee/superadmin/EditDiscountPage";
 import PaymentVerificationPage from "./pages/employee/superadmin/package/PaymentVerificationPage";
 import SuperAdminInvoicePage from "./pages/employee/superadmin/SuperAdminInvoicePage";
+import SuperAdminGetAllRecodingsPage from "./pages/employee/superadmin/SuperAdminGetAllRecodingsPage";
+import SuperAdminLearingStaticsDashboard from "./pages/employee/superadmin/SuperAdminLearingStaticsDashboard";
 
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
@@ -1026,7 +1028,12 @@ function App() {
           <Route path="/super-admin/department/package-table"  element={<SuperAdminPackageTableList />} />   
           <Route path="/super-admin/department/payment-details/:encodedData" element={<PaymentVerificationPage />}/> 
           <Route path="/super-admin/department/invoice-table" element={<SuperAdminInvoicePage />}/> 
+          <Route path="/super-admin/department/get-class-recordings" element={<SuperAdminGetAllRecodingsPage />}/> 
+          <Route path="/super-admin/department/student-attandace-report" element={<SuperadminAttendanceReport />}/>
 
+
+
+          <Route path="/super-admin/department/get-class-statistic-dashboard" element={<SuperAdminLearingStaticsDashboard />}/> 
 
 
 
@@ -1064,7 +1071,6 @@ function App() {
 
           
           <Route path="/superadminFeedback" element={<SuperadminFeedback />} />
-          <Route path="/superadminAttendanceReport" element={<SuperadminAttendanceReport />}/>
           <Route path="/superadminSupport/"  element={<SuperadminSupportRequest />}/>
           <Route path="/notifications" element={<NotificationTable />} />
           <Route path="/superadminAttendance" element={<SuperadminAttendance />}/>

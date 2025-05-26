@@ -28,8 +28,6 @@ import {
   getPackageData,
   getPhycicalCenterData,
   updatePackageData,
-  // deletePackage,
-  // updatePackage,
 } from "../../../api/service/employee/EmployeeService";
 
 import ClassPricingDialog from "./ClassPricingDialog";
@@ -87,6 +85,7 @@ const PackageTable = () => {
   const [openViewDialog, setOpenViewDialog] = useState(false);
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [editPackage, setEditPackage] = useState(null);
+  const [refreshData, setRefreshData] = useState(false);
 
   const [openPricingDialog, setOpenPricingDialog] = useState(false);
   const [onlinePrice, setOnlinePrice] = useState("");
@@ -108,9 +107,13 @@ const PackageTable = () => {
     "Advanced",
   ];
 
-  const packageTypes = ["Online", "Offline", "Hybrid", "Kit"];
+  const packageTypes = ["Online", "Offline", "Kit"];
 
   const timings = ["Day", "Night"];
+
+  const handleDataUpdate = () => {
+    setRefreshData((prev) => !prev);
+  };
 
   useEffect(() => {
     const fetchCenters = async () => {
@@ -148,7 +151,7 @@ const PackageTable = () => {
 
   useEffect(() => {
     fetchPackages();
-  }, []);
+  }, [refreshData]);
 
   const fetchPackages = async () => {
     try {
@@ -165,7 +168,8 @@ const PackageTable = () => {
             packageName: pkg.packageName || "N/A",
             programName: pkg.programName || "N/A",
             programLevel: pkg.programLevel || "N/A",
-            classes: pkg.classes || 0,
+            classStartFrom: pkg.classStartFrom || 0,
+            classUpTo: pkg.classUpTo || 0,
             amount: pkg.amount || 0,
             time: pkg.time || "N/A",
             mode: pkg.mode || "N/A",
@@ -198,13 +202,9 @@ const PackageTable = () => {
 
     try {
       setLoading(true);
-      // Uncomment when ready to use the actual API
-      // await deletePackage(id);
-      const deletedData = await rows.filter((item)=>item.id===id)
-      console.log("deletedData",deletedData)
-      const response = await deletePackageData(deletedData)
+      const deletedData = await rows.filter((item) => item.id === id);
+      const response = await deletePackageData(deletedData);
 
-      // For development without the actual API
       setTimeout(() => {
         setRows(rows.filter((row) => row.id !== id));
         setLoading(false);
@@ -231,48 +231,61 @@ const PackageTable = () => {
   };
 
   const handleEdit = (pkg) => {
-    setEditPackage({ ...pkg });
+    console.log("Edit package data:", pkg); // Debug log
+    // Ensure all required fields are mapped correctly
+    const packageToEdit = {
+      ...pkg,
+      // Make sure these fields exist for the edit dialog
+      classStartFrom:  pkg.classStartFrom || 0,
+      classUpTo: pkg.classUpTo || 0,
+    };
+    setEditPackage(packageToEdit);
     setOpenEditDialog(true);
   };
 
   const handleUpdatePackage = async (updatedData) => {
     try {
       setLoading(true);
-      
+
       const dataToUpdate = updatedData || editPackage;
-      
+      console.log("Updating package with data:", dataToUpdate); // Debug log
+
       const response = await updatePackageData(dataToUpdate);
-      
+
       if (response && response.status === 200) {
-        setRows(rows.map((row) => {
-          if (row.id === dataToUpdate.id) {
-            const updatedRow = {
-              ...row,
-              programLevel: dataToUpdate.programLevel,
-              classes: dataToUpdate.classes,
-              amount: dataToUpdate.amount,
-              time: dataToUpdate.time,
-              quantity: dataToUpdate.quantity,
-              kitPrice: dataToUpdate.kitPrice,
-              originalData: { ...dataToUpdate }
-            };
-            return updatedRow;
-          }
-          return row;
-        }));
-        
+        setRows(
+          rows.map((row) => {
+            if (row.id === dataToUpdate.id) {
+              const updatedRow = {
+                ...row,
+                programLevel: dataToUpdate.programLevel,
+                classStartFrom: dataToUpdate.classStartFrom, // Update both fields
+                classUpTo: dataToUpdate.classUpTo, // Update both fields
+                amount: dataToUpdate.amount,
+                time: dataToUpdate.time,
+                quantity: dataToUpdate.quantity,
+                kitPrice: dataToUpdate.kitPrice,
+                originalData: { ...dataToUpdate },
+              };
+              return updatedRow;
+            }
+            return row;
+          })
+        );
+
         if (selectedPackage && selectedPackage.id === dataToUpdate.id) {
-          setSelectedPackage(prev => ({
+          setSelectedPackage((prev) => ({
             ...prev,
             programLevel: dataToUpdate.programLevel,
-            classes: dataToUpdate.classes,
+            classStartFrom: dataToUpdate.classStartFrom,
+            classUpTo: dataToUpdate.classUpTo,
             amount: dataToUpdate.amount,
             time: dataToUpdate.time,
             quantity: dataToUpdate.quantity,
             kitPrice: dataToUpdate.kitPrice,
           }));
         }
-        
+
         setSnackbar({
           open: true,
           message: "Package updated successfully",
@@ -281,7 +294,6 @@ const PackageTable = () => {
       } else {
         throw new Error("Failed to update package");
       }
-      
     } catch (error) {
       console.error("Error updating package:", error);
       setSnackbar({
@@ -364,10 +376,16 @@ const PackageTable = () => {
       minWidth: 150,
     },
     {
-      field: "classes",
-      headerName: "Classes",
+      field: "classStartFrom",
+      headerName: "Class Start From",
       flex: 0.7,
-      minWidth: 80,
+      minWidth: 90,
+    },
+    {
+      field: "classUpTo",
+      headerName: "Class Up To",
+      flex: 0.8,
+      minWidth: 110,
     },
     {
       field: "centerName",
@@ -457,7 +475,6 @@ const PackageTable = () => {
               </Typography>
             </Grid>
 
-            {/* Program Information */}
             <Grid item xs={12} md={6}>
               <Typography variant="subtitle2" color="textSecondary">
                 Program
@@ -478,10 +495,10 @@ const PackageTable = () => {
 
             <Grid item xs={12} md={6}>
               <Typography variant="subtitle2" color="textSecondary">
-                Number of Classes
+                Class Start From
               </Typography>
               <Typography variant="body1" gutterBottom>
-                {packageData.classes || "N/A"}
+                {packageData.classStartFrom || "N/A"}
               </Typography>
             </Grid>
 
@@ -575,12 +592,13 @@ const PackageTable = () => {
     loading,
   }) => {
     const [localPackageData, setLocalPackageData] = useState({});
-    
+
     useEffect(() => {
-      if (packageData) {
+      if (packageData && open) {
+        console.log("Setting edit dialog data:", packageData); // Debug log
         setLocalPackageData({ ...packageData });
       }
-    }, [packageData]);
+    }, [packageData, open]);
 
     if (!open) return null;
 
@@ -592,6 +610,7 @@ const PackageTable = () => {
     };
 
     const handleSubmit = () => {
+      console.log("Submitting edit data:", localPackageData); // Debug log
       onUpdate(localPackageData);
     };
 
@@ -661,11 +680,24 @@ const PackageTable = () => {
 
             <Grid item xs={12} md={6}>
               <TextField
-                label="Number of Classes"
+                label="Class Start From"
                 type="number"
-                value={localPackageData.classes || ""}
+                value={localPackageData.classStartFrom || ""}
                 onChange={(e) =>
-                  handleChange("classes", parseInt(e.target.value) || 0)
+                  handleChange("classStartFrom", parseInt(e.target.value) || 0)
+                }
+                fullWidth
+                margin="normal"
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Class Up To"
+                type="number"
+                value={localPackageData.classUpTo || ""}
+                onChange={(e) =>
+                  handleChange("classUpTo", parseInt(e.target.value) || 0)
                 }
                 fullWidth
                 margin="normal"
@@ -806,16 +838,15 @@ const PackageTable = () => {
                 Package Management
               </Typography>
             </Box>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleOpenPricingDialog}
-                sx={{ height: 36 }}
-                startIcon={<School />}
-              >
-                Set Class Price
-              </Button>
-     
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleOpenPricingDialog}
+              sx={{ height: 36 }}
+              startIcon={<School />}
+            >
+              Set Class Price
+            </Button>
           </Box>
           <DataGrid
             rows={rows}
@@ -873,6 +904,7 @@ const PackageTable = () => {
             centerPrices={centerPrices}
             handleCenterPriceChange={handleCenterPriceChange}
             existingCenters={existingCenters}
+            onDataUpdate={handleDataUpdate}
           />
         )}
 

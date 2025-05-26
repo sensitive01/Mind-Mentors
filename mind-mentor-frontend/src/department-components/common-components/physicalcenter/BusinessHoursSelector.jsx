@@ -3,7 +3,6 @@
 import { useState } from "react";
 
 const BusinessHoursSelector = ({ onChange, initialData = [] }) => {
-  // Initialize business hours for each day of the week
 
   const [businessHours, setBusinessHours] = useState(
     initialData && initialData.length > 0
@@ -54,10 +53,8 @@ const BusinessHoursSelector = ({ onChange, initialData = [] }) => {
         ]
   );
 
-  // Copy hours from one day to all other days
   const [expandedDay, setExpandedDay] = useState(null);
 
-  // Generate time options for dropdowns
   const timeOptions = [];
   for (let hour = 0; hour < 24; hour++) {
     const formattedHour = hour < 10 ? `0${hour}` : hour;
@@ -65,7 +62,6 @@ const BusinessHoursSelector = ({ onChange, initialData = [] }) => {
     timeOptions.push(`${formattedHour}:30`);
   }
 
-  // Handle mode change
   const handleModeChange = (index, mode) => {
     const updatedHours = [...businessHours];
 
@@ -96,7 +92,6 @@ const BusinessHoursSelector = ({ onChange, initialData = [] }) => {
     onChange(updatedHours);
   };
 
-  // Toggle day expanded state
   const toggleDayExpanded = (index) => {
     if (expandedDay === index) {
       setExpandedDay(null);
@@ -105,7 +100,6 @@ const BusinessHoursSelector = ({ onChange, initialData = [] }) => {
     }
   };
 
-  // Handle time change
   const handleTimeChange = (dayIndex, periodIndex, field, value) => {
     const updatedHours = [...businessHours];
     updatedHours[dayIndex].periods[periodIndex] = {
@@ -116,13 +110,11 @@ const BusinessHoursSelector = ({ onChange, initialData = [] }) => {
     onChange(updatedHours);
   };
 
-  // Add a new time period to a day
   const addTimePeriod = (dayIndex) => {
     const updatedHours = [...businessHours];
     const lastPeriod =
       updatedHours[dayIndex].periods[updatedHours[dayIndex].periods.length - 1];
 
-    // Default to the closeTime of the last period + 1 hour for new period's openTime
     let defaultOpenHour = parseInt(lastPeriod.closeTime.split(":")[0]) + 1;
     if (defaultOpenHour >= 24) defaultOpenHour = 23;
 
@@ -145,12 +137,10 @@ const BusinessHoursSelector = ({ onChange, initialData = [] }) => {
     onChange(updatedHours);
   };
 
-  // Remove a time period from a day
   const removeTimePeriod = (dayIndex, periodIndex) => {
     const updatedHours = [...businessHours];
     updatedHours[dayIndex].periods.splice(periodIndex, 1);
 
-    // If no periods left, add a default one
     if (updatedHours[dayIndex].periods.length === 0) {
       updatedHours[dayIndex].periods.push({
         openTime: "09:00",
@@ -162,7 +152,6 @@ const BusinessHoursSelector = ({ onChange, initialData = [] }) => {
     onChange(updatedHours);
   };
 
-  // Apply current day's schedule to all other days
   const applyToAllDays = (dayIndex) => {
     const sourceDay = businessHours[dayIndex];
     const updatedHours = businessHours.map((day) => ({
@@ -194,9 +183,7 @@ const BusinessHoursSelector = ({ onChange, initialData = [] }) => {
             key={dayData.day}
             className="border-b border-gray-200 last:border-b-0"
           >
-            {/* Day Header Row */}
             <div className="grid grid-cols-12 p-3 items-center hover:bg-gray-50">
-              {/* Expand/Collapse and Day */}
               <div className="col-span-3 flex items-center">
                 <button
                   type="button"
@@ -221,7 +208,6 @@ const BusinessHoursSelector = ({ onChange, initialData = [] }) => {
                 <span className="font-medium">{dayData.day}</span>
               </div>
 
-              {/* Status */}
               <div className="col-span-5">
                 {dayData.isClosed ? (
                   <span className="text-sm px-2 py-1 bg-red-50 text-red-600 rounded-md">
@@ -243,7 +229,6 @@ const BusinessHoursSelector = ({ onChange, initialData = [] }) => {
                 )}
               </div>
 
-              {/* Mode Selection */}
               <div className="col-span-4">
                 <div className="flex border border-gray-200 rounded-lg overflow-hidden">
                   <button
@@ -320,8 +305,6 @@ const BusinessHoursSelector = ({ onChange, initialData = [] }) => {
                 </div>
               </div>
             </div>
-
-            {/* Expanded Time Periods */}
             {expandedDay === dayIndex &&
               !dayData.isClosed &&
               !dayData.is24Hours && (

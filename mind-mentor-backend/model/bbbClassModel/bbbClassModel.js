@@ -24,6 +24,9 @@ const bbbClassModel = new mongoose.Schema({
   startTime: {
     type: Date,
   },
+  checkSum:{type:String},
+  internalMeetingID:{type:String},
+  
 });
 
 module.exports = mongoose.model("bbbClassModel", bbbClassModel);

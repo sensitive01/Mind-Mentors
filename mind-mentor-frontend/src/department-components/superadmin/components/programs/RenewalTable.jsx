@@ -25,9 +25,6 @@ import {
   adminDeleteProgramme,
   adminUpdateProgramme,
   getAllProgrameData,
-  // Add these new imports to your service file:
-  // adminUpdateProgramme,
-  // adminDeleteProgramme,
 } from "../../../../api/service/employee/EmployeeService";
 
 const theme = createTheme({
@@ -76,13 +73,13 @@ const ProgramListing = () => {
   });
   const [tempLevel, setTempLevel] = useState("");
   const [loading, setLoading] = useState(false);
+  const [dataLoading, setDataLoading] = useState(false);
   const [toast, setToast] = useState({
     open: false,
     message: "",
     severity: "success",
   });
 
-  // Enhanced columns with improved widths and better responsive behavior
   const columns = [
     {
       field: "sno",
@@ -126,19 +123,19 @@ const ProgramListing = () => {
         if (!params || !params.value || params.value.length === 0) {
           return "-";
         }
-    
+
         const levels = Array.isArray(params.value) ? params.value : [];
-    
+
         return (
           <Box
-            sx={{ 
-              display: "flex", 
-              flexWrap: "wrap", 
-              gap: 0.8, 
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 0.8,
               maxWidth: "100%",
-              px: 0.5, // Add horizontal padding
-              alignItems: "flex-start", // Align items at the top
-              height: "100%", // Take full height of the cell
+              px: 0.5,
+              alignItems: "flex-start",
+              height: "100%",
             }}
           >
             {levels.map((level, index) => (
@@ -152,11 +149,11 @@ const ProgramListing = () => {
                   color: "primary.main",
                   fontSize: "0.75rem",
                   height: "22px",
-                  margin: "2px", // Add margin between chips
+                  margin: "2px",
                   "& .MuiChip-label": {
                     padding: "0px 8px",
                     whiteSpace: "normal",
-                    lineHeight: "1.2", // Better line height for chip text
+                    lineHeight: "1.2",
                   },
                 }}
               />
@@ -203,7 +200,7 @@ const ProgramListing = () => {
 
   const fetchProgramData = async () => {
     try {
-      setLoading(true);
+      setDataLoading(true);
       const response = await getAllProgrameData();
 
       if (response && response.status === 200) {
@@ -212,6 +209,7 @@ const ProgramListing = () => {
           sno: index + 1,
         }));
         setRows(processedRows);
+        console.log("Fetched programs:", processedRows);
       } else {
         console.error("Invalid API response format:", response);
         setToast({
@@ -228,7 +226,7 @@ const ProgramListing = () => {
         severity: "error",
       });
     } finally {
-      setLoading(false);
+      setDataLoading(false);
     }
   };
 
@@ -236,7 +234,6 @@ const ProgramListing = () => {
     fetchProgramData();
   }, []);
 
-  // Handle Edit button click
   const handleEditClick = (program) => {
     setSelectedProgram(program);
     setNewProgram({
@@ -248,7 +245,6 @@ const ProgramListing = () => {
     setOpen(true);
   };
 
-  // Handle Delete button click
   const handleDeleteClick = (program) => {
     setSelectedProgram(program);
     setDeleteDialogOpen(true);
@@ -257,6 +253,7 @@ const ProgramListing = () => {
   const handleClickOpen = () => {
     setEditMode(false);
     setNewProgram({ programName: "", programLevel: [] });
+    setTempLevel("");
     setOpen(true);
   };
 
@@ -339,23 +336,25 @@ const ProgramListing = () => {
         setLoading(true);
 
         const programData = {
-          programName: newProgram.programName,
+          programName: newProgram.programName.trim(),
           programLevel: [...newProgram.programLevel],
         };
 
+        console.log("Adding program:", programData);
         const response = await adminAddNewProgramme(programData);
+        console.log("Add response:", response);
 
-        if (response && (response.status === 200 || response.success)) {
-          await fetchProgramData();
+        if (response.status === 201||response.status === 200) {
           handleClose();
 
-          setTimeout(() => {
-            setToast({
-              open: true,
-              message: "Program added successfully!",
-              severity: "success",
-            });
-          }, 100);
+          // Refresh the data immediately
+          await fetchProgramData();
+
+          setToast({
+            open: true,
+            message: "Program added successfully!",
+            severity: "success",
+          });
         } else {
           setToast({
             open: true,
@@ -389,25 +388,22 @@ const ProgramListing = () => {
 
         const programData = {
           _id: newProgram._id,
-          programName: newProgram.programName,
+          programName: newProgram.programName.trim(),
           programLevel: [...newProgram.programLevel],
         };
 
-        console.log("programData",programData)
-
+        console.log("Updating program:", programData);
         const response = await adminUpdateProgramme(programData);
 
         if (response && (response.status === 200 || response.success)) {
-          await fetchProgramData();
           handleClose();
+          await fetchProgramData();
 
-          setTimeout(() => {
-            setToast({
-              open: true,
-              message: "Program updated successfully!",
-              severity: "success",
-            });
-          }, 100);
+          setToast({
+            open: true,
+            message: "Program updated successfully!",
+            severity: "success",
+          });
         } else {
           setToast({
             open: true,
@@ -441,16 +437,14 @@ const ProgramListing = () => {
         const response = await adminDeleteProgramme(selectedProgram._id);
 
         if (response && (response.status === 200 || response.success)) {
-          await fetchProgramData();
           handleDeleteDialogClose();
+          await fetchProgramData();
 
-          setTimeout(() => {
-            setToast({
-              open: true,
-              message: "Program deleted successfully!",
-              severity: "success",
-            });
-          }, 100);
+          setToast({
+            open: true,
+            message: "Program deleted successfully!",
+            severity: "success",
+          });
         } else {
           setToast({
             open: true,
@@ -518,7 +512,7 @@ const ProgramListing = () => {
                   letterSpacing: "-0.5px",
                 }}
               >
-                Program Listing
+                Program Listing ({rows.length} programs)
               </Typography>
             </Box>
             <Button
@@ -548,7 +542,7 @@ const ProgramListing = () => {
             autoHeight
             disableRowSelectionOnClick
             disableDensitySelector
-            loading={loading}
+            loading={dataLoading}
             getRowId={(row) => row._id || row.sno.toString()}
             slots={{ toolbar: GridToolbar }}
             slotProps={{
@@ -590,9 +584,9 @@ const ProgramListing = () => {
                 py: 1.5,
                 paddingLeft: 2,
                 paddingRight: 2,
-                whiteSpace: "normal !important", // Allow text to wrap
+                whiteSpace: "normal !important",
                 overflow: "visible",
-                lineHeight: "1.5", // Improve line height for wrapped text
+                lineHeight: "1.5",
               },
               "& .MuiDataGrid-cell:focus": {
                 outline: "none",
@@ -602,8 +596,8 @@ const ProgramListing = () => {
               },
               "& .MuiDataGrid-row": {
                 fontSize: "14px",
-                minHeight: "80px !important", // Increase minimum row height
-                height: "auto !important", // Allow rows to expand based on content
+                minHeight: "80px !important",
+                height: "auto !important",
               },
               "& .MuiDataGrid-columnHeader": {
                 backgroundColor: "#642b8f",
@@ -623,7 +617,7 @@ const ProgramListing = () => {
                 padding: 2,
               },
               "& .MuiDataGrid-virtualScroller": {
-                minHeight: "300px", // Ensure enough height for content
+                minHeight: "300px",
               },
               "& .MuiDataGrid-overlay": {
                 backgroundColor: "rgba(255, 255, 255, 0.8)",
@@ -631,11 +625,9 @@ const ProgramListing = () => {
               "& .MuiDataGrid-columnSeparator": {
                 visibility: "hidden",
               },
-              // Force all cells to use auto height
               "& .MuiDataGrid-cell--textLeft": {
                 whiteSpace: "normal",
               },
-              // Ensure Grid renders correctly with wrapped text
               "& .MuiDataGrid-viewport": {
                 overflow: "visible",
               },
@@ -650,7 +642,6 @@ const ProgramListing = () => {
         </Paper>
       </Box>
 
-      {/* Add/Edit Program Dialog */}
       <Dialog
         open={open}
         onClose={handleClose}
@@ -681,6 +672,7 @@ const ProgramListing = () => {
             placeholder="Enter program name"
             type="text"
             fullWidth
+            multiline
             variant="outlined"
             value={newProgram.programName}
             onChange={handleNameChange}
@@ -690,7 +682,6 @@ const ProgramListing = () => {
             }}
           />
 
-          {/* Program Levels Section */}
           <Box sx={{ mb: 3 }}>
             <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
               Program Levels
@@ -702,6 +693,7 @@ const ProgramListing = () => {
                 placeholder="Enter a program level and press Enter"
                 type="text"
                 fullWidth
+                multiline
                 variant="outlined"
                 value={tempLevel}
                 onChange={handleLevelChange}
@@ -713,6 +705,7 @@ const ProgramListing = () => {
               <Button
                 variant="outlined"
                 onClick={handleAddLevel}
+                disabled={!tempLevel.trim()}
                 sx={{
                   borderRadius: 1.5,
                   whiteSpace: "nowrap",
@@ -760,7 +753,7 @@ const ProgramListing = () => {
             onClick={editMode ? handleUpdateProgram : handleAddProgram}
             variant="contained"
             disabled={
-              !newProgram.programName ||
+              !newProgram.programName.trim() ||
               newProgram.programLevel.length === 0 ||
               loading
             }
@@ -783,7 +776,6 @@ const ProgramListing = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}
         onClose={handleDeleteDialogClose}

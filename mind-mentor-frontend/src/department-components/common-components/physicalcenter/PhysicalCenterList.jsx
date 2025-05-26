@@ -5,7 +5,6 @@ import {
   deletePhysicalCenters,
   fetchPhycicalCenterData,
 } from "../../../api/service/employee/EmployeeService";
-import axios from "axios";
 
 const ImageDisplay = ({ images = [], centerName }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -390,7 +389,6 @@ const ChessCenterCard = ({ center, onDelete }) => {
         </div>
       </div>
 
-      {/* Delete confirmation modal */}
       <DeleteConfirmationModal
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}

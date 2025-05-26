@@ -22,6 +22,9 @@ userRoute.get('/get-employee-data/:empId',userController.getEmployeeData);
 userRoute.put('/update-employee-data/:empId',userController.updateEmployeeData);
 userRoute.put('/delete-employee-data/:empId',userController.deleteEmployeeData);
 
+userRoute.put('/change-the-employee-password/:empId',userController.changeThePassword);
+
+
 
 
 

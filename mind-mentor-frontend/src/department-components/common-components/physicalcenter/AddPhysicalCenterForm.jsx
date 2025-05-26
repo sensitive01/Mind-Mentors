@@ -11,7 +11,7 @@ const AddPhysicalCenterForm = ({ initialData = null }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState(
     initialData || {
-      centerType: "offline", // Default to offline
+      centerType: "offline",
       centerName: "",
       address: "",
       city: "",
@@ -19,7 +19,7 @@ const AddPhysicalCenterForm = ({ initialData = null }) => {
       pincode: "",
       email: "",
       phoneNumber: "",
-      programLevels: [], // Array of program-level objects
+      programLevels: [],
       businessHours: [],
       photos: [],
     }
@@ -38,7 +38,6 @@ const AddPhysicalCenterForm = ({ initialData = null }) => {
         [name]: checked,
       }));
     } else {
-      // Handle other inputs
       setFormData((prev) => ({
         ...prev,
         [name]: value,
@@ -50,31 +49,21 @@ const AddPhysicalCenterForm = ({ initialData = null }) => {
     }
   };
 
-  // Handle program levels change
-  // Handle program levels change
   const handleProgramLevelsChange = (updatedProgramLevels) => {
-    // Make sure we're getting valid program level data
-    const validProgramLevels = updatedProgramLevels.filter(
-      (item) => item.program && item.levels && item.levels.length > 0
-    );
-
-    // Only update form data if there's valid data to update
     if (updatedProgramLevels && updatedProgramLevels.length > 0) {
       setFormData((prev) => ({
         ...prev,
-        programLevels: updatedProgramLevels, // Store all program levels in state
+        programLevels: updatedProgramLevels,
       }));
 
       if (errors.programLevels) {
         setErrors((prev) => ({ ...prev, programLevels: null }));
       }
 
-      // For debugging - only log when there's an actual change
       console.log("Updated program levels:", updatedProgramLevels);
     }
   };
 
-  // Handle business hours change
   const handleBusinessHoursChange = (updatedHours) => {
     setFormData((prev) => ({
       ...prev,
@@ -85,7 +74,6 @@ const AddPhysicalCenterForm = ({ initialData = null }) => {
       setErrors((prev) => ({ ...prev, businessHours: null }));
     }
 
-    // For debugging
     console.log("Updated business hours:", updatedHours);
   };
 
@@ -140,7 +128,6 @@ const AddPhysicalCenterForm = ({ initialData = null }) => {
     if (!formData.centerName.trim())
       newErrors.centerName = "Center name is required";
 
-    // Only validate address, city, state, pincode for offline centers
     if (formData.centerType === "offline") {
       if (!formData.address.trim()) newErrors.address = "Address is required";
       if (!formData.city.trim()) newErrors.city = "City is required";
@@ -155,7 +142,6 @@ const AddPhysicalCenterForm = ({ initialData = null }) => {
     if (!formData.phoneNumber.trim())
       newErrors.phoneNumber = "Phone number is required";
 
-    // Validate all program-level pairs
     if (!formData.programLevels || formData.programLevels.length === 0) {
       newErrors.programLevels =
         "At least one program and level must be selected";
@@ -192,7 +178,6 @@ const AddPhysicalCenterForm = ({ initialData = null }) => {
 
     setIsSubmitting(true);
 
-    // Log the form data before submission for debugging
     console.log("Submitting form data:", formData);
 
     try {
@@ -229,13 +214,11 @@ const AddPhysicalCenterForm = ({ initialData = null }) => {
           <ArrowLeft size={24} />
         </button>
         <h1 className="text-2xl font-bold text-gray-800">
-        Add New Chess Center
+          Add New Chess Center
         </h1>
       </div>
- 
 
       <form onSubmit={handleSubmit}>
-        {/* Center Type - Radio Button */}
         <div className="mb-6">
           <label className="block text-gray-700 font-medium mb-2">
             Center Type*
@@ -269,7 +252,6 @@ const AddPhysicalCenterForm = ({ initialData = null }) => {
           )}
         </div>
 
-        {/* Center Name */}
         <div className="mb-6">
           <label
             className="block text-gray-700 font-medium mb-2"
@@ -295,7 +277,6 @@ const AddPhysicalCenterForm = ({ initialData = null }) => {
           )}
         </div>
 
-        {/* Address - Only show for offline centers */}
         {formData.centerType === "offline" && (
           <>
             <div className="mb-6">
@@ -323,9 +304,7 @@ const AddPhysicalCenterForm = ({ initialData = null }) => {
               )}
             </div>
 
-            {/* Pincode, City, State in same line */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              {/* Pincode with auto-fetch */}
               <div>
                 <label
                   className="block text-gray-700 font-medium mb-2"
@@ -377,7 +356,6 @@ const AddPhysicalCenterForm = ({ initialData = null }) => {
                 )}
               </div>
 
-              {/* City - Auto-populated */}
               <div>
                 <label
                   className="block text-gray-700 font-medium mb-2"
@@ -404,7 +382,6 @@ const AddPhysicalCenterForm = ({ initialData = null }) => {
                 )}
               </div>
 
-              {/* State - Auto-populated */}
               <div>
                 <label
                   className="block text-gray-700 font-medium mb-2"
@@ -434,9 +411,7 @@ const AddPhysicalCenterForm = ({ initialData = null }) => {
           </>
         )}
 
-        {/* Email and Phone in same line */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          {/* Email */}
           <div>
             <label
               className="block text-gray-700 font-medium mb-2"
@@ -462,7 +437,6 @@ const AddPhysicalCenterForm = ({ initialData = null }) => {
             )}
           </div>
 
-          {/* Phone Number */}
           <div>
             <label
               className="block text-gray-700 font-medium mb-2"
@@ -489,7 +463,6 @@ const AddPhysicalCenterForm = ({ initialData = null }) => {
           </div>
         </div>
 
-        {/* Program Levels Component - Replaces the old Program and Level fields */}
         <ProgramLevelSelector onChange={handleProgramLevelsChange} />
 
         {errors.programLevels && (
@@ -498,7 +471,6 @@ const AddPhysicalCenterForm = ({ initialData = null }) => {
           </p>
         )}
 
-        {/* Business Hours Component */}
         <BusinessHoursSelector onChange={handleBusinessHoursChange} />
 
         {errors.businessHours && (
@@ -507,7 +479,6 @@ const AddPhysicalCenterForm = ({ initialData = null }) => {
           </p>
         )}
 
-        {/* File Upload Component */}
         <MultipleFileUpload
           fieldName="Physical Center Photos"
           name="photos"
@@ -518,7 +489,6 @@ const AddPhysicalCenterForm = ({ initialData = null }) => {
           <p className="text-red-500 text-sm mt-1 mb-4">{errors.photos}</p>
         )}
 
-        {/* Submit Button */}
         <div className="mt-8 flex justify-end gap-4">
           <button
             type="button"
@@ -558,7 +528,7 @@ const AddPhysicalCenterForm = ({ initialData = null }) => {
           </button>
         </div>
       </form>
-      <ToastContainer />
+      <ToastContainer style={{marginTop:"60px"}} />
     </div>
   );
 };

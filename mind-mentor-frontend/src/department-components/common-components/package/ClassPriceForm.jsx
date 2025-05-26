@@ -29,9 +29,53 @@ import {
   LocalShipping as KitIcon,
 } from "@mui/icons-material";
 
-import {  ToastContainer } from "react-toastify";
+import { ToastContainer } from "react-toastify";
+import { BaggageClaim, Wifi } from "lucide-react";
 
-const ClassPriceForm = ({onClose,tabValue,handleTabChange,TabPanel,onlineClassPrices,ClassAmountRow,handleOnlineClassPriceChange,deleteOnlineClassPrice,programs,addOnlineClassPrice,handleSubmitOnlineClasses,loading,applyPhysicalToAll,setApplyPhysicalToAll,physicalClassPrices,existingCenters,centerPhysicalPrices,handleCenterPhysicalPriceChange,handlePhysicalClassPriceChange,addPhysicalClassPrice,deleteCenterPhysicalClassPrice,handleSubmitPhysicalClasses,addCenterPhysicalClassPrice,centerHybridPrices,handleSubmitCenterPhysicalPrices,applyHybridToAll,setApplyHybridToAll,hybridClassPrices,handleHybridClassPriceChange,deleteHybridClassPrice,handleSubmitHybridClasses,addHybridClassPrice,handleCenterHybridPriceChange,deleteCenterHybridClassPrice,addCenterHybridClassPrice,handleSubmitKitPrice,setKitPrice,kitPrice,setQuantity,handleSubmitCenterHybridPrices,quantity,deletePhysicalClassPrice }) => {
+const ClassPriceForm = ({
+  onClose,
+  tabValue,
+  handleTabChange,
+  TabPanel,
+  onlineClassPrices,
+  ClassAmountRow,
+  handleOnlineClassPriceChange,
+  deleteOnlineClassPrice,
+  programs,
+  addOnlineClassPrice,
+  handleSubmitOnlineClasses,
+  loading,
+  applyPhysicalToAll,
+  setApplyPhysicalToAll,
+  physicalClassPrices,
+  existingCenters,
+  centerPhysicalPrices,
+  handleCenterPhysicalPriceChange,
+  handlePhysicalClassPriceChange,
+  addPhysicalClassPrice,
+  deleteCenterPhysicalClassPrice,
+  handleSubmitPhysicalClasses,
+  addCenterPhysicalClassPrice,
+  centerHybridPrices,
+  handleSubmitCenterPhysicalPrices,
+  applyHybridToAll,
+  setApplyHybridToAll,
+  hybridClassPrices,
+  handleHybridClassPriceChange,
+  deleteHybridClassPrice,
+  handleSubmitHybridClasses,
+  addHybridClassPrice,
+  handleCenterHybridPriceChange,
+  deleteCenterHybridClassPrice,
+  addCenterHybridClassPrice,
+  handleSubmitKitPrice,
+  setKitPrice,
+  kitPrice,
+  setQuantity,
+  handleSubmitCenterHybridPrices,
+  quantity,
+  deletePhysicalClassPrice,
+}) => {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>
@@ -54,7 +98,7 @@ const ClassPriceForm = ({onClose,tabValue,handleTabChange,TabPanel,onlineClassPr
               label="Online Classes"
               id="class-tab-0"
               aria-controls="class-tabpanel-0"
-              icon={<School />}
+              icon={<Wifi />}
               iconPosition="start"
             />
             <Tab
@@ -64,24 +108,23 @@ const ClassPriceForm = ({onClose,tabValue,handleTabChange,TabPanel,onlineClassPr
               icon={<LocationOn />}
               iconPosition="start"
             />
-            <Tab
+            {/* <Tab
               label="Hybrid Classes"
               id="class-tab-2"
               aria-controls="class-tabpanel-2"
               icon={<SyncIcon />}
               iconPosition="start"
-            />
+            /> */}
             <Tab
               label="Kit"
               id="class-tab-3"
               aria-controls="class-tabpanel-3"
-              icon={<KitIcon />}
+              icon={<BaggageClaim />}
               iconPosition="start"
             />
           </Tabs>
         </Box>
 
-        {/* Online Classes Tab */}
         <TabPanel value={tabValue} index={0}>
           <Card elevation={1} sx={{ p: 2, borderRadius: 2, mb: 2 }}>
             <CardContent>
@@ -94,7 +137,6 @@ const ClassPriceForm = ({onClose,tabValue,handleTabChange,TabPanel,onlineClassPr
               </Typography>
               <Divider sx={{ my: 2 }} />
 
-              {/* Online Class-Amount Rows */}
               <Box sx={{ mt: 3 }}>
                 {onlineClassPrices.map((price, index) => (
                   <ClassAmountRow
@@ -104,12 +146,11 @@ const ClassPriceForm = ({onClose,tabValue,handleTabChange,TabPanel,onlineClassPr
                     onChange={handleOnlineClassPriceChange}
                     onDelete={deleteOnlineClassPrice}
                     disableDelete={onlineClassPrices.length === 1}
-                    isHybrid={false} 
+                    isHybrid={false}
                     programs={programs}
                   />
                 ))}
 
-             
                 <Box
                   sx={{
                     display: "flex",
@@ -134,7 +175,8 @@ const ClassPriceForm = ({onClose,tabValue,handleTabChange,TabPanel,onlineClassPr
                       loading ||
                       onlineClassPrices.some(
                         (p) =>
-                          !p.classes ||
+                          !p.classStartFrom ||
+                          !p.classUpTo ||
                           !p.amount ||
                           !p.program ||
                           !p.level ||
@@ -223,7 +265,8 @@ const ClassPriceForm = ({onClose,tabValue,handleTabChange,TabPanel,onlineClassPr
                           loading ||
                           physicalClassPrices.some(
                             (p) =>
-                              !p.classes ||
+                              !p.classStartFrom ||
+                              !p.classUpTo ||
                               !p.amount ||
                               !p.program ||
                               !p.level ||
@@ -367,7 +410,8 @@ const ClassPriceForm = ({onClose,tabValue,handleTabChange,TabPanel,onlineClassPr
                                       physicalClassPrices
                                     ).some(
                                       (p) =>
-                                        !p.classes ||
+                                        !p.classStartFrom ||
+                                        !p.classUpTo ||
                                         !p.amount ||
                                         !p.program ||
                                         !p.level ||
@@ -489,11 +533,13 @@ const ClassPriceForm = ({onClose,tabValue,handleTabChange,TabPanel,onlineClassPr
                       loading ||
                       hybridClassPrices.some(
                         (p) =>
-                          !p.classes ||
+                          !p.classStartFrom ||
+                          !p.classUpTo ||
                           !p.amount ||
                           !p.program ||
                           !p.level ||
-                          !p.time
+                          !p.time ||
+                          !p.classFrom
                       )
                     }
                   >
@@ -614,7 +660,8 @@ const ClassPriceForm = ({onClose,tabValue,handleTabChange,TabPanel,onlineClassPr
                                     hybridClassPrices
                                   ).some(
                                     (p) =>
-                                      !p.classes ||
+                                      !p.classStartFrom ||
+                                      !p.classUpTo ||
                                       !p.amount ||
                                       !p.program ||
                                       !p.level ||

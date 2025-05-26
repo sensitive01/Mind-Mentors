@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { getAllProgrameData } from "../../../api/service/employee/EmployeeService";
 
-// MultiSelect Dropdown Component
 const MultiSelectDropdown = ({
   options,
   selected,
@@ -12,7 +11,6 @@ const MultiSelectDropdown = ({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -26,7 +24,6 @@ const MultiSelectDropdown = ({
     };
   }, []);
 
-  // Toggle checkbox selection
   const toggleOption = (value) => {
     if (selected.includes(value)) {
       onChange(selected.filter((item) => item !== value));
@@ -35,7 +32,6 @@ const MultiSelectDropdown = ({
     }
   };
 
-  // Get display text for selected options
   const getDisplayText = () => {
     if (selected.length === 0) {
       return "Select Levels";
@@ -53,7 +49,6 @@ const MultiSelectDropdown = ({
 
   return (
     <div className="relative w-full" ref={dropdownRef}>
-      {/* Dropdown Button */}
       <button
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
@@ -95,7 +90,6 @@ const MultiSelectDropdown = ({
         </svg>
       </button>
 
-      {/* Dropdown Menu */}
       {isOpen && options.length > 0 && (
         <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded shadow-lg max-h-60 overflow-y-auto">
           {options.length === 0 ? (
@@ -130,25 +124,20 @@ const MultiSelectDropdown = ({
 };
 
 const ProgramLevelSelector = ({ onChange, initialData = [] }) => {
-  // State for dynamic program data
   const [programData, setProgramData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Initialize with either initial data or one empty entry
   const [programLevels, setProgramLevels] = useState(
     initialData && initialData.length > 0
       ? initialData
       : [{ program: "", levels: [] }]
   );
 
-  // Track validation errors
   const [errors, setErrors] = useState([]);
 
-  // Reference to track changes for parent notification
   const hasInitialDataRef = useRef(Boolean(initialData?.length > 0));
   const notifiedRef = useRef(false);
 
-  // Fetch program data from API
   useEffect(() => {
     const fetchPrograms = async () => {
       try {
@@ -170,18 +159,16 @@ const ProgramLevelSelector = ({ onChange, initialData = [] }) => {
     fetchPrograms();
   }, []);
 
-  // Update parent component when program levels change
-  // This effect runs only once for initial data or when programLevels changes due to user actions
+
   useEffect(() => {
-    // Initial load with valid initialData (run only once)
     if (hasInitialDataRef.current && !notifiedRef.current) {
       onChange(programLevels);
       notifiedRef.current = true;
       return;
     }
-  }, []); // Empty dependency array means this runs only once on mount
+  }, []); 
 
-  // Create program options from API data
+
   const getProgramOptions = () => {
     const defaultOption = { value: "", label: "Select Program" };
 
@@ -197,7 +184,6 @@ const ProgramLevelSelector = ({ onChange, initialData = [] }) => {
     return [defaultOption, ...options];
   };
 
-  // Get level options based on selected program
   const getLevelOptions = (programId) => {
     if (!programId || loading) {
       return [];
@@ -215,7 +201,6 @@ const ProgramLevelSelector = ({ onChange, initialData = [] }) => {
     }));
   };
 
-  // Add new program-level pair
   const addProgramLevel = () => {
     const updatedProgramLevels = [
       ...programLevels,
@@ -223,11 +208,9 @@ const ProgramLevelSelector = ({ onChange, initialData = [] }) => {
     ];
     setProgramLevels(updatedProgramLevels);
     setErrors([...errors, { program: false, levels: false }]);
-    // Notify parent about the change
     onChange(updatedProgramLevels);
   };
 
-  // Remove a program-level pair
   const removeProgramLevel = (index) => {
     if (programLevels.length > 1) {
       const updatedProgramLevels = [...programLevels];
@@ -238,35 +221,29 @@ const ProgramLevelSelector = ({ onChange, initialData = [] }) => {
       updatedErrors.splice(index, 1);
       setErrors(updatedErrors);
 
-      // Notify parent about the change
       onChange(updatedProgramLevels);
     }
   };
 
-  // Handle change in program selection
   const handleProgramChange = (index, value) => {
     const updatedProgramLevels = [...programLevels];
     updatedProgramLevels[index] = { program: value, levels: [] };
     setProgramLevels(updatedProgramLevels);
 
-    // Clear error for this field if it exists
     if (errors[index] && errors[index].program) {
       const updatedErrors = [...errors];
       updatedErrors[index] = { ...updatedErrors[index], program: false };
       setErrors(updatedErrors);
     }
 
-    // Notify parent about the change
     onChange(updatedProgramLevels);
   };
 
-  // Handle change in level selection
   const handleLevelChange = (index, selected) => {
     const updatedProgramLevels = [...programLevels];
     updatedProgramLevels[index].levels = selected;
     setProgramLevels(updatedProgramLevels);
 
-    // Clear error if levels are selected
     if (errors[index]?.levels && selected.length > 0) {
       const updatedErrors = [...errors];
       updatedErrors[index] = {
@@ -276,7 +253,6 @@ const ProgramLevelSelector = ({ onChange, initialData = [] }) => {
       setErrors(updatedErrors);
     }
 
-    // Notify parent about the change
     onChange(updatedProgramLevels);
   };
 
@@ -313,7 +289,6 @@ const ProgramLevelSelector = ({ onChange, initialData = [] }) => {
                 index > 0 ? "mt-2" : ""
               }`}
             >
-              {/* Program Selection */}
               <div className="col-span-5">
                 <select
                   value={item.program}
@@ -335,7 +310,6 @@ const ProgramLevelSelector = ({ onChange, initialData = [] }) => {
                 )}
               </div>
 
-              {/* Level Selection with Dropdown Multi-Select */}
               <div className="col-span-5">
                 <div className="relative">
                   <MultiSelectDropdown
@@ -353,9 +327,7 @@ const ProgramLevelSelector = ({ onChange, initialData = [] }) => {
                 </div>
               </div>
 
-              {/* Action Buttons */}
               <div className="col-span-2 flex justify-end">
-                {/* Delete Button */}
                 {programLevels.length > 1 && (
                   <button
                     type="button"
@@ -378,7 +350,6 @@ const ProgramLevelSelector = ({ onChange, initialData = [] }) => {
                   </button>
                 )}
 
-                {/* Add Button (only on last row) */}
                 {index === programLevels.length - 1 && (
                   <button
                     type="button"

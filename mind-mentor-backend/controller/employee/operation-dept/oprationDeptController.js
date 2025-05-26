@@ -21,11 +21,10 @@ const Voucher = require("../../../model/discount_voucher/voucherModel");
 const PhysicalCenters = require("../../../model/physicalcenter/physicalCenterShema");
 const classPaymentModel = require("../../../model/classPaymentModel");
 const { CALLING_API } = require("../../../config/variables/variables");
-const onlineClassPackage = require("../../../model/class/onlineClassPackage")
-const offlineClassPackage  = require("../../../model/class/offlineClassPackage")
-const hybridClassPackage = require("../../../model/class/hybridClassPackage")
-const kitPackages = require("../../../model/class/kitPrice")
-
+const onlineClassPackage = require("../../../model/class/onlineClassPackage");
+const offlineClassPackage = require("../../../model/class/offlineClassPackage");
+const hybridClassPackage = require("../../../model/class/hybridClassPackage");
+const kitPackages = require("../../../model/class/kitPrice");
 
 const registerEmployee = async (req, res) => {
   try {
@@ -178,6 +177,7 @@ const enquiryFormData = async (req, res) => {
         {
           employeeId: empId,
           employeeName: empData.firstName,
+          department: empData.department,
           comment: "Enquiry form submission",
           action: `Enquiry form submitted by ${empData.firstName} in ${
             empData.department
@@ -1282,8 +1282,6 @@ const addNotes = async (req, res) => {
       return res.status(404).json({ message: "Employee not found" });
     }
 
-    console.log("Employee Data", empData);
-
     const formattedDateTime = new Intl.DateTimeFormat("en-US", {
       dateStyle: "medium",
       timeStyle: "short",
@@ -1291,7 +1289,6 @@ const addNotes = async (req, res) => {
 
     // Fetch the current entry to compare changes
     const currentEntry = await OperationDept.findById(id);
-    console.log("currentEntry", currentEntry);
     if (!currentEntry) {
       return res.status(404).json({ message: "Enquiry not found" });
     }
@@ -1304,7 +1301,7 @@ const addNotes = async (req, res) => {
     // Determine the values to save, falling back to old values if new ones are empty
     const updatedNotes = notesToSave !== "" ? notesToSave : currentEntry.notes;
     const updatedEnquiryStatus =
-      enquiryStatus !== "" ? enquiryStatus : currentEntry.enquiryStatus;
+      enquiryStatus !== "" ? enquiryStatus : currentEntry.enquiryStage;
     const updatedDisposition =
       disposition !== "" ? disposition : currentEntry.disposition;
 
@@ -1312,7 +1309,8 @@ const addNotes = async (req, res) => {
       logs.push({
         employeeId: empId,
         employeeName: empData.firstName,
-        comment: `Updated notes from "${currentEntry.notes}" to "${updatedNotes}"`,
+        department: empData.department,
+        comment: `Updated note as "${updatedNotes}"`,
         action: `${empData.firstName} in ${empData.department} department updated notes from "${oldNote}" to "${updatedNotes}" on ${formattedDateTime}`,
         createdAt: new Date(),
       });
@@ -1322,8 +1320,9 @@ const addNotes = async (req, res) => {
     if (updatedEnquiryStatus !== currentEntry.enquiryStatus) {
       logs.push({
         employeeId: empId,
+        department: empData.department,
         employeeName: empData.firstName,
-        comment: `Changed enquiryStatus from "${currentEntry.enquiryStatus}" to "${updatedEnquiryStatus}"`,
+        comment: `Updated enquiryStatus as "${updatedEnquiryStatus}"`,
         action: `${empData.firstName} in ${empData.department} department updated enquiry status from "${currentEntry.enquiryStatus}" to "${updatedEnquiryStatus}" on ${formattedDateTime}`,
         createdAt: new Date(),
       });
@@ -1334,7 +1333,8 @@ const addNotes = async (req, res) => {
       logs.push({
         employeeId: empId,
         employeeName: empData.firstName,
-        comment: `Changed disposition from "${currentEntry.disposition}" to "${updatedDisposition}"`,
+        department:empData.department,
+        comment: `Updated disposition as"${updatedDisposition}"`,
         action: `${empData.firstName} in ${empData.department} department updated disposition from "${currentEntry.disposition}" to "${updatedDisposition}" on ${formattedDateTime}`,
         createdAt: new Date(),
       });
@@ -1346,17 +1346,18 @@ const addNotes = async (req, res) => {
       id,
       {
         notes: updatedNotes,
-        enquiryStatus: updatedEnquiryStatus,
+        enquiryStage: updatedEnquiryStatus,
         disposition: updatedDisposition,
       },
       { new: true }
     );
 
     const noteToAdd = {
-      enquiryStatus: `${updatedEnquiryStatus}` || currentEntry.enquiryStatus,
+      enquiryStage: `${updatedEnquiryStatus}` || currentEntry.enquiryStatus,
       disposition: `${updatedDisposition}` || currentEntry.disposition,
       note: `${updatedNotes}` || currentEntry.notes,
-      updatedBy: `${empData.firstName} in ${empData.department} department`,
+      updatedBy: empData.firstName,
+      department:empData.department,
       createdOn: `${formattedDateTime}`,
     };
 
@@ -1672,7 +1673,7 @@ const referToFriend = async (req, res) => {
 };
 const createLeave = async (req, res) => {
   try {
-    console.log("Eelcome to create leave",req.body)
+    console.log("Eelcome to create leave", req.body);
     const { empId, ...leaveData } = req.body;
 
     const emp = await Employee.findById(empId).select("firstName");
@@ -1702,7 +1703,9 @@ const createLeave = async (req, res) => {
     const formattedLeave = {
       ...newLeave._doc,
       leaveStartDate: formatDate(newLeave.leaveStartDate),
-      leaveEndDate: newLeave.leaveEndDate ? formatDate(newLeave.leaveEndDate) : null,
+      leaveEndDate: newLeave.leaveEndDate
+        ? formatDate(newLeave.leaveEndDate)
+        : null,
     };
 
     res.status(201).json({
@@ -1718,7 +1721,6 @@ const createLeave = async (req, res) => {
     });
   }
 };
-
 
 const formatDate = (inputDate) => {
   const dateObj = new Date(inputDate);
@@ -1867,7 +1869,9 @@ const updateLeave = async (req, res) => {
     // Check if leave exists
     const existingLeave = await leaves.findById(id);
     if (!existingLeave) {
-      return res.status(404).json({ success: false, message: "Leave not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Leave not found" });
     }
 
     // Delete the existing leave
@@ -1876,7 +1880,9 @@ const updateLeave = async (req, res) => {
     // Get employee name from empId
     const emp = await Employee.findById(updatedData.empId).select("firstName");
     if (!emp) {
-      return res.status(404).json({ success: false, message: "Employee not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Employee not found" });
     }
 
     // Create a new leave record
@@ -2682,7 +2688,7 @@ const getAllAttandanceData = async (req, res) => {
 
 const getAllSheduleClass = async (req, res) => {
   try {
-    const scheduleData = await ClassSchedule.find({ isDemoAdded:true });
+    const scheduleData = await ClassSchedule.find({ isDemoAdded: true });
     console.log("Demo Class Schedule Data:", scheduleData);
 
     res.status(200).json({
@@ -2719,6 +2725,9 @@ const fetchAllLogs = async (req, res) => {
 
     // Extract only createdAt and action
     const logs = sortedLogs.map((log) => ({
+      comment: log.comment,
+      empName: log.employeeName,
+      department: log.department,
       createdAt: moment(log.createdAt).format("DD-MM-YY , hh:mm A"),
       action: log.action,
     }));
@@ -2765,7 +2774,7 @@ const getDemoClassAndStudentsData = async (req, res) => {
     // Find class data matching program and level
     const classData = await ClassSchedule.find({
       $or: programFilters, // Match any program and level from kidsData
-      isDemoAdded:true, // Ensure the class type is "Demo"
+      isDemoAdded: true, // Ensure the class type is "Demo"
       // status: "Scheduled", // Match only scheduled classes
     });
 
@@ -2808,7 +2817,7 @@ const getSheduledDemoClassDataOfKid = async (req, res) => {
     // Iterate over each program and level and fetch classes
     const classData = await ClassSchedule.find({
       $and: [
-        { isDemoAdded:true }, // Match classType
+        { isDemoAdded: true }, // Match classType
         { status: "Scheduled" }, // Match status
         { selectedStudents: { $elemMatch: { kidId } } }, // Match kidId in selectedStudents
         {
@@ -3175,16 +3184,14 @@ const specificKidAssignTask = async (req, res) => {
       "service-delivery",
       "marketing",
       "renewal",
-      "coach"
+      "coach",
     ];
     const employeeData = await Employee.find(
       { department: { $in: allowedDepartments } },
       { _id: 1, firstName: 1, email: 1, department: 1 }
     );
-    console.log("kidsData",kidsData)
-    console.log("employeeData",employeeData)
-
-
+    console.log("kidsData", kidsData);
+    console.log("employeeData", employeeData);
 
     res.status(200).json({
       success: true,
@@ -3402,7 +3409,6 @@ const getPackageData = async (req, res) => {
     });
   }
 };
-
 
 const getDiscountVouchers = async (req, res) => {
   try {
@@ -3915,13 +3921,13 @@ const getMyAttendanceData = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Monthly attendance summary fetched successfully.",
-        attendanceSummary,
-        counts: {
-          totalWorkingDays: daysInMonth,
-          present: presentCount,
-          late: lateCount,
-          absent: absentCount,
-        },
+      attendanceSummary,
+      counts: {
+        totalWorkingDays: daysInMonth,
+        present: presentCount,
+        late: lateCount,
+        absent: absentCount,
+      },
     });
   } catch (err) {
     console.log("Error in getting attendance data", err);
