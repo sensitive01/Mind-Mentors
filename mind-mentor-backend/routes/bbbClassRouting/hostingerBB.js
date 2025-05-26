@@ -121,39 +121,29 @@ router.post("/new-sign-join-url", async (req, res) => {
     res.status(500).json({ error: "Failed to sign join URL" });
   }
 });
+router.get("/get-recordings-link/:meetingID", async (req, res) => {
+  const {meetingID} = req.params;
+  console.log("Requested meetingID:", meetingID);
 
-router.post("/get-recordings-link", async (req, res) => {
-  console.log("Welcome to get meeting link",req.body)
-  const { meetingIDs } = req.body;
-  console.log("meetingIDs",meetingIDs)
+  if (!meetingID) {
+    return res.status(400).json({ error: "meetingID query parameter is required" });
+  }
 
   try {
-    if (!Array.isArray(meetingIDs)) {
-      return res.status(400).json({ error: "meetingIDs should be an array" });
+    const classRecord = await Class.findOne({ meetingID }, { internalMeetingID: 1 });
+
+    if (classRecord && classRecord.internalMeetingID) {
+      const link = `https://class.mindmentorz.in/playback/presentation/2.3/${classRecord.internalMeetingID}`;
+      return res.status(200).json({ links: link });
+    } else {
+      return res.status(404).json({  message: "No recording found for the given meetingID" });
     }
-
-    const recordingsLinks = [];
-
-    for (const meetingID of meetingIDs) {
-      const classRecord = await Class.findOne(
-        { meetingID },
-        { internalMeetingID: 1 }
-      );
-
-      if (classRecord && classRecord.internalMeetingID) {
-        const link = `https://class.mindmentorz.in/playback/presentation/2.3/${classRecord.internalMeetingID}`;
-        recordingsLinks.push(link);
-      }
-    }
-
-    console.log("recordingsLinks", recordingsLinks);
-
-    res.status(200).json({ links: recordingsLinks });
   } catch (error) {
     console.error("Error in getting the recordings:", error);
     res.status(500).json({ error: "Failed to get the recordings" });
   }
 });
+
 
 router.get("/get-learning-statistic-data/:meetingID", async (req, res) => {
   console.log("Welcome to get-learning-statistic-data", req.body);

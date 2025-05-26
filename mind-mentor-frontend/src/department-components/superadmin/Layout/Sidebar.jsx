@@ -460,11 +460,11 @@ const ModernSidebar = () => {
           text: "Student Class Attendance Report",
           link: "/super-admin/department/student-attandace-report",
         },
-        {
-          icon: <ReportsIcon />,
-          text: "Get Class Recordings",
-          link: "/super-admin/department/get-class-recordings",
-        },
+        // {
+        //   icon: <ReportsIcon />,
+        //   text: "Get Class Recordings",
+        //   link: "/super-admin/department/get-class-recordings",
+        // },
       ],
       open: openClasses,
       onClick: handleClassesClick,

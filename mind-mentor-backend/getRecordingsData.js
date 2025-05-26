@@ -1,15 +1,10 @@
 const axios = require("axios");
 
-const meetingIDs = [
-  "class-qeuidcda",
-];
+const meetingIDs = "class-ewbnw3ip";
 
 axios
-  .post(
-    "http://localhost:3000/api/new-class/get-recordings-link",
-    {
-      meetingIDs,
-    },
+  .get(
+    `https://live.mindmentorz.in/api/new-class/get-recordings-link/${meetingIDs}`,
     {
       headers: {
         "Content-Type": "application/json",
@@ -19,18 +14,8 @@ axios
   .then((response) => {
     const { links } = response.data;
 
-    if (!Array.isArray(links)) {
-      console.error("Unexpected response format:", response.data);
-      return;
-    }
-
-    const result = meetingIDs.map((id, index) => ({
-      meetingID: id,
-      recordingLink: links[index] || "No recording available",
-    }));
-
-    console.log("Meeting Recordings:\n", result);
+    console.log("Meeting Recordings:\n", links);
   })
   .catch((error) => {
-    console.error("Error:", error.response?.data || error.message);
+    console.error("Error:", error);
   });

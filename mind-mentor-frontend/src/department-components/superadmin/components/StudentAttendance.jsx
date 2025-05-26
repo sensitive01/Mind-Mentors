@@ -9,7 +9,7 @@ import {
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import React, { useEffect, useState } from "react";
 import { getAttandanceReport } from "../../../api/service/employee/EmployeeService";
-import { Visibility } from "@mui/icons-material";
+import { Visibility, PlayArrow } from "@mui/icons-material";
 
 const theme = createTheme({
   palette: {
@@ -64,6 +64,12 @@ const StudentAttendance = () => {
     window.open(url, "_blank");
   };
 
+  // Function to handle view recording
+  const handleViewRecording = (internalMeetingID) => {
+    const url = `https://class.mindmentorz.in/playback/presentation/2.3/${internalMeetingID}`;
+    window.open(url, "_blank");
+  };
+
   // Define columns for the DataGrid
   const columns = [
     {
@@ -115,27 +121,45 @@ const StudentAttendance = () => {
     },
     {
       field: "actions",
-      headerName: "Action",
-      width: 120,
+      headerName: "Actions",
+      width: 200,
       sortable: false,
       filterable: false,
       renderCell: (params) => (
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={<Visibility />}
-          onClick={() => handleViewStatistics(params.row.internalMeetingID)}
-          sx={{
-            backgroundColor: "#642b8f",
-            "&:hover": {
-              backgroundColor: "#4F46E5",
-            },
-            textTransform: "none",
-            fontSize: "0.75rem",
-          }}
-        >
-          View Stats
-        </Button>
+        <Box sx={{ display: "flex", gap: 1 }}>
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<Visibility />}
+            onClick={() => handleViewStatistics(params.row.internalMeetingID)}
+            sx={{
+              backgroundColor: "#642b8f",
+              "&:hover": {
+                backgroundColor: "#4F46E5",
+              },
+              textTransform: "none",
+              fontSize: "0.75rem",
+            }}
+          >
+            Stats
+          </Button>
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<PlayArrow />}
+            onClick={() => handleViewRecording(params.row.internalMeetingID)}
+            sx={{
+              backgroundColor: "#28a745",
+              "&:hover": {
+                backgroundColor: "#218838",
+              },
+              textTransform: "none",
+              fontSize: "0.75rem",
+            }}
+          >
+            Recording
+          </Button>
+        </Box>
       ),
     },
   ];
@@ -147,7 +171,7 @@ const StudentAttendance = () => {
         const response = await getAttandanceReport();
         console.log(response);
 
-        if (response.status===200) {
+        if (response.status === 200) {
           // Transform the data to match DataGrid requirements
           const transformedData = response.data.data.map((item, index) => ({
             id: item._id,
