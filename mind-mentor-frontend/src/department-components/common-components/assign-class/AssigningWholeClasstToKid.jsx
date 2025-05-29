@@ -6,7 +6,7 @@ import {
   getActiveKidData,
   getScheduledClassData,
 } from "../../../api/service/employee/serviceDeliveryService";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 // Extracted components
 const InfoCard = ({ label, value }) => (
@@ -63,7 +63,36 @@ const ClassSelectionDropdown = React.memo(
     selectedClasses,
     onClassSelection,
     availableClasses,
+    classMode,
   }) => {
+    // Group classes by type for hybrid mode
+    const groupedClasses = useMemo(() => {
+      if (classMode !== "hybrid") return { all: availableClasses };
+
+      return {
+        online: availableClasses.filter((cls) => cls.type === "online"),
+        offline: availableClasses.filter((cls) => cls.type === "offline"),
+      };
+    }, [availableClasses, classMode]);
+
+    const renderClassGroup = (classes, title) => (
+      <div className="mb-4">
+        {title && (
+          <div className="text-sm font-medium text-gray-600 mb-2 px-2">
+            {title} Classes
+          </div>
+        )}
+        {classes.map((classItem) => (
+          <ClassOption
+            key={classItem._id}
+            classItem={classItem}
+            isSelected={selectedClasses.some((c) => c._id === classItem._id)}
+            onSelect={() => onClassSelection(classItem)}
+          />
+        ))}
+      </div>
+    );
+
     return (
       <div className="relative">
         <button
@@ -78,7 +107,27 @@ const ClassSelectionDropdown = React.memo(
                 <span className="bg-primary text-white text-xs font-medium px-2 py-1 rounded-full">
                   {selectedClasses.length}
                 </span>
-                <span className="text-gray-700 font-medium">Classes Selected</span>
+                <span className="text-gray-700 font-medium">
+                  Classes Selected
+                </span>
+                {classMode === "hybrid" && (
+                  <div className="flex gap-1 ml-2">
+                    <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded">
+                      Online:{" "}
+                      {
+                        selectedClasses.filter((c) => c.type === "online")
+                          .length
+                      }
+                    </span>
+                    <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded">
+                      Offline:{" "}
+                      {
+                        selectedClasses.filter((c) => c.type === "offline")
+                          .length
+                      }
+                    </span>
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -94,15 +143,17 @@ const ClassSelectionDropdown = React.memo(
             <div className="sticky top-0 bg-white border-b p-3 flex justify-between items-center">
               <h4 className="font-medium text-gray-700">Available Classes</h4>
               {selectedClasses.length > 0 && (
-                <button 
-                  onClick={() => selectedClasses.forEach(c => onClassSelection(c))}
+                <button
+                  onClick={() =>
+                    selectedClasses.forEach((c) => onClassSelection(c))
+                  }
                   className="text-xs text-red-500 hover:text-red-700 transition-colors"
                 >
                   Clear All
                 </button>
               )}
             </div>
-            
+
             <div className="p-3">
               {availableClasses.length === 0 ? (
                 <div className="text-center py-6 text-gray-500">
@@ -116,20 +167,19 @@ const ClassSelectionDropdown = React.memo(
                     <div className="col-span-1">Coach</div>
                     <div className="col-span-1">Type</div>
                   </div>
-                  {availableClasses.map((classItem) => (
-                    <ClassOption
-                      key={classItem._id}
-                      classItem={classItem}
-                      isSelected={selectedClasses.some(
-                        (c) => c._id === classItem._id
-                      )}
-                      onSelect={() => onClassSelection(classItem)}
-                    />
-                  ))}
+
+                  {classMode === "hybrid" ? (
+                    <>
+                      {renderClassGroup(groupedClasses.online, "Online")}
+                      {renderClassGroup(groupedClasses.offline, "Offline")}
+                    </>
+                  ) : (
+                    renderClassGroup(groupedClasses.all)
+                  )}
                 </>
               )}
             </div>
-            
+
             {selectedClasses.length > 0 && (
               <div className="sticky bottom-0 bg-white border-t p-3 flex justify-end">
                 <button
@@ -147,38 +197,91 @@ const ClassSelectionDropdown = React.memo(
   }
 );
 
-const ClassOption = React.memo(({ classItem, isSelected, onSelect }) => (
-  <div
-    className={`flex items-center hover:bg-gray-50 p-2 rounded-lg cursor-pointer mb-2 last:mb-0 ${
-      isSelected ? "bg-blue-50 border border-blue-100" : ""
-    }`}
-    onClick={onSelect}
-  >
-    <input
-      type="checkbox"
-      checked={isSelected}
-      onChange={onSelect}
-      className="w-4 h-4 text-primary rounded border-gray-300 mr-3"
-      onClick={(e) => e.stopPropagation()}
-    />
-    <div className="flex-1 grid grid-cols-4 items-center">
-      <span className="font-medium text-gray-800">{classItem.day}</span>
-      <div className="flex items-center gap-1">
-        <Clock className="w-3 h-3 text-gray-400" />
-        <span className="text-gray-600 text-sm">{classItem.classTime}</span>
+const ClassOption = React.memo(({ classItem, isSelected, onSelect }) => {
+  const isClassPassed = useMemo(() => {
+    const classDate = new Date(classItem.classDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return classDate < today;
+  }, [classItem.classDate]);
+
+  return (
+    <div
+      className={`group relative flex items-center p-4 rounded-xl border transition-all duration-200 cursor-pointer mb-3 last:mb-0 hover:shadow-md ${
+        isSelected
+          ? "bg-blue-50 border-blue-200 shadow-sm ring-1 ring-blue-100"
+          : "bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+      } }`}
+      onClick={onSelect}
+    >
+      {/* Selection Indicator */}
+      <div className="flex items-center mr-4">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={onSelect}
+          className="w-5 h-5 text-blue-600 bg-white border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 transition-colors duration-150"
+          onClick={(e) => e.stopPropagation()}
+        />
       </div>
-      <div className="flex items-center gap-1">
-        <Award className="w-3 h-3 text-gray-400" />
-        <span className="text-gray-600 text-sm truncate" title={classItem.coachName}>
-          {classItem.coachName}
-        </span>
+
+      {/* Content Grid */}
+      <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+        {/* Day Column */}
+        <div className="flex flex-col">
+          <span className="font-semibold text-gray-900 text-base leading-tight">
+            {classItem.day}
+          </span>
+          <span className="text-xs text-gray-500 mt-0.5">
+            {new Date(classItem.classDate).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+            })}
+          </span>
+        </div>
+
+        {/* Time Column */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center w-7 h-7 bg-gray-100 rounded-lg group-hover:bg-gray-200 transition-colors">
+            <Clock className="w-4 h-4 text-gray-600" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-sm font-medium text-gray-800">
+              {classItem.classTime}
+            </span>
+            <span className="text-xs text-gray-500">Duration</span>
+          </div>
+        </div>
+
+        {/* Coach Column */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center w-7 h-7 bg-amber-100 rounded-lg group-hover:bg-amber-200 transition-colors">
+            <Award className="w-4 h-4 text-amber-600" />
+          </div>
+          <div className="flex flex-col min-w-0">
+            <span
+              className="text-sm font-medium text-gray-800 truncate"
+              title={classItem.coachName}
+            >
+              {classItem.coachName}
+            </span>
+            <span className="text-xs text-gray-500">Coach</span>
+          </div>
+        </div>
+
+        {/* Status Column */}
+        <div className="flex justify-end md:justify-center">
+          <StatusBadge type={classItem.type} />
+        </div>
       </div>
-      <div className="flex justify-end">
-        <StatusBadge type={classItem.type} />
-      </div>
+
+      {/* Selected State Indicator */}
+      {isSelected && (
+        <div className="absolute top-2 right-2 w-2 h-2 bg-blue-500 rounded-full"></div>
+      )}
     </div>
-  </div>
-));
+  );
+});
 
 const ClassCard = React.memo(({ session, onSessionAction }) => (
   <div
@@ -232,6 +335,7 @@ const ClassCard = React.memo(({ session, onSessionAction }) => (
 
 const AssigningWholeClassToKid = () => {
   const { enqId } = useParams();
+  const navigate = useNavigate();
   const [kidData, setKidData] = useState(null);
   const [availableClasses, setAvailableClasses] = useState([]);
   const [selectedClasses, setSelectedClasses] = useState([]);
@@ -246,6 +350,81 @@ const AssigningWholeClassToKid = () => {
   const [selectedSession, setSelectedSession] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
+
+  // Get day name from date
+  const getDayName = useCallback((date) => {
+    const days = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
+    return days[date.getDay()];
+  }, []);
+
+  // Get next occurrence of a specific day
+  const getNextOccurrenceOfDay = useCallback(
+    (dayName, startFromDate = new Date()) => {
+      const days = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ];
+      const targetDayIndex = days.indexOf(dayName);
+
+      const currentDate = new Date(startFromDate);
+      currentDate.setHours(0, 0, 0, 0);
+
+      const currentDayIndex = currentDate.getDay();
+      let daysToAdd = targetDayIndex - currentDayIndex;
+
+      // If the target day is today or has passed this week, move to next week
+      if (daysToAdd <= 0) {
+        daysToAdd += 7;
+      }
+
+      const nextOccurrence = new Date(currentDate);
+      nextOccurrence.setDate(currentDate.getDate() + daysToAdd);
+
+      return nextOccurrence;
+    },
+    []
+  );
+
+  // Get the next valid date for a class considering its original classDate
+  const getNextValidClassDate = useCallback(
+    (classItem, startFromDate = new Date()) => {
+      const classDate = new Date(classItem.classDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // If class date is in the future, use it
+      if (classDate >= today) {
+        return classDate;
+      }
+
+      // If class date has passed, find the next occurrence of that day
+      return getNextOccurrenceOfDay(classItem.day, startFromDate);
+    },
+    [getNextOccurrenceOfDay]
+  );
+
+  // Filter classes by selected date
+  const getAvailableClassesForDate = useCallback(
+    (date) => {
+      if (!date) return [];
+      const dayName = getDayName(date);
+      return availableClasses.filter((cls) => cls.day === dayName);
+    },
+    [availableClasses, getDayName]
+  );
 
   useEffect(() => {
     const fetchKidData = async () => {
@@ -280,6 +459,7 @@ const AssigningWholeClassToKid = () => {
               (cls) => cls.type === "offline"
             );
           }
+          // For hybrid mode, we keep all classes (both online and offline)
 
           setAvailableClasses(filteredClasses);
         }
@@ -301,41 +481,112 @@ const AssigningWholeClassToKid = () => {
   }, []);
 
   const generateSchedule = useCallback(
-    (classes, lastDate = new Date()) => {
+    (classes) => {
       if (!classes.length || !kidData?.classDetails) return [];
 
-      const { numberOfClasses, classMode } = kidData.classDetails;
+      const { onlineClasses, offlineClasses, classMode } = kidData.classDetails;
       let schedule = [];
-      let currentDate = new Date(lastDate);
-      let currentIndex = 0;
 
-      const addSession = (classItem, count) => {
-        schedule.push({
-          ...classItem,
-          sessionId: `${classItem._id}-${count}`,
-          sessionNumber: schedule.length + 1,
-          classDate: new Date(currentDate),
-          formattedDate: formatDate(currentDate),
-          status: "scheduled",
-        });
+      if (classMode === "hybrid") {
+        const onlineClassList = classes.filter((c) => c.type === "online");
+        const offlineClassList = classes.filter((c) => c.type === "offline");
 
-        const daysToAdd = 7; 
-        currentDate = new Date(
-          currentDate.getTime() + daysToAdd * 24 * 60 * 60 * 1000
-        );
-        currentIndex++;
-      };
+        let onlineCount = 0;
+        let offlineCount = 0;
 
-      const totalClasses = numberOfClasses || 8; 
+        const lastScheduledDates = new Map();
 
-      for (let i = 0; i < totalClasses; i++) {
-        const classItem = classes[currentIndex % classes.length];
-        addSession(classItem, i);
+        const totalSessions = (onlineClasses || 0) + (offlineClasses || 0);
+
+        for (let i = 0; i < totalSessions; i++) {
+          let classItem;
+          let sessionType;
+
+          if (
+            onlineCount < (onlineClasses || 0) &&
+            offlineCount < (offlineClasses || 0)
+          ) {
+            sessionType = i % 2 === 0 ? "online" : "offline";
+          } else if (onlineCount < (onlineClasses || 0)) {
+            sessionType = "online";
+          } else if (offlineCount < (offlineClasses || 0)) {
+            sessionType = "offline";
+          }
+
+          if (sessionType === "online" && onlineClassList.length > 0) {
+            classItem = onlineClassList[onlineCount % onlineClassList.length];
+            onlineCount++;
+          } else if (sessionType === "offline" && offlineClassList.length > 0) {
+            classItem =
+              offlineClassList[offlineCount % offlineClassList.length];
+            offlineCount++;
+          }
+
+          if (classItem) {
+            const classKey = `${classItem._id}-${classItem.day}`;
+
+            let nextClassDate;
+
+            if (lastScheduledDates.has(classKey)) {
+              const lastDate = lastScheduledDates.get(classKey);
+              nextClassDate = new Date(lastDate);
+              nextClassDate.setDate(nextClassDate.getDate() + 7);
+            } else {
+              nextClassDate = getNextValidClassDate(classItem, new Date());
+            }
+
+            lastScheduledDates.set(classKey, nextClassDate);
+
+            schedule.push({
+              ...classItem,
+              sessionId: `${classItem._id}-${i}`,
+              sessionNumber: schedule.length + 1,
+              classDate: new Date(nextClassDate),
+              formattedDate: formatDate(nextClassDate),
+              status: "scheduled",
+            });
+          }
+        }
+      } else {
+        const totalClasses =
+          kidData.classDetails.numberOfClasses ||
+          onlineClasses ||
+          offlineClasses ||
+          8;
+
+        const lastScheduledDates = new Map();
+
+        for (let i = 0; i < totalClasses; i++) {
+          const classItem = classes[i % classes.length];
+
+          const classKey = `${classItem._id}-${classItem.day}`;
+
+          let nextClassDate;
+
+          if (lastScheduledDates.has(classKey)) {
+            const lastDate = lastScheduledDates.get(classKey);
+            nextClassDate = new Date(lastDate);
+            nextClassDate.setDate(nextClassDate.getDate() + 7);
+          } else {
+            nextClassDate = getNextValidClassDate(classItem, new Date());
+          }
+
+          lastScheduledDates.set(classKey, nextClassDate);
+
+          schedule.push({
+            ...classItem,
+            sessionId: `${classItem._id}-${i}`,
+            sessionNumber: schedule.length + 1,
+            classDate: new Date(nextClassDate),
+            formattedDate: formatDate(nextClassDate),
+            status: "scheduled",
+          });
+        }
       }
 
       return schedule.sort((a, b) => a.classDate - b.classDate);
     },
-    [kidData, formatDate]
+    [kidData, formatDate, getNextValidClassDate]
   );
 
   const handleClassSelection = useCallback((classItem) => {
@@ -352,6 +603,8 @@ const AssigningWholeClassToKid = () => {
     if (selectedClasses.length > 0) {
       const newSchedule = generateSchedule(selectedClasses);
       setGeneratedSchedule(newSchedule);
+    } else {
+      setGeneratedSchedule([]);
     }
   }, [selectedClasses, generateSchedule]);
 
@@ -367,16 +620,31 @@ const AssigningWholeClassToKid = () => {
           ? { ...session, status: "cancelled" }
           : session
       );
-      const newSession = generateSchedule(
-        [selectedSession],
-        Math.max(...prev.map((s) => s.classDate))
-      )[0];
-      return [...updated, newSession];
+
+      const lastScheduledDate = Math.max(
+        ...updated
+          .filter((s) => s.status === "scheduled")
+          .map((s) => s.classDate.getTime())
+      );
+
+      const newSession = generateSchedule([selectedSession])[0];
+      if (newSession) {
+        const newDate = new Date(lastScheduledDate);
+        newDate.setDate(newDate.getDate() + 7);
+        newSession.classDate = newDate;
+        newSession.formattedDate = formatDate(newDate);
+        newSession.sessionNumber = updated.length + 1;
+        newSession.sessionId = `${selectedSession._id}-new-${Date.now()}`;
+
+        return [...updated, newSession];
+      }
+
+      return updated;
     });
     setModalState((prev) => ({ ...prev, action: false }));
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
-  }, [selectedSession, generateSchedule]);
+  }, [selectedSession, generateSchedule, formatDate]);
 
   const handleSubmit = async () => {
     setModalState((prev) => ({ ...prev, success: true }));
@@ -391,6 +659,10 @@ const AssigningWholeClassToKid = () => {
       console.error("Error submitting schedule:", error);
     }
   };
+
+  const availableClassesForReschedule = useMemo(() => {
+    return getAvailableClassesForDate(selectedDate);
+  }, [selectedDate, getAvailableClassesForDate]);
 
   if (!kidData) {
     return (
@@ -410,18 +682,45 @@ const AssigningWholeClassToKid = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <InfoCard label="Student Name" value={kidData.kidName} />
             <InfoCard
-              label="Program"
+              label="Program & Level"
+              value={
+                kidData.classDetails?.program && kidData.classDetails?.level
+                  ? `${kidData.classDetails.program} - ${kidData.classDetails.level}`
+                  : "Not Specified"
+              }
+            />
+
+            <InfoCard
+              label="Selected Package "
               value={kidData.classDetails?.selectedPackage || "Not Specified"}
             />
             <InfoCard
               label="Class Details"
               value={
                 <div className="space-y-1">
-                  {kidData.classDetails?.numberOfClasses && (
-                    <p>Total Classes: {kidData.classDetails.numberOfClasses}</p>
-                  )}
-                  {kidData.classDetails?.classMode && (
-                    <p>Class Mode: {kidData.classDetails.classMode}</p>
+                  {kidData.classDetails?.classMode === "hybrid" ? (
+                    <>
+                      <p>
+                        Online Classes:{" "}
+                        {kidData.classDetails.onlineClasses || 0}
+                      </p>
+                      <p>
+                        Offline Classes:{" "}
+                        {kidData.classDetails.offlineClasses || 0}
+                      </p>
+                      <p>Mode: Hybrid</p>
+                    </>
+                  ) : (
+                    <>
+                      {kidData.classDetails?.numberOfClasses && (
+                        <p>
+                          Total Classes: {kidData.classDetails.numberOfClasses}
+                        </p>
+                      )}
+                      {kidData.classDetails?.classMode && (
+                        <p>Class Mode: {kidData.classDetails.classMode}</p>
+                      )}
+                    </>
                   )}
                 </div>
               }
@@ -434,6 +733,7 @@ const AssigningWholeClassToKid = () => {
             selectedClasses={selectedClasses}
             onClassSelection={handleClassSelection}
             availableClasses={availableClasses}
+            classMode={kidData.classDetails?.classMode}
           />
         </div>
 
@@ -525,9 +825,11 @@ const AssigningWholeClassToKid = () => {
         {/* Reschedule Modal */}
         <Modal
           isOpen={modalState.reschedule}
-          onClose={() =>
-            setModalState((prev) => ({ ...prev, reschedule: false }))
-          }
+          onClose={() => {
+            setModalState((prev) => ({ ...prev, reschedule: false }));
+            setSelectedDate(null);
+            setSelectedTimeSlot(null);
+          }}
           title="Reschedule Session"
         >
           <div className="mb-4">
@@ -537,10 +839,22 @@ const AssigningWholeClassToKid = () => {
             <input
               type="date"
               className="w-full p-2 border rounded-lg"
-              onChange={(e) => setSelectedDate(new Date(e.target.value))}
+              onChange={(e) => {
+                setSelectedDate(new Date(e.target.value));
+                setSelectedTimeSlot(null); // Reset time slot when date changes
+              }}
               min={new Date().toISOString().split("T")[0]}
             />
           </div>
+
+          {selectedDate && (
+            <div className="mb-4">
+              <div className="text-sm text-gray-600 mb-2">
+                Selected Date: {selectedDate.toLocaleDateString()} (
+                {getDayName(selectedDate)})
+              </div>
+            </div>
+          )}
 
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -549,21 +863,35 @@ const AssigningWholeClassToKid = () => {
             <div className="relative">
               <select
                 onChange={(e) => {
-                  const selected = availableClasses.find(
+                  const selected = availableClassesForReschedule.find(
                     (c) => c._id === e.target.value
                   );
                   setSelectedTimeSlot(selected);
                 }}
+                value={selectedTimeSlot?._id || ""}
                 className="w-full bg-white border rounded-lg p-3 text-gray-700"
+                disabled={!selectedDate}
               >
-                <option value="">Select Class</option>
-                {availableClasses.map((classItem) => (
+                <option value="">
+                  {!selectedDate
+                    ? "Please select a date first"
+                    : availableClassesForReschedule.length === 0
+                    ? `No classes available on ${getDayName(selectedDate)}`
+                    : "Select Class"}
+                </option>
+                {availableClassesForReschedule.map((classItem) => (
                   <option key={classItem._id} value={classItem._id}>
-                    {`${classItem.day} - ${classItem.classTime} (${classItem.coachName})`}
+                    {`${classItem.classTime} - ${classItem.coachName} (${classItem.type})`}
                   </option>
                 ))}
               </select>
             </div>
+            {selectedDate && availableClassesForReschedule.length === 0 && (
+              <div className="text-sm text-red-500 mt-2">
+                No classes are scheduled on {getDayName(selectedDate)}. Please
+                select a different date.
+              </div>
+            )}
           </div>
 
           <div className="flex gap-4">
@@ -596,9 +924,11 @@ const AssigningWholeClassToKid = () => {
               Confirm Reschedule
             </button>
             <button
-              onClick={() =>
-                setModalState((prev) => ({ ...prev, reschedule: false }))
-              }
+              onClick={() => {
+                setModalState((prev) => ({ ...prev, reschedule: false }));
+                setSelectedDate(null);
+                setSelectedTimeSlot(null);
+              }}
               className="flex-1 bg-gray-200 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors font-medium"
             >
               Cancel
@@ -616,9 +946,14 @@ const AssigningWholeClassToKid = () => {
             Classes have been successfully assigned!
           </p>
           <button
-            onClick={() =>
-              setModalState((prev) => ({ ...prev, success: false }))
-            }
+            onClick={() => {
+              setModalState((prev) => ({ ...prev, success: false }));
+              setTimeout(() => {
+                navigate(
+                  `/super-admin/department/display-whole-selectedClass/${enqId}`
+                );
+              }, 1500);
+            }}
             className="w-full bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary transition-colors font-medium"
           >
             Close

@@ -22,6 +22,11 @@ serviceRoute.post("/save-coach-availabledays",serviceController.saveCoachAvailab
 serviceRoute.post("/save-class-data/:empId", serviceController.saveClassData);
 serviceRoute.post("/assign-whole-class", serviceController.assignWholeClass);
 
+serviceRoute.post("/pause-class-temporary/:enqId/:classId", serviceController.pauseTheClassTemporary);
+serviceRoute.post("/resume-the-class/:enqId/:classId", serviceController.resumeTheClassBack);
+
+
+
 
 
 

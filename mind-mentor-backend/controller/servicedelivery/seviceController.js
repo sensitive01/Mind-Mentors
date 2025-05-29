@@ -161,7 +161,10 @@ const getClassShedules = async (req, res) => {
     let query = {};
     if (department === "centeradmin") {
       query.type = "offline";
-    } else if (department === "operation" || department === "service-delivary") {
+    } else if (
+      department === "operation" ||
+      department === "service-delivary"
+    ) {
       query.type = "online";
     } // else, no filter — return all
 
@@ -181,9 +184,6 @@ const getClassShedules = async (req, res) => {
     });
   }
 };
-
-
-
 
 const getCoachData = async (req, res) => {
   try {
@@ -263,7 +263,10 @@ const getCoachAvailableDays = async (req, res) => {
     );
 
     // Fetch center data
-    const centerData = await PhysicalCenter.find({}, { businessHours: 1, programLevels: 1,centerType:1 });
+    const centerData = await PhysicalCenter.find(
+      {},
+      { businessHours: 1, programLevels: 1, centerType: 1 }
+    );
 
     // Fetch all availability records
     const availableDays = await CoachAvailability.find();
@@ -274,17 +277,17 @@ const getCoachAvailableDays = async (req, res) => {
 
     // Create maps for quick lookups
     const coachMap = {};
-    coachData.forEach(coach => {
+    coachData.forEach((coach) => {
       coachMap[coach._id.toString()] = coach;
     });
 
     const centerMap = {};
-    centerData.forEach(center => {
+    centerData.forEach((center) => {
       centerMap[center._id.toString()] = center;
     });
 
     // Merge coach and center details
-    const mergedAvailableDays = availableDays.map(entry => {
+    const mergedAvailableDays = availableDays.map((entry) => {
       const coachInfo = coachMap[entry.coachId];
       let centerInfo = null;
 
@@ -295,16 +298,18 @@ const getCoachAvailableDays = async (req, res) => {
       return {
         ...entry.toObject(),
         coachInfo: coachInfo || null,
-        centerInfo: centerInfo ? {
-          centerId: centerInfo._id,
-          centerType:centerInfo.centerType,
-          businessHours: centerInfo.businessHours,
-          programLevels: centerInfo.programLevels
-        } : null
+        centerInfo: centerInfo
+          ? {
+              centerId: centerInfo._id,
+              centerType: centerInfo.centerType,
+              businessHours: centerInfo.businessHours,
+              programLevels: centerInfo.programLevels,
+            }
+          : null,
       };
     });
 
-    console.log("mergedAvailableDays",mergedAvailableDays)
+    console.log("mergedAvailableDays", mergedAvailableDays);
 
     res.status(200).json({
       success: true,
@@ -320,8 +325,6 @@ const getCoachAvailableDays = async (req, res) => {
     });
   }
 };
-
-
 
 const getClassAndStudentsData = async (req, res) => {
   try {
@@ -632,11 +635,9 @@ const timeTableShedules = async (req, res) => {
   }
 };
 
-
-
-
 const getActiveKidAndClassData = async (req, res) => {
   try {
+    console.log("Welcome to get kiddata");
     const { enqId } = req.params;
 
     const paymentClassData = await classPaymentModel.findOne({
@@ -654,7 +655,6 @@ const getActiveKidAndClassData = async (req, res) => {
     const programData = paymentClassData.programs[0]; // assuming one program per payment
     let classData = {};
 
-    // Assign offline/online class counts
     if (
       paymentClassData.offlineClasses !== undefined &&
       paymentClassData.onlineClasses !== undefined
@@ -714,12 +714,11 @@ const getActiveKidAndClassData = async (req, res) => {
   }
 };
 
-
 const assignWholeClass = async (req, res) => {
   try {
     console.log("Req.body", req.body);
 
-    const { submissionData } = req.body; // Extract submissionData
+    const { submissionData } = req.body;
 
     if (!submissionData) {
       return res.status(400).json({ success: false, message: "Invalid data" });
@@ -732,21 +731,55 @@ const assignWholeClass = async (req, res) => {
       generatedSchedule,
       cancelledSessions,
     } = submissionData;
-    const enqData = await operationDeptModel.findOne(
-      { _id: studentId, paymentStatus: "Success", enquiryStatus: "Active" },
-      { kidId: 1 }
-    );
-    console.log("EnqId==>", enqData);
 
     if (!studentId || !studentName || !Array.isArray(selectedClasses)) {
       return res.status(400).json({ success: false, message: "Invalid data" });
     }
 
-    console.log("Student ID:", studentId);
-    console.log("Student Name:", studentName);
-    console.log("Selected Classes:", selectedClasses);
-    console.log("Generated Schedule:", generatedSchedule);
-    console.log("Cancelled Sessions:", cancelledSessions);
+    const distinctIds = [...new Set(generatedSchedule.map((item) => item._id))];
+    console.log("Distinct IDs:", distinctIds);
+
+    const enqData = await operationDeptModel.findOne(
+      { _id: studentId, paymentStatus: "Success", enquiryStatus: "Active" },
+      { kidId: 1, kidFirstName: 1, classAssigned: 1 }
+    );
+
+    if (!enqData) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Student not found or inactive" });
+    }
+
+    const kidData = {
+      kidId: enqData.kidId,
+      kidName: enqData.kidFirstName,
+      status: "Scheduled",
+    };
+
+    for (const classId of distinctIds) {
+      const classDoc = await ClassSchedule.findById(classId);
+
+      if (!classDoc) {
+        console.warn(`Class with ID ${classId} not found.`);
+        continue;
+      }
+
+      // Check if the student is already added
+      const alreadyAdded = classDoc.selectedStudents.some(
+        (student) => student.kidId === kidData.kidId
+      );
+
+      if (!alreadyAdded) {
+        classDoc.selectedStudents.push(kidData);
+
+        // If you're tracking count, make sure the field name is correct
+        classDoc.enrolledKidCount += 1;
+
+        await classDoc.save();
+      } else {
+        console.log(`Kid already added to class: ${classId}`);
+      }
+    }
 
     const newClassSelection = new SelectedClass({
       kidId: enqData.kidId,
@@ -756,11 +789,15 @@ const assignWholeClass = async (req, res) => {
       cancelledSessions,
       enqId: studentId,
     });
-    await newClassSelection.save();
 
-    res
-      .status(201)
-      .json({ success: true, message: "Classes saved successfully" });
+    await newClassSelection.save();
+    enqData.classAssigned = true;
+    await enqData.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Classes assigned and saved successfully",
+    });
   } catch (error) {
     console.error("Error saving selected classes:", error);
     res.status(500).json({ success: false, message: "Server error" });
@@ -770,10 +807,16 @@ const assignWholeClass = async (req, res) => {
 const displaySelectedClass = async (req, res) => {
   try {
     const { enqId } = req.params;
+    const programData = await operationDeptModel.findOne(
+      { _id: enqId },
+      { programs: 1 }
+    );
+
+    const classData = await ClassSchedule.find();
 
     const selectedClass = await SelectedClass.findOne(
       { enqId: enqId },
-      { generatedSchedule: 1, _id: 0, studentName: 1 } // Only return the `generatedSchedule` field
+      { generatedSchedule: 1, _id: 1, studentName: 1 }
     );
 
     if (!selectedClass) {
@@ -782,13 +825,31 @@ const displaySelectedClass = async (req, res) => {
         .json({ message: "No schedule found for the given ID" });
     }
 
-    res
-      .status(200)
-      .json({
-        message: "Selected class retrieved successfully",
-        data: selectedClass.generatedSchedule,
-        kidName: selectedClass.studentName,
-      });
+    const enrichedSchedule = selectedClass.generatedSchedule.map((session) => {
+      const matchedClass = classData.find(
+        (cls) => cls._id.toString() === session._id.toString()
+      );
+      return {
+        ...session.toObject(),
+        ...(matchedClass
+          ? {
+              classTime: matchedClass.classTime,
+              coachName: matchedClass.coachName,
+              program: matchedClass.program,
+              level: matchedClass.level,
+              centerName: matchedClass.centerName,
+            }
+          : {}),
+      };
+    });
+
+    res.status(200).json({
+      message: "Selected class retrieved successfully",
+      data: enrichedSchedule,
+      kidName: selectedClass.studentName,
+      classId: selectedClass._id,
+      programData,
+    });
   } catch (err) {
     console.error("Error in displaying the selected class", err);
     res
@@ -816,7 +877,7 @@ const getScheduledClassData = async (req, res) => {
     // Fetch class schedule data
     const classData = await ClassSchedule.find(
       {},
-      { day: 1, classTime: 1, coachName: 1, coachId: 1,type:1 }
+      { day: 1, classTime: 1, coachName: 1, coachId: 1, type: 1, classDate: 1 }
     );
 
     console.log("classData", classData);
@@ -824,17 +885,97 @@ const getScheduledClassData = async (req, res) => {
     // Send response to client
     res.status(200).json({
       enrollment: enqData,
-       classData,
+      classData,
     });
-
   } catch (err) {
     console.error("Error in getting the schedule", err);
-    res.status(500).json({ message: "Internal Server Error", error: err.message });
+    res
+      .status(500)
+      .json({ message: "Internal Server Error", error: err.message });
   }
 };
 
+const pauseTheClassTemporary = async (req, res) => {
+  try {
+    console.log("Welcome to pause the class", req.body);
+
+    const { enqId, classId } = req.params;
+    const { updatedData, pauseRemarks } = req.body;
+    const exisitingData = await SelectedClass.findOne(
+      { _id: classId },
+      { generatedSchedule: 1 }
+    );
+    console.log("existing Data", exisitingData);
+    console.log("updatedData", updatedData);
+
+    const updatedClass = await SelectedClass.findOneAndUpdate(
+      { _id: classId },
+      {
+        $set: {
+          generatedSchedule: updatedData,
+          pauseRemarks,
+        },
+      },
+      { new: true }
+    );
+
+    if (!updatedClass) {
+      return res.status(404).json({ message: "Class not found" });
+    }
+
+    console.log("Updated class", updatedClass);
+
+    res.status(200).json({
+      message: "Class paused successfully",
+      data: updatedClass,
+    });
+  } catch (err) {
+    console.log("Error in pausing the data", err);
+    res.status(500).json({
+      message: "Error while pausing the class",
+      error: err.message,
+    });
+  }
+};
+
+const resumeTheClassBack = async (req, res) => {
+  try {
+    const { enqId, classId } = req.params;
+    const { updatedData, pauseRemarks } = req.body;
+
+    const updatedClass = await SelectedClass.findOneAndUpdate(
+      { _id: classId },
+      {
+        $set: {
+          generatedSchedule: updatedData,
+          pauseRemarks,
+        },
+      },
+      { new: true }
+    );
+
+    if (!updatedClass) {
+      return res.status(404).json({ message: "Class not found" });
+    }
+
+    console.log("Updated class", updatedClass);
+
+    res.status(200).json({
+      message: "Class Resumed successfully",
+      data: updatedClass,
+    });
+  } catch (err) {
+    console.log("Error in resuming the data", err);
+    res.status(500).json({
+      message: "Error while resuming the class",
+      error: err.message,
+    });
+  }
+};
 
 module.exports = {
+  resumeTheClassBack,
+  pauseTheClassTemporary,
   displaySelectedClass,
   assignWholeClass,
   getActiveKidAndClassData,

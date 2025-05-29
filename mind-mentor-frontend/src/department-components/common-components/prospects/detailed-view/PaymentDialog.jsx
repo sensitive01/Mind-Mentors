@@ -8,10 +8,10 @@ import {
 } from "../../../../api/service/employee/EmployeeService";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useNavigate } from "react-router-dom"; // Import navigate hook for React Router
+import { useNavigate } from "react-router-dom";
 
 const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
-  const navigate = useNavigate(); // Initialize navigate hook
+  const navigate = useNavigate();
   const [packageType, setPackageType] = useState("");
   const [packages, setPackages] = useState({
     online: [],
@@ -86,35 +86,20 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
       ];
       setCentersList(uniqueCenters);
     } else if (type === "hybrid") {
-      // For hybrid, combine centers from both online and offline packages
-      let combinedCenters = [];
+      // For hybrid, we need centers from offline packages (physical centers)
+      let hybridCenters = [];
 
-      // Add online centers
-      if (packages.online.length > 0) {
-        const onlineCenters =
-          packages.online[0].centers?.map((center) => ({
-            centerId: center.centerId,
-            centerName: center.centerName,
-            type: "online",
-          })) || [];
-        combinedCenters = [...combinedCenters, ...onlineCenters];
-      }
-
-      // Add offline centers
       if (packages.offline.length > 0) {
         const offlineCenters = packages.offline[0].centers.map((center) => ({
           centerId: center.centerId,
           centerName: center.centerName,
-          type: "offline",
         }));
-        combinedCenters = [...combinedCenters, ...offlineCenters];
+        hybridCenters = [...hybridCenters, ...offlineCenters];
       }
 
-      // Remove duplicates based on centerId and keep unique centers
+      // Remove duplicates based on centerId
       const uniqueCenters = [
-        ...new Map(
-          combinedCenters.map((item) => [item.centerId, item])
-        ).values(),
+        ...new Map(hybridCenters.map((item) => [item.centerId, item])).values(),
       ];
 
       setCentersList(uniqueCenters);
@@ -136,6 +121,8 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
     setBaseAmount(0);
     setTotalAmount(0);
     setPaymentId("");
+    setOnlineRate(100);
+    setOfflineRate(125);
   };
 
   const calculateAmounts = () => {
@@ -154,30 +141,8 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
         }
       }
     } else if (packageType === "hybrid") {
-      if (selectedCenter && packages.hybrid.length > 0) {
-        const centerPackages = packages.hybrid[0].centers.filter(
-          (c) => c.centerId === selectedCenter
-        );
-
-        const onlinePkg = centerPackages.find((c) => c.mode === "online");
-        const offlinePkg = centerPackages.find((c) => c.mode === "offline");
-
-        const currentOnlineRate = onlinePkg
-          ? onlinePkg.oneClassPrice
-          : onlineRate;
-        const currentOfflineRate = offlinePkg
-          ? offlinePkg.oneClassPrice
-          : offlineRate;
-
-        setOnlineRate(currentOnlineRate);
-        setOfflineRate(currentOfflineRate);
-
-        base =
-          onlineClasses * currentOnlineRate +
-          offlineClasses * currentOfflineRate;
-      } else {
-        base = onlineClasses * onlineRate + offlineClasses * offlineRate;
-      }
+      // For hybrid, calculate based on selected center rates
+      base = onlineClasses * onlineRate + offlineClasses * offlineRate;
     } else if (packageType === "kit") {
       base = kitItems.reduce((total, item) => {
         const kitItem = kitItemsList.find((k) => k._id === item.name);
@@ -215,48 +180,45 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
   };
 
   const handleCenterChange = (e) => {
-    setSelectedCenter(e.target.value);
+    const centerId = e.target.value;
+    setSelectedCenter(centerId);
 
-    if (packageType === "hybrid") {
-      // Find online and offline rates for the selected center
+    if (packageType === "hybrid" && centerId) {
+      // Get online rate from online packages for this center
       let onlinePrice = 100; // default
-      let offlinePrice = 125; // default
-
-      // Check in online packages for this center
       if (packages.online.length > 0) {
         const onlineCenter = packages.online[0].centers?.find(
-          (c) => c.centerId === e.target.value
+          (c) => c.centerId === centerId
         );
         if (onlineCenter) {
-          onlinePrice = onlineCenter.oneClassPrice;
+          // Use the lowest online rate for this center from available packages
+          const onlinePackagesForCenter = packages.online.filter((pkg) =>
+            pkg.centers?.some((center) => center.centerId === centerId)
+          );
+          if (onlinePackagesForCenter.length > 0) {
+            // Get the average or use first available rate
+            onlinePrice = onlinePackagesForCenter[0].oneClassPrice;
+          }
         }
       }
 
-      // Check in offline packages for this center
+      // Get offline rate from offline packages for this center
+      let offlinePrice = 125; // default
       if (packages.offline.length > 0) {
         const offlineCenter = packages.offline[0].centers.find(
-          (c) => c.centerId === e.target.value
+          (c) => c.centerId === centerId
         );
         if (offlineCenter) {
           offlinePrice = offlineCenter.oneClassPrice;
         }
       }
 
-      // Also check hybrid package data if it exists
-      if (packages.hybrid.length > 0) {
-        const centerPackages = packages.hybrid[0].centers.filter(
-          (c) => c.centerId === e.target.value
-        );
-
-        const onlinePkg = centerPackages.find((c) => c.mode === "online");
-        const offlinePkg = centerPackages.find((c) => c.mode === "offline");
-
-        if (onlinePkg) onlinePrice = onlinePkg.oneClassPrice;
-        if (offlinePkg) offlinePrice = offlinePkg.oneClassPrice;
-      }
-
       setOnlineRate(onlinePrice);
       setOfflineRate(offlinePrice);
+
+      console.log(
+        `Center ${centerId} rates - Online: ₹${onlinePrice}, Offline: ₹${offlinePrice}`
+      );
     }
   };
 
@@ -292,9 +254,15 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
         return;
       }
 
-      if (packageType === "hybrid" && onlineClasses + offlineClasses === 0) {
-        toast.error("Please enter number of classes");
-        return;
+      if (packageType === "hybrid") {
+        if (!selectedCenter) {
+          toast.error("Please select a center for hybrid package");
+          return;
+        }
+        if (onlineClasses + offlineClasses === 0) {
+          toast.error("Please enter number of classes");
+          return;
+        }
       }
 
       if (
@@ -305,10 +273,7 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
         return;
       }
 
-      if (
-        (packageType === "offline" || packageType === "hybrid") &&
-        !selectedCenter
-      ) {
+      if (packageType === "offline" && !selectedCenter) {
         toast.error("Please select a center");
         return;
       }
@@ -339,9 +304,9 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
           packageId: selectedPackage,
           selectedPackage: selectedPkg?.packageName || "",
           onlineClasses:
-            packageType === "online" ? selectedPkg?.classes || 0 : 0,
+            packageType === "online" ? selectedPkg?.classUpTo || 0 : 0,
           offlineClasses:
-            packageType === "offline" ? selectedPkg?.classes || 0 : 0,
+            packageType === "offline" ? selectedPkg?.classUpTo || 0 : 0,
           centerId: selectedCenter,
           centerName:
             centersList.find((c) => c.centerId === selectedCenter)
@@ -358,6 +323,8 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
           centerName:
             centersList.find((c) => c.centerId === selectedCenter)
               ?.centerName || "",
+          onlineRate: onlineRate,
+          offlineRate: offlineRate,
         };
       } else if (packageType === "kit") {
         packageData = {
@@ -379,10 +346,8 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
         setPaymentId(receivedPaymentId);
         toast.success("Package selection submitted successfully");
 
-        // Redirect to payment-details page after 1.5 seconds
         setTimeout(() => {
           onClose();
-          // Redirect to payment details page with the payment ID
           navigate(
             `/super-admin/department/payment-details/${receivedPaymentId}`
           );
@@ -405,6 +370,8 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
     offlineClasses,
     kitItems,
     selectedCenter,
+    onlineRate,
+    offlineRate,
   ]);
 
   return (
@@ -520,7 +487,8 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
                   <option value="">Select a package</option>
                   {packages.online.map((pkg) => (
                     <option key={pkg._id} value={pkg._id}>
-                      {pkg.packageName} - {pkg.classes} Classes - ₹{pkg.amount}
+                      {pkg.packageName} - {pkg.classUpTo} Classes - ₹
+                      {pkg.amount}
                     </option>
                   ))}
                 </select>
@@ -582,7 +550,7 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
                         .filter((center) => center.centerId === selectedCenter)
                         .map((pkg) => (
                           <option key={pkg._id} value={pkg._id}>
-                            {pkg.packageName} - {pkg.classes} Classes - ₹
+                            {pkg.packageName} - {pkg.classUpTo} Classes - ₹
                             {pkg.amount}
                           </option>
                         ))}
@@ -609,7 +577,7 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
               <div className="bg-white p-4 rounded-lg shadow-sm space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Select Center
+                    Select Center (Physical Location)
                   </label>
                   <select
                     value={selectedCenter}
@@ -625,31 +593,80 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Number of Online Classes (₹{onlineRate}/class)
-                  </label>
-                  <input
-                    type="number"
-                    value={onlineClasses}
-                    onChange={(e) => setOnlineClasses(Number(e.target.value))}
-                    className="block w-full rounded-md border border-gray-300 px-4 py-2"
-                    min="0"
-                  />
-                </div>
+                {selectedCenter && (
+                  <>
+                    {/* <div className="bg-blue-50 p-3 rounded-md">
+                      <p className="text-sm text-blue-800">
+                        <strong>Selected Center:</strong>{" "}
+                        {
+                          centersList.find((c) => c.centerId === selectedCenter)
+                            ?.centerName
+                        }
+                      </p>
+                      <p className="text-sm text-blue-600 mt-1">
+                        Online Rate: ₹{onlineRate}/class | Offline Rate: ₹
+                        {offlineRate}/class
+                      </p>
+                    </div> */}
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Number of Offline Classes (₹{offlineRate}/class)
-                  </label>
-                  <input
-                    type="number"
-                    value={offlineClasses}
-                    onChange={(e) => setOfflineClasses(Number(e.target.value))}
-                    className="block w-full rounded-md border border-gray-300 px-4 py-2"
-                    min="0"
-                  />
-                </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Number of Online Classes (₹{onlineRate}/class)
+                      </label>
+                      <input
+                        type="number"
+                        value={onlineClasses}
+                        onChange={(e) =>
+                          setOnlineClasses(Number(e.target.value))
+                        }
+                        className="block w-full rounded-md border border-gray-300 px-4 py-2"
+                        min="0"
+                        placeholder="Enter number of online classes"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Number of Offline Classes (₹{offlineRate}/class)
+                      </label>
+                      <input
+                        type="number"
+                        value={offlineClasses}
+                        onChange={(e) =>
+                          setOfflineClasses(Number(e.target.value))
+                        }
+                        className="block w-full rounded-md border border-gray-300 px-4 py-2"
+                        min="0"
+                        placeholder="Enter number of offline classes"
+                      />
+                    </div>
+
+                    {/* {(onlineClasses > 0 || offlineClasses > 0) && (
+                      <div className="bg-gray-50 p-3 rounded-md">
+                        <h4 className="font-medium text-gray-700 mb-2">
+                          Price Breakdown:
+                        </h4>
+                        {onlineClasses > 0 && (
+                          <p className="text-sm text-gray-600">
+                            Online: {onlineClasses} classes × ₹{onlineRate} = ₹
+                            {onlineClasses * onlineRate}
+                          </p>
+                        )}
+                        {offlineClasses > 0 && (
+                          <p className="text-sm text-gray-600">
+                            Offline: {offlineClasses} classes × ₹{offlineRate} =
+                            ₹{offlineClasses * offlineRate}
+                          </p>
+                        )}
+                        <p className="text-sm font-medium text-gray-800 mt-1">
+                          Subtotal: ₹
+                          {onlineClasses * onlineRate +
+                            offlineClasses * offlineRate}
+                        </p>
+                      </div>
+                    )} */}
+                  </>
+                )}
               </div>
             )}
 
@@ -727,7 +744,6 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
               </div>
             )}
 
-            {/* Display payment ID if available */}
             {paymentId && (
               <div className="bg-white p-4 rounded-lg shadow-sm">
                 <div className="flex justify-between items-center">

@@ -105,6 +105,7 @@ const operationDeptSchema = new mongoose.Schema(
       default: "Pending",
     },
     paymentRenewal: { type: String },
+    classAssigned:{type:Boolean,default:false}
   },
   { timestamps: true }
 );

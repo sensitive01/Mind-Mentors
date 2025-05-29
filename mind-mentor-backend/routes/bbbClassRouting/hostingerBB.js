@@ -219,6 +219,8 @@ router.get("/get-attandance-report", async (req, res) => {
       { internalMeetingID: { $exists: true, $ne: null, $ne: "" } }
     ).lean(); // use .lean() for plain JS objects
 
+    console.log("classData",classData)
+
     // Format and sort data
     classData = classData
       .map(item => ({

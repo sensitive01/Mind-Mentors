@@ -674,12 +674,30 @@ const ClassScheduleForm = () => {
 
     try {
       const response = await sheduleTimeTable(empId, schedules);
+      console.log(response)
+
       if (response.status === 201) {
         toast.success(
           response.data.message || "Schedules submitted successfully"
         );
+        setSchedules([
+          {
+            mode: "",
+            day: "",
+            date: "",
+            centerId: "",
+            centerName: "",
+            coachId: "",
+            coachName: "",
+            program: "",
+            level: "",
+            fromTime: "",
+            toTime: "",
+            isDemo: false,
+          },
+        ]);
         setTimeout(() => {
-          navigate(`/${department}/department/class-shedules`);
+          navigate(`/${department}/department/class-timetable-list`);
         }, 1500);
       }
     } catch (error) {
@@ -728,7 +746,9 @@ const ClassScheduleForm = () => {
             </p>
           </div>
           <button
-            onClick={()=>navigate("/super-admin/department/class-timetable-list")} // replace with your actual handler
+            onClick={() =>
+              navigate("/super-admin/department/class-timetable-list")
+            } // replace with your actual handler
             className="bg-white text-[#642b8f] px-4 py-2 rounded font-medium hover:bg-gray-100 transition"
           >
             View Schedule

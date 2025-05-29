@@ -84,12 +84,18 @@ const classScheduleSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  enrolledKidCount: {
+    type: Number,
+    default: 0,
+  },
   selectedStudents: [
     {
       kidId: { type: String },
       chessKid: { type: String },
       kidName: { type: String },
       status: { type: String, default: "Scheduled" },
+      sheduleId: { type: String },
+      sheduledDate: { type: Date },
     },
   ],
   demoAssignedKid: [
@@ -98,6 +104,8 @@ const classScheduleSchema = new mongoose.Schema({
       chessKid: { type: String },
       kidName: { type: String },
       status: { type: String, default: "Scheduled" },
+      sheduleId: { type: String },
+      sheduledDate: { type: Date },
     },
   ],
 });

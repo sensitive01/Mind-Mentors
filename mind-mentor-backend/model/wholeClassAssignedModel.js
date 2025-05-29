@@ -11,7 +11,7 @@ const scheduleSchema = new mongoose.Schema({
   sessionNumber: { type: Number },
   classDate: { type: Date },
   formattedDate: { type: String },
-  status: { type: String, enum: ["scheduled", "cancelled", "rescheduled"] },
+  status: { type: String,},
 });
 
 const selectedClassSchema = new mongoose.Schema({
@@ -23,19 +23,11 @@ const selectedClassSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "operationdepts",
   },
+  pauseRemarks:{type:String},
   studentName: {
     type: String,
   },
-  selectedClasses: [
-    {
-      id: { type: Number },
-      day: { type: String },
-      startTime: { type: String },
-      endTime: { type: String, default: "" },
-      coach: { type: String },
-      type: { type: String, enum: ["online", "offline", "hybrid"] },
-    },
-  ],
+  selectedClasses: {type:Array},
   generatedSchedule: [scheduleSchema],
   cancelledSessions: [scheduleSchema],
   status:{type:String,default:"Active"}

@@ -3,7 +3,7 @@ const axios = require('axios');
 axios.post('https://live.mindmentorz.in/api/new-class/create-new-class', {
 // axios.post('http://localhost:3000/api/new-class/create-new-class', {
 
-  className: "Check For Statistic Data",
+  className: "Demo for recordings Link",
   coachName: "Aswinraj"
 }, {
   headers: {

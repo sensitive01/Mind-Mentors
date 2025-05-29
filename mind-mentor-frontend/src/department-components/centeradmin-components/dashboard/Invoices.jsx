@@ -121,7 +121,7 @@ const Prospects = () => {
           // Transform the data to match DataGrid requirements
           const transformedData = response.data.data.map((invoice, index) => ({
             id: invoice._id,
-            slNo: index + 1,
+            slNo: response.data.data.length - index,
             paymentId: invoice.paymentId,
             paymentMode: invoice.paymentMode || "Online",
             transactionId: invoice.transactionId || "N/A",
@@ -437,7 +437,6 @@ const Prospects = () => {
           <Typography variant="h5" color="text.primary">
             Invoice Management
           </Typography>
-         
         </Box>
 
         <Paper
@@ -448,8 +447,6 @@ const Prospects = () => {
             overflow: "hidden",
           }}
         >
-          
-
           <DataGrid
             rows={rows}
             columns={columns}

@@ -102,3 +102,13 @@ export const getScheduledClassData = async (enqId) => {
   const response = await serviceInstance.get(`/service/get-all-scheduled-class-data/${enqId}`);
   return response;
 };
+
+export const pauseTheClass = async (enqId,updatedData,pauseRemarks,classId) => {
+  const response = await serviceInstance.post(`/service/pause-class-temporary/${enqId}/${classId}`,{updatedData,pauseRemarks});
+  return response;
+};
+
+export const resumeTheClass = async (enqId,updatedData,classId) => {
+  const response = await serviceInstance.post(`/service/resume-the-class/${enqId}/${classId}`,{updatedData});
+  return response;
+};
