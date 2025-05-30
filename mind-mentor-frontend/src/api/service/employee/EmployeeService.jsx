@@ -211,6 +211,12 @@ export const getInvoiceData = async () => {
   return response;
 };
 
+export const generateClassMeetingLink = async (classId,className,coachName) => {
+  const response = await hrInstance.post(`/api/new-class/create-new-class-link-admin/${classId}`,{coachName,className});
+  return response;
+};
+
+
 
 
 

@@ -4,6 +4,7 @@ const axios = require("axios");
 const Class = require("../../model/bbbClassModel/bbbClassModel");
 const { buildUrl } = require("../../utils/bigblue"); // Utility function to build signed BBB URLs
 const xml2js = require("xml2js");
+const ClassSchedule = require("../../model/classSheduleModel");
 
 const BASE_URL = "https://class.mindmentorz.in";
 const SECRET = "T8g4qUus8uKCqBNFxu2hrXOIjbHO9GaLhIsudsu8g";
@@ -29,11 +30,11 @@ router.post("/create-new-class", async (req, res) => {
   const createUrl = buildUrl(BASE_URL, "create", createQuery, SECRET);
   const parsedUrl = new URL(createUrl);
   const newCheckSumData = parsedUrl.searchParams.get("checksum");
-  console.log("newCheckSumData",newCheckSumData)
+  console.log("newCheckSumData", newCheckSumData);
 
   try {
     const data = await axios.get(createUrl); // Create BBB meeting
-    console.log("data",data)
+    console.log("data", data);
     const result = await xml2js.parseStringPromise(data.data, {
       explicitArray: false,
     });
@@ -50,7 +51,7 @@ router.post("/create-new-class", async (req, res) => {
       started: true,
       startTime: new Date(),
       internalMeetingID,
-      checkSum:newCheckSumData
+      checkSum: newCheckSumData,
     });
 
     await newClass.save();
@@ -77,6 +78,90 @@ router.post("/create-new-class", async (req, res) => {
     res.status(500).json({ error: "Failed to create class" });
   }
 });
+
+router.post(
+  "/create-new-class-link-admin/:sheduledClassId",
+  async (req, res) => {
+    const { sheduledClassId } = req.params;
+    const { className, coachName } = req.body;
+
+    if (!className || !coachName) {
+      return res
+        .status(400)
+        .json({ error: "Class name and coach name are required" });
+    }
+
+    const classData = await ClassSchedule.findById(sheduledClassId);
+    if (!classData) {
+      return res.status(404).json({ error: "Scheduled class not found" });
+    }
+
+    const classId = Math.random().toString(36).substr(2, 8);
+    const meetingID = `class-${classId}`;
+    const createQuery = `name=${encodeURIComponent(
+      className
+    )}&meetingID=${meetingID}&attendeePW=apwd&moderatorPW=mpwd&welcome=Welcome+to+${encodeURIComponent(
+      className
+    )}!&record=true&autoStartRecording=true&allowStartStopRecording=false`;
+
+    const createUrl = buildUrl(BASE_URL, "create", createQuery, SECRET);
+    const parsedUrl = new URL(createUrl);
+    const newCheckSumData = parsedUrl.searchParams.get("checksum");
+
+    try {
+      const data = await axios.get(createUrl);
+      const result = await xml2js.parseStringPromise(data.data, {
+        explicitArray: false,
+      });
+
+      const internalMeetingID = result.response.internalMeetingID;
+
+      const newClass = new Class({
+        classId,
+        className,
+        coachName,
+        meetingID,
+        started: true,
+        startTime: new Date(),
+        internalMeetingID,
+        checkSum: newCheckSumData,
+      });
+
+      await newClass.save();
+
+      // Build join URLs
+      const joinCoachUrl = buildUrl(
+        BASE_URL,
+        "join",
+        `fullName=${encodeURIComponent(
+          coachName
+        )}&meetingID=${meetingID}&password=mpwd&redirect=true`,
+        SECRET
+      );
+
+      const joinKidUrl = `https://live.mindmentorz.in/kid/join-the-class-room/${classId}`;
+
+      // ✅ Update or add to ClassSchedule
+      classData.coachJoinUrl = joinCoachUrl;
+      classData.kidJoinUrl = joinKidUrl;
+      classData.meetingLinkCreated=true
+      classData.updatedAt = new Date();
+
+      await classData.save();
+
+      res.json({
+        message: "Class created and links updated successfully",
+        classId,
+        joinCoachUrl,
+        joinKidUrl,
+        meetingLinkCreated:true
+      });
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).json({ error: "Failed to create class" });
+    }
+  }
+);
 
 // ✅ Route 2: Get class details by classId (used when kid joins)
 router.get("/get-new-class/:classId", async (req, res) => {
@@ -122,28 +207,34 @@ router.post("/new-sign-join-url", async (req, res) => {
   }
 });
 router.get("/get-recordings-link/:meetingID", async (req, res) => {
-  const {meetingID} = req.params;
+  const { meetingID } = req.params;
   console.log("Requested meetingID:", meetingID);
 
   if (!meetingID) {
-    return res.status(400).json({ error: "meetingID query parameter is required" });
+    return res
+      .status(400)
+      .json({ error: "meetingID query parameter is required" });
   }
 
   try {
-    const classRecord = await Class.findOne({ meetingID }, { internalMeetingID: 1 });
+    const classRecord = await Class.findOne(
+      { meetingID },
+      { internalMeetingID: 1 }
+    );
 
     if (classRecord && classRecord.internalMeetingID) {
       const link = `https://class.mindmentorz.in/playback/presentation/2.3/${classRecord.internalMeetingID}`;
       return res.status(200).json({ links: link });
     } else {
-      return res.status(404).json({  message: "No recording found for the given meetingID" });
+      return res
+        .status(404)
+        .json({ message: "No recording found for the given meetingID" });
     }
   } catch (error) {
     console.error("Error in getting the recordings:", error);
     res.status(500).json({ error: "Failed to get the recordings" });
   }
 });
-
 
 router.get("/get-learning-statistic-data/:meetingID", async (req, res) => {
   console.log("Welcome to get-learning-statistic-data", req.body);
@@ -156,20 +247,20 @@ router.get("/get-learning-statistic-data/:meetingID", async (req, res) => {
   try {
     const response = await axios.get(url);
     console.log("Response status:", response);
-    console.log("Response content-type:", response.headers['content-type']);
-    
+    console.log("Response content-type:", response.headers["content-type"]);
+
     // Check if the response is HTML (which it is)
-    if (response.headers['content-type']?.includes('text/html')) {
-      console.log("Received HTML content, not XML/JSON",response);
-      
+    if (response.headers["content-type"]?.includes("text/html")) {
+      console.log("Received HTML content, not XML/JSON", response);
+
       // Option 1: Return the HTML as is
-      return res.status(200).json({ 
+      return res.status(200).json({
         success: true,
-        contentType: 'html',
+        contentType: "html",
         data: response.data,
-        message: "Received HTML content from learning analytics dashboard"
+        message: "Received HTML content from learning analytics dashboard",
       });
-      
+
       // Option 2: If you need to extract data from the HTML, you could use a library like cheerio
       // const cheerio = require('cheerio');
       // const $ = cheerio.load(response.data);
@@ -177,19 +268,28 @@ router.get("/get-learning-statistic-data/:meetingID", async (req, res) => {
       // const title = $('title').text();
       // return res.status(200).json({ title, html: response.data });
     }
-    
+
     // If it's actually XML/JSON, parse accordingly
-    const contentType = response.headers['content-type'];
-    if (contentType?.includes('application/xml') || contentType?.includes('text/xml')) {
+    const contentType = response.headers["content-type"];
+    if (
+      contentType?.includes("application/xml") ||
+      contentType?.includes("text/xml")
+    ) {
       // Only try to parse as XML if content-type indicates XML
-      xml2js.parseString(response.data, { explicitArray: false }, (err, result) => {
-        if (err) {
-          console.error("XML parsing error:", err);
-          return res.status(500).json({ error: "Failed to parse XML response" });
+      xml2js.parseString(
+        response.data,
+        { explicitArray: false },
+        (err, result) => {
+          if (err) {
+            console.error("XML parsing error:", err);
+            return res
+              .status(500)
+              .json({ error: "Failed to parse XML response" });
+          }
+          return res.status(200).json(result);
         }
-        return res.status(200).json(result);
-      });
-    } else if (contentType?.includes('application/json')) {
+      );
+    } else if (contentType?.includes("application/json")) {
       // If it's JSON, return as is
       return res.status(200).json(response.data);
     } else {
@@ -197,33 +297,32 @@ router.get("/get-learning-statistic-data/:meetingID", async (req, res) => {
       return res.status(200).json({
         success: true,
         contentType: contentType,
-        data: response.data
+        data: response.data,
       });
     }
-    
   } catch (error) {
-    console.error("Error in getting the learning analytics data:", error.message);
-    return res.status(500).json({ 
+    console.error(
+      "Error in getting the learning analytics data:",
+      error.message
+    );
+    return res.status(500).json({
       error: "Failed to get the learning analytics data",
-      details: error.message 
+      details: error.message,
     });
   }
 });
 
-
-
-
 router.get("/get-attandance-report", async (req, res) => {
   try {
-    let classData = await Class.find(
-      { internalMeetingID: { $exists: true, $ne: null, $ne: "" } }
-    ).lean(); // use .lean() for plain JS objects
+    let classData = await Class.find({
+      internalMeetingID: { $exists: true, $ne: null, $ne: "" },
+    }).lean(); // use .lean() for plain JS objects
 
-    console.log("classData",classData)
+    console.log("classData", classData);
 
     // Format and sort data
     classData = classData
-      .map(item => ({
+      .map((item) => ({
         ...item,
         formattedStartTime: new Date(item.startTime).toLocaleString("en-IN", {
           day: "2-digit",
@@ -239,20 +338,10 @@ router.get("/get-attandance-report", async (req, res) => {
     res.status(200).json({ success: true, data: classData });
   } catch (error) {
     console.error("Error in getting the recordings:", error);
-    res.status(500).json({ success: false, error: "Failed to get the recordings" });
+    res
+      .status(500)
+      .json({ success: false, error: "Failed to get the recordings" });
   }
 });
-
-
-
-
-
-
-
-
-
-
-
-
 
 module.exports = router;

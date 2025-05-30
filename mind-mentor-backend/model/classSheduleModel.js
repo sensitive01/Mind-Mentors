@@ -108,6 +108,9 @@ const classScheduleSchema = new mongoose.Schema({
       sheduledDate: { type: Date },
     },
   ],
+  coachJoinUrl:{type:String},
+  kidJoinUrl:{type:String},
+  meetingLinkCreated:{type:Boolean,default:false}
 });
 
 const ClassSchedule = mongoose.model("ClassSchedule", classScheduleSchema);
