@@ -309,6 +309,7 @@ import PaymentVerificationPage from "./pages/employee/superadmin/package/Payment
 import SuperAdminInvoicePage from "./pages/employee/superadmin/SuperAdminInvoicePage";
 import SuperAdminGetAllRecodingsPage from "./pages/employee/superadmin/SuperAdminGetAllRecodingsPage";
 import SuperAdminLearingStaticsDashboard from "./pages/employee/superadmin/SuperAdminLearingStaticsDashboard";
+import SuperAdminAllClassData from "./pages/employee/superadmin/SuperAdminAllClassData";
 
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
@@ -766,32 +767,14 @@ function App() {
           {/* <Route path="/renewalLogin" element={<RenewalLogin />} /> */}
           <Route path="/renewalReferrals" element={<RenewalReferal />} />
 
-          <Route
-            path="/coach/start-class-room"
-            element={<CoachCreateMeetings />}
-          />
+          <Route path="/coach/start-class-room" element={<CoachCreateMeetings />}/>
           <Route path="/coachProfile" element={<CoachProfile />} />
-          <Route
-            path="/coach/department/dashboard"
-            element={<CoachDashboard />}
-          />
+          <Route path="/coach/department/dashboard" element={<CoachDashboard />}/>
           <Route path="/coach/department/leaves" element={<CoachLeaves />} />
-          <Route
-            path="/coach/department/leaves/add"
-            element={<CoachLeavesAdd />}
-          />
-          <Route
-            path="/coach/department/edit-leaves/:id"
-            element={<CoachLeavesAdd />}
-          />
-          <Route
-            path="/coach/department/task-table"
-            element={<CoachMyTasks />}
-          />
-          <Route
-            path="/coach/department/list-task-assigned-me"
-            element={<CoachMyAssignTasksTable />}
-          />
+          <Route path="/coach/department/leaves/add" element={<CoachLeavesAdd />}/>
+          <Route path="/coach/department/edit-leaves/:id" element={<CoachLeavesAdd />}/>
+          <Route path="/coach/department/task-table" element={<CoachMyTasks />}/>
+          <Route path="/coach/department/list-task-assigned-me" element={<CoachMyAssignTasksTable />}/>
           <Route
             path="/coach/department/assign-new-task"
             element={<CoachMyAssignTasks />}
@@ -1011,6 +994,8 @@ function App() {
           <Route path="/super-admin/department/coachAvailabilityTable" element={<SuperAdminCoachAvailabilityTable />}/>
           <Route path="/super-admin/department/employee/add" element={<EmployeeForm />} />        
           <Route path="/super-admin/department/class-timetable-list"  element={<SuperadminScheduleClass />}/>
+          <Route path="/super-admin/department/all-class-details"  element={<SuperAdminAllClassData />}/>
+
           <Route path="/super-admin/department/class-shedules"  element={<SuperAdminAddTimeTable />}/>
           <Route path="/super-admin/department/edit-class-shedules/:classId"  element={<SuperAdminEditClassShedule />}/>
           <Route path="/super-admin/department/employee-mark-attandance" element={<SuperAdminMarkAttandance />}/>
@@ -1030,16 +1015,7 @@ function App() {
           <Route path="/super-admin/department/invoice-table" element={<SuperAdminInvoicePage />}/> 
           <Route path="/super-admin/department/get-class-recordings" element={<SuperAdminGetAllRecodingsPage />}/> 
           <Route path="/super-admin/department/student-attandace-report" element={<SuperadminAttendanceReport />}/>
-
-
-
           <Route path="/super-admin/department/get-class-statistic-dashboard" element={<SuperAdminLearingStaticsDashboard />}/> 
-
-
-
-
-
-
           <Route path="/super-admin/department/dashboard"  element={<SuperadminDashboard />}/>     
           <Route path="/super-admin/department/enquiry-form" element={<SuperAdminAddNewEnquiryForm />}/>
           <Route path="/super-admin/department/enrollment-data"  element={<SuperAdminEnquiryProspectsTab />}/>
@@ -1051,15 +1027,12 @@ function App() {
           <Route path="/super-admin/department/discount-table" element={<VoucherTablePage />}/>
           <Route path="/super-admin/department/discount-form" element={<DiscountFormPage />}/>
           <Route path="/super-admin/department/edit-discount-form/:voucherId" element={<EditDiscountPage />}/>
-
           <Route path="/super-admin/department/add-package-form" element={<SuperAdminAddPackageForm />}/>
-
-
           <Route path="/super-admin/department/schedule-demo-class-list-individually/:enqId/:isSheduled" element={<SuperAdminAssignNewClass />}/>
           <Route path="/super-admin/department/assign-whole-plan-class/:enqId" element={<SuperAdminAssignWholeClassToKid />} />
           <Route path="/super-admin/department/display-whole-selectedClass/:enqId"  element={<SuperAdminDisplayWholeClassKid />}/>
-
           <Route path="/super-admin/department/allowdeduct" element={<AllowDeductTable />} />
+
           {/* <Route path="/super-admin/department/show-complete-enquiry-logs/:id" element={<ShowAllEnquiryLogs />} /> */}
           {/* <Route path="/super-admin/department/list-task-assigned-me" element={<SuperadminMyAssignTasksTable />}/>         */}
           {/* <Route path="/super-admin/department/attendance" element={<SuperadminAttendance />}/> */}

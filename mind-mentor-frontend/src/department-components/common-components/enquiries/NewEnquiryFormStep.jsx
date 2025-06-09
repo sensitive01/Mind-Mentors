@@ -788,7 +788,6 @@ const NewEnquiryFormStep = () => {
                         <div className="space-y-2">
                           <label className="block text-sm font-medium text-[#642b8f]">
                             Preferred Type{" "}
-                            <span className="text-red-500">*</span>
                           </label>
                           <select
                             className="w-full p-2 rounded-md border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors bg-white"
@@ -822,7 +821,6 @@ const NewEnquiryFormStep = () => {
                           <div className="space-y-2">
                             <label className="block text-sm font-medium text-[#642b8f]">
                               Preferred Center{" "}
-                              <span className="text-red-500">*</span>
                             </label>
                             <select
                               className="w-full p-2 rounded-md border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors bg-white"
@@ -849,6 +847,7 @@ const NewEnquiryFormStep = () => {
                   </div>
                 ))}
               </div>
+
 
               {/* Add Program Button */}
               <button

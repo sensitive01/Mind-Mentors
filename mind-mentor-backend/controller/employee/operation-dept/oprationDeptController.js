@@ -504,6 +504,8 @@ const updateProspectData = async (req, res) => {
       const logUpdate = {
         employeeId: empId,
         employeeName: empData.firstName,
+        department:empData.firstName,
+        comment:"Enquiry moved to prospects",
         action: `Enquiry moved to prospects by ${empData.firstName} in ${empData.department} department.`,
         updatedAt: new Date(),
       };
@@ -530,7 +532,7 @@ const updateProspectData = async (req, res) => {
       logs.push({
         employeeId: empId,
         employeeName: empData.firstName,
-        comments: `Registered/Updated parent with ID: ${parentData._id}`,
+        comment: `Registered/Updated parent with ID: ${parentData._id}`,
         action: "Parent Registration",
         createdAt: new Date(),
       });
@@ -980,7 +982,8 @@ const updateEnquiryStatus = async (req, res) => {
         $push: {
           logs: {
             employeeId: empId,
-            employeeName: empData.firstName, // empData.firstName should exist here
+            employeeName: empData.firstName, 
+            department:empData.department,
             comment: `Status updated from '${previousStatus}' to '${enquiryStatus}'`,
             action: `Status updated by ${empData.firstName} in ${empData.department} department from '${previousStatus}' to '${enquiryStatus}' on ${formattedDateTime}`,
             createdAt: new Date(),

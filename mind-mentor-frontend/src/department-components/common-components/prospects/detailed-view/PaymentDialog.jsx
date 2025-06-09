@@ -26,6 +26,12 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
   const [selectedCenter, setSelectedCenter] = useState("");
   const [centersList, setCentersList] = useState([]);
 
+  // New state for day/night selection
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState(""); // "day" or "night"
+  const [availableCenters, setAvailableCenters] = useState([]);
+  const [classRate, setClassRate] = useState(0);
+  const [numberOfClasses, setNumberOfClasses] = useState(0);
+
   const [onlineClasses, setOnlineClasses] = useState(0);
   const [offlineClasses, setOfflineClasses] = useState(0);
   const [onlineRate, setOnlineRate] = useState(100);
@@ -76,16 +82,7 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
     setPackageType(type);
     resetSelections();
 
-    if (type === "offline" && packages.offline.length > 0) {
-      const centersList = packages.offline[0].centers.map((center) => ({
-        centerId: center.centerId,
-        centerName: center.centerName,
-      }));
-      const uniqueCenters = [
-        ...new Map(centersList.map((item) => [item.centerId, item])).values(),
-      ];
-      setCentersList(uniqueCenters);
-    } else if (type === "hybrid") {
+    if (type === "hybrid") {
       // For hybrid, we need centers from offline packages (physical centers)
       let hybridCenters = [];
 
@@ -103,8 +100,6 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
       ];
 
       setCentersList(uniqueCenters);
-    } else if (type === "online" && packages.online.length > 0) {
-      setCentersList(packages.online[0].centers || []);
     } else {
       setCentersList([]);
     }
@@ -115,6 +110,10 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
     setSelectedProgram("");
     setSelectedLevel("");
     setSelectedCenter("");
+    setSelectedTimeSlot("");
+    setAvailableCenters([]);
+    setClassRate(0);
+    setNumberOfClasses(0);
     setOnlineClasses(0);
     setOfflineClasses(0);
     setKitItems([{ name: "", quantity: 0 }]);
@@ -125,20 +124,87 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
     setOfflineRate(125);
   };
 
+  // Handle day/night selection for online and offline packages
+  const handleTimeSlotChange = (timeSlot) => {
+    setSelectedTimeSlot(timeSlot);
+    setSelectedCenter("");
+    setClassRate(0);
+    setNumberOfClasses(0);
+
+    // Get available centers based on package type and time slot
+    let centers = [];
+
+    if (packageType === "online") {
+      // Filter online packages for the selected time slot
+      const filteredPackages = packages.online.filter((pkg) => {
+        // Assuming the package has a timeSlot property or you can determine it from package name
+        // You might need to adjust this based on your actual data structure
+        const packageTimeSlot = pkg.packageName.toLowerCase().includes("night")
+          ? "night"
+          : "day";
+        return packageTimeSlot === timeSlot;
+      });
+
+      if (filteredPackages.length > 0) {
+        centers = filteredPackages.flatMap(
+          (pkg) =>
+            pkg.centers?.map((center) => ({
+              centerId: center.centerId,
+              centerName: center.centerName,
+              oneClassPrice: pkg.oneClassPrice || center.oneClassPrice || 100,
+            })) || []
+        );
+      }
+    } else if (packageType === "offline") {
+      // Filter offline packages for the selected time slot
+      if (packages.offline.length > 0) {
+        const filteredCenters = packages.offline[0].centers.filter((center) => {
+          // Assuming the center has a timeSlot property or you can determine it from center name
+          // You might need to adjust this based on your actual data structure
+          const centerTimeSlot = center.packageName
+            ?.toLowerCase()
+            .includes("night")
+            ? "night"
+            : "day";
+          return centerTimeSlot === timeSlot;
+        });
+
+        centers = filteredCenters.map((center) => ({
+          centerId: center.centerId,
+          centerName: center.centerName,
+          oneClassPrice: center.oneClassPrice || 125,
+        }));
+      }
+    }
+
+    // Remove duplicates
+    const uniqueCenters = [
+      ...new Map(centers.map((item) => [item.centerId, item])).values(),
+    ];
+
+    setAvailableCenters(uniqueCenters);
+  };
+
+  // Handle center selection for online/offline with day/night
+  const handleCenterSelectionForTimeSlot = (centerId) => {
+    setSelectedCenter(centerId);
+
+    // Find the selected center and set the class rate
+    const selectedCenterData = availableCenters.find(
+      (center) => center.centerId === centerId
+    );
+    if (selectedCenterData) {
+      setClassRate(selectedCenterData.oneClassPrice);
+    }
+  };
+
   const calculateAmounts = () => {
     let base = 0;
 
     if (packageType === "online" || packageType === "offline") {
-      if (selectedPackage) {
-        if (packageType === "online") {
-          const pkg = packages.online.find((p) => p._id === selectedPackage);
-          if (pkg) base = pkg.amount;
-        } else {
-          const foundPackage = packages.offline[0]?.centers.find(
-            (c) => c._id === selectedPackage
-          );
-          if (foundPackage) base = foundPackage.amount;
-        }
+      // For online/offline with day/night selection, calculate based on number of classes and rate
+      if (selectedTimeSlot && selectedCenter && numberOfClasses > 0) {
+        base = numberOfClasses * classRate;
       }
     } else if (packageType === "hybrid") {
       // For hybrid, calculate based on selected center rates
@@ -156,27 +222,6 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
     setTotalAmount(discountedTotal);
 
     return { baseAmount: base, totalAmount: discountedTotal };
-  };
-
-  const handlePackageChange = (e) => {
-    setSelectedPackage(e.target.value);
-
-    if (packageType === "online") {
-      const pkg = packages.online.find((p) => p._id === e.target.value);
-      if (pkg) {
-        setSelectedProgram(pkg.programName);
-        setSelectedLevel(pkg.programLevel);
-      }
-    } else if (packageType === "offline") {
-      const pkg = packages.offline[0]?.centers.find(
-        (c) => c._id === e.target.value
-      );
-      if (pkg) {
-        setSelectedProgram(pkg.programName);
-        setSelectedLevel(pkg.programLevel);
-        setSelectedCenter(pkg.centerId);
-      }
-    }
   };
 
   const handleCenterChange = (e) => {
@@ -246,12 +291,19 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
         return;
       }
 
-      if (
-        (packageType === "online" || packageType === "offline") &&
-        !selectedPackage
-      ) {
-        toast.error("Please select a package");
-        return;
+      if (packageType === "online" || packageType === "offline") {
+        if (!selectedTimeSlot) {
+          toast.error("Please select day or night option");
+          return;
+        }
+        if (!selectedCenter) {
+          toast.error("Please select a center");
+          return;
+        }
+        if (numberOfClasses === 0) {
+          toast.error("Please enter number of classes");
+          return;
+        }
       }
 
       if (packageType === "hybrid") {
@@ -273,11 +325,6 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
         return;
       }
 
-      if (packageType === "offline" && !selectedCenter) {
-        toast.error("Please select a center");
-        return;
-      }
-
       const amounts = calculateAmounts();
 
       let packageData = {
@@ -292,25 +339,18 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
       };
 
       if (packageType === "online" || packageType === "offline") {
-        const selectedPkg =
-          packageType === "online"
-            ? packages.online.find((p) => p._id === selectedPackage)
-            : packages.offline[0]?.centers.find(
-                (c) => c._id === selectedPackage
-              );
-
         packageData = {
           ...packageData,
-          packageId: selectedPackage,
-          selectedPackage: selectedPkg?.packageName || "",
-          onlineClasses:
-            packageType === "online" ? selectedPkg?.classUpTo || 0 : 0,
-          offlineClasses:
-            packageType === "offline" ? selectedPkg?.classUpTo || 0 : 0,
+          packageId: `${packageType.toUpperCase()}-${selectedTimeSlot.toUpperCase()}-CUSTOM`,
+          selectedPackage: `Custom ${packageType} Package (${selectedTimeSlot})`,
+          onlineClasses: packageType === "online" ? numberOfClasses : 0,
+          offlineClasses: packageType === "offline" ? numberOfClasses : 0,
           centerId: selectedCenter,
           centerName:
-            centersList.find((c) => c.centerId === selectedCenter)
+            availableCenters.find((c) => c.centerId === selectedCenter)
               ?.centerName || "",
+          timeSlot: selectedTimeSlot,
+          classRate: classRate,
         };
       } else if (packageType === "hybrid") {
         packageData = {
@@ -366,6 +406,8 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
   }, [
     packageType,
     selectedPackage,
+    numberOfClasses,
+    classRate,
     onlineClasses,
     offlineClasses,
     kitItems,
@@ -474,99 +516,117 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
               </div>
             </div>
 
-            {packageType === "online" && (
-              <div className="bg-white p-4 rounded-lg shadow-sm">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Online Package
-                </label>
-                <select
-                  value={selectedPackage}
-                  onChange={handlePackageChange}
-                  className="block w-full rounded-md border border-gray-300 px-4 py-2 mb-4"
-                >
-                  <option value="">Select a package</option>
-                  {packages.online.map((pkg) => (
-                    <option key={pkg._id} value={pkg._id}>
-                      {pkg.packageName} - {pkg.classUpTo} Classes - ₹
-                      {pkg.amount}
-                    </option>
-                  ))}
-                </select>
-
-                {selectedPackage && (
-                  <div className="mt-3 space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Program:</span>
-                      <span className="font-medium">{selectedProgram}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Level:</span>
-                      <span className="font-medium">{selectedLevel}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Center:</span>
-                      <span className="font-medium">
-                        {packages.online.find((p) => p._id === selectedPackage)
-                          ?.centers?.[0]?.centerName || "Online"}
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {packageType === "offline" && (
+            {(packageType === "online" || packageType === "offline") && (
               <div className="bg-white p-4 rounded-lg shadow-sm space-y-4">
+                {/* Day/Night Selection */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Select Center
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Select Time Slot
                   </label>
-                  <select
-                    value={selectedCenter}
-                    onChange={handleCenterChange}
-                    className="block w-full rounded-md border border-gray-300 px-4 py-2"
-                  >
-                    <option value="">Select a center</option>
-                    {centersList.map((center) => (
-                      <option key={center.centerId} value={center.centerId}>
-                        {center.centerName}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="flex gap-4">
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="timeSlot"
+                        value="day"
+                        checked={selectedTimeSlot === "day"}
+                        onChange={(e) => handleTimeSlotChange(e.target.value)}
+                        className="mr-2 text-purple-600 focus:ring-purple-500"
+                      />
+                      <span className="text-sm font-medium text-gray-700">
+                        Day
+                      </span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="timeSlot"
+                        value="night"
+                        checked={selectedTimeSlot === "night"}
+                        onChange={(e) => handleTimeSlotChange(e.target.value)}
+                        className="mr-2 text-purple-600 focus:ring-purple-500"
+                      />
+                      <span className="text-sm font-medium text-gray-700">
+                        Night
+                      </span>
+                    </label>
+                  </div>
                 </div>
 
-                {selectedCenter && (
+                {/* Center Selection */}
+                {selectedTimeSlot && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Select Package
+                      Select {packageType} Center
                     </label>
                     <select
-                      value={selectedPackage}
-                      onChange={handlePackageChange}
+                      value={selectedCenter}
+                      onChange={(e) =>
+                        handleCenterSelectionForTimeSlot(e.target.value)
+                      }
                       className="block w-full rounded-md border border-gray-300 px-4 py-2"
                     >
-                      <option value="">Select a package</option>
-                      {packages.offline[0]?.centers
-                        .filter((center) => center.centerId === selectedCenter)
-                        .map((pkg) => (
-                          <option key={pkg._id} value={pkg._id}>
-                            {pkg.packageName} - {pkg.classUpTo} Classes - ₹
-                            {pkg.amount}
-                          </option>
-                        ))}
+                      <option value="">Select a center</option>
+                      {availableCenters.map((center) => (
+                        <option key={center.centerId} value={center.centerId}>
+                          {center.centerName} (₹{center.oneClassPrice}/class)
+                        </option>
+                      ))}
                     </select>
                   </div>
                 )}
 
-                {selectedPackage && (
-                  <div className="mt-3 space-y-2 text-sm">
+                {/* Number of Classes */}
+                {selectedCenter && classRate > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Number of Classes (₹{classRate}/class)
+                    </label>
+                    <input
+                      type="number"
+                      value={numberOfClasses}
+                      onChange={(e) =>
+                        setNumberOfClasses(Number(e.target.value))
+                      }
+                      className="block w-full rounded-md border border-gray-300 px-4 py-2"
+                      min="0"
+                      placeholder="Enter number of classes"
+                    />
+                  </div>
+                )}
+
+                {/* Summary */}
+                {selectedCenter && numberOfClasses > 0 && (
+                  <div className="mt-3 space-y-2 text-sm bg-gray-50 p-3 rounded-md">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Program:</span>
-                      <span className="font-medium">{selectedProgram}</span>
+                      <span className="text-gray-600">Package Type:</span>
+                      <span className="font-medium capitalize">
+                        {packageType}
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Level:</span>
-                      <span className="font-medium">{selectedLevel}</span>
+                      <span className="text-gray-600">Time Slot:</span>
+                      <span className="font-medium capitalize">
+                        {selectedTimeSlot}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Center:</span>
+                      <span className="font-medium">
+                        {
+                          availableCenters.find(
+                            (c) => c.centerId === selectedCenter
+                          )?.centerName
+                        }
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Classes:</span>
+                      <span className="font-medium">{numberOfClasses}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Rate per class:</span>
+                      <span className="font-medium">₹{classRate}</span>
                     </div>
                   </div>
                 )}
@@ -595,20 +655,6 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
 
                 {selectedCenter && (
                   <>
-                    {/* <div className="bg-blue-50 p-3 rounded-md">
-                      <p className="text-sm text-blue-800">
-                        <strong>Selected Center:</strong>{" "}
-                        {
-                          centersList.find((c) => c.centerId === selectedCenter)
-                            ?.centerName
-                        }
-                      </p>
-                      <p className="text-sm text-blue-600 mt-1">
-                        Online Rate: ₹{onlineRate}/class | Offline Rate: ₹
-                        {offlineRate}/class
-                      </p>
-                    </div> */}
-
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Number of Online Classes (₹{onlineRate}/class)
@@ -640,31 +686,6 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
                         placeholder="Enter number of offline classes"
                       />
                     </div>
-
-                    {/* {(onlineClasses > 0 || offlineClasses > 0) && (
-                      <div className="bg-gray-50 p-3 rounded-md">
-                        <h4 className="font-medium text-gray-700 mb-2">
-                          Price Breakdown:
-                        </h4>
-                        {onlineClasses > 0 && (
-                          <p className="text-sm text-gray-600">
-                            Online: {onlineClasses} classes × ₹{onlineRate} = ₹
-                            {onlineClasses * onlineRate}
-                          </p>
-                        )}
-                        {offlineClasses > 0 && (
-                          <p className="text-sm text-gray-600">
-                            Offline: {offlineClasses} classes × ₹{offlineRate} =
-                            ₹{offlineClasses * offlineRate}
-                          </p>
-                        )}
-                        <p className="text-sm font-medium text-gray-800 mt-1">
-                          Subtotal: ₹
-                          {onlineClasses * onlineRate +
-                            offlineClasses * offlineRate}
-                        </p>
-                      </div>
-                    )} */}
                   </>
                 )}
               </div>

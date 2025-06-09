@@ -61,7 +61,7 @@ const CompleteEnquiryLogs = () => {
 
           const logData = sortedLogs.map((log, index) => ({
             id: index + 1,
-            createdAt: formatDate(log.createdAt),
+            createdAt: log.createdAt,
             comment: log.comment || "N/A",
             empName: log.empName || "N/A",
             department: log.department || "N/A",
@@ -83,14 +83,11 @@ const CompleteEnquiryLogs = () => {
   }, [id]);
 
   const formatDate = (dateStr) => {
-    // Handle different date formats
     if (dateStr.includes(",")) {
-      // Format: "22-05-25 , 05:09 PM"
       const [datePart] = dateStr.split(",");
       const [day, month, year] = datePart.trim().split("-");
       return `${day}/${month}/20${year}`;
     } else {
-      // Format: "22-05-25"
       const [day, month, year] = dateStr.split("-");
       return `${day}/${month}/20${year}`;
     }
@@ -172,8 +169,8 @@ const CompleteEnquiryLogs = () => {
     {
       field: "createdAt",
       headerName: "Date",
-      width: 120,
-      minWidth: 120,
+      width: 150,
+      minWidth: 150,
       headerAlign: "center",
       align: "center",
     },

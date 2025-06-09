@@ -139,7 +139,7 @@ const ModernSidebar = () => {
       currentPath.includes("/super-admin/department/list-all-programme") ||
       currentPath.includes("/superadminFeedback") ||
       currentPath.includes("/super-admin/department/student-attandace-report") ||
-      currentPath.includes("/super-admin/department/get-class-recordings")
+      currentPath.includes("/super-admin/department/all-class-details")
     ) {
       setOpenClasses(true);
     } else if (
@@ -460,11 +460,11 @@ const ModernSidebar = () => {
           text: "Student Class Attendance Report",
           link: "/super-admin/department/student-attandace-report",
         },
-        // {
-        //   icon: <ReportsIcon />,
-        //   text: "Get Class Recordings",
-        //   link: "/super-admin/department/get-class-recordings",
-        // },
+        {
+          icon: <ReportsIcon />,
+          text: "All Class Data",
+          link: "/super-admin/department/all-class-details",
+        },
       ],
       open: openClasses,
       onClick: handleClassesClick,

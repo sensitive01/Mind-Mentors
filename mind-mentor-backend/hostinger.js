@@ -1,9 +1,9 @@
 const axios = require('axios');
 
-axios.post('https://live.mindmentorz.in/api/new-class/create-new-class', {
-// axios.post('http://localhost:3000/api/new-class/create-new-class', {
+// axios.post('https://live.mindmentorz.in/api/new-class/create-new-class', {
+axios.post('http://localhost:3000/api/new-class/create-new-class', {
 
-  className: "Demo for recordings Link",
+  className: "Demo Display",
   coachName: "Aswinraj"
 }, {
   headers: {

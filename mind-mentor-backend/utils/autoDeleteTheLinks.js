@@ -23,7 +23,7 @@ function getDayNameFromDate(date) {
 }
 
 // Cron job runs every 10 minutes
-cron.schedule("*/180 * * * *", async () => {
+cron.schedule("*/2 * * * *", async () => {
   console.log("🔄 Running class cleanup job based on day and time...");
 
   try {

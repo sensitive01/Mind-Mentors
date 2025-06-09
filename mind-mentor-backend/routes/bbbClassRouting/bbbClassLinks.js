@@ -4,7 +4,7 @@ const axios = require("axios");
 const Class = require("../../model/bbbClassModel/bbbClassModel");
 const { buildUrl } = require("../../utils/bigblue"); // Utility function to build signed BBB URLs
 
-const BASE_URL = "https://aswinraj.online";
+const BASE_URL = "http://64.227.185.227:3000";
 const SECRET = "InhUDw8YmwzaScfbnu14ItbUukbRNPqNQs1XAFiwk";
 
 // ✅ Route 1: Create a new class

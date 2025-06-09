@@ -484,26 +484,7 @@ const CompleteStatusLogs = () => {
                 </Select>
               </FormControl>
 
-              <FormControl fullWidth sx={{ mt: 2 }}>
-                <InputLabel>Department</InputLabel>
-                <Select
-                  value={noteDialog.department}
-                  onChange={(e) =>
-                    setNoteDialog((prev) => ({
-                      ...prev,
-                      department: e.target.value,
-                    }))
-                  }
-                  label="Department"
-                >
-                  <MenuItem value="super-admin">Super Admin</MenuItem>
-                  <MenuItem value="sales">Sales</MenuItem>
-                  <MenuItem value="marketing">Marketing</MenuItem>
-                  <MenuItem value="support">Support</MenuItem>
-                  <MenuItem value="hr">HR</MenuItem>
-                  <MenuItem value="finance">Finance</MenuItem>
-                </Select>
-              </FormControl>
+   
 
               <TextField
                 label="Note"
