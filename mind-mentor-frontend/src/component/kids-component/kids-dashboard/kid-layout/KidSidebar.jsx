@@ -11,9 +11,9 @@ const KidSidebar = () => {
 
   const navLinks = [
     { path: "/kids/dashboard", icon: Home, label: "Home", color: "text-secondary" },
-    { path: "/kids/class-rooms-live", icon: Video, label: "Live Meetings", color: "text-secondary" },
+    // { path: "/kids/class-rooms-live", icon: Video, label: "Live Meetings", color: "text-secondary" },
 
-    { path: "/kids/demo-class", icon: FileText, label: "Class", color: "text-tertiary" },
+    { path: "/kids/today-class", icon: FileText, label: "Class", color: "text-tertiary" },
     { path: "/kids/class-schedule", icon: Grid, label: "Schedule", color: "text-quaternary" },
     { path: "/kids/game-list", icon: Gamepad, label: "Games", color: "text-quinary" },
     { path: "/kids/achievements-list", icon: Trophy, label: "Achievements", color: "text-secondary" },

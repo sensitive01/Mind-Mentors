@@ -1350,61 +1350,115 @@ const ScheduleKanban = () => {
         </Dialog>
 
         {/* Meeting Link Creation Dialog */}
-        <Dialog
-          open={meetingDialogOpen}
-          onClose={handleMeetingDialogClose}
-          aria-labelledby="meeting-dialog-title"
-          maxWidth="sm"
+       {/* Meeting Link Creation Dialog */}
+<Dialog
+  open={meetingDialogOpen}
+  onClose={handleMeetingDialogClose}
+  aria-labelledby="meeting-dialog-title"
+  maxWidth="sm"
+  fullWidth
+  PaperProps={{
+    sx: {
+      borderRadius: 2,
+    }
+  }}
+>
+  <DialogTitle 
+    id="meeting-dialog-title"
+    sx={{
+      textAlign: 'center',
+      pb: 2,
+      fontSize: '1.25rem',
+      fontWeight: 600,
+    }}
+  >
+    Create Meeting Link
+  </DialogTitle>
+  
+  <DialogContent sx={{ px: 3, pb: 2 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <Typography 
+        variant="body2" 
+        color="text.secondary"
+        sx={{ textAlign: 'center', mb: 1 }}
+      >
+        Please provide the following details to generate your meeting link
+      </Typography>
+
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+        <TextField
+          autoFocus
+          label="Class Name"
+          type="text"
           fullWidth
-        >
-          <DialogTitle id="meeting-dialog-title">
-            Create Meeting Link
-          </DialogTitle>
-          <DialogContent>
-            <Box sx={{ pt: 2 }}>
-              <TextField
-                autoFocus
-                margin="dense"
-                label="Class Name"
-                type="text"
-                fullWidth
-                variant="outlined"
-                value={meetingFormData.className}
-                onChange={(e) =>
-                  handleMeetingFormChange("className", e.target.value)
-                }
-                sx={{ mb: 2 }}
-              />
-              <TextField
-                margin="dense"
-                label="Coach Name"
-                type="text"
-                fullWidth
-                variant="outlined"
-                value={meetingFormData.coachName}
-                onChange={(e) =>
-                  handleMeetingFormChange("coachName", e.target.value)
-                }
-              />
-            </Box>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleMeetingDialogClose} color="secondary">
-              Cancel
-            </Button>
-            <Button
-              onClick={handleMeetingSubmit}
-              color="primary"
-              variant="contained"
-              disabled={
-                !meetingFormData.className.trim() ||
-                !meetingFormData.coachName.trim()
-              }
-            >
-              Submit
-            </Button>
-          </DialogActions>
-        </Dialog>
+          variant="outlined"
+          value={meetingFormData.className}
+          onChange={(e) =>
+            handleMeetingFormChange("className", e.target.value)
+          }
+          placeholder="Enter class name"
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              '&:hover fieldset': {
+                borderColor: 'primary.main',
+              },
+            },
+          }}
+        />
+        
+        <TextField
+          label="Coach Name"
+          type="text"
+          fullWidth
+          variant="outlined"
+          value={meetingFormData.coachName}
+          onChange={(e) =>
+            handleMeetingFormChange("coachName", e.target.value)
+          }
+          placeholder="Enter coach name"
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              '&:hover fieldset': {
+                borderColor: 'primary.main',
+              },
+            },
+          }}
+        />
+      </Box>
+    </Box>
+  </DialogContent>
+
+  <DialogActions sx={{ px: 3, py: 2.5, gap: 2, justifyContent: 'flex-end' }}>
+    <Button 
+      onClick={handleMeetingDialogClose} 
+      color="inherit"
+      variant="outlined"
+      sx={{ 
+        minWidth: 100,
+        textTransform: 'none',
+      }}
+    >
+      Cancel
+    </Button>
+    
+    <Button
+      onClick={handleMeetingSubmit}
+      color="primary"
+      variant="contained"
+      disabled={
+        !meetingFormData.className.trim() ||
+        !meetingFormData.coachName.trim()
+      }
+      sx={{ 
+        minWidth: 140,
+        textTransform: 'none',
+        fontWeight: 600,
+      }}
+    >
+      Create Meeting Link
+    </Button>
+  </DialogActions>
+</Dialog>
       </Box>
     </ThemeProvider>
   );

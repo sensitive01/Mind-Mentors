@@ -6,61 +6,63 @@ import {
   Fade,
   Tabs,
   Tab,
-  Grid,
+  Container,
+  Paper,
+  Badge,
+  Chip,
 } from "@mui/material";
 import {
   PlayCircleOutline as LiveIcon,
   ScheduleOutlined as UpcomingIcon,
   CheckCircleOutline as ConductedIcon,
 } from "@mui/icons-material";
-import { getMyClassData } from "../../../api/service/employee/coachService";
+import {
+  getMyClassData,
+  getSuperAdminAllClassData,
+} from "../../../api/service/employee/coachService";
 import { customColors, theme } from "../Layout/customStyle";
 import RenderClassList from "./shedule-components/RenderClassList";
 import UpcomingClasses from "./shedule-components/UpcommingClasses";
 import ClassDetailsModal from "./shedule-components/ClassDetailModel";
 
 const TabPanel = ({ children, value, index, ...other }) => (
-  <div
+  <Box
     role="tabpanel"
     hidden={value !== index}
     id={`tabpanel-${index}`}
     {...other}
   >
     {value === index && (
-      <Box
-        sx={{
-          p: 3,
-          transition: "all 0.3s ease",
-          backgroundColor: "background.paper",
-          borderRadius: 2,
-          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-          minHeight: "500px",
-          "& > *": {
-            animation: "fadeIn 0.5s ease-in-out",
-          },
-          "@keyframes fadeIn": {
-            "0%": {
-              opacity: 0,
-              transform: "translateY(10px)",
+      <Fade in={true} timeout={500}>
+        <Box
+          sx={{
+            mt: 3,
+            minHeight: "400px",
+            "& > *": {
+              animation: "slideUp 0.4s ease-out",
             },
-            "100%": {
-              opacity: 1,
-              transform: "translateY(0)",
+            "@keyframes slideUp": {
+              "0%": {
+                opacity: 0,
+                transform: "translateY(20px)",
+              },
+              "100%": {
+                opacity: 1,
+                transform: "translateY(0)",
+              },
             },
-          },
-          "&:hover": {
-            boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-          },
-        }}
-      >
-        {children}
-      </Box>
+          }}
+        >
+          {children}
+        </Box>
+      </Fade>
     )}
-  </div>
+  </Box>
 );
 
 const ScheduleKanban = () => {
-  const empId = localStorage.getItem("empId");
+  const [department, setDepartment] = useState(null);
+  const [empId, setEmpId] = useState(null);
   const [conductedClasses, setConductedClasses] = useState([]);
   const [liveClasses, setLiveClasses] = useState([]);
   const [upcomingClasses, setUpcomingClasses] = useState({});
@@ -68,20 +70,47 @@ const ScheduleKanban = () => {
   const [selectedDay, setSelectedDay] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [currentTab, setCurrentTab] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  // Initialize localStorage values safely
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setDepartment(localStorage.getItem("department"));
+      setEmpId(localStorage.getItem("empId"));
+    }
+  }, []);
 
   // Helper function to parse time and convert to 24-hour format
   const parseTime = (timeString) => {
-    const [time, period] = timeString.split(" ");
-    let [hours, minutes] = time.split(":").map(Number);
+    try {
+      if (!timeString || typeof timeString !== "string") {
+        throw new Error("Invalid time string");
+      }
 
-    if (period === "PM" && hours !== 12) {
-      hours += 12;
-    }
-    if (period === "AM" && hours === 12) {
-      hours = 0;
-    }
+      const [time, period] = timeString.trim().split(" ");
 
-    return hours * 60 + minutes;
+      if (!time || !period) {
+        throw new Error("Invalid time format");
+      }
+
+      let [hours, minutes] = time.split(":").map(Number);
+
+      if (isNaN(hours) || isNaN(minutes)) {
+        throw new Error("Invalid time values");
+      }
+
+      if (period.toUpperCase() === "PM" && hours !== 12) {
+        hours += 12;
+      }
+      if (period.toUpperCase() === "AM" && hours === 12) {
+        hours = 0;
+      }
+
+      return hours * 60 + minutes;
+    } catch (error) {
+      console.error("Error parsing time:", timeString, error);
+      return 0;
+    }
   };
 
   const getDayPosition = (day) => {
@@ -97,6 +126,11 @@ const ScheduleKanban = () => {
     const today = new Date().getDay();
     const targetDay = days.indexOf(day);
 
+    if (targetDay === -1) {
+      console.warn("Invalid day:", day);
+      return 7;
+    }
+
     let position = targetDay - today;
     if (position <= 0) {
       position += 7;
@@ -107,57 +141,96 @@ const ScheduleKanban = () => {
 
   // Check if a class is currently live
   const isLiveToday = (classItem) => {
-    const today = new Date();
-    const currentDay = today.toLocaleDateString("en-US", { weekday: "long" });
-    const currentTime = today.getHours() * 60 + today.getMinutes();
-    const classTime = parseTime(classItem.classTime);
+    try {
+      const today = new Date();
+      const currentDay = today.toLocaleDateString("en-US", { weekday: "long" });
+      const currentTime = today.getHours() * 60 + today.getMinutes();
+      const classTime = parseTime(classItem.classTime);
 
-    return (
-      classItem.day == currentDay && Math.abs(currentTime - classTime) <= 120
-    );
+      return (
+        classItem.day === currentDay && Math.abs(currentTime - classTime) <= 120
+      );
+    } catch (error) {
+      console.error("Error checking if class is live:", error);
+      return false;
+    }
   };
 
   // Check if a class has been conducted
   const isConducted = (classItem) => {
-    const today = new Date();
-    const currentDay = today.getDay();
-    const days = [
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-    ];
-    const classDay = days.indexOf(classItem.day);
-    const currentTime = today.getHours() * 60 + today.getMinutes();
-    const classTime = parseTime(classItem.classTime);
+    try {
+      const today = new Date();
+      const currentDay = today.getDay();
+      const days = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ];
+      const classDay = days.indexOf(classItem.day);
 
-    if (classDay === currentDay) {
-      return classTime < currentTime;
+      if (classDay === -1) {
+        console.warn("Invalid class day:", classItem.day);
+        return false;
+      }
+
+      const currentTime = today.getHours() * 60 + today.getMinutes();
+      const classTime = parseTime(classItem.classTime);
+
+      if (classDay === currentDay) {
+        return classTime < currentTime;
+      }
+
+      let dayDiff = currentDay - classDay;
+      return dayDiff > 0;
+    } catch (error) {
+      console.error("Error checking if class is conducted:", error);
+      return false;
     }
-
-    // Check if the class day has already passed this week
-    let dayDiff = currentDay - classDay;
-    return dayDiff > 0;
   };
 
   useEffect(() => {
+    if (!department || !empId) {
+      return;
+    }
+
     const fetchClassSchedules = async () => {
       try {
-        const response = await getMyClassData(empId);
-        const classData = response.data.classData;
+        setLoading(true);
+        let response;
+        if (department === "super-admin") {
+          response = await getSuperAdminAllClassData();
+        } else {
+          response = await getMyClassData(empId);
+        }
 
-        // Sort classes by time within each day
+        const classData = response?.data?.classData;
+
+        if (!Array.isArray(classData)) {
+          console.error("Invalid class data received:", classData);
+          return;
+        }
+
         const sortedClasses = classData.sort((a, b) => {
           return parseTime(a.classTime) - parseTime(b.classTime);
         });
 
         const currentConductedClasses = sortedClasses.filter(isConducted);
-        const currentLiveClasses = sortedClasses.filter(isLiveToday);
+        
+        // For live classes, filter and modify to only include coach join URL
+        const currentLiveClasses = sortedClasses
+          .filter(isLiveToday)
+          .map(classItem => ({
+            ...classItem,
+            // Keep only coach join URL, remove kid join URL
+            joinUrl: classItem.coachJoinUrl,
+            // Remove kidJoinUrl to avoid confusion
+            kidJoinUrl: undefined
+          }));
 
-        // Group upcoming classes by day
         const upcomingClassesByDay = sortedClasses
           .filter(
             (classItem) => !isConducted(classItem) && !isLiveToday(classItem)
@@ -170,7 +243,6 @@ const ScheduleKanban = () => {
             return acc;
           }, {});
 
-        // Sort days based on their position relative to today
         const sortedUpcomingClasses = Object.entries(upcomingClassesByDay)
           .sort(([dayA], [dayB]) => {
             const posA = getDayPosition(dayA);
@@ -187,16 +259,16 @@ const ScheduleKanban = () => {
         setUpcomingClasses(sortedUpcomingClasses);
       } catch (error) {
         console.error("Error fetching class schedules:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchClassSchedules();
 
-    // Refresh the data every minute to update live classes
     const intervalId = setInterval(fetchClassSchedules, 60000);
-
     return () => clearInterval(intervalId);
-  }, [empId]);
+  }, [empId, department]);
 
   const handleTabChange = (event, newValue) => {
     setCurrentTab(newValue);
@@ -214,154 +286,274 @@ const ScheduleKanban = () => {
     setSelectedDay(null);
   };
 
-  return (
-    <ThemeProvider theme={theme}>
-      <Fade in={true}>
-        <Box
+  if (!department || !empId) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh",
+          background: `linear-gradient(135deg, ${customColors.background} 0%, #f8fafc 100%)`,
+        }}
+      >
+        <Paper
+          elevation={0}
           sx={{
-            p: 3,
-            bgcolor: customColors.background,
-            minHeight: "100vh",
-            background: `linear-gradient(45deg, ${customColors.background} 0%, #ffffff 100%)`,
+            p: 4,
+            borderRadius: 3,
+            background: "rgba(255, 255, 255, 0.9)",
+            backdropFilter: "blur(10px)",
           }}
         >
-          <Typography
-            variant="h5"
-            gutterBottom
-            sx={{
-              color: "text.primary",
-              fontWeight: 600,
-              mb: 3,
-              textAlign: "center",
-            }}
-          >
-            Class Schedules
+          <Typography variant="h6" color="text.secondary">
+            Loading...
           </Typography>
+        </Paper>
+      </Box>
+    );
+  }
 
-          <Grid container spacing={3}>
-            <Grid
-              item
-              xs={12}
-              md={2}
+  return (
+    <ThemeProvider theme={theme}>
+      <Box
+        sx={{
+          minHeight: "100vh",
+          background: `linear-gradient(135deg, ${customColors.background} 0%, #f8fafc 100%)`,
+          pb: 4,
+        }}
+      >
+        <Container maxWidth="xl" sx={{ pt: 3 }}>
+
+          {/* Main Content Card */}
+          <Fade in={true} timeout={800}>
+            <Paper
+              elevation={0}
               sx={{
-                borderRight: "1px solid",
-                borderColor: "divider",
-                pr: 2,
+                borderRadius: 4,
+                overflow: "hidden",
+                background: "rgba(255, 255, 255, 0.95)",
+                backdropFilter: "blur(10px)",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
               }}
             >
-              <Tabs
-                value={currentTab}
-                onChange={handleTabChange}
-                orientation="vertical"
-                variant="fullWidth"
+              {/* Tab Navigation */}
+              <Box
                 sx={{
-                  "& .MuiTab-root": {
-                    justifyContent: "flex-start",
-                    alignItems: "center",
-                    textTransform: "none",
-                    color: customColors.primary,
-                    "&.Mui-selected": {
-                      color: customColors.secondary,
-                      fontWeight: "bold",
-                    },
-                  },
-                  "& .MuiTabs-indicator": {
-                    left: 0,
-                    right: "auto",
-                    backgroundColor: customColors.secondary,
-                  },
+                  background: `linear-gradient(135deg, ${customColors.primary}15 0%, ${customColors.secondary}15 100%)`,
+                  borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
                 }}
               >
-                <Tab
-                  icon={<ConductedIcon />}
-                  label="Conducted Classes"
-                  iconPosition="start"
-                />
-                <Tab
-                  icon={<LiveIcon />}
-                  label="Live Classes"
-                  iconPosition="start"
-                />
-                <Tab
-                  icon={<UpcomingIcon />}
-                  label="Upcoming Classes"
-                  iconPosition="start"
-                />
-              </Tabs>
-            </Grid>
-
-            <Grid item xs={12} md={10}>
-              <TabPanel value={currentTab} index={0}>
-                {conductedClasses.length > 0 ? (
-                  <RenderClassList
-                    classes={conductedClasses}
-                    handleCardClick={handleCardClick}
-                  />
-                ) : (
-                  <Typography
-                    variant="body1"
+                <Container maxWidth="xl">
+                  <Tabs
+                    value={currentTab}
+                    onChange={handleTabChange}
+                    variant="fullWidth"
                     sx={{
-                      textAlign: "center",
-                      color: customColors.primary,
-                      mt: 5,
+                      "& .MuiTab-root": {
+                        minHeight: 80,
+                        textTransform: "none",
+                        fontSize: "1rem",
+                        fontWeight: 500,
+                        color: customColors.primary,
+                        transition: "all 0.3s ease",
+                        "&:hover": {
+                          background: "rgba(255, 255, 255, 0.1)",
+                          transform: "translateY(-2px)",
+                        },
+                        "&.Mui-selected": {
+                          color: customColors.secondary,
+                          fontWeight: 600,
+                          background: "rgba(255, 255, 255, 0.2)",
+                        },
+                      },
+                      "& .MuiTabs-indicator": {
+                        height: 4,
+                        borderRadius: 2,
+                        background: `linear-gradient(45deg, ${customColors.secondary}, ${customColors.primary})`,
+                      },
                     }}
                   >
-                    No Conducted Classes Found
-                  </Typography>
-                )}
-              </TabPanel>
+                    <Tab
+                      icon={
+                        <Badge
+                          badgeContent={conductedClasses.length}
+                          color="success"
+                          max={99}
+                        >
+                          <ConductedIcon sx={{ fontSize: 28 }} />
+                        </Badge>
+                      }
+                      label="Conducted Classes"
+                      iconPosition="top"
+                    />
+                    <Tab
+                      icon={
+                        <Badge
+                          badgeContent={liveClasses.length}
+                          color="error"
+                          max={99}
+                          variant={liveClasses.length > 0 ? "dot" : "standard"}
+                        >
+                          <LiveIcon
+                            sx={{
+                              fontSize: 28,
+                              color: liveClasses.length > 0 ? "#ff4444" : "inherit",
+                              animation: liveClasses.length > 0 ? "pulse 2s infinite" : "none",
+                            }}
+                          />
+                        </Badge>
+                      }
+                      label="Today's Classes"
+                      iconPosition="top"
+                    />
+                    <Tab
+                      icon={
+                        <Badge
+                          badgeContent={Object.keys(upcomingClasses).reduce(
+                            (total, day) => total + upcomingClasses[day].length,
+                            0
+                          )}
+                          color="primary"
+                          max={99}
+                        >
+                          <UpcomingIcon sx={{ fontSize: 28 }} />
+                        </Badge>
+                      }
+                      label="Upcoming Classes"
+                      iconPosition="top"
+                    />
+                  </Tabs>
+                </Container>
+              </Box>
 
-              <TabPanel value={currentTab} index={1}>
-                {liveClasses.length > 0 ? (
-                  <RenderClassList
-                    classes={liveClasses}
-                    handleCardClick={handleCardClick}
-                    isLiveTab
-                  />
-                ) : (
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      textAlign: "center",
-                      color: customColors.primary,
-                      mt: 5,
-                    }}
-                  >
-                    No Live Classes Right Now
-                  </Typography>
-                )}
-              </TabPanel>
+              {/* Tab Content */}
+              <Container maxWidth="xl" sx={{ py: 4 }}>
+                <TabPanel value={currentTab} index={0}>
+                  {loading ? (
+                    <Box sx={{ textAlign: "center", py: 8 }}>
+                      <Typography variant="h6" color="text.secondary">
+                        Loading conducted classes...
+                      </Typography>
+                    </Box>
+                  ) : conductedClasses.length > 0 ? (
+                    <RenderClassList
+                      classes={conductedClasses}
+                      handleCardClick={handleCardClick}
+                    />
+                  ) : (
+                    <Box sx={{ textAlign: "center", py: 8 }}>
+                      <ConductedIcon
+                        sx={{ fontSize: 64, color: "text.disabled", mb: 2 }}
+                      />
+                      <Typography variant="h6" color="text.secondary" gutterBottom>
+                        No Conducted Classes Found
+                      </Typography>
+                      <Typography variant="body2" color="text.disabled">
+                        Classes you've completed will appear here
+                      </Typography>
+                    </Box>
+                  )}
+                </TabPanel>
 
-              <TabPanel value={currentTab} index={2}>
-                {Object.keys(upcomingClasses).length > 0 ? (
-                  <UpcomingClasses
-                    upcomingClasses={upcomingClasses}
-                    handleCardClick={handleCardClick}
-                  />
-                ) : (
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      textAlign: "center",
-                      color: customColors.primary,
-                      mt: 5,
-                    }}
-                  >
-                    No Upcoming Classes
-                  </Typography>
-                )}
-              </TabPanel>
-            </Grid>
-          </Grid>
+                <TabPanel value={currentTab} index={1}>
+                  {loading ? (
+                    <Box sx={{ textAlign: "center", py: 8 }}>
+                      <Typography variant="h6" color="text.secondary">
+                        Checking for live classes...
+                      </Typography>
+                    </Box>
+                  ) : liveClasses.length > 0 ? (
+                    <Box>
+                      <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
+                        <Chip
+                          icon={<LiveIcon />}
+                          label="LIVE NOW"
+                          color="error"
+                          variant="filled"
+                          sx={{
+                            fontWeight: 600,
+                            animation: "pulse 2s infinite",
+                            "@keyframes pulse": {
+                              "0%": { opacity: 1 },
+                              "50%": { opacity: 0.7 },
+                              "100%": { opacity: 1 },
+                            },
+                          }}
+                        />
+                        <Typography variant="body2" color="text.secondary">
+                          {liveClasses.length} class{liveClasses.length > 1 ? "es" : ""} currently active - Coach access only
+                        </Typography>
+                      </Box>
+                      <RenderClassList
+                        classes={liveClasses}
+                        handleCardClick={handleCardClick}
+                        isLiveTab
+                      />
+                    </Box>
+                  ) : (
+                    <Box sx={{ textAlign: "center", py: 8 }}>
+                      <LiveIcon
+                        sx={{ fontSize: 64, color: "text.disabled", mb: 2 }}
+                      />
+                      <Typography variant="h6" color="text.secondary" gutterBottom>
+                        No Live Classes Right Now
+                      </Typography>
+                      <Typography variant="body2" color="text.disabled">
+                        Active classes will appear here when they're in session
+                      </Typography>
+                    </Box>
+                  )}
+                </TabPanel>
 
-          <ClassDetailsModal
-            modalOpen={modalOpen}
-            handleCloseModal={handleCloseModal}
-            selectedClass={selectedClass}
-            selectedDay={selectedDay}
-          />
-        </Box>
-      </Fade>
+                <TabPanel value={currentTab} index={2}>
+                  {loading ? (
+                    <Box sx={{ textAlign: "center", py: 8 }}>
+                      <Typography variant="h6" color="text.secondary">
+                        Loading upcoming classes...
+                      </Typography>
+                    </Box>
+                  ) : Object.keys(upcomingClasses).length > 0 ? (
+                    <UpcomingClasses
+                      upcomingClasses={upcomingClasses}
+                      handleCardClick={handleCardClick}
+                    />
+                  ) : (
+                    <Box sx={{ textAlign: "center", py: 8 }}>
+                      <UpcomingIcon
+                        sx={{ fontSize: 64, color: "text.disabled", mb: 2 }}
+                      />
+                      <Typography variant="h6" color="text.secondary" gutterBottom>
+                        No Upcoming Classes
+                      </Typography>
+                      <Typography variant="body2" color="text.disabled">
+                        Your scheduled classes will appear here
+                      </Typography>
+                    </Box>
+                  )}
+                </TabPanel>
+              </Container>
+            </Paper>
+          </Fade>
+        </Container>
+
+        <ClassDetailsModal
+          modalOpen={modalOpen}
+          handleCloseModal={handleCloseModal}
+          selectedClass={selectedClass}
+          selectedDay={selectedDay}
+        />
+
+        {/* Add pulse animation for live indicator */}
+        <style jsx>{`
+          @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+          }
+        `}</style>
+      </Box>
     </ThemeProvider>
   );
 };

@@ -319,51 +319,23 @@ function App() {
       <Router>
         <Routes>
           <Route path="/sample-coach" element={<CoachClassMeeting />} />
-          <Route
-            path="/kid/join-kid-class"
-            element={<BlueButtonKidLiveClass />}
-          />
-
+          <Route path="/kid/join-kid-class" element={<BlueButtonKidLiveClass />}/>
           <Route path="/join-the-meeting-blue" element={<BlueButton />} />
-          <Route
-            path="/join-the-meeting-blue-kid"
-            element={<BlueButtonKid />}
-          />
-
-          <Route
-            path="/super-admin/department/create-class-links"
-            element={<AdminCreateClass />}
-          />
-
-          <Route
-            path="/super-admin/department/create-class-links-new-class"
-            element={<NewMMClassUI />}
-          />
-
-          <Route
-            path="/kid/join-class-room/:classId"
-            element={<KidJoinTheClass />}
-          />
-          <Route
-            path="/kid/join-class-room-new/:classId"
-            element={<MmKidJoinClass />}
-          />
-
-          <Route
-            path="/super-admin/department/create-new-class-link"
-            element={<BbAdminCreateLinkHostinger />}
-          />
-
-          <Route
-            path="/kid/join-the-class-room/:classId"
-            element={<BbKidJoinClassHostinger />}
-          />
-
+          <Route path="/join-the-meeting-blue-kid"    element={<BlueButtonKid />}/>
+            
+          <Route path="/super-admin/department/create-class-links" element={<AdminCreateClass />} />
+          <Route path="/super-admin/department/create-class-links-new-class"  element={<NewMMClassUI />}/>
+            
+          <Route path="/kid/join-class-room/:classId"  element={<KidJoinTheClass />}/>
+          <Route path="/kid/join-class-room-new/:classId" element={<MmKidJoinClass />}/>
+                      
+          <Route path="/super-admin/department/create-new-class-link"  element={<BbAdminCreateLinkHostinger />} />
+        
+          <Route path="/kid/join-the-class-room/:classId"  element={<BbKidJoinClassHostinger />}  />
+         
           <Route path="/" element={<HomePage />} />
-
           <Route path="/parent/login" element={<ParentLogin />} />
           <Route path="/parent/enter-otp" element={<ParentOtpPage />} />
-
           <Route
             path="/parent/registration"
             element={
@@ -398,58 +370,31 @@ function App() {
           />
 
           <Route path="/parent/new-dashboard" element={<NewDashboard />} />
-          <Route
-            path="/parent/new-dashboard/kid-1"
-            element={<NewDashboard />}
-          />
+          <Route path="/parent/new-dashboard/kid-1" element={<NewDashboard />}/>
           <Route path="/parent/dashboard" element={<DashboardPage />} />
           <Route path="/parent/kid" element={<ParentKidsDetailsPage />} />
           <Route path="/parent/add-kid" element={<AddKid />} />
-          <Route
-            path="/parent/kid/attendance/:id"
-            element={<AttendancePage />}
-          />
-          <Route
-            path="/parent/kid/demo-class/:id"
-            element={<ParentDemoClassPage />}
-          />
-          <Route
-            path="/parent/kid/demo-class-shedule/:id"
-            element={<ParentReqNewDemoClass />}
-          />
-          <Route
-            path="/parent/kid/manage-login/:id"
-            element={<ParentManageChildLoginPage />}
-          />
-          <Route
-            path="/parent/profile/manage"
-            element={<ParentProfilePage />}
-          />
+          <Route path="/parent/kid/attendance/:id" element={<AttendancePage />}/>
+          <Route path="/parent/kid/demo-class/:id" element={<ParentDemoClassPage />}/> 
+          <Route path="/parent/kid/demo-class-shedule/:id" element={<ParentReqNewDemoClass />}/> 
+          <Route path="/parent/kid/manage-login/:id" element={<ParentManageChildLoginPage />} />  
+          <Route path="/parent/profile/manage" element={<ParentProfilePage />}/>
           <Route path="/parent/certificate" element={<CertificatePage />} />
           <Route path="/parent/kid/classShedule/:id" element={<KidsPage />} />
           <Route path="/parent/new-referal" element={<ParentReferalPage />} />
           <Route path="/parent/support" element={<SupportPage />} />
-          <Route
-            path="/parent/walkthrough-video"
-            element={<WalkThroughPage />}
-          />
-          <Route
-            path="/parent/add-kid-availability/:kidId"
-            element={<AddKidAvailabilityPage />}
-          />
-          <Route
-            path="/parent/payment-page/payment-details/:encodedData"
-            element={<ParentPaymentPage />}
-          />
-          <Route
-            path="/parent/kid/live-class/:kidId"
-            element={<LiveClassPage />}
-          />
+          <Route path="/parent/walkthrough-video" element={<WalkThroughPage />}/>
+          <Route path="/parent/add-kid-availability/:kidId" element={<AddKidAvailabilityPage />}/>
+          <Route path="/parent/payment-page/payment-details/:encodedData" element={<ParentPaymentPage />}/>
+          <Route path="/parent/kid/live-class/:kidId"  element={<LiveClassPage />} />
+            
+           
+         
 
           <Route path="/kids/login" element={<KidsLoginPage />} />
           <Route path="/kid/otp" element={<KidsPinPage />} />
           <Route path="/kids/dashboard" element={<KidsDashboard />} />
-          <Route path="/kids/demo-class" element={<KidsDemoClassPage />} />
+          <Route path="/kids/today-class" element={<KidsDemoClassPage />} />
           <Route
             path="/kids/class-schedule"
             element={<KidsClassShedulePage />}

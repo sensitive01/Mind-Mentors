@@ -317,3 +317,17 @@ export const getMyKidData = async (parentId) => {
     return err;
   }
 };
+
+
+export const getKidLiveClass = async (kidId) => {
+  try {
+   
+    const response = await parentInstance.get(
+      `/parent/get-kid-live-class/${kidId}`,
+ 
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};

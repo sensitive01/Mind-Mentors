@@ -504,8 +504,8 @@ const updateProspectData = async (req, res) => {
       const logUpdate = {
         employeeId: empId,
         employeeName: empData.firstName,
-        department:empData.firstName,
-        comment:"Enquiry moved to prospects",
+        department: empData.firstName,
+        comment: "Enquiry moved to prospects",
         action: `Enquiry moved to prospects by ${empData.firstName} in ${empData.department} department.`,
         updatedAt: new Date(),
       };
@@ -810,6 +810,7 @@ const getAllEnquiries = async (req, res) => {
 const getProspectsData = async (req, res) => {
   try {
     const enquiries = await OperationDept.find({ enquiryField: "prospects" });
+    console.log("enquiries", enquiries);
 
     const customizedEnquiries = await Promise.all(
       enquiries.map(async (enquiry) => {
@@ -982,8 +983,8 @@ const updateEnquiryStatus = async (req, res) => {
         $push: {
           logs: {
             employeeId: empId,
-            employeeName: empData.firstName, 
-            department:empData.department,
+            employeeName: empData.firstName,
+            department: empData.department,
             comment: `Status updated from '${previousStatus}' to '${enquiryStatus}'`,
             action: `Status updated by ${empData.firstName} in ${empData.department} department from '${previousStatus}' to '${enquiryStatus}' on ${formattedDateTime}`,
             createdAt: new Date(),
@@ -1336,7 +1337,7 @@ const addNotes = async (req, res) => {
       logs.push({
         employeeId: empId,
         employeeName: empData.firstName,
-        department:empData.department,
+        department: empData.department,
         comment: `Updated disposition as"${updatedDisposition}"`,
         action: `${empData.firstName} in ${empData.department} department updated disposition from "${currentEntry.disposition}" to "${updatedDisposition}" on ${formattedDateTime}`,
         createdAt: new Date(),
@@ -1360,7 +1361,7 @@ const addNotes = async (req, res) => {
       disposition: `${updatedDisposition}` || currentEntry.disposition,
       note: `${updatedNotes}` || currentEntry.notes,
       updatedBy: empData.firstName,
-      department:empData.department,
+      department: empData.department,
       createdOn: `${formattedDateTime}`,
     };
 
@@ -1435,8 +1436,8 @@ const cancelDemoClassForKid = async (req, res) => {
 
     // Remove the student from the demo class
     const democlassData = await ClassSchedule.updateOne(
-      { "selectedStudents.kidId": kidId, _id: classId },
-      { $pull: { selectedStudents: { kidId: kidId } } }
+      { "demoAssignedKid.kidId": kidId, _id: classId },
+      { $pull: { demoAssignedKid: { kidId: kidId } } }
     );
     console.log("cancelled demo class", democlassData);
 
@@ -1465,8 +1466,9 @@ const cancelDemoClassForKid = async (req, res) => {
         $push: {
           logs: {
             employeeId: empId,
-            employeeName: empData.firstName, // Assuming 'name' contains the employee's full name
-            action: ` ${empData.firstName} in the ${empData.department} department cancelled the demo class for the ${classSchedule.program} . Created on ${formattedDateTime}`,
+            employeeName: empData.firstName, 
+            department:empData.department,
+            comment: `Demo class cancelled for the ${classSchedule.program}`,
             createdAt: new Date(),
           },
         },
@@ -1516,8 +1518,8 @@ const rescheduleDemoClass = async (req, res) => {
 
     // Remove each kid from their current class
     const removeStudent = await ClassSchedule.updateMany(
-      { "selectedStudents.kidId": { $in: selectedStudents } },
-      { $pull: { selectedStudents: { kidId: { $in: selectedStudents } } } }
+      { "demoAssignedKid.kidId": { $in: selectedStudents } },
+      { $pull: { demoAssignedKid: { kidId: { $in: selectedStudents } } } }
     );
     console.log("Removed students from current class:", removeStudent);
 
@@ -1530,7 +1532,7 @@ const rescheduleDemoClass = async (req, res) => {
     const addStudent = await ClassSchedule.findByIdAndUpdate(
       classId,
       {
-        $push: { selectedStudents: { $each: addStudentsData } },
+        $push: { demoAssignedKid: { $each: addStudentsData } },
       },
       { new: true }
     );
@@ -1552,7 +1554,8 @@ const rescheduleDemoClass = async (req, res) => {
               logs: {
                 employeeId: empId,
                 employeeName: empData.firstName,
-                action: `${empData.firstName} in the ${empData.department} department rescheduled a demo class for the ${classSchedule.program} program at the ${classSchedule.level} level with coach ${classSchedule.coachName}. Created on ${formattedDateTime}`,
+                department:empData.department,
+                comment: `Demo class resheduled for the ${classSchedule.program} program at the ${classSchedule.level} level with coach ${classSchedule.coachName}`,
                 createdAt: new Date(),
               },
             },
@@ -2822,7 +2825,7 @@ const getSheduledDemoClassDataOfKid = async (req, res) => {
       $and: [
         { isDemoAdded: true }, // Match classType
         { status: "Scheduled" }, // Match status
-        { selectedStudents: { $elemMatch: { kidId } } }, // Match kidId in selectedStudents
+        { demoAssignedKid: { $elemMatch: { kidId } } }, // Match kidId in selectedStudents
         {
           $or: programs.map((program) => ({
             program: program.program, // Match program
@@ -2906,9 +2909,6 @@ const saveDemoClassData = async (req, res) => {
       { kidFirstName: 1, _id: 1, logs: 1, kidId: 1 }
     );
 
-    console.log("Fetched kids data:", kidsData);
-    console.log("Fetched empData:", empData);
-
     // Fetch the class schedule data
     const classSchedule = await ClassSchedule.findById(classId);
 
@@ -2933,7 +2933,7 @@ const saveDemoClassData = async (req, res) => {
       classId,
       {
         $push: {
-          selectedStudents: { $each: updatedSelectedStudents },
+          demoAssignedKid: { $each: updatedSelectedStudents },
         },
         $set: {
           "scheduledBy.id": empData._id,
@@ -2969,8 +2969,10 @@ const saveDemoClassData = async (req, res) => {
             $push: {
               logs: {
                 employeeId: empId,
-                employeeName: empData.firstName, // Assuming 'name' contains the employee's full name
-                action: ` ${empData.firstName} in the ${empData.department} department scheduled a demo class for the ${classSchedule.program} program at the ${classSchedule.level} level with coach ${classSchedule.coachName}.`,
+                employeeName: empData.firstName,
+                department: empData.department,
+
+                comment: `  scheduled a demo class for the ${classSchedule.program} program at the ${classSchedule.level} level with coach ${classSchedule.coachName}.`,
                 createdAt: new Date(),
               },
             },

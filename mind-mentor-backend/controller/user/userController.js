@@ -32,6 +32,7 @@ const packagePaymentData = require("../../model/packagePaymentModel");
 const { v4: uuidv4 } = require("uuid");
 const kidSchema = require("../../model/kidModel");
 const enquiryData = require("../../model/operationDeptModel");
+const logsSchema = require("../../model/enquiryLogs");
 
 const createUser = async (req, res) => {
   try {
@@ -2939,14 +2940,27 @@ const sendSelectedPackageData = async (req, res) => {
   try {
     console.log("Selected package data", req.body);
     const { enqId } = req.params;
-    const { packageData } = req.body;
+    const { packageData, empId } = req.body;
 
+    // ✅ Validate packageData
     if (!packageData) {
       return res.status(400).json({ message: "Package data is required." });
     }
 
+    // ✅ Get employee details
+    const empData = await Employee.findOne(
+      { _id: empId },
+      { firstName: 1, department: 1 }
+    );
+
+    if (!empData) {
+      return res.status(404).json({ message: "Employee not found." });
+    }
+
+    // ✅ Create payment ID
     const paymentId = `PAY-${uuidv4().slice(0, 8).toUpperCase()}`;
 
+    // ✅ Create new package payment
     const newPackage = new packagePaymentData({
       paymentId,
       enqId: packageData.enqId || enqId,
@@ -2968,6 +2982,24 @@ const sendSelectedPackageData = async (req, res) => {
 
     const savedPackage = await newPackage.save();
 
+    // ✅ Log the package selection action
+    await logsSchema.updateOne(
+      { enqId: enqId },
+      {
+        $push: {
+          logs: {
+            employeeId: empId,
+            employeeName: empData.firstName,
+            department: empData.department,
+            comment: `Package selection completed for kid: ${packageData.kidName}`,
+            action: "Package Selection",
+          },
+        },
+      },
+      { upsert: true }
+    );
+
+    // ✅ Send response
     res.status(201).json({
       message: "Package data saved successfully.",
       paymentId,
@@ -2975,9 +3007,10 @@ const sendSelectedPackageData = async (req, res) => {
     });
   } catch (err) {
     console.error("Error in saving the selected package data", err);
-    res
-      .status(500)
-      .json({ message: "Failed to save package data.", error: err.message });
+    res.status(500).json({
+      message: "Failed to save package data.",
+      error: err.message,
+    });
   }
 };
 

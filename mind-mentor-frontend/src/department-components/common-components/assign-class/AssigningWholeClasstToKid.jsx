@@ -540,7 +540,7 @@ const AssigningWholeClassToKid = () => {
             schedule.push({
               ...classItem,
               sessionId: `${classItem._id}-${i}`,
-              sessionNumber: schedule.length + 1,
+              sessionNumber: i + 1, // Use loop index + 1 for continuous numbering
               classDate: new Date(nextClassDate),
               formattedDate: formatDate(nextClassDate),
               status: "scheduled",
@@ -576,7 +576,7 @@ const AssigningWholeClassToKid = () => {
           schedule.push({
             ...classItem,
             sessionId: `${classItem._id}-${i}`,
-            sessionNumber: schedule.length + 1,
+            sessionNumber: i + 1, // Use loop index + 1 for continuous numbering
             classDate: new Date(nextClassDate),
             formattedDate: formatDate(nextClassDate),
             status: "scheduled",
@@ -584,7 +584,14 @@ const AssigningWholeClassToKid = () => {
         }
       }
 
-      return schedule.sort((a, b) => a.classDate - b.classDate);
+      // Sort by date first, then reassign session numbers to ensure continuity after sorting
+      const sortedSchedule = schedule.sort((a, b) => a.classDate - b.classDate);
+
+      // Reassign session numbers after sorting to maintain continuous order
+      return sortedSchedule.map((session, index) => ({
+        ...session,
+        sessionNumber: index + 1,
+      }));
     },
     [kidData, formatDate, getNextValidClassDate]
   );
@@ -615,32 +622,80 @@ const AssigningWholeClassToKid = () => {
 
   const handleSessionDelete = useCallback(() => {
     setGeneratedSchedule((prev) => {
-      const updated = prev.map((session) =>
+      const updatedSchedule = prev.map((session) =>
         session.sessionId === selectedSession.sessionId
           ? { ...session, status: "cancelled" }
           : session
       );
 
-      const lastScheduledDate = Math.max(
-        ...updated
-          .filter((s) => s.status === "scheduled")
-          .map((s) => s.classDate.getTime())
+      const activeSessions = updatedSchedule
+        .filter((s) => s.status !== "cancelled")
+        .sort((a, b) => a.classDate - b.classDate);
+
+      const cancelledSessions = updatedSchedule.filter(
+        (s) => s.status === "cancelled"
       );
 
+      // Generate new session to replace the cancelled one
       const newSession = generateSchedule([selectedSession])[0];
       if (newSession) {
-        const newDate = new Date(lastScheduledDate);
+        let newDate;
+
+        // Find the latest date from all sessions (including the one being cancelled)
+        const allSessionDates = prev.map((s) => s.classDate.getTime());
+        const latestDate = Math.max(...allSessionDates);
+
+        // Set the new date to be 7 days after the latest date
+        newDate = new Date(latestDate);
         newDate.setDate(newDate.getDate() + 7);
+
+        // Ensure it falls on the correct day of the week
+        const targetDay = selectedSession.day;
+        const targetDayIndex = [
+          "Sunday",
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+        ].indexOf(targetDay);
+        const newDateDayIndex = newDate.getDay();
+
+        if (newDateDayIndex !== targetDayIndex) {
+          const daysToAdd = (targetDayIndex - newDateDayIndex + 7) % 7;
+          if (daysToAdd === 0) {
+            // If it's the same day, move to next week
+            newDate.setDate(newDate.getDate() + 7);
+          } else {
+            newDate.setDate(newDate.getDate() + daysToAdd);
+          }
+        }
+
         newSession.classDate = newDate;
         newSession.formattedDate = formatDate(newDate);
-        newSession.sessionNumber = updated.length + 1;
         newSession.sessionId = `${selectedSession._id}-new-${Date.now()}`;
+        newSession.status = "scheduled";
 
-        return [...updated, newSession];
+        activeSessions.push(newSession);
       }
 
-      return updated;
+      activeSessions.sort((a, b) => a.classDate - b.classDate);
+
+      const reNumberedActiveSessions = activeSessions.map((session, index) => ({
+        ...session,
+        sessionNumber: index + 1,
+      }));
+
+      const finalSchedule = [...reNumberedActiveSessions, ...cancelledSessions];
+
+      return finalSchedule.sort((a, b) => {
+        if (a.status === "cancelled" && b.status !== "cancelled") return 1;
+        if (a.status !== "cancelled" && b.status === "cancelled") return -1;
+        return a.sessionNumber - b.sessionNumber;
+      });
     });
+
     setModalState((prev) => ({ ...prev, action: false }));
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);

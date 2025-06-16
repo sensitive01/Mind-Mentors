@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 
 const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
   const navigate = useNavigate();
+  const empId = localStorage.getItem("empId")
   const [packageType, setPackageType] = useState("");
   const [packages, setPackages] = useState({
     online: [],
@@ -124,21 +125,16 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
     setOfflineRate(125);
   };
 
-  // Handle day/night selection for online and offline packages
   const handleTimeSlotChange = (timeSlot) => {
     setSelectedTimeSlot(timeSlot);
     setSelectedCenter("");
     setClassRate(0);
     setNumberOfClasses(0);
 
-    // Get available centers based on package type and time slot
     let centers = [];
 
     if (packageType === "online") {
-      // Filter online packages for the selected time slot
       const filteredPackages = packages.online.filter((pkg) => {
-        // Assuming the package has a timeSlot property or you can determine it from package name
-        // You might need to adjust this based on your actual data structure
         const packageTimeSlot = pkg.packageName.toLowerCase().includes("night")
           ? "night"
           : "day";
@@ -156,11 +152,8 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
         );
       }
     } else if (packageType === "offline") {
-      // Filter offline packages for the selected time slot
       if (packages.offline.length > 0) {
         const filteredCenters = packages.offline[0].centers.filter((center) => {
-          // Assuming the center has a timeSlot property or you can determine it from center name
-          // You might need to adjust this based on your actual data structure
           const centerTimeSlot = center.packageName
             ?.toLowerCase()
             .includes("night")
@@ -177,7 +170,6 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
       }
     }
 
-    // Remove duplicates
     const uniqueCenters = [
       ...new Map(centers.map((item) => [item.centerId, item])).values(),
     ];
@@ -185,11 +177,9 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
     setAvailableCenters(uniqueCenters);
   };
 
-  // Handle center selection for online/offline with day/night
   const handleCenterSelectionForTimeSlot = (centerId) => {
     setSelectedCenter(centerId);
 
-    // Find the selected center and set the class rate
     const selectedCenterData = availableCenters.find(
       (center) => center.centerId === centerId
     );
@@ -379,7 +369,7 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
         };
       }
 
-      const response = await sendPackageSelection(packageData, data._id);
+      const response = await sendPackageSelection(packageData, data._id,empId);
 
       if (response.status === 201) {
         const receivedPaymentId = response.data.paymentId;

@@ -24,6 +24,14 @@ export const getMyClassData = async (empId) => {
   return response;
 };
 
+export const getSuperAdminAllClassData = async () => {
+  const response = await coachInsatance.get(
+    `/coach/fetch-super-admin-sheduled-class`,
+    
+  );
+  return response;
+};
+
 
 export const addFeedbackAndAttandance = async (empId,classId,submissionData) => {
   const response = await coachInsatance.post(

@@ -374,11 +374,11 @@ const ModernSidebar = () => {
           text: "Parents",
           link: "/super-admin/department/parents-data",
         },
-        {
-          icon: <KidsIcon />,
-          text: "Kids (All / Active / Paused)",
-          link: "/super-admin/department/kids-data",
-        },
+        // {
+        //   icon: <KidsIcon />,
+        //   text: "Kids (All / Active / Paused)",
+        //   link: "/super-admin/department/kids-data",
+        // },
         {
           icon: <ActiveIcon />,
           text: "Active Kids",

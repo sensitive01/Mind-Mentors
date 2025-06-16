@@ -174,7 +174,40 @@ const getKidClassData = async (req, res) => {
 };
 
 
- 
+const getMyTodayClassData = async (req, res) => {
+  try {
+    const { kidId } = req.params;
+
+    const kidData = await kidModel.findOne({ _id: kidId }, { kidsName: 1 });
+
+    const today = new Date();
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const todayDayName = days[today.getDay()];
+
+    const classData = await ClassSchedule.find({
+      day: todayDayName,
+      $or: [
+        { selectedStudents: { $elemMatch: { kidId: kidId } } },
+        { demoAssignedKid: { $elemMatch: { kidId: kidId } } }
+      ]
+    });
+
+    res.status(200).json({
+      success: true,
+      data: classData,
+      kidName: kidData?.kidsName
+    });
+
+  } catch (err) {
+    console.log("Error in getting the my today class data", err);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
+  }
+};
+
+
 
 
 
@@ -186,6 +219,7 @@ const getKidClassData = async (req, res) => {
 
 
 module.exports = {
+  getMyTodayClassData,
   validateKidChessId,
   validateKidPin,
   getDemoClass,

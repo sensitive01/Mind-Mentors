@@ -18,6 +18,8 @@ parentRoute.get("/get-paid-payment-information/:kidId",parentController.getKidPa
 parentRoute.get("/get-kid-data/:kidId",parentController.getParentKidData) 
 parentRoute.get("/get-kid-enquiry-status/:kidId",parentController.getKidEnquiryStatus) 
 parentRoute.get("/get-my-kid-data/:parentId",parentController.getMyKidData) 
+parentRoute.get("/get-kid-live-class/:kidId",parentController.getKidTodayClass) 
+
 
 
 

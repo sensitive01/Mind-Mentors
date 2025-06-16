@@ -15,6 +15,7 @@ import {
   School as SubjectIcon,
   VideoCall as JoinIcon,
   AssignmentTurnedIn as AttendanceIcon,
+  OpenInNew as ExternalLinkIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import WebRtc from "./WebRtc"; // Import the updated component
@@ -45,6 +46,14 @@ const RenderClassList = ({
 
   const handleJoinClick = (e, classItem) => {
     e.stopPropagation();
+
+    // For live classes, use coach join URL directly
+    if (isLiveTab && classItem.coachJoinUrl) {
+      window.open(classItem.coachJoinUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    // Fallback to WebRTC modal for non-live classes or if no coach URL
     setSelectedClassId(classItem._id);
     setIsMeetingOpen(true);
   };
@@ -134,18 +143,34 @@ const RenderClassList = ({
               <Button
                 variant="contained"
                 color="primary"
-                startIcon={<JoinIcon />}
+                startIcon={
+                  classItem.coachJoinUrl ? <ExternalLinkIcon /> : <JoinIcon />
+                }
                 onClick={(e) => handleJoinClick(e, classItem)}
+                disabled={!classItem.coachJoinUrl}
                 sx={{
                   flex: { xs: 1, sm: "none" },
                   whiteSpace: "nowrap",
-                  bgcolor: customColors.primary,
+                  bgcolor: classItem.coachJoinUrl
+                    ? customColors.primary
+                    : "grey.400",
                   "&:hover": {
-                    bgcolor: `${customColors.primary}dd`,
+                    bgcolor: classItem.coachJoinUrl
+                      ? `${customColors.primary}dd`
+                      : "grey.500",
+                  },
+                  "&:disabled": {
+                    bgcolor: "grey.300",
+                    color: "grey.600",
                   },
                 }}
+                title={
+                  classItem.coachJoinUrl
+                    ? "Click to join class in new tab"
+                    : "No join link available"
+                }
               >
-                Join Now
+                {classItem.coachJoinUrl ? "Join Class" : "No Link"}
               </Button>
               <Button
                 variant="outlined"
@@ -169,10 +194,6 @@ const RenderClassList = ({
           )}
         </ClassCard>
       ))}
-
-      <Dialog fullScreen open={isMeetingOpen} onClose={handleCloseMeeting}>
-        <WebRtc onClose={handleCloseMeeting} classId={selectedClassId} />
-      </Dialog>
     </>
   );
 };

@@ -88,6 +88,32 @@ const getMyScheduledClasses = async (req, res) => {
   }
 };
 
+const getSuperAdminScheduledClasses = async (req, res) => {
+  try {
+    console.log("Haillll")
+    const classData = await ClassSchedule.find();
+
+    console.log("classData",classData)
+
+    const conductedClassData = await ConductedClass.find({status:"Conducted"})
+    console.log("conductedClass",conductedClassData)
+
+
+    if (!classData || classData.length === 0) {
+      return res.status(404).json({ message: "No classes scheduled for this coach." });
+    }
+    // const zoomData = await zoomIntegration2()
+
+    return res.status(200).json({
+      message: "Classes retrieved successfully",
+      classData,
+      conductedClassData
+    });
+  } catch (err) {
+    return res.status(500).json({ message: "Error in getting the coach scheduled classes", error: err.message });
+  }
+};
+
 
 // const addFeedBackAndAttandance = async (req, res) => {
 //   try {
@@ -699,7 +725,8 @@ module.exports = {
   saveCoachAvailability,
   getMyScheduledClasses,
   addFeedBackAndAttendance,
-  getClassData
+  getClassData,
+  getSuperAdminScheduledClasses
   
 
 

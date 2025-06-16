@@ -12,48 +12,42 @@ const classPaymentModel = require("../../model/classPaymentModel");
 const notificationSchema = require("../../model/notification/notificationSchema");
 const wholeClassModel = require("../../model/wholeClassAssignedModel");
 
-
-
-const parentSubmitEnquiryForm = async(req,res)=>{
+const parentSubmitEnquiryForm = async (req, res) => {
   try {
     const {
-        childAge,
-        childName,
-        email,
-        experience,
-        parentMobile,
-        parentName,
-        program
+      childAge,
+      childName,
+      email,
+      experience,
+      parentMobile,
+      parentName,
+      program,
     } = req.body;
 
-
     if (!childName || !parentName || !parentMobile || !program) {
-        return res.status(400).json({ message: "Missing required fields" });
+      return res.status(400).json({ message: "Missing required fields" });
     }
-
 
     const [kidFirstName, kidLastName] = childName.split(" ");
     const [parentFirstName, parentLastName] = parentName.split(" ");
-   
 
     const newEnquiry = new operationDeptModel({
-        parentFirstName,
-        parentLastName: parentLastName || "", 
-        kidFirstName,
-        kidLastName: kidLastName || "",
-        contactNumber: parentMobile,
-        whatsappNumber: parentMobile,
-        isSameAsContact: true, 
-        email,
-        kidsAge: parseInt(childAge, 10), 
-        programs: [{ program, level: experience }], 
-        enquiryStatus: "Pending",
-        enquiryType: "cold",
-        status: "Pending",
-        isNewUser: true,
+      parentFirstName,
+      parentLastName: parentLastName || "",
+      kidFirstName,
+      kidLastName: kidLastName || "",
+      contactNumber: parentMobile,
+      whatsappNumber: parentMobile,
+      isSameAsContact: true,
+      email,
+      kidsAge: parseInt(childAge, 10),
+      programs: [{ program, level: experience }],
+      enquiryStatus: "Pending",
+      enquiryType: "cold",
+      status: "Pending",
+      isNewUser: true,
     });
 
-   
     await newEnquiry.save();
 
     const logEntry = {
@@ -72,28 +66,16 @@ const parentSubmitEnquiryForm = async(req,res)=>{
     newEnquiry.logs = logData._id;
     await newEnquiry.save();
 
-    
-
-    return res.status(201).json({ message: "Enquiry saved successfully", data: newEnquiry });
-
-} catch (error) {
+    return res
+      .status(201)
+      .json({ message: "Enquiry saved successfully", data: newEnquiry });
+  } catch (error) {
     console.error("Error saving enquiry:", error);
-    return res.status(500).json({ message: "Server error", error: error.message });
-}
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
+};
 
 const parentLogin = async (req, res) => {
   try {
@@ -252,7 +234,10 @@ const parentStudentRegistration = async (req, res) => {
       await parentData.save();
     }
 
-    const updateEnqData = await operationDeptModel.findOneAndUpdate({_id:formData.enqId},{$set:{kidFirstName:formData.kidName,kidId:newKid._id}})
+    const updateEnqData = await operationDeptModel.findOneAndUpdate(
+      { _id: formData.enqId },
+      { $set: { kidFirstName: formData.kidName, kidId: newKid._id } }
+    );
 
     res.status(201).json({
       success: true,
@@ -1111,6 +1096,81 @@ const getKidClassData = async (req, res) => {
   try {
     const { kidId } = req.params;
 
+    // Get all time table data
+    const timeTableData = await ClassSchedule.find();
+    console.log("timeTableData", timeTableData);
+
+    // Get class data for specific kid
+    const classData = await wholeClassModel.find(
+      { kidId: kidId },
+      { generatedSchedule: 1,studentName:1 }
+    );
+
+    console.log("classData", classData[0]?.generatedSchedule);
+
+    if (!classData || classData.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No class data found for this kid",
+      });
+    }
+
+    // Create a map of timeTableData for quick lookup
+    const timeTableMap = new Map();
+    timeTableData.forEach((schedule) => {
+      timeTableMap.set(schedule._id.toString(), schedule);
+    });
+
+    // Combine the data
+    const combinedClassData = classData[0].generatedSchedule.map((session) => {
+      const scheduleId = session._id.toString();
+      const matchingSchedule = timeTableMap.get(scheduleId);
+
+      if (matchingSchedule) {
+        return {
+          // Session data from generatedSchedule
+          ...(session.toObject ? session.toObject() : session),
+          // Additional data from timeTableData
+          scheduleDetails: {
+            kidJoinUrl:matchingSchedule.kidJoinUrl,
+            coachName: matchingSchedule.coachName,
+            program: matchingSchedule.program,
+            level: matchingSchedule.level,
+            centerName: matchingSchedule.centerName,
+            classTime: matchingSchedule.classTime,
+            studentName:classData[0].studentName
+          },
+        };
+      }
+
+      // Return session data even if no matching schedule found
+      return {
+        ...(session.toObject ? session.toObject() : session),
+        scheduleDetails: null,
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Class data retrieved successfully",
+      classData: combinedClassData,
+    });
+  } catch (err) {
+    console.error("Error in getKidClassData:", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve class data. Please try again later.",
+      error: err.message,
+    });
+  }
+};
+
+// Alternative approach - if you want to group by schedule ID
+const getKidClassDataGrouped = async (req, res) => {
+  try {
+    const { kidId } = req.params;
+
+    const timeTableData = await ClassSchedule.find();
     const classData = await wholeClassModel.find(
       { kidId: kidId },
       { generatedSchedule: 1 }
@@ -1123,12 +1183,34 @@ const getKidClassData = async (req, res) => {
       });
     }
 
+    // Group sessions by schedule ID
+    const groupedData = {};
+
+    classData[0].generatedSchedule.forEach((session) => {
+      const scheduleId = session._id.toString();
+
+      if (!groupedData[scheduleId]) {
+        // Find matching schedule
+        const matchingSchedule = timeTableData.find(
+          (schedule) => schedule._id.toString() === scheduleId
+        );
+
+        groupedData[scheduleId] = {
+          scheduleInfo: matchingSchedule || null,
+          sessions: [],
+        };
+      }
+
+      groupedData[scheduleId].sessions.push(session);
+    });
+
     res.status(200).json({
       success: true,
-      message: "Class data retrieved successfully",
-      classData,
+      message: "Grouped class data retrieved successfully",
+      classData: groupedData,
     });
   } catch (err) {
+    console.error("Error in getKidClassDataGrouped:", err);
     res.status(500).json({
       success: false,
       message: "Failed to retrieve class data. Please try again later.",
@@ -1304,7 +1386,7 @@ const savePaymentData = async (req, res) => {
       whatsappNumber,
       parentId,
       raz_transaction_id: transactionId,
-      paymentStatus:"Success",
+      paymentStatus: "Success",
 
       timestamp: Date.now(), // Assuming timestamp is not provided in paymentData
     });
@@ -1378,7 +1460,7 @@ const getKidEnquiryStatus = async (req, res) => {
     const { kidId } = req.params;
     const enqData = await operationDeptModel.findOne(
       { kidId: kidId },
-      { enquiryStatus: 1, status: 1, scheduleDemo: 1 }
+      { enquiryStatus: 1, paymentStatus: 1, scheduleDemo: 1 }
     );
 
     console.log("enqData", enqData);
@@ -1425,7 +1507,9 @@ const parentBookDemoClassInProfile = async (req, res) => {
         { _id: existingClass._id },
         { $pull: { selectedStudents: { kidId: kidId } } }
       );
-      console.log(`Kid ${kidId} removed from previous schedule ${existingClass._id}`);
+      console.log(
+        `Kid ${kidId} removed from previous schedule ${existingClass._id}`
+      );
     }
 
     // Find the new class schedule
@@ -1468,7 +1552,6 @@ const parentBookDemoClassInProfile = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
-
 
 const getMyKidData = async (req, res) => {
   try {
@@ -1514,7 +1597,60 @@ const getMyKidData = async (req, res) => {
   }
 };
 
+
+const getKidTodayClass = async (req, res) => {
+  try {
+    console.log("Welcome to parent today class");
+    const { kidId } = req.params;
+    const kidData = await kidModel.findOne({_id:kidId},{kidsName:1})
+
+    const today = new Date();
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const todayDayName = days[today.getDay()];
+
+    const classData = await ClassSchedule.find({
+      day: todayDayName,
+      "selectedStudents.kidId": kidId
+    });
+
+    console.log("classData", classData);
+
+    res.status(200).json({
+      success: true,
+      data: classData,
+      kidName:kidData?.kidsName
+    });
+
+  } catch (err) {
+    console.error("Error in getting the live class", err);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error"
+    });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 module.exports = {
+  getKidTodayClass,
   parentSubmitEnquiryForm,
   getMyKidData,
   getKidEnquiryStatus,

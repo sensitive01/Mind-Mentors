@@ -45,3 +45,14 @@ export const getMyClassData = async (kidId) => {
     return err;
   }
 };
+
+export const getMyTodayClassData = async (kidId) => {
+  try {
+    const response = await kidInstance.get(
+      `/kid/get-my-today-class-data/${kidId}`
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};

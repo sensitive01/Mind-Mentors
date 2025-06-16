@@ -25,6 +25,7 @@ const MenuGrid = () => {
   const parentId = localStorage.getItem("parentId");
   const [link, setLink] = useState();
   const [demoStatus, setDemoStatus] = useState(null);
+  const [paymentStatus,setPaymentStatus] = useState(null)
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -49,6 +50,8 @@ const MenuGrid = () => {
         const response = await fetchEnquiryStatus(id, parentId);
         if (response.status === 200) {
           setDemoStatus(response.data.data.scheduleDemo?.status || "Pending");
+          setPaymentStatus(response.data.data.paymentStatus)
+
         }
       } catch (error) {
         console.error("Error fetching enquiry status:", error);
@@ -60,7 +63,7 @@ const MenuGrid = () => {
   }, [id, parentId]);
 
   const getMenuItems = () => {
-    if (demoStatus === "Pending") {
+    if (demoStatus === "Pending"&& paymentStatus!=="Success") {
       return [
         {
           id: id,
