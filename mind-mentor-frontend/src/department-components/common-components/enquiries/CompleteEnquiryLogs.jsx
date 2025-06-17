@@ -56,11 +56,13 @@ const CompleteEnquiryLogs = () => {
           const sortedLogs = response.data.sort((a, b) => {
             const dateA = new Date(a.createdAt.split("-").reverse().join("-"));
             const dateB = new Date(b.createdAt.split("-").reverse().join("-"));
-            return dateB - dateA;
+            return dateB - dateA; // descending order: latest first
           });
 
+          const totalCount = sortedLogs.length;
+
           const logData = sortedLogs.map((log, index) => ({
-            id: index + 1,
+            id: totalCount - index, // serial number in reverse
             createdAt: log.createdAt,
             comment: log.comment || "N/A",
             empName: log.empName || "N/A",

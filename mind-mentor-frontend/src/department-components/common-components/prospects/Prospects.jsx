@@ -46,12 +46,12 @@ const theme = createTheme({
       light: "#F472B6",
       dark: "#DB2777",
     },
-    warm: {
+    cold: {
       main: "#F59E0B",
       light: "#FCD34D",
       dark: "#D97706",
     },
-    cold: {
+    warm: {
       main: "#3B82F6",
       light: "#60A5FA",
       dark: "#2563EB",

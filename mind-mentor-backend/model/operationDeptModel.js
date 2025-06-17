@@ -44,7 +44,7 @@ const operationDeptSchema = new mongoose.Schema(
     schoolPincode: { type: String },
     intentionOfParents: { type: String },
 
-    enquiryType: { type: String, enum: ["warm", "cold"], default: "cold" },
+    enquiryType: { type: String, enum: ["warm", "cold"], default: "warm" },
     enquiryStage: { type: String ,},
 
     enquiryStatus: {

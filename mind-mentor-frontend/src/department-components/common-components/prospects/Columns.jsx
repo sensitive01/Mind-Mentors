@@ -331,7 +331,7 @@ const columns = (
               display: "flex",
               alignItems: "center",
               gap: 1,
-              color: params.value === "warm" ? "#F59E0B" : "#642b8f",
+              color: params.value === "cold" ? "#F59E0B" : "#642b8f",
               padding: "4px 12px",
               borderRadius: "20px",
               transition: "all 0.3s ease",
@@ -340,7 +340,7 @@ const columns = (
             {params.value}
             <Switch
               size="small"
-              checked={params.value === "warm"}
+              checked={params.value === "cold"}
               onChange={() => handleStatusToggle(params.row._id)}
               onClick={(e) => e.stopPropagation()}
               className="status-update-btn"
@@ -366,7 +366,7 @@ const columns = (
       renderHeader: () => <strong>Move to Enquiry</strong>,
       width: 150,
       renderCell: (params) => {
-        const isWarmStatus = params.row.enquiryType === "warm"; // Assuming "status" is the field name
+        const isWarmStatus = params.row.enquiryType === "cold"; // Assuming "status" is the field name
 
         return (
           <button

@@ -21,12 +21,12 @@ import {
   rescheduleDemoClass,
 } from "../../../api/service/employee/EmployeeService";
 import { toast, ToastContainer } from "react-toastify";
-import AlertDialogBox from "../alertDialog/AlertDialogBox"
+import AlertDialogBox from "../alertDialog/AlertDialogBox";
 
 const AssignDemoClass = () => {
   const navigate = useNavigate();
   const empId = localStorage.getItem("empId");
-  const department = localStorage.getItem("department")
+  const department = localStorage.getItem("department");
   const { enqId, isSheduled } = useParams();
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [classData, setClassData] = useState([]);
@@ -52,22 +52,37 @@ const AssignDemoClass = () => {
           setClassData(availableClassesResponse.data.scheduleData || []);
 
           const currentClass = demoClassResponse.data.classData[0];
-
           setSelectedClass(currentClass);
 
           // Set student data
-          setStudent(demoClassResponse.data.kidsData);
+          const studentData = demoClassResponse.data.kidsData;
+          setStudent(studentData);
 
-          // Set selected students from the current class
-          if (currentClass?.selectedStudents) {
-            setSelectedStudents(
-              currentClass.selectedStudents.map((student) => student.kidId)
-            );
+          // Auto-select the student by default (for editing mode)
+          if (studentData && studentData.kidId) {
+            setSelectedStudents([studentData.kidId]);
+          }
+
+          // Also set selected students from the current class if available
+          if (currentClass?.selectedStudents && currentClass.selectedStudents.length > 0) {
+            const existingStudentIds = currentClass.selectedStudents.map((student) => student.kidId);
+            // Merge with the current student if not already included
+            const allSelectedIds = studentData && studentData.kidId && !existingStudentIds.includes(studentData.kidId) 
+              ? [...existingStudentIds, studentData.kidId]
+              : existingStudentIds;
+            setSelectedStudents(allSelectedIds);
           }
         } else {
           const response = await getDemoClassandStudentData(enqId);
           setClassData(response?.data?.classData || []);
-          setStudent(response?.data?.kidsData);
+
+          const studentData = response?.data?.kidsData;
+          setStudent(studentData);
+
+          // Auto-select the student by default (for new assignment mode)
+          if (studentData && studentData.kidId) {
+            setSelectedStudents([studentData.kidId]);
+          }
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -76,6 +91,13 @@ const AssignDemoClass = () => {
     };
     fetchData();
   }, [enqId, isSheduled]);
+
+  // Additional useEffect to ensure student is selected when student data is loaded
+  useEffect(() => {
+    if (student && student.kidId && selectedStudents.length === 0) {
+      setSelectedStudents([student.kidId]);
+    }
+  }, [student]);
 
   const handleStudentSelection = (student) => {
     if (selectedStudents.includes(student.kidId)) {
@@ -88,7 +110,7 @@ const AssignDemoClass = () => {
   };
 
   const handleSaveAssignments = () => {
-    console.log("Save assignemet")
+    console.log("Save assignemet");
     if (!selectedClass || selectedStudents.length === 0) {
       toast.warning("Please select both a class and students");
       return;
@@ -110,14 +132,14 @@ const AssignDemoClass = () => {
               selectedStudents,
               empId
             );
-        
+
             response = await rescheduleDemoClass(
               selectedClass._id,
               selectedStudents,
               empId
             );
           } else {
-            console.log("Else")
+            console.log("Else");
             response = await saveDemoClassDetails(
               selectedClass._id,
               selectedStudents,
@@ -156,7 +178,11 @@ const AssignDemoClass = () => {
       message: "Are you sure you want to cancel this demo class?",
       onConfirm: async () => {
         try {
-          const response = await cancelDemoClass(enqId, selectedClass._id,empId);
+          const response = await cancelDemoClass(
+            enqId,
+            selectedClass._id,
+            empId
+          );
           if (response.status === 200) {
             toast.success("Demo class cancelled successfully");
             setTimeout(
@@ -343,8 +369,8 @@ const AssignDemoClass = () => {
                     onClick={() => handleStudentSelection(student)}
                     className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
                       selectedStudents.includes(student.kidId)
-                        ? "bg-blue-50 border-blue-200"
-                        : "bg-gray-50 hover:bg-gray-100"
+                        ? "bg-blue-50 border-blue-200 border"
+                        : "bg-gray-50 hover:bg-gray-100 border border-gray-200"
                     }`}
                   >
                     <div className="flex items-center space-x-3">
@@ -376,7 +402,7 @@ const AssignDemoClass = () => {
               <div className="border-t pt-4">
                 <div className="flex justify-between items-center mb-3">
                   <span className="text-xs text-gray-600">
-                    {selectedStudents.length} student selected
+                    {selectedStudents.length} student{selectedStudents.length !== 1 ? 's' : ''} selected
                   </span>
                 </div>
                 <div className="space-y-2">
@@ -408,17 +434,16 @@ const AssignDemoClass = () => {
             </div>
           </div>
         </div>
-       
       </div>
       <AlertDialogBox
-          isOpen={confirmationModal.isOpen}
-          onClose={() =>
-            setConfirmationModal({ ...confirmationModal, isOpen: false })
-          }
-          onConfirm={confirmationModal.onConfirm}
-          title={confirmationModal.title}
-          message={confirmationModal.message}
-        />
+        isOpen={confirmationModal.isOpen}
+        onClose={() =>
+          setConfirmationModal({ ...confirmationModal, isOpen: false })
+        }
+        onConfirm={confirmationModal.onConfirm}
+        title={confirmationModal.title}
+        message={confirmationModal.message}
+      />
       <ToastContainer
         position="top-right"
         autoClose={5000}

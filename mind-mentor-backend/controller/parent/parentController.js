@@ -755,12 +755,12 @@ const getParentProfileData = async (req, res) => {
 const getKidDemoClassDetails = async (req, res) => {
   try {
     const { kidId } = req.params;
-    console.log(kidId);
 
     const demoClassDetails = await ClassSchedule.findOne({
-      "selectedStudents.kidId": kidId,
+      "demoAssignedKid.kidId": kidId,
       status: "Scheduled",
     });
+    console.log("demoClassDetails",demoClassDetails);
 
     if (!demoClassDetails) {
       const conductedDemoClass = await ConductedClass.findOne({
@@ -807,7 +807,7 @@ const getKidDemoClassDetails = async (req, res) => {
         };
 
         return res.status(200).json({
-          message: "Kid's conducted demo class details retrieved successfully.",
+          message: "Kid's conducted  class details retrieved successfully.",
           combinedData,
         });
       } else {
@@ -817,7 +817,7 @@ const getKidDemoClassDetails = async (req, res) => {
       }
     }
 
-    const filteredStudents = demoClassDetails.selectedStudents.filter(
+    const filteredStudents = demoClassDetails.demoAssignedKid.filter(
       (student) => student.kidId === kidId
     );
 
@@ -1103,7 +1103,7 @@ const getKidClassData = async (req, res) => {
     // Get class data for specific kid
     const classData = await wholeClassModel.find(
       { kidId: kidId },
-      { generatedSchedule: 1,studentName:1 }
+      { generatedSchedule: 1, studentName: 1 }
     );
 
     console.log("classData", classData[0]?.generatedSchedule);
@@ -1132,13 +1132,13 @@ const getKidClassData = async (req, res) => {
           ...(session.toObject ? session.toObject() : session),
           // Additional data from timeTableData
           scheduleDetails: {
-            kidJoinUrl:matchingSchedule.kidJoinUrl,
+            kidJoinUrl: matchingSchedule.kidJoinUrl,
             coachName: matchingSchedule.coachName,
             program: matchingSchedule.program,
             level: matchingSchedule.level,
             centerName: matchingSchedule.centerName,
             classTime: matchingSchedule.classTime,
-            studentName:classData[0].studentName
+            studentName: classData[0].studentName,
           },
         };
       }
@@ -1498,14 +1498,14 @@ const parentBookDemoClassInProfile = async (req, res) => {
 
     // Find the kid's existing scheduled class
     const existingClass = await ClassSchedule.findOne({
-      "selectedStudents.kidId": kidId,
+      "demoAssignedKid.kidId": kidId,
     });
 
     // Remove the kid from the existing class if found
     if (existingClass) {
       await ClassSchedule.updateOne(
         { _id: existingClass._id },
-        { $pull: { selectedStudents: { kidId: kidId } } }
+        { $pull: { demoAssignedKid: { kidId: kidId } } }
       );
       console.log(
         `Kid ${kidId} removed from previous schedule ${existingClass._id}`
@@ -1531,7 +1531,7 @@ const parentBookDemoClassInProfile = async (req, res) => {
 
     await ClassSchedule.updateOne(
       { _id: scheduleId },
-      { $push: { selectedStudents: newStudent } }
+      { $push: { demoAssignedKid: newStudent } }
     );
 
     // Update the inquiry schedule status
@@ -1597,20 +1597,27 @@ const getMyKidData = async (req, res) => {
   }
 };
 
-
 const getKidTodayClass = async (req, res) => {
   try {
     console.log("Welcome to parent today class");
     const { kidId } = req.params;
-    const kidData = await kidModel.findOne({_id:kidId},{kidsName:1})
+    const kidData = await kidModel.findOne({ _id: kidId }, { kidsName: 1 });
 
     const today = new Date();
-    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const days = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
     const todayDayName = days[today.getDay()];
 
     const classData = await ClassSchedule.find({
       day: todayDayName,
-      "selectedStudents.kidId": kidId
+      "selectedStudents.kidId": kidId,
     });
 
     console.log("classData", classData);
@@ -1618,36 +1625,16 @@ const getKidTodayClass = async (req, res) => {
     res.status(200).json({
       success: true,
       data: classData,
-      kidName:kidData?.kidsName
+      kidName: kidData?.kidsName,
     });
-
   } catch (err) {
     console.error("Error in getting the live class", err);
     res.status(500).json({
       success: false,
-      message: "Internal Server Error"
+      message: "Internal Server Error",
     });
   }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 module.exports = {
   getKidTodayClass,

@@ -300,7 +300,7 @@ const columns = (
             display: "flex",
             alignItems: "center",
             gap: 1,
-            color: params.value === "warm" ? "#F59E0B" : "#642b8f",
+            color: params.value === "cold" ? "#F59E0B" : "#642b8f",
             padding: "4px 12px",
             borderRadius: "20px",
             transition: "all 0.3s ease",
@@ -309,7 +309,7 @@ const columns = (
           {params.value}
           <Switch
             size="small"
-            checked={params.value === "warm"}
+            checked={params.value === "cold"}
             onChange={() => handleStatusToggle(params.row._id)}
             onClick={(e) => e.stopPropagation()}
             className="status-update-btn"
@@ -346,15 +346,15 @@ const columns = (
         className={`px-4 py-1 text-sm font-medium rounded-md 
                    transition-all duration-300 ease-in-out
                    border-2 ${
-                     params.row.enquiryType !== "warm"
+                     params.row.enquiryType !== "cold"
                        ? "bg-gray-200 text-gray-600 border-gray-300 cursor-not-allowed"
                        : "text-white bg-primary  border-2 border-primary hover:border-primary hover:bg-primary hover:text-white"
                    }`}
-        disabled={params.row.enquiryType !== "warm"}
+        disabled={params.row.enquiryType !== "cold"}
       >
         {params.row.isProspect
           ? "Already Prospect"
-          : params.row.status !== "warm"
+          : params.row.status !== "cold"
           ? "Move to Prospects"
           : "Move to Prospects"}
       </button>

@@ -55,10 +55,9 @@ const CompleteStatusLogs = () => {
         console.log("Res", response);
         if (response.status && response.data?.data?.notes) {
           const notes = response.data.data.notes;
-          const totalCount = notes.length;
           const notesData = notes.map((note, index) => ({
-            id: totalCount - index,
-            serialNumber: totalCount - index,
+            id: index,
+            serialNumber: index+1,
             createdAt: note.createdOn,
             enquiryStatus: note.enquiryStatus || "N/A",
             disposition: note.disposition || "N/A",
@@ -330,7 +329,7 @@ const CompleteStatusLogs = () => {
                   variant="h5"
                   sx={{ color: "text.primary", fontWeight: 600 }}
                 >
-                  Status Logs ({notes.length} entries)
+                  Notes Logs ({notes.length} entries)
                 </Typography>
               </Box>
               <Button
@@ -444,7 +443,7 @@ const CompleteStatusLogs = () => {
                 background: "linear-gradient(to right, #642b8f, #aa88be)",
               }}
             >
-              Add Note
+              Call Notes
             </DialogTitle>
             <Divider />
             <DialogContent>
