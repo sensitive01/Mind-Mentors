@@ -308,7 +308,7 @@ const DemoClassList = () => {
                             />
                           </IconText>
 
-                          {classItem.status === "Scheduled" && (
+                          {/* {classItem.status === "Scheduled" && (
                             <Tooltip title="Add Kids" arrow>
                               <IconButton
                                 size="small"
@@ -328,7 +328,7 @@ const DemoClassList = () => {
                                 <AddKidIcon />
                               </IconButton>
                             </Tooltip>
-                          )}
+                          )} */}
                         </Box>
                       </ClassCard>
                     ))
@@ -485,7 +485,7 @@ const DemoClassList = () => {
                             {selectedClass?.students} Students
                           </Typography>
                         </Box>
-                        <Button
+                        {/* <Button
                           variant="outlined"
                           color="primary"
                           onClick={() => {
@@ -513,7 +513,7 @@ const DemoClassList = () => {
                           }}
                         >
                           Add kids
-                        </Button>
+                        </Button> */}
                       </Box>
                     </DetailRow>
 

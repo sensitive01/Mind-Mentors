@@ -15,6 +15,7 @@ import {
   Fade,
   IconButton,
   Button,
+  Divider,
 } from "@mui/material";
 import {
   AccessTime as TimeIcon,
@@ -26,6 +27,7 @@ import {
   CalendarToday as DayIcon,
   PersonAdd as AddStudentIcon,
   EventBusy as NoScheduleIcon,
+  Assignment as DemoIcon,
 } from "@mui/icons-material";
 import { Link, useNavigate } from "react-router-dom";
 import { getClassShedules } from "../../../api/service/employee/serviceDeliveryService";
@@ -108,6 +110,21 @@ const ScheduleKanban = () => {
     return hours * 60 + minutes;
   };
 
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case "scheduled":
+        return "#4caf50"; // Green
+      case "completed":
+        return "#2196f3"; // Blue
+      case "cancelled":
+        return "#f44336"; // Red
+      case "pending":
+        return "#ff9800"; // Orange
+      default:
+        return customColors.secondary;
+    }
+  };
+
   useEffect(() => {
     const fetchAllClassSchedules = async () => {
       try {
@@ -128,9 +145,15 @@ const ScheduleKanban = () => {
               teacher: classItem.coachName,
               students: classItem.selectedStudents.length || 0,
               level: classItem.level,
-              classType: classItem.classType,
+              classType: classItem.type,
               status: classItem.status,
               meetingLink: classItem.meetingLink,
+              isDemo: classItem.isDemoAdded,
+              selectedStudents: classItem.selectedStudents || [],
+              demoAssignedKid: classItem.demoAssignedKid || [],
+              maximumKidCount: classItem.maximumKidCount,
+              enrolledKidCount: classItem.enrolledKidCount,
+              centerName: classItem.centerName,
             },
           ];
 
@@ -183,7 +206,9 @@ const ScheduleKanban = () => {
   const handleAddKids = (e, classInfo) => {
     e.stopPropagation();
     console.log("Add kids for class:", classInfo);
-    navigate(`/service-delivery/department/serviceAssignClassToKid/${classInfo.id}`);
+    navigate(
+      `/service-delivery/department/serviceAssignClassToKid/${classInfo.id}`
+    );
   };
 
   return (
@@ -315,6 +340,18 @@ const ScheduleKanban = () => {
                           >
                             {classItem.subject}
                           </Typography>
+                          {classItem.isDemo && (
+                            <Chip
+                              icon={<DemoIcon />}
+                              label="Demo"
+                              size="small"
+                              sx={{
+                                ml: 1,
+                                backgroundColor: "#ff9800",
+                                color: "white",
+                              }}
+                            />
+                          )}
                         </IconText>
 
                         <IconText>
@@ -340,7 +377,7 @@ const ScheduleKanban = () => {
                               sx={{ color: customColors.highlight }}
                             />
                             <Chip
-                              label={`${classItem.students} students`}
+                              label={`${classItem.students}/${classItem.maximumKidCount}`}
                               size="small"
                               sx={{
                                 borderColor: customColors.primary,
@@ -352,21 +389,80 @@ const ScheduleKanban = () => {
                               variant="outlined"
                             />
                           </IconText>
+                        </Box>
 
-                          {classItem.classType === "Class" && (
-                            <IconButton
-                              onClick={(e) => handleAddKids(e, classItem)}
+                        {/* Display enrolled students */}
+                        {classItem.selectedStudents.length > 0 && (
+                          <Box sx={{ mt: 1, width: "100%" }}>
+                            <Typography
+                              variant="caption"
                               sx={{
-                                color: customColors.primary,
-                                "&:hover": {
-                                  backgroundColor: `${customColors.primary}20`,
-                                },
+                                color: customColors.secondary,
+                                fontWeight: "bold",
                               }}
                             >
-                              <AddStudentIcon />
-                            </IconButton>
-                          )}
-                        </Box>
+                              Enrolled Students:
+                            </Typography>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                flexWrap: "wrap",
+                                gap: 0.5,
+                                mt: 0.5,
+                              }}
+                            >
+                              {classItem.selectedStudents.map((student) => (
+                                <Chip
+                                  key={student._id}
+                                  label={student.kidName}
+                                  size="small"
+                                  sx={{
+                                    backgroundColor: getStatusColor(
+                                      student.status
+                                    ),
+                                    color: "white",
+                                    fontSize: "0.7rem",
+                                    height: "20px",
+                                  }}
+                                />
+                              ))}
+                            </Box>
+                          </Box>
+                        )}
+
+                        {/* Display demo assigned kids */}
+                        {classItem.demoAssignedKid.length > 0 && (
+                          <Box sx={{ mt: 1, width: "100%" }}>
+                            <Typography
+                              variant="caption"
+                              sx={{ color: "#ff9800", fontWeight: "bold" }}
+                            >
+                              Demo Students:
+                            </Typography>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                flexWrap: "wrap",
+                                gap: 0.5,
+                                mt: 0.5,
+                              }}
+                            >
+                              {classItem.demoAssignedKid.map((student) => (
+                                <Chip
+                                  key={student._id}
+                                  label={student.kidName}
+                                  size="small"
+                                  sx={{
+                                    backgroundColor: "#ff9800",
+                                    color: "white",
+                                    fontSize: "0.7rem",
+                                    height: "20px",
+                                  }}
+                                />
+                              ))}
+                            </Box>
+                          </Box>
+                        )}
                       </ClassCard>
                     ))
                   ) : (
@@ -411,8 +507,6 @@ const ScheduleKanban = () => {
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
-
-                      // position: "sticky",
                       top: 0,
                       backgroundColor: "white",
                       zIndex: 10,
@@ -465,6 +559,18 @@ const ScheduleKanban = () => {
                       >
                         {selectedClass.subject}
                       </Typography>
+                      {selectedClass.isDemo && (
+                        <Chip
+                          icon={<DemoIcon />}
+                          label="Demo Class"
+                          size="small"
+                          sx={{
+                            mt: 0.5,
+                            backgroundColor: "#ff9800",
+                            color: "white",
+                          }}
+                        />
+                      )}
                     </Box>
                   </DetailRow>
 
@@ -499,6 +605,7 @@ const ScheduleKanban = () => {
                       </Typography>
                     </Box>
                   </DetailRow>
+
                   <DetailRow>
                     <StudentsIcon
                       sx={{ color: customColors.secondary, fontSize: 28 }}
@@ -508,7 +615,7 @@ const ScheduleKanban = () => {
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "center",
-                        width: "100%", // Ensure the row takes full width
+                        width: "100%",
                       }}
                     >
                       <Box>
@@ -522,38 +629,10 @@ const ScheduleKanban = () => {
                           variant="h6"
                           sx={{ color: customColors.secondary }}
                         >
-                          {selectedClass?.students} Students
+                          {selectedClass?.students}/
+                          {selectedClass?.maximumKidCount} Students
                         </Typography>
                       </Box>
-                      <Button
-                        variant="outlined"
-                        color="primary"
-                        onClick={() => {
-                          navigate(
-                            `/service-delivery/department/serviceAssignClassToKid/${selectedClass.id}`
-                          );
-                        }}
-                        disabled={selectedClass.status !== "Scheduled"} // Disable button based on condition
-                        sx={{
-                          height: "fit-content",
-                          backgroundColor:
-                            selectedClass.status !== "Scheduled"
-                              ? "#cccccc"
-                              : "#642b8f", // Grey out if disabled
-                          color:
-                            selectedClass.status !== "Scheduled"
-                              ? "black"
-                              : "white", // Adjust text color
-                          "&:hover": {
-                            backgroundColor:
-                              selectedClass.status !== "Scheduled"
-                                ? "#cccccc"
-                                : "#0056b3", // Maintain hover color for active button
-                          },
-                        }}
-                      >
-                        Add kids
-                      </Button>
                     </Box>
                   </DetailRow>
 
@@ -579,27 +658,141 @@ const ScheduleKanban = () => {
                     </DetailRow>
                   )}
 
+                  {selectedClass.centerName && (
+                    <DetailRow>
+                      <Typography
+                        variant="body1"
+                        sx={{ color: customColors.primary }}
+                      >
+                        <strong>Center:</strong> {selectedClass.centerName}
+                      </Typography>
+                    </DetailRow>
+                  )}
+
                   {selectedClass.classType && (
                     <DetailRow>
                       <Typography
                         variant="body1"
                         sx={{ color: customColors.primary }}
                       >
-                        Class Type: {selectedClass.classType}
+                        <strong>Class Type:</strong> {selectedClass.classType}
                       </Typography>
                     </DetailRow>
                   )}
 
                   {selectedClass.status && (
                     <DetailRow>
-                      <Typography
-                        variant="body1"
-                        sx={{ color: customColors.primary }}
-                      >
-                        Status: {selectedClass.status}
-                      </Typography>
+                      <Chip
+                        label={selectedClass.status}
+                        sx={{
+                          backgroundColor: getStatusColor(selectedClass.status),
+                          color: "white",
+                        }}
+                      />
                     </DetailRow>
                   )}
+
+                  {/* Enrolled Students Details in Modal */}
+                  {selectedClass.selectedStudents &&
+                    selectedClass.selectedStudents.length > 0 && (
+                      <Box sx={{ mt: 2 }}>
+                        <Divider />
+                        <Typography
+                          variant="h6"
+                          sx={{ color: customColors.primary, mt: 2, mb: 1 }}
+                        >
+                          Enrolled Students
+                        </Typography>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 1,
+                          }}
+                        >
+                          {selectedClass.selectedStudents.map((student) => (
+                            <Box
+                              key={student._id}
+                              sx={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                p: 1,
+                                border: "1px solid #e0e0e0",
+                                borderRadius: 1,
+                              }}
+                            >
+                              <Typography
+                                variant="body1"
+                                sx={{ color: customColors.primary }}
+                              >
+                                {student.kidName}
+                              </Typography>
+                              <Chip
+                                label={student.status}
+                                size="small"
+                                sx={{
+                                  backgroundColor: getStatusColor(
+                                    student.status
+                                  ),
+                                  color: "white",
+                                }}
+                              />
+                            </Box>
+                          ))}
+                        </Box>
+                      </Box>
+                    )}
+
+                  {/* Demo Students Details in Modal */}
+                  {selectedClass.demoAssignedKid &&
+                    selectedClass.demoAssignedKid.length > 0 && (
+                      <Box sx={{ mt: 2 }}>
+                        <Divider />
+                        <Typography
+                          variant="h6"
+                          sx={{ color: "#ff9800", mt: 2, mb: 1 }}
+                        >
+                          Demo Students
+                        </Typography>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 1,
+                          }}
+                        >
+                          {selectedClass.demoAssignedKid.map((student) => (
+                            <Box
+                              key={student._id}
+                              sx={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                p: 1,
+                                border: "1px solid #e0e0e0",
+                                borderRadius: 1,
+                              }}
+                            >
+                              <Typography
+                                variant="body1"
+                                sx={{ color: customColors.primary }}
+                              >
+                                {student.kidName}
+                              </Typography>
+                              <Chip
+                                label={student.status}
+                                size="small"
+                                sx={{
+                                  backgroundColor: "#ff9800",
+                                  color: "white",
+                                }}
+                              />
+                            </Box>
+                          ))}
+                        </Box>
+                      </Box>
+                    )}
                 </>
               )}
             </ModalContent>

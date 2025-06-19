@@ -1829,10 +1829,12 @@ const getMyLeaveData = async (req, res) => {
         formattedLeaves,
       });
     } else {
-      res.status(401).json({
-        success: false,
-        message: "No leave data found for this employee",
-      });
+     res.status(200).json({
+  success: true,
+  message: "No leave data found for this employee",
+  formattedLeaves: [], 
+});
+
     }
   } catch (err) {
     console.error("Error in fetching my leaves", err);

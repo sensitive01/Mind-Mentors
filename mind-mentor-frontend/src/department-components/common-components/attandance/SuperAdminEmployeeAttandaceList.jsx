@@ -938,9 +938,9 @@ const SuperAdminEmployeeAttandaceList = () => {
                             <div className="text-sm font-medium text-gray-900">
                               {employee.name}
                             </div>
-                            <div className="text-sm text-gray-500">
+                            {/* <div className="text-sm text-gray-500">
                               {employee.email}
-                            </div>
+                            </div> */}
                           </div>
                         </div>
                       </td>

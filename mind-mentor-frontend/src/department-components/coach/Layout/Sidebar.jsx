@@ -133,12 +133,12 @@ const ModernSidebar = () => {
       color: iconColors.dashboard,
       link: '/coach/department/dashboard',
     },
-    {
-      icon: <Video />,
-      text: 'Create Meetings',
-      color: iconColors.dashboard,
-      link: '/coach/start-class-room',
-    },
+    // {
+    //   icon: <Video />,
+    //   text: 'Create Meetings',
+    //   color: iconColors.dashboard,
+    //   link: '/coach/start-class-room',
+    // },
     
     {
       icon: <ClassScheduleIcon />,

@@ -741,7 +741,7 @@ const assignWholeClass = async (req, res) => {
 
     const enqData = await operationDeptModel.findOne(
       { _id: studentId, paymentStatus: "Success", enquiryStatus: "Active" },
-      { kidId: 1, kidFirstName: 1, classAssigned: 1 }
+      { kidId: 1, kidFirstName: 1, classAssigned: 1, scheduleDemo: 1 }
     );
 
     if (!enqData) {
@@ -764,21 +764,29 @@ const assignWholeClass = async (req, res) => {
         continue;
       }
 
-      // Check if the student is already added
       const alreadyAdded = classDoc.selectedStudents.some(
         (student) => student.kidId === kidData.kidId
       );
 
+      const inDemoAddedIndex = classDoc.demoAssignedKid.findIndex(
+        (student) => student.kidId === kidData.kidId
+      );
+
+      if (inDemoAddedIndex !== -1 && classDoc.isDemoAdded) {
+        console.log("removing the kid in demo ")
+        classDoc.demoAssignedKid.splice(inDemoAddedIndex, 1);
+        enqData.scheduleDemo.status = "Conducted";
+        await enqData.save();
+      }
+
       if (!alreadyAdded) {
         classDoc.selectedStudents.push(kidData);
-
-        // If you're tracking count, make sure the field name is correct
         classDoc.enrolledKidCount += 1;
-
-        await classDoc.save();
       } else {
         console.log(`Kid already added to class: ${classId}`);
       }
+
+      await classDoc.save();
     }
 
     const newClassSelection = new SelectedClass({

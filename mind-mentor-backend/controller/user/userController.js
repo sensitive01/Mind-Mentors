@@ -2982,6 +2982,25 @@ const sendSelectedPackageData = async (req, res) => {
 
     const savedPackage = await newPackage.save();
 
+    // ✅ Build dynamic comment
+    let comment = `Package selection completed for kid: ${packageData.kidName}`;
+
+    const online = packageData.onlineClasses;
+    const offline = packageData.offlineClasses;
+
+    const details = [];
+
+    if (online) {
+      details.push(`Online Classes: ${online}`);
+    }
+    if (offline) {
+      details.push(`Offline Classes: ${offline}`);
+    }
+
+    if (details.length > 0) {
+      comment += ` (${details.join(", ")})`;
+    }
+
     // ✅ Log the package selection action
     await logsSchema.updateOne(
       { enqId: enqId },
@@ -2991,7 +3010,7 @@ const sendSelectedPackageData = async (req, res) => {
             employeeId: empId,
             employeeName: empData.firstName,
             department: empData.department,
-            comment: `Package selection completed for kid: ${packageData.kidName}`,
+            comment:comment,
             action: "Package Selection",
           },
         },

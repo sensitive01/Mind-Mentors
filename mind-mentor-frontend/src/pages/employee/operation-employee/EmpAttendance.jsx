@@ -1,4 +1,4 @@
-import AttendanceDashboard from "../../../department-components/common-components/attandance/AttendanceDashboard";
+import AttendanceDashboard from "../../../department-components/common-components/attandance/EmployeeAttandance";
 import Sidebar from "../../../department-components/operation-new/layout/Sidebar";
 import Topbar from './../../../component/parent-component/parent-dashboard/layout/Topbar';
 const EmpAttendance = () => {

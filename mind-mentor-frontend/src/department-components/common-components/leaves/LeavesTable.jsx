@@ -561,8 +561,7 @@ const EmployeeLeaveManagement = () => {
         const response = await fetchMyLeaves(empId);
         console.log("Response received: ", response);
 
-        // Add serial numbers to the formatted leaves
-        const leavesWithSerialNumbers = response.formattedLeaves.map(
+        const leavesWithSerialNumbers = (response.formattedLeaves || []).map(
           (leave, index) => ({
             ...leave,
             slNo: index + 1,
@@ -570,6 +569,13 @@ const EmployeeLeaveManagement = () => {
         );
 
         setRows(leavesWithSerialNumbers);
+
+        if (leavesWithSerialNumbers.length === 0) {
+          setError(response.message || "No leave data found.");
+        } else {
+          setError(""); // clear any previous error
+        }
+
         setLoading(false);
       } catch (err) {
         console.error("Error fetching leaves data:", err.message);
@@ -659,9 +665,7 @@ const EmployeeLeaveManagement = () => {
         borderRadius: 2,
       }}
     >
-      <Typography variant="h6" color="error" gutterBottom>
-        Error Loading Data
-      </Typography>
+ 
       <Typography
         variant="body2"
         color="text.secondary"
@@ -670,13 +674,13 @@ const EmployeeLeaveManagement = () => {
       >
         {error}
       </Typography>
-      <Button
+      {/* <Button
         variant="contained"
         color="primary"
         onClick={() => window.location.reload()}
       >
         Retry
-      </Button>
+      </Button> */}
     </Box>
   );
 
