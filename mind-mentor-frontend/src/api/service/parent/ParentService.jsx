@@ -331,3 +331,44 @@ export const getKidLiveClass = async (kidId) => {
     return err;
   }
 };
+
+export const getTheEnqId = async (kidId) => {
+  try {
+   
+    const response = await parentInstance.get(
+      `/parent/get-enqId-of-kid/${kidId}`,
+ 
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+
+export const parentSelectPackageData = async (finalData,enqId,parentId) => {
+  try {
+   
+    const response = await parentInstance.post(
+      `/parent/send-selected-package/${parentId}`,{finalData,enqId},
+ 
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+
+export const parentAddNewKid = async (formData,parentId) => {
+  try {
+   
+    const response = await parentInstance.post(
+      `/parent/parent-add-new-kid-data/${parentId}`,{formData},
+ 
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};

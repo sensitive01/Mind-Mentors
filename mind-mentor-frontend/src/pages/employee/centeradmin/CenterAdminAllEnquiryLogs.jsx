@@ -1,10 +1,10 @@
-import Enquires from "../../../department-components/common-components/enquiry-prospect/EnquiryProspectTab";
+import CompleteEnquiryLogs from "../../../department-components/common-components/enquiries/CompleteEnquiryLogs";
+
 import Sidebar from "../../../department-components/centeradmin-components/layout/Sidebar";
 import Topbar from "./../../../component/parent-component/parent-dashboard/layout/Topbar";
 
 
-
-const CenterListingEnquiries = () => {
+const CenterAdminAllEnquiryLogs = () => {
   return (
     <div className="flex h-screen w-screen overflow-hidden">
       <div className="z-30 flex-shrink-0">
@@ -15,9 +15,9 @@ const CenterListingEnquiries = () => {
           <Topbar />
         </div>
         <div className="flex-1 overflow-hidden relative z-10">
-          <div className="h-full w-full overflow-auto scrollbar-hide">
+          <div className="h-full w-full overflow-auto scrollbar-hide bg-gray-50">
             <div className="min-w-full p-4">
-              <Enquires />
+              <CompleteEnquiryLogs />
             </div>
           </div>
         </div>
@@ -25,6 +25,4 @@ const CenterListingEnquiries = () => {
     </div>
   );
 };
-
-
-export default CenterListingEnquiries;
+export default CenterAdminAllEnquiryLogs;

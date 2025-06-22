@@ -20,6 +20,9 @@ parentRoute.get("/get-kid-enquiry-status/:kidId",parentController.getKidEnquiryS
 parentRoute.get("/get-my-kid-data/:parentId",parentController.getMyKidData) 
 parentRoute.get("/get-kid-live-class/:kidId",parentController.getKidTodayClass) 
 
+parentRoute.get("/get-enqId-of-kid/:kidId",parentController.getTheKidEnqId) 
+
+
 
 
 
@@ -36,6 +39,10 @@ parentRoute.post("/book-new-demo-class/:kidId",parentController.parentBookNewDem
 parentRoute.post("/add-new-kid/:parentId",parentController.parentAddNewKid)
 parentRoute.post("/save-kid-availability/:kidId",parentController.saveKidAvailability)
 parentRoute.post("/save-payment-information-data/:parentId",parentController.savePaymentData)
+parentRoute.post("/send-selected-package/:parentId",parentController.parentSelectThePackage)
+parentRoute.post("/parent-add-new-kid-data/:parentId",parentController.parentAddNewKidData)
+
+
 
 
 

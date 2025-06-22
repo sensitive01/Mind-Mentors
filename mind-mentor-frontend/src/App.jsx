@@ -310,6 +310,15 @@ import SuperAdminInvoicePage from "./pages/employee/superadmin/SuperAdminInvoice
 import SuperAdminGetAllRecodingsPage from "./pages/employee/superadmin/SuperAdminGetAllRecodingsPage";
 import SuperAdminLearingStaticsDashboard from "./pages/employee/superadmin/SuperAdminLearingStaticsDashboard";
 import SuperAdminAllClassData from "./pages/employee/superadmin/SuperAdminAllClassData";
+import CenterAdminAddAttandanceToKid from "./pages/employee/centeradmin/CenterAdminAddAttandanceToKid";
+import CenterAdminAllEnquiryLogs from "./pages/employee/centeradmin/CenterAdminAllEnquiryLogs";
+import CenterAdminAllStatusLogs from "./pages/employee/centeradmin/CenterAdminAllStatusLogs";
+import CenterAdminAssignDemo from "./pages/employee/centeradmin/CenterAdminAssignDemo";
+import CenterAminPaymentVerification from "./pages/employee/centeradmin/CenterAminPaymentVerification";
+import CenterAdminActiveKidData from "./pages/employee/centeradmin/CenterAdminActiveKidData";
+import CenterAdminAssignWholeClass from "./pages/employee/centeradmin/CenterAdminAssignWholeClass";
+import CenterAdminDisplayAssignClass from "./pages/employee/centeradmin/CenterAdminDisplayAssignClass";
+import EnrollmentVerifyPayment from "./pages/employee/operation-employee/EnrollmentVerifyPayment";
 
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
@@ -408,7 +417,7 @@ function App() {
           <Route path="/fee-details/:kidId" element={<FeeDetailsPage />} />
           <Route path="/class-schedule" element={<ClassShedulePage />} />
           <Route
-            path="/paranet-package-selection/:kidId"
+            path="/parent-package-selection/:kidId"
             element={<ParentPackageSelectionPage />}
           />
           <Route
@@ -451,6 +460,8 @@ function App() {
           <Route path="/operation/department/schedule-demo-class-list"  element={<ScheduleClass />}/>
           <Route path="/operation/department/holidays" element={<HolidayPage />}/>
           <Route path="/operation/department/list-task-assigned-me"  element={<AssigneTaskPage />} />
+          <Route path="/operation/department/payment-details/:encodedData" element={<EnrollmentVerifyPayment />}/> 
+
             
            
          
@@ -553,178 +564,79 @@ function App() {
           {/* <Route path="/coachLogin" element={<CoachLogin />} /> */}
 
           <Route path="/marketingProfile" element={<MarketingProfile />} />
-          <Route
-            path="/marketing/department/dashboard"
-            element={<MarketingDashboard />}
-          />
-          <Route
-            path="/marketing/department/leaves"
-            element={<MarketingLeaves />}
-          />
-          <Route
-            path="/marketing/department/leaves/add"
-            element={<MarketingLeavesAdd />}
-          />
-          <Route
-            path="/marketing/department/edit-leaves/:id"
-            element={<MarketingLeavesAdd />}
-          />
-          <Route
-            path="/marketing/department/task-table"
-            element={<MarketingMyTaskPage />}
-          />
-          <Route
-            path="/marketing/department/list-task-assigned-me"
-            element={<MarketingAssignedTaskTable />}
-          />
-          <Route
-            path="/marketing/department/assign-new-task"
-            element={<MarketingNewTaskForm />}
-          />
-          <Route
-            path="/marketing/department/taskslogs/:id"
-            element={<MarketingTaskLogs />}
-          />
-          <Route
-            path="/marketing/department/attendance"
-            element={<MarketingAttendance />}
-          />
+          <Route path="/marketing/department/dashboard" element={<MarketingDashboard />}/>
+          <Route path="/marketing/department/leaves" element={<MarketingLeaves />}/>
+          <Route path="/marketing/department/leaves/add"  element={<MarketingLeavesAdd />}/>
+          <Route path="/marketing/department/edit-leaves/:id" element={<MarketingLeavesAdd />}/>        
+          <Route path="/marketing/department/task-table" element={<MarketingMyTaskPage />}/>
+          <Route path="/marketing/department/list-task-assigned-me" element={<MarketingAssignedTaskTable />} />
+          <Route path="/marketing/department/assign-new-task"  element={<MarketingNewTaskForm />}/>
+          <Route path="/marketing/department/taskslogs/:id"  element={<MarketingTaskLogs />}/>
+          <Route path="/marketing/department/attendance" element={<MarketingAttendance />}/>    
           <Route path="/marketingEnquiries" element={<MarketingEnquiry />} />
           <Route path="/marketingFeedback" element={<MarketingFeedback />} />
-          <Route
-            path="/marketingAttendanceReport"
-            element={<MarketingAttendanceReport />}
-          />
+          <Route path="/marketingAttendanceReport" element={<MarketingAttendanceReport />}/>
           <Route path="/marketingSupport/add" element={<MarketingSupport />} />
-          <Route
-            path="/marketingSupport/"
-            element={<MarketingSupportRequest />}
-          />
-          <Route
-            path="/showCompleteLogsMarketing/:id"
-            element={<MarketingCompleteLogs />}
-          />
-          <Route
-            path="/marketing-associate/holidays"
-            element={<MarketingHolidayPage />}
-          />
-
+          <Route path="/marketingSupport/" element={<MarketingSupportRequest />}/>         
+          <Route path="/showCompleteLogsMarketing/:id" element={<MarketingCompleteLogs />}/>
+          <Route path="/marketing-associate/holidays" element={<MarketingHolidayPage />}/>
+          
+          
           {/* <Route path="/marketingScheduleClass/" element={<MarketingScheduleClass />} /> */}
           {/* <Route path="/marketingLogin" element={<MarketingLogin />} /> */}
           {/* <Route path="/centeradmin-login" element={<CenterLoginPage />} /> */}
 
           <Route path="/centeradmin/profile" element={<CenterProfile />} />
-          <Route
-            path="/centeradmin-enquiry-list"
-            element={<CenterListingEnquiries />}
-          />
-          <Route
-            path="/centeradmin-enquiry-form"
-            element={<CenterSEnquiryFormPage />}
-          />
+          <Route path="/centeradmin/department/enrollment-data"  element={<CenterListingEnquiries />} />
+          <Route path="/centeradmin/department/enquiry-form"  element={<CenterSEnquiryFormPage />}/>
           <Route path="/centeradmin-kids" element={<CenterAdminKidsPage />} />
 
-          <Route
-            path="/centeradmin/department/dashboard"
-            element={<CenterOperationDashboardPage />}
-          />
-          <Route
-            path="/centeradmin/department/leaves"
-            element={<CenterLeavesPage />}
-          />
-          <Route
-            path="/centeradmin/department/leaves/add"
-            element={<CenterLeaveFormPage />}
-          />
-          <Route
-            path="/centeradmin/department/coachAvailabilityTable"
-            element={<CenterAdminCoachAvailabilityTable />}
-          />
-          <Route
-            path="/centeradmin/department/coachAvailabilityform"
-            element={<CenterAdminCoachAvailabilityForm />}
-          />
-          <Route
-            path="/centeradmin/department/edit-leaves/:id"
-            element={<CenterLeaveFormPage />}
-          />
-          <Route
-            path="/centeradmin/department/task-table"
-            element={<CenterTasksPage />}
-          />
-          <Route
-            path="/centeradmin/department/list-task-assigned-me"
-            element={<CenterAssigneTasksPage />}
-          />
-          <Route
-            path="/centeradmin/department/assign-new-task"
-            element={<CenterTaskAssignByMePage />}
-          />
-          <Route
-            path="/centeradmin/department/taskslogs/:id"
-            element={<CenterAdminTaskLogs />}
-          />
-          <Route
-            path="/centeradmin/department/attendance"
-            element={<CenterAdminAttendance />}
-          />
-          <Route
-            path="/centeradmin/department/class-schedule-list"
-            element={<CenterScheduleClass />}
-          />
-          <Route
-            path="/centeradmin/department/create-time-table"
-            element={<CenterScheduleClassForm />}
-          />
 
-          <Route
-            path="/centeradmin/coachfeedback"
-            element={<CenterCoachFeedback />}
-          />
-          <Route
-            path="/showCompleteLogsCenterAdmin/:id"
-            element={<CenterAdminEnquiryLogs />}
-          />
-          <Route
-            path="/centeradmin-tasks/supports"
-            element={<CenterSupportRequest />}
-          />
-          <Route
-            path="/centeradmin/studentreport"
-            element={<CenterStudentReport />}
-          />
+          <Route path="/centeradmin/department/dashboard" element={<CenterOperationDashboardPage />}  />
+          <Route path="/centeradmin/department/leaves" element={<CenterLeavesPage />} />
+          <Route path="/centeradmin/department/leaves/add" element={<CenterLeaveFormPage />}/>
+          <Route path="/centeradmin/department/coachAvailabilityTable" element={<CenterAdminCoachAvailabilityTable />}/>
+          <Route path="/centeradmin/department/coachAvailabilityform" element={<CenterAdminCoachAvailabilityForm />}/>
+          <Route path="/centeradmin/department/edit-leaves/:id" element={<CenterLeaveFormPage />} />
+          <Route path="/centeradmin/department/task-table" element={<CenterTasksPage />}/>
+          <Route path="/centeradmin/department/list-task-assigned-me"  element={<CenterAssigneTasksPage />} />
+          <Route path="/centeradmin/department/assign-new-task"  element={<CenterTaskAssignByMePage />}  />
+          <Route path="/centeradmin/department/taskslogs/:id" element={<CenterAdminTaskLogs />} />
+          <Route path="/centeradmin/department/attendance" element={<CenterAdminAttendance />}  />
+          <Route path="/centeradmin/department/class-schedule-list" element={<CenterScheduleClass />} />        
+          <Route path="/centeradmin/department/create-time-table" element={<CenterScheduleClassForm />} />
+          <Route path="/centeradmin/department/add-attandance-to-kid/:classId" element={<CenterAdminAddAttandanceToKid />} />
+          <Route path="/centeradmin/department/show-complete-enquiry-logs/:id"  element={<CenterAdminAllEnquiryLogs />} />
+          <Route path="/centeradmin/department/show-complete-status-logs/:id"  element={<CenterAdminAllStatusLogs />}/>
+          <Route path="/centeradmin/department/schedule-demo-class-list-individually/:enqId/:isSheduled" element={<CenterAdminAssignDemo />}/>
+          <Route path="/centeradmin/department/payment-details/:encodedData" element={<CenterAminPaymentVerification />}/> 
+          <Route path="/centeradmin/department/active-kid-data" element={<CenterAdminActiveKidData />}/>
+          <Route path="/centeradmin/department/assign-whole-plan-class/:enqId" element={<CenterAdminAssignWholeClass />} />
+          <Route path="/centeradmin/department/display-whole-selectedClass/:enqId"  element={<CenterAdminDisplayAssignClass />}/>
+
+
+
+
+
+
+          <Route path="/centeradmin/coachfeedback" element={<CenterCoachFeedback />} />
+          <Route path="/showCompleteLogsCenterAdmin/:id" element={<CenterAdminEnquiryLogs />} />     
+          <Route path="/centeradmin-tasks/supports" element={<CenterSupportRequest />} />
+          <Route path="/centeradmin/studentreport"  element={<CenterStudentReport />}/>
           <Route path="/centeradmin/invoice" element={<CenterInvoicePage />} />
           <Route path="/centeradmin-tasks/add" element={<CenterMyTaskPage />} />
-          <Route
-            path="/centeradmin/prospects"
-            element={<CenterProspectPage />}
-          />
+          <Route path="/centeradmin/prospects" element={<CenterProspectPage />}/>
           <Route path="/centeradmin/referal" element={<CenterReferalPage />} />
-          <Route
-            path="/centeradmin-tasks/support/add"
-            element={<CenterSupportPage />}
-          />
-          <Route
-            path="/centeradmin-tasks/supportTrack"
-            element={<CenterMessageStusTrackPage />}
-          />
-          <Route
-            path="/centreAdminHoliday"
-            element={<CenterAdminHolidayPage />}
-          />
-
-          <Route
-            path="/hr/department/add-employee-form"
-            element={<AddEmployeeFormPage />}
-          />
-          <Route
-            path="/hr/department/employee-list"
-            element={<EmployeeList />}
-          />
+          <Route path="/centeradmin-tasks/support/add" element={<CenterSupportPage />} />
+          <Route path="/centeradmin-tasks/supportTrack"  element={<CenterMessageStusTrackPage />} />
+          <Route path="/centreAdminHoliday" element={<CenterAdminHolidayPage />} />
+                                  
+            
+          <Route path="/hr/department/add-employee-form" element={<AddEmployeeFormPage />}/>
+          <Route path="/hr/department/employee-list" element={<EmployeeList />}  />
           <Route path="/hr/department/attendance" element={<EmployeeList />} />
-
-
-
+            
+            
          {/* SUPER  ADMIN DEPARTMENT */}
           <Route path="/super-admin/department/list-all-programme" element={<SuperadminPrograms />} />
           <Route path="/super-admin/department/physical-centerlist" element={<PhysicalCenterListPage />}/>

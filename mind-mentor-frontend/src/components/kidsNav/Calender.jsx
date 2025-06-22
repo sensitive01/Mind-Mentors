@@ -516,7 +516,7 @@ const ClassScheduleCalendar = ({ classData }) => {
                       {getStatusIcon(session.status)}
                       <span>{session.status}</span>
                     </div>
-                    {session.kidJoinUrl && (
+                    {/* {session.kidJoinUrl && (
                       <button
                         onClick={() =>
                           handleJoinSession(
@@ -536,7 +536,7 @@ const ClassScheduleCalendar = ({ classData }) => {
                           {joinLoading ? "Joining Session..." : "Join Session"}
                         </span>
                       </button>
-                    )}
+                    )} */}
                   </div>
                 </div>
 

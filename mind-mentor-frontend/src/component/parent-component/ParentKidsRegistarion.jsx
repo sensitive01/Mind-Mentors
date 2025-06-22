@@ -14,21 +14,25 @@ const ParentKidsRegistration = () => {
   const location = useLocation();
   const { nextStep, previousStep } = useContext(StepperContext);
   const { state } = location;
+  console.log("State",state)
   const regFormData = useSelector((state) => state.formData);
   console.log("Toolkit datas in ParentKidsRegistration", regFormData);
 
   const [formData, setFormDatas] = useState({
+    isMobileWhatsapp:state?.isMobileWhatsapp,
+    email:state?.email,
+    mobile:state?.mobile,
+    name:state?.name,
     kidsName: state?.childName || "",
-    age:regFormData.age|| "",
-    gender:regFormData.gender|| "",
-    schoolName:regFormData.schoolName|| "",
-    address:regFormData.address|| "",
-    pincode:regFormData.pincode|| "",
-    enqId:state.enqId||""
+    age: regFormData.age || "",
+    gender: regFormData.gender || "",
+    pincode: regFormData.pincode || "",
+    city: regFormData.city || "",
+    state: regFormData.state || "",
+    enqId: state.enqId || "",
   });
   const [isCooldown, setIsCooldown] = useState(false);
-
-  const intention = ["Compitative", "Life Skill Improvement", "Summer Camp"];
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -38,20 +42,70 @@ const ParentKidsRegistration = () => {
     }));
   };
 
+  // Function to fetch city and state from pincode
+  const fetchLocationFromPincode = async (pincode) => {
+    if (pincode.length !== 6) return;
+
+    setIsLoadingLocation(true);
+    try {
+      const response = await fetch(
+        `https://api.postalpincode.in/pincode/${pincode}`
+      );
+      const data = await response.json();
+
+      if (data[0].Status === "Success" && data[0].PostOffice.length > 0) {
+        const postOffice = data[0].PostOffice[0];
+        setFormDatas((prev) => ({
+          ...prev,
+          city: postOffice.District,
+          state: postOffice.State,
+        }));
+        toast.success(
+          `Location found: ${postOffice.District}, ${postOffice.State}`
+        );
+      } else {
+        toast.error("Invalid pincode or location not found");
+        setFormDatas((prev) => ({
+          ...prev,
+          city: "",
+          state: "",
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching location:", error);
+      toast.error("Failed to fetch location. Please try again.");
+      setFormDatas((prev) => ({
+        ...prev,
+        city: "",
+        state: "",
+      }));
+    } finally {
+      setIsLoadingLocation(false);
+    }
+  };
+
+ 
+  const handlePincodeChange = (e) => {
+    const { value } = e.target;
+    setFormDatas((prev) => ({
+      ...prev,
+      pincode: value,
+      city: "", 
+      state: "",
+    }));
+
+
+    if (value.length === 6 && /^\d{6}$/.test(value)) {
+      fetchLocationFromPincode(value);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isCooldown) return;
 
-    const { kidsName, age, gender, schoolName, address, pincode } =
-      formData;
-    if (
-      !kidsName ||
-      !age ||
-      !gender ||
-      !schoolName ||
-      !address ||
-      !pincode
-    ) {
+    const { kidsName, age, gender, pincode, city, state } = formData;
+    if (!kidsName || !age || !gender || !pincode || !city || !state) {
       toast.error("Please fill out all fields before submitting.");
       setIsCooldown(true);
       setTimeout(() => setIsCooldown(false), 5000);
@@ -170,51 +224,56 @@ const ParentKidsRegistration = () => {
               </div>
             </div>
 
-        
-
             <div className="bg-white border border-primary p-4 rounded-lg shadow-sm mb-4">
               <h3 className="text-lg font-semibold text-primary mb-4">
-                School Information
+                Location Information
               </h3>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    School Name
+                    Pincode *
                   </label>
                   <input
                     type="text"
-                    name="schoolName"
-                    value={formData.schoolName}
-                    onChange={handleChange}
-                    placeholder="Enter school name"
-                    className="w-full p-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    name="pincode"
+                    value={formData.pincode}
+                    onChange={handlePincodeChange}
+                    placeholder="Enter 6-digit pincode"
+                    className="w-full p-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                    maxLength={6}
+                    pattern="[0-9]{6}"
                   />
+                  {isLoadingLocation && (
+                    <p className="text-sm text-blue-600 mt-1">
+                      Fetching location...
+                    </p>
+                  )}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Address
+                      City
                     </label>
                     <input
                       type="text"
-                      name="address"
-                      value={formData.address}
-                      onChange={handleChange}
-                      placeholder="Enter address"
-                      className="w-full p-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                      name="city"
+                      value={formData.city}
+                      readOnly
+                      placeholder="City will be auto-filled"
+                      className="w-full p-3 text-sm border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Pincode
+                      State
                     </label>
                     <input
                       type="text"
-                      name="pincode"
-                      value={formData.pincode}
-                      onChange={handleChange}
-                      placeholder="Enter your pincode"
-                      className="w-full p-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                      name="state"
+                      value={formData.state}
+                      readOnly
+                      placeholder="State will be auto-filled"
+                      className="w-full p-3 text-sm border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed"
                     />
                   </div>
                 </div>

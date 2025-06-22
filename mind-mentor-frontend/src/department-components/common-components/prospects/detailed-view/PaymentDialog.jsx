@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 
 const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
   const navigate = useNavigate();
+  const department = localStorage.getItem("department")
   const empId = localStorage.getItem("empId")
   const [packageType, setPackageType] = useState("");
   const [packages, setPackages] = useState({
@@ -379,7 +380,7 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
         setTimeout(() => {
           onClose();
           navigate(
-            `/super-admin/department/payment-details/${receivedPaymentId}`
+            `/${department}/department/payment-details/${receivedPaymentId}`
           );
         }, 1500);
       } else {

@@ -850,13 +850,13 @@ const NewEnquiryFormStep = () => {
 
 
               {/* Add Program Button */}
-              <button
+              {/* <button
                 type="button"
                 onClick={addProgram}
                 className="flex items-center text-[#642b8f] hover:text-[#aa88be] font-medium text-sm transition-colors"
               >
                 <span className="mr-1 text-lg">+</span> Add Program
-              </button>
+              </button> */}
 
               {/* Remarks */}
               <div className="pt-4">
@@ -895,7 +895,7 @@ const NewEnquiryFormStep = () => {
           <Button
             variant="contained"
             component={Link}
-            to="/operation/department/enrollment-data"
+            to={`/${department}/department/enrollment-data`}
             sx={{
               backgroundColor: "#ffff",
               color: "#f8a213", // Set text color for contrast

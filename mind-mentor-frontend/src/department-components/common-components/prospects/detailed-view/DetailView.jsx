@@ -123,7 +123,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
     console.log("update", response);
     if (response.status === 200) {
       navigate(
-        `/super-admin/department/payment-details/${response?.data?.paymentData?.paymentId}`
+        `/${department}/department/payment-details/${response?.data?.paymentData?.paymentId}`
       );
     }
   };

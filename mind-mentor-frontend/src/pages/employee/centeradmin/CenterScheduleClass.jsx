@@ -1,4 +1,4 @@
-import ScheduleList from "../../../department-components/common-components/classtimetable/TimetableList";
+import ScheduleList from "../../../department-components/common-components/classtimetable/CenterAdminClassShedules";
 import Sidebar from "../../../department-components/centeradmin-components/layout/Sidebar";
 import Topbar from "./../../../component/parent-component/parent-dashboard/layout/Topbar";
 

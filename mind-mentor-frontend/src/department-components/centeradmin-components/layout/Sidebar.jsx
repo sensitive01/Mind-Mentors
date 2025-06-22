@@ -160,7 +160,13 @@ const ModernSidebar = () => {
       icon: <DashboardIcon />,
       text: "Enquiries",
       color: iconColors.enquiries,
-      path: "/centeradmin-enquiry-list",
+      path: "/centeradmin/department/enrollment-data",
+    },
+        {
+      icon: <KidsIcon />,
+      text: "Active Kids",
+      color: iconColors.kids,
+      path: "/centeradmin/department/active-kid-data",
     },
     {
       icon: <KidsIcon />,

@@ -1,10 +1,8 @@
-import Enquires from "../../../department-components/common-components/enquiry-prospect/EnquiryProspectTab";
+import AssigningWholeClasstToKid from "../../../department-components/common-components/assign-class/AssigningWholeClasstToKid";
 import Sidebar from "../../../department-components/centeradmin-components/layout/Sidebar";
 import Topbar from "./../../../component/parent-component/parent-dashboard/layout/Topbar";
 
-
-
-const CenterListingEnquiries = () => {
+const CenterAdminAssignWholeClass = () => {
   return (
     <div className="flex h-screen w-screen overflow-hidden">
       <div className="z-30 flex-shrink-0">
@@ -17,7 +15,7 @@ const CenterListingEnquiries = () => {
         <div className="flex-1 overflow-hidden relative z-10">
           <div className="h-full w-full overflow-auto scrollbar-hide">
             <div className="min-w-full p-4">
-              <Enquires />
+              <AssigningWholeClasstToKid />
             </div>
           </div>
         </div>
@@ -26,5 +24,4 @@ const CenterListingEnquiries = () => {
   );
 };
 
-
-export default CenterListingEnquiries;
+export default CenterAdminAssignWholeClass;

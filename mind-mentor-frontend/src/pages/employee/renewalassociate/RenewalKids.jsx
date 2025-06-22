@@ -1,4 +1,4 @@
-import KidsTable from "../../../department-components/renewalassociate/components/KidsTable.jsx";
+import KidsTable from "../../../department-components/common-components/prospects/Prospects";
 import Sidebar from "../../../department-components/renewalassociate/Layout/Sidebar";
 import Topbar from '../../../component/parent-component/parent-dashboard/layout/Topbar';
 

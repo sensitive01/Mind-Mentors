@@ -11,6 +11,8 @@ const enquiryLogs = require("../../model/enquiryLogs");
 const classPaymentModel = require("../../model/classPaymentModel");
 const notificationSchema = require("../../model/notification/notificationSchema");
 const wholeClassModel = require("../../model/wholeClassAssignedModel");
+const { v4: uuidv4 } = require("uuid");
+const packagePaymentData = require("../../model/packagePaymentModel");
 
 const parentSubmitEnquiryForm = async (req, res) => {
   try {
@@ -34,7 +36,7 @@ const parentSubmitEnquiryForm = async (req, res) => {
     const newEnquiry = new operationDeptModel({
       parentFirstName,
       parentLastName: parentLastName || "",
-      kidFirstName,
+      kidFirstName:childName,
       kidLastName: kidLastName || "",
       contactNumber: parentMobile,
       whatsappNumber: parentMobile,
@@ -189,15 +191,14 @@ const parentStudentRegistration = async (req, res) => {
     const chessId = generateChessId();
     const kidPin = generateOTP();
 
-    let parentData = await parentModel.findOne({ parentMobile: state.mobile });
+    let parentData = await parentModel.findOne({
+      parentMobile: formData.mobile,
+    });
 
     const newKid = new kidModel({
       kidsName: formData.kidsName,
       age: formData.age,
       gender: formData.gender,
-      intention: formData.intention,
-      schoolName: formData.schoolName,
-      address: formData.address,
       pincode: formData.pincode,
       parentId: parentData ? parentData._id : null,
       chessId: chessId,
@@ -211,12 +212,12 @@ const parentStudentRegistration = async (req, res) => {
 
     if (parentData) {
       parentData = await parentModel.findOneAndUpdate(
-        { parentMobile: state.mobile },
+        { parentMobile: formData.mobile },
         {
           $push: { kids: { kidId: newKid._id } },
           $set: {
-            parentEmail: state.email,
-            parentName: state.name,
+            parentEmail: formData.email,
+            parentName: formData.name,
             type: "exist",
           },
         },
@@ -224,10 +225,10 @@ const parentStudentRegistration = async (req, res) => {
       );
     } else {
       parentData = new parentModel({
-        parentMobile: state.mobile,
-        parentEmail: state.email,
-        parentName: state.name,
-        isMobileWhatsapp: state.isMobileWhatsapp,
+        parentMobile: formData.mobile,
+        parentEmail: formData.email,
+        parentName: formData.name,
+        isMobileWhatsapp: formData.isMobileWhatsapp,
         kids: [newKid._id],
         type: "exist",
       });
@@ -258,171 +259,166 @@ const parentStudentRegistration = async (req, res) => {
 
 const createEnquiryParent = async (formData, state) => {
   try {
-    // Extract data
     const { parent, kid } = state;
-    const { programs, scheduleId, hasSchedule } = formData;
+    const { programs } = formData;
 
-    console.log("programs", programs);
+    const parentData = await parentModel.findOne(
+      { _id: parent._id },
+      { parentName: 1, parentMobile: 1, parentEmail: 1 }
+    );
 
-    // Format date and time
     const formattedDateTime = new Date().toLocaleString("en-US", {
       dateStyle: "medium",
       timeStyle: "short",
     });
 
-    const logUpdate = {
-      employeeId: "",
-      employeeName: "",
-      action: `Demo class booking for ${parent.parentName} on ${formattedDateTime}`,
-      updatedAt: new Date(),
-    };
-
+    // Always create a log
     const newLog = new enquiryLogs({
       logs: [
         {
-          action: `Request for demo class booking raised by parent ${parent.parentName} on ${formattedDateTime}`,
+          comment: `Demo class booking/update by ${parentData.parentName} on ${formattedDateTime}`,
           createdAt: new Date(),
           employeeId: "",
-          employeeName: "",
+          employeeName: "Parent",
         },
       ],
     });
     const savedLog = await newLog.save();
 
+    // Prepare data for OperationDept
     const operationDeptData = {
-      parentFirstName: parent.parentName.split(" ")[0],
-      parentLastName: parent.parentName.split(" ")[1] || "",
-      kidFirstName: kid.kidsName.split(" ")[0],
+      parentFirstName: parentData.parentName,
+      kidFirstName: kid.kidsName,
       kidLastName: kid.kidsName.split(" ")[1] || "",
-      whatsappNumber: parent.parentMobile.toString(),
-      email: parent.parentEmail,
-      message: "",
+      whatsappNumber: parentData.parentMobile,
+      email: parentData.parentEmail,
       source: "Demo Class Booking",
       kidId: kid._id,
       kidsAge: kid.age,
       kidsGender: kid.gender,
       programs: programs.map((program) => ({
-        program: program.program, // Adjust key based on the program object structure
-        level: program.programLevel, // Adjust key based on the program object structure
+        program: program.program,
+        level: program.programLevel,
       })),
       intentionOfParents: kid.intention,
       schoolName: kid.schoolName,
       address: kid.address,
-      schoolPincode: "", // Add if available
       enquiryStatus: "Pending",
-      enquiryType: "warm",
+      enquiryType: "cold",
       disposition: "None",
       enquiryField: "prospects",
-      payment: "Pending",
-      notes: "",
-      scheduleDemo: {
-        status: hasSchedule ? "Scheduled" : "Pending",
-        sheduledDay: hasSchedule ? scheduleId : null, // Assuming scheduleId is a day; adjust as needed
-      },
-      referral: {
-        referredTo: "",
-        referredEmail: "",
-      },
-      logs: savedLog._id, // Reference the saved log
+      paymentStatus: "Pending",
+      scheduleDemo: { status: "Scheduled" },
+      logs: savedLog._id,
     };
 
-    console.log("operationDeptData", operationDeptData.logs);
+    let savedOperationDept;
 
-    const newOperationDept = new operationDeptModel(operationDeptData);
-    const savedOperationDept = await newOperationDept.save();
+    if (kid.enqId) {
+      // ✅ If enqId exists, update existing OperationDept
+      savedOperationDept = await operationDeptModel.findByIdAndUpdate(
+        kid.enqId,
+        { $set: operationDeptData },
+        { new: true, upsert: false }
+      );
 
-    console.log("savedOperationDept", savedOperationDept);
+      if (savedOperationDept) {
+        // Also push the new log to logs array if needed
+        savedOperationDept.logs = savedLog._id;
+        await savedOperationDept.save();
+      } else {
+        throw new Error("Provided enqId not found for update");
+      }
+    } else {
+      // ✅ If no enqId, create new OperationDept
+      const newOperationDept = new operationDeptModel(operationDeptData);
+      savedOperationDept = await newOperationDept.save();
+    }
 
+    // Link log back to enquiry
     savedLog.enqId = savedOperationDept._id;
     await savedLog.save();
 
-    // console.log("savedLog 2",savedLog)
-
     console.log(
-      "OperationDept entry created successfully with log:",
+      "OperationDept entry created/updated successfully with log:",
       savedOperationDept
     );
+
     return savedOperationDept;
   } catch (error) {
-    console.error("Error creating OperationDept entry with log:", error);
+    console.error("Error creating/updating OperationDept entry with log:", error);
     throw error;
   }
 };
 
+
 const parentBookDemoClass = async (req, res) => {
   try {
-    console.log("Welcome to demo class booking", req.body);
-
     const { formData, state } = req.body;
     const { parent, kid } = state;
 
-    formData.programs.map((data) => {
-      console.log(data);
-    });
+    const classSchedule = await ClassSchedule.findById(formData.scheduleId);
 
-    console.log("formData", formData);
-    console.log("parent", parent);
-    console.log("kid", kid);
-
-    console.log("Parent ID:", parent._id, "Kid ID:", kid._id);
-
-    if (formData.hasSchedule) {
-      console.log("Using predefined slot");
-      const updateDemoClassDetails = await ClassSchedule.findOne({
-        _id: formData.scheduleId,
-      });
-
-      if (updateDemoClassDetails) {
-        console.log("Demo class details found", updateDemoClassDetails);
-
-        updateDemoClassDetails.selectedStudents.push({
-          kidId: kid._id,
-          kidName: kid.kidsName,
-        });
-
-        await updateDemoClassDetails.save();
-
-        const updateEnqData = await operationDeptModel.findOneAndUpdate(
-          { _id: kid.enqId },
-          { $set: { "scheduleDemo.status": "Scheduled" } }
-        );
-
-        console.log(
-          "Updated demo class details with selected student:",
-          updateDemoClassDetails
-        );
-      }
+    if (!classSchedule) {
+      return res.status(404).json({ message: "Class schedule not found." });
     }
 
-    const parentData = await parentModel.findByIdAndUpdate(
+    const studentExists = classSchedule.demoAssignedKid.some(
+      (student) => student.kidId.toString() === kid._id.toString()
+    );
+
+    if (!studentExists) {
+      classSchedule.demoAssignedKid.push({
+        kidId: kid._id,
+        kidName: kid.kidsName,
+        status: "Scheduled",
+      });
+    }
+
+    const demoKidExists = classSchedule.demoAssignedKid.some(
+      (student) => student.kidId.toString() === kid._id.toString()
+    );
+
+    if (!demoKidExists) {
+      classSchedule.demoAssignedKid.push({
+        kidId: kid._id,
+        kidName: kid.kidsName,
+        status: "Scheduled",
+      });
+    }
+
+    await classSchedule.save();
+
+    await operationDeptModel.findOneAndUpdate(
+      { _id: kid.enqId },
+      { $set: { "scheduleDemo.status": "Scheduled" } },
+      { new: true }
+    );
+
+    const parentUpdate = await parentModel.findByIdAndUpdate(
       parent._id,
       {
-        type: "exist",
-        $push: { kids: { kidId: kid._id } },
+        $addToSet: { kids: { kidId: kid._id } },
+        $set: { type: "exist" },
       },
       { new: true }
     );
 
-    if (!parentData) {
-      throw new Error(`Parent with ID ${parent._id} not found`);
-    }
-
-    const updatedKid = await kidModel.findByIdAndUpdate({ _id: kid._id }, kid, {
-      new: true,
-    });
-
-    // Invoke the logging function
+    const updatedKid = await kidModel.findByIdAndUpdate(
+      kid._id,
+      {},
+      { new: true }
+    );
 
     const logResult = await createEnquiryParent(formData, state);
-    console.log("Log entry created:", logResult);
 
-    res.status(201).json({
+    res.status(200).json({
       success: true,
-      message: "Demo class updated with selected student successfully.",
-      parentId: parent._id,
+      message: "Demo class booked and kid assigned successfully!",
+      parent: parentUpdate,
     });
   } catch (err) {
-    console.error("Error in parent Book Demo Class", err);
+    console.error("Error in parentBookDemoClass:", err);
     res.status(500).json({
       success: false,
       message: "Internal server error. Please try again later.",
@@ -759,8 +755,9 @@ const getKidDemoClassDetails = async (req, res) => {
     const demoClassDetails = await ClassSchedule.findOne({
       "demoAssignedKid.kidId": kidId,
       status: "Scheduled",
+
     });
-    console.log("demoClassDetails",demoClassDetails);
+    console.log("demoClassDetails", demoClassDetails);
 
     if (!demoClassDetails) {
       const conductedDemoClass = await ConductedClass.findOne({
@@ -1636,7 +1633,219 @@ const getKidTodayClass = async (req, res) => {
   }
 };
 
+const getTheKidEnqId = async (req, res) => {
+  try {
+    const { kidId } = req.params;
+    console.log("kidId", kidId);
+
+    const kidData = await operationDeptModel.findOne(
+      { kidId: kidId },
+      { kidFirstName: 1 }
+    );
+
+    console.log("Kid data", kidData);
+
+    if (!kidData) {
+      return res.status(404).json({
+        message: "No kid found with the provided ID",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Kid data fetched successfully",
+      data: kidData,
+    });
+  } catch (err) {
+    console.error("Error fetching kid data:", err);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
+const parentSelectThePackage = async (req, res) => {
+  try {
+    const { parentId } = req.params;
+    const { finalData, enqId } = req.body;
+
+    console.log("finalData", finalData, "enqId", enqId, "parentId", parentId);
+
+    if (!finalData) {
+      return res
+        .status(400)
+        .json({ message: "Package data (finalData) is required." });
+    }
+    const kidData = await kidModel.findOne(
+      { _id: finalData.kidId },
+      { kidsName: 1, programs: 1, whatsappNumber: 1, contactNumber: 1 }
+    );
+
+    const paymentId = `PAY-${uuidv4().slice(0, 8).toUpperCase()}`;
+
+    const newPackage = new packagePaymentData({
+      paymentId,
+      enqId: finalData.enqId || enqId,
+      kidName: kidData.kidsName,
+      kidId: finalData.kidId,
+      whatsappNumber: kidData.whatsappNumber || kidData.contactNumber,
+      programs: kidData.programs,
+      classMode: finalData.classMode,
+      discount: finalData.discount,
+      baseAmount: finalData.baseAmount,
+      totalAmount: finalData.totalAmount,
+      packageId: finalData.packageId,
+      selectedPackage: finalData.selectedPackage,
+      onlineClasses: finalData.onlineClasses,
+      offlineClasses: finalData.offlineClasses,
+      centerId: finalData.centerId || null,
+      centerName: finalData.centerName,
+      timeSlot: finalData.timeSlot,
+      classRate: finalData.classRate,
+      razorpayPaymentId: finalData.razorpayPaymentId,
+      paymentStatus: "Success",
+    });
+    const savedPackage = await newPackage.save();
+    await kidModel.findOneAndUpdate(
+      { _id: finalData.kidId },
+      { $set: { status: "Active" } }
+    );
+
+    await operationDeptModel.findOneAndUpdate(
+      { _id: finalData.enqId },
+      { $set: { enquiryStatus: "Active", paymentStatus: "Success", isNewUser: false  } }
+    );
+
+    let comment = `Parent selected package for kid: ${
+      finalData.kidName || "N/A"
+    }`;
+
+    const online = finalData.onlineClasses;
+    const offline = finalData.offlineClasses;
+
+    const details = [];
+    if (online) details.push(`Online Classes: ${online}`);
+    if (offline) details.push(`Offline Classes: ${offline}`);
+    if (details.length > 0) comment += ` (${details.join(", ")})`;
+
+    await enquiryLogs.updateOne(
+      { enqId: finalData.enqId || enqId },
+      {
+        $push: {
+          logs: {
+            parentId: parentId,
+            comment: comment,
+            action: "Parent Package Selection",
+          },
+        },
+      },
+      { upsert: true }
+    );
+
+    res.status(201).json({
+      message: "Parent's package selection saved successfully.",
+      paymentId,
+      data: savedPackage,
+    });
+  } catch (err) {
+    console.error("Error in selecting the package", err);
+    res.status(500).json({
+      message: "Failed to save parent's package selection.",
+      error: err.message,
+    });
+  }
+};
+
+const parentAddNewKidData = async (req, res) => {
+  try {
+    const { parentId } = req.params;
+    const { formData } = req.body;
+
+    // 1️⃣  Get parent
+    const parentData = await parentModel.findById(parentId);
+    if (!parentData) {
+      return res.status(404).json({ message: "Parent not found." });
+    }
+
+    // 2️⃣  Generate a new MM ID and PIN for kid
+    const kidCount = await kidModel.countDocuments({});
+    const newKidPin = 1000 + kidCount + 1;
+    const newMMID = `MM${Math.floor(1000000 + Math.random() * 9000000)}`; // MM + 7-digit random
+
+    // 3️⃣  Create new Kid
+    const newKid = new kidModel({
+      kidsName: formData.kidsName,
+      age: formData.age,
+      gender: formData.gender,
+      kidPin: newKidPin,
+      chessId: newMMID,
+      parentId: parentId,
+      status: "Pending",
+      role: "Kid",
+    });
+
+    const savedKid = await newKid.save();
+
+    // 4️⃣  Create OperationDept Enquiry for this kid
+    const newLog = new enquiryLogs({
+      logs: [
+        {
+          comment: `New Kid ${formData.kidsName} added by parent ${parentData.parentName}`,
+          createdAt: new Date(),
+          employeeId: "",
+          employeeName: "Parent",
+        },
+      ],
+    });
+    const savedLog = await newLog.save();
+
+    const newOperationDept = new operationDeptModel({
+      parentFirstName: parentData.parentName,
+      kidFirstName: formData.kidsName,
+      kidLastName: formData.kidsName?.split(" ")[1] || "",
+      whatsappNumber: parentData.parentMobile,
+      email: parentData.parentEmail,
+      source: "Parent Added New Kid",
+      kidId: savedKid._id,
+      kidsAge: formData.age,
+      kidsGender: formData.gender,
+      enquiryStatus: "Pending",
+      enquiryType: "cold",
+      disposition: "None",
+      enquiryField: "prospects",
+      payment: "Pending",
+      logs: savedLog._id,
+      scheduleDemo: {
+        status: "Pending",
+      },
+    });
+    const savedOperationDept = await newOperationDept.save();
+
+    // Link log back to enquiry
+    savedLog.enqId = savedOperationDept._id;
+    await savedLog.save();
+
+    // 5️⃣  Attach kid to parent
+    parentData.kids.push({ kidId: savedKid._id });
+    await parentData.save();
+
+    // 6️⃣  Respond success
+    res.status(201).json({
+      success: true,
+      message: "New kid added and enquiry created successfully!",
+    });
+  } catch (err) {
+    console.error("Error in adding the new kid:", err);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error. Please try again later.",
+    });
+  }
+};
+
 module.exports = {
+  parentAddNewKidData,
+  parentSelectThePackage,
+  getTheKidEnqId,
   getKidTodayClass,
   parentSubmitEnquiryForm,
   getMyKidData,

@@ -6,12 +6,16 @@ const serviceController = require('../../controller/servicedelivery/seviceContro
 
 serviceRoute.get("/get-active-enquiry-data",serviceController.getAllActiveEnquiries)
 serviceRoute.get("/get-class-shedule",serviceController.getClassShedules)
+serviceRoute.get("/get-center-class-shedule",serviceController.getCenterClassShedules)
+
 serviceRoute.get("/get-coach-data",serviceController.getCoachData)
 serviceRoute.get("/get-coach-availabledata-table",serviceController.getCoachAvailableDays)
 serviceRoute.get("/get-class-student-data/:classId", serviceController.getClassAndStudentsData);
 serviceRoute.get("/get-active-kid-class-data/:enqId", serviceController.getActiveKidAndClassData);
 serviceRoute.get("/display-selected-class/:enqId", serviceController.displaySelectedClass);
 serviceRoute.get("/get-all-scheduled-class-data/:enqId", serviceController.getScheduledClassData);
+serviceRoute.get("/get-class-student-data/:classId", serviceController.getClassStudentData);
+
 
 
 

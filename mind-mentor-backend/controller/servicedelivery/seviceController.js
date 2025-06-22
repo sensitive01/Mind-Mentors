@@ -185,6 +185,34 @@ const getClassShedules = async (req, res) => {
   }
 };
 
+
+const getCenterClassShedules = async (req, res) => {
+  try {
+    console.log("Welcome to class schedules");
+    const { empId } = req.query;
+    const empData = await Employee.findOne({_id:empId},{centerId:1})
+
+    let query = {centerId:empData.centerId};
+
+
+    const classData = await ClassSchedule.find(query); // `query` may be empty, which fetches all
+
+    res.status(200).json({
+      success: true,
+      message: "Class schedules retrieved successfully",
+      classData,
+    });
+  } catch (err) {
+    console.error("Error in getting the class schedules", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve class schedules",
+      error: err.message,
+    });
+  }
+};
+
+
 const getCoachData = async (req, res) => {
   try {
     console.log("Welcome to fetch coach data");
@@ -981,7 +1009,54 @@ const resumeTheClassBack = async (req, res) => {
   }
 };
 
+
+const getClassStudentData = async (req, res) => {
+  try {
+    const { classId } = req.params;
+    const classData = await ClassSchedule.findOne(
+      { _id: classId },
+      { selectedStudents: 1, demoAssignedKid: 1 }
+    );
+
+    if (!classData) {
+      return res.status(404).json({
+        success: false,
+        message: "Class schedule not found.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Class student data fetched successfully.",
+      data: {
+        selectedStudents: classData.selectedStudents,
+        demoAssignedKid: classData.demoAssignedKid,
+      },
+    });
+  } catch (err) {
+    console.log("Error in getting the class student data", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
 module.exports = {
+  getClassStudentData,
+  getCenterClassShedules,
   resumeTheClassBack,
   pauseTheClassTemporary,
   displaySelectedClass,

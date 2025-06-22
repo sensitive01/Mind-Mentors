@@ -134,17 +134,17 @@ const ModernSidebar = () => {
       color: iconColors.dashboard,
       link: "/renewal/department/dashboard",
     },
-    {
-      icon: <ReportsIcon />,
-      text: "CRM",
-      color: iconColors.attendance,
-      subItems: [
-        { icon: <ReportsIcon />, text: "Referrals", link: "/renewalReferrals" },
-        { icon: <ReportsIcon />, text: "Others", link: "#" },
-      ],
-      open: openCRM,
-      onClick: handleCRMClick,
-    },
+    // {
+    //   icon: <ReportsIcon />,
+    //   text: "CRM",
+    //   color: iconColors.attendance,
+    //   subItems: [
+    //     { icon: <ReportsIcon />, text: "Referrals", link: "/renewalReferrals" },
+    //     { icon: <ReportsIcon />, text: "Others", link: "#" },
+    //   ],
+    //   open: openCRM,
+    //   onClick: handleCRMClick,
+    // },
     {
       icon: <KidsIcon />,
       text: "Kids",
@@ -187,25 +187,31 @@ const ModernSidebar = () => {
       color: iconColors.attendance,
       link: "/renewal-associate/holidays",
     },
-    {
-      icon: <ReportsIcon />,
-      text: "Reports",
-      color: iconColors.reports,
-      subItems: [
         {
-          icon: <ReportsIcon />,
-          text: "Students Feedback",
-          link: "/renewalFeedback",
-        },
-        {
-          icon: <ReportsIcon />,
-          text: "Student Attendance Report",
-          link: "/renewalAttendanceReport",
-        },
-      ],
-      open: openReports,
-      onClick: handleReportsClick,
+      icon: <TaskIcon />,
+      text: "Tasks",
+      color: iconColors.tasks,
+      link: "/renewal/department/task-table",
     },
+    // {
+    //   icon: <ReportsIcon />,
+    //   text: "Reports",
+    //   color: iconColors.reports,
+    //   subItems: [
+    //     {
+    //       icon: <ReportsIcon />,
+    //       text: "Students Feedback",
+    //       link: "/renewalFeedback",
+    //     },
+    //     {
+    //       icon: <ReportsIcon />,
+    //       text: "Student Attendance Report",
+    //       link: "/renewalAttendanceReport",
+    //     },
+    //   ],
+    //   open: openReports,
+    //   onClick: handleReportsClick,
+    // },
 
     // {
     //   icon: <TaskIcon />,
@@ -218,30 +224,20 @@ const ModernSidebar = () => {
     //   open: openTasks,
     //   onClick: handleTasksClick,
     // },
-    {
-      icon: <TaskIcon />,
-      text: "Tasks",
-      color: iconColors.tasks,
-      link: "/renewal/department/task-table",
-    },
-    {
-      icon: <ClassScheduleIcon />,
-      text: "Class Schedules",
-      color: iconColors.classSchedules,
-      link: "/renewal/department/schedule-class-list",
-    },
+
+    // {
+    //   icon: <ClassScheduleIcon />,
+    //   text: "Class Schedules",
+    //   color: iconColors.classSchedules,
+    //   link: "/renewal/department/schedule-class-list",
+    // },
     {
       icon: <SupportIcon />,
       text: "Support",
       color: iconColors.support,
       link: "/renewalSupport",
     },
-    {
-      icon: <LogoutIcon />,
-      text: "Logout",
-      color: iconColors.logout,
-      link: "/",
-    },
+
   ];
 
   return (

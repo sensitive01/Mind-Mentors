@@ -1,4 +1,4 @@
-import NewEnquiryForm from "../../../department-components/centeradmin-components/dashboard/NewEnquiryForm";
+import NewEnquiryForm from "../../../department-components/common-components/enquiries/NewEnquiryFormStep";
 import Sidebar from "../../../department-components/centeradmin-components/layout/Sidebar";
 import Topbar from "./../../../component/parent-component/parent-dashboard/layout/Topbar";
 

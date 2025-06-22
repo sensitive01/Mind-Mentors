@@ -77,7 +77,7 @@ const MenuGrid = () => {
       ];
     }
     // If demo is scheduled but enquiry is still pending, show demo view, manage kids and package
-    else if (demoStatus === "Scheduled") {
+    else if (demoStatus === "Scheduled"&& paymentStatus!=="Success") {
       return [
         {
           id: id,
@@ -104,7 +104,7 @@ const MenuGrid = () => {
           subtitle: "(Detailed View)",
           bgColor: "bg-blue-600",
           gradient: "from-blue-600 to-blue-700",
-          route: `/paranet-package-selection/${id}`,
+          route: `/parent-package-selection/${id}`,
         },
       ];
     }
@@ -145,7 +145,7 @@ const MenuGrid = () => {
           subtitle: "(Detailed View)",
           bgColor: "bg-blue-600",
           gradient: "from-blue-600 to-blue-700",
-          route: `/paranet-package-selection/${id}`,
+          route: `/parent-package-selection/${id}`,
         },
         {
           id: id,

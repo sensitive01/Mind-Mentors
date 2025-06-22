@@ -19,6 +19,14 @@ export const getClassShedules = async (department) => {
   return response.data.classData;
 };
 
+export const centerClassTimeTable = async (empId) => {
+  const response = await serviceInstance.get(
+    `/service/get-center-class-shedule?empId=${empId}`,
+    
+  );
+  return response.data.classData;
+};
+
 export const fetchCoachData = async () => {
   const response = await serviceInstance.get(
     `/service/get-coach-data`,
@@ -110,5 +118,10 @@ export const pauseTheClass = async (enqId,updatedData,pauseRemarks,classId) => {
 
 export const resumeTheClass = async (enqId,updatedData,classId) => {
   const response = await serviceInstance.post(`/service/resume-the-class/${enqId}/${classId}`,{updatedData});
+  return response;
+};
+
+export const getClassKidData = async (classId) => {
+  const response = await serviceInstance.get(`/service/get-class-student-data/${classId}`);
   return response;
 };

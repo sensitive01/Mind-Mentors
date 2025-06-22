@@ -1,255 +1,785 @@
-import React, { useState, useEffect } from "react";
-import {
-  Monitor,
-  Building,
-  ChevronDown,
-  CheckCircle,
-  Send,
-  Layers,
-} from "lucide-react";
+import { useState, useEffect } from "react";
+import { CheckCircle, X } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   fetchPackageDetails,
   getDiscountAmount,
-  sendPaymentDetailsLink,
 } from "../../../../api/service/employee/EmployeeService";
-import { useParams } from "react-router-dom";
-import { getParentKidData } from "../../../../api/service/parent/ParentService";
+import { getTheEnqId, parentSelectPackageData } from "../../../../api/service/parent/ParentService";
+const RAZORPAY_KEY = import.meta.env.VITE_RAZORPAY_KEY_ID;
+import logo from "../../../../assets/mindmentorz.png";
 
-const PackageDetails = ({ selectedPackage, discount = 0 }) => {
-  if (!selectedPackage) return null;
 
-  return (
-    <div className="mt-6 bg-white rounded-xl shadow-sm border border-purple-100 overflow-hidden transition-all duration-300">
-      <div className="p-6">
-        <div className="flex justify-between items-start mb-6">
-          <div>
-            <h3 className="text-xl font-bold text-gray-900">
-              {selectedPackage.packageName}
-            </h3>
-            <div className="flex items-center gap-2 mt-2">
-              {selectedPackage.type === "online" ? (
-                <Monitor className="w-4 h-4 text-blue-500" />
-              ) : selectedPackage.type === "offline" ? (
-                <Building className="w-4 h-4 text-green-500" />
-              ) : (
-                <Layers className="w-4 h-4 text-purple-500" />
-              )}
-              <span className="text-sm capitalize text-gray-600">
-                {selectedPackage.type} Package
-              </span>
-            </div>
-          </div>
-          <div className="text-right">
-            <p className="text-3xl font-bold text-purple-600">
-              ₹{selectedPackage.pricing.amount}
-            </p>
-            <p className="text-sm text-gray-500">+GST</p>
-          </div>
-        </div>
 
-        <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
-          <h5 className="font-semibold text-gray-900">Package Details</h5>
-          <div className="space-y-3">
-            {selectedPackage.onlineClasses > 0 && (
-              <div className="flex items-center gap-2 text-gray-700">
-                <Monitor className="w-4 h-4 text-blue-500" />
-                <span>{selectedPackage.onlineClasses} Online Classes</span>
-              </div>
-            )}
-            {selectedPackage.physicalClasses > 0 && (
-              <div className="flex items-center gap-2 text-gray-700">
-                <Building className="w-4 h-4 text-green-500" />
-                <span>{selectedPackage.physicalClasses} Physical Classes</span>
-              </div>
-            )}
-            {selectedPackage.centerName && (
-              <div className="text-sm text-gray-600">
-                Center: {selectedPackage.centerName}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="mt-6 space-y-3">
-          <div className="flex justify-between text-gray-600">
-            <span>Base Amount</span>
-            <span>₹{selectedPackage.pricing.amount}</span>
-          </div>
-          {discount > 0 && (
-            <div className="flex justify-between text-green-600">
-              <span>Discount</span>
-              <span>-₹{discount}</span>
-            </div>
-          )}
-          <div className="flex justify-between text-gray-600">
-            <span>GST (18%)</span>
-            <span>₹{selectedPackage.pricing.tax}</span>
-          </div>
-          <div className="flex justify-between text-lg font-bold border-t border-gray-200 pt-3">
-            <span>Total Amount</span>
-            <span className="text-purple-600">
-              ₹{selectedPackage.pricing.total - discount}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
-        <button className="w-full bg-purple-600 text-white py-3 px-6 rounded-lg hover:bg-purple-700 font-medium transition-colors flex items-center justify-center gap-2">
-          Proceed to Payment
-          <Send className="w-4 h-4" />
-        </button>
-      </div>
-    </div>
-  );
-};
-
-const ParentPackageSelection = ({ data, enqId }) => {
+const ParentPackageSelection = () => {
   const { kidId } = useParams();
-  const [selectedPackage, setSelectedPackage] = useState(null);
+  const navigate = useNavigate();
+  const parentId = localStorage.getItem("parentId");
+  const [packageType, setPackageType] = useState("");
   const [packages, setPackages] = useState({
     online: [],
     offline: [],
     hybrid: [],
+    kit: [],
   });
+
+  const [selectedCenter, setSelectedCenter] = useState("");
+  const [centersList, setCentersList] = useState([]);
+  const [enqId, setEnqId] = useState(null);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState("");
+  const [availableCenters, setAvailableCenters] = useState([]);
+  const [classRate, setClassRate] = useState(0);
+  const [numberOfClasses, setNumberOfClasses] = useState(0);
+  const [onlineClasses, setOnlineClasses] = useState(0);
+  const [offlineClasses, setOfflineClasses] = useState(0);
+  const [onlineRate, setOnlineRate] = useState(100);
+  const [offlineRate, setOfflineRate] = useState(125);
+  const [kitItems, setKitItems] = useState([{ name: "", quantity: 0 }]);
+  const [kitItemsList, setKitItemsList] = useState([]);
   const [discount, setDiscount] = useState(0);
-  const [packageType, setPackageType] = useState("online");
+  const [baseAmount, setBaseAmount] = useState(0);
+  const [totalAmount, setTotalAmount] = useState(0);
+  const [paymentId, setPaymentId] = useState("");
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [data, setData] = useState({
+    kidId: kidId,
+    kidName: "",
+    whatsappNumber: "",
+    programs: [],
+  });
 
   useEffect(() => {
-    const fetchPackage = async () => {
-      const response = await fetchPackageDetails();
-      if (response.status === 200) {
-        const groupedPackages = {
-          online: response.data.data.filter((pkg) => pkg.type === "online"),
-          offline: response.data.data.filter((pkg) => pkg.type === "offline"),
-          hybrid: response.data.data.filter((pkg) => pkg.type === "hybrid"),
-        };
-        setPackages(groupedPackages);
-      }
-    };
-    fetchPackage();
-  }, []);
+    const fetchData = async () => {
+      try {
+        const packageResponse = await fetchPackageDetails();
+        if (packageResponse.status === 200) {
+          const packageData = packageResponse?.data?.data;
+          setPackages({
+            online: packageData.onlinePackageData || [],
+            offline: packageData.offlineClassPackageData || [],
+            hybrid: packageData.hybridClassPackageData || [],
+            kit: packageData.kitPrice || [],
+          });
 
-  useEffect(() => {
-    const fetchDiscount = async () => {
-      const response = await getDiscountAmount(enqId);
-      if (response.status === 200) {
-        setDiscount(response.data.vouchers);
+          if (packageData.kitPrice && packageData.kitPrice.length > 0) {
+            setKitItemsList(packageData.kitPrice);
+          }
+        }
+
+        const getEnqId = await getTheEnqId(kidId);
+        setEnqId(getEnqId?.data?.data?._id);
+
+        if (getEnqId?.data?.data) {
+          setData({
+            kidId: kidId,
+            kidName: getEnqId.data.data.kidName || "",
+            whatsappNumber: getEnqId.data.data.whatsappNumber || "",
+            programs: getEnqId.data.data.programs || [],
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        toast.error("Failed to load package data");
       }
     };
-    fetchDiscount();
-  }, [enqId]);
+
+    fetchData();
+  }, [kidId]);
 
   const handlePackageTypeChange = (type) => {
     setPackageType(type);
-    setSelectedPackage(null);
+    resetSelections();
+
+    if (type === "hybrid") {
+      let hybridCenters = [];
+
+      if (packages.offline.length > 0) {
+        const offlineCenters = packages.offline[0].centers.map((center) => ({
+          centerId: center.centerId,
+          centerName: center.centerName,
+        }));
+        hybridCenters = [...hybridCenters, ...offlineCenters];
+      }
+
+      const uniqueCenters = [
+        ...new Map(hybridCenters.map((item) => [item.centerId, item])).values(),
+      ];
+
+      setCentersList(uniqueCenters);
+    } else {
+      setCentersList([]);
+    }
   };
 
-  return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-8 mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          Choose Your Package
-        </h1>
-        <p className="text-gray-600">
-          Select the perfect learning package for {data?.kidName}'s chess
-          journey
-        </p>
-      </div>
+  const resetSelections = () => {
+    setSelectedCenter("");
+    setSelectedTimeSlot("");
+    setAvailableCenters([]);
+    setClassRate(0);
+    setNumberOfClasses(0);
+    setOnlineClasses(0);
+    setOfflineClasses(0);
+    setKitItems([{ name: "", quantity: 0 }]);
+    setBaseAmount(0);
+    setTotalAmount(0);
+    setPaymentId("");
+    setOnlineRate(100);
+    setOfflineRate(125);
+  };
 
-      <div className="mb-8">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">
-          Package Type
-        </h2>
-        <div className="flex flex-wrap gap-4">
-          <label
-            className={`flex items-center gap-2 p-4 rounded-lg border cursor-pointer transition-all ${
-              packageType === "online"
-                ? "border-purple-500 bg-purple-50"
-                : "border-gray-200 hover:border-purple-300"
-            }`}
-          >
-            <input
-              type="radio"
-              name="packageType"
-              className="w-4 h-4 text-purple-600"
-              checked={packageType === "online"}
-              onChange={() => handlePackageTypeChange("online")}
-            />
-            <Monitor className="w-5 h-5 text-blue-500" />
-            <span className="font-medium">Online</span>
-          </label>
+  const handleTimeSlotChange = (timeSlot) => {
+    setSelectedTimeSlot(timeSlot);
+    setSelectedCenter("");
+    setClassRate(0);
+    setNumberOfClasses(0);
 
-          <label
-            className={`flex items-center gap-2 p-4 rounded-lg border cursor-pointer transition-all ${
-              packageType === "offline"
-                ? "border-purple-500 bg-purple-50"
-                : "border-gray-200 hover:border-purple-300"
-            }`}
-          >
-            <input
-              type="radio"
-              name="packageType"
-              className="w-4 h-4 text-purple-600"
-              checked={packageType === "offline"}
-              onChange={() => handlePackageTypeChange("offline")}
-            />
-            <Building className="w-5 h-5 text-green-500" />
-            <span className="font-medium">Offline</span>
-          </label>
+    let centers = [];
 
-          <label
-            className={`flex items-center gap-2 p-4 rounded-lg border cursor-pointer transition-all ${
-              packageType === "hybrid"
-                ? "border-purple-500 bg-purple-50"
-                : "border-gray-200 hover:border-purple-300"
-            }`}
-          >
-            <input
-              type="radio"
-              name="packageType"
-              className="w-4 h-4 text-purple-600"
-              checked={packageType === "hybrid"}
-              onChange={() => handlePackageTypeChange("hybrid")}
-            />
-            <Layers className="w-5 h-5 text-purple-500" />
-            <span className="font-medium">Hybrid</span>
-          </label>
-        </div>
-      </div>
+    if (packageType === "online") {
+      const filteredPackages = packages.online.filter((pkg) => {
+        const packageTimeSlot = pkg.packageName.toLowerCase().includes("night")
+          ? "night"
+          : "day";
+        return packageTimeSlot === timeSlot;
+      });
 
-      <div className="mb-8">
-        <div className="relative">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Available{" "}
-            {packageType.charAt(0).toUpperCase() + packageType.slice(1)}{" "}
-            Packages
-          </label>
-          <select
-            className="w-full p-3 bg-white border border-gray-200 rounded-lg shadow-sm appearance-none cursor-pointer hover:border-purple-300 transition-colors"
-            onChange={(e) => {
-              const selected = packages[packageType].find(
-                (p) => p._id === e.target.value
+      if (filteredPackages.length > 0) {
+        centers = filteredPackages.flatMap(
+          (pkg) =>
+            pkg.centers?.map((center) => ({
+              centerId: center.centerId,
+              centerName: center.centerName,
+              oneClassPrice: pkg.oneClassPrice || center.oneClassPrice || 100,
+            })) || []
+        );
+      }
+    } else if (packageType === "offline") {
+      if (packages.offline.length > 0) {
+        const filteredCenters = packages.offline[0].centers.filter((center) => {
+          const centerTimeSlot = center.packageName
+            ?.toLowerCase()
+            .includes("night")
+            ? "night"
+            : "day";
+          return centerTimeSlot === timeSlot;
+        });
+
+        centers = filteredCenters.map((center) => ({
+          centerId: center.centerId,
+          centerName: center.centerName,
+          oneClassPrice: center.oneClassPrice || 125,
+        }));
+      }
+    }
+
+    const uniqueCenters = [
+      ...new Map(centers.map((item) => [item.centerId, item])).values(),
+    ];
+
+    setAvailableCenters(uniqueCenters);
+  };
+
+  const handleCenterSelectionForTimeSlot = (centerId) => {
+    setSelectedCenter(centerId);
+
+    const selectedCenterData = availableCenters.find(
+      (center) => center.centerId === centerId
+    );
+    if (selectedCenterData) {
+      setClassRate(selectedCenterData.oneClassPrice);
+    }
+  };
+
+  const calculateAmounts = () => {
+    let base = 0;
+
+    if (packageType === "online" || packageType === "offline") {
+      if (selectedTimeSlot && selectedCenter && numberOfClasses > 0) {
+        base = numberOfClasses * classRate;
+      }
+    } else if (packageType === "hybrid") {
+      base = onlineClasses * onlineRate + offlineClasses * offlineRate;
+    } else if (packageType === "kit") {
+      base = kitItems.reduce((total, item) => {
+        const kitItem = kitItemsList.find((k) => k._id === item.name);
+        return total + (kitItem ? kitItem.amount * item.quantity : 0);
+      }, 0);
+    }
+
+    const discountedTotal = Math.max(base - discount, 0);
+
+    setBaseAmount(base);
+    setTotalAmount(discountedTotal);
+
+    return { baseAmount: base, totalAmount: discountedTotal };
+  };
+
+  const handleCenterChange = (e) => {
+    const centerId = e.target.value;
+    setSelectedCenter(centerId);
+
+    if (packageType === "hybrid" && centerId) {
+      let onlinePrice = 100;
+      if (packages.online.length > 0) {
+        const onlineCenter = packages.online[0].centers?.find(
+          (c) => c.centerId === centerId
+        );
+        if (onlineCenter) {
+          const onlinePackagesForCenter = packages.online.filter((pkg) =>
+            pkg.centers?.some((center) => center.centerId === centerId)
+          );
+          if (onlinePackagesForCenter.length > 0) {
+            onlinePrice = onlinePackagesForCenter[0].oneClassPrice;
+          }
+        }
+      }
+
+      let offlinePrice = 125;
+      if (packages.offline.length > 0) {
+        const offlineCenter = packages.offline[0].centers.find(
+          (c) => c.centerId === centerId
+        );
+        if (offlineCenter) {
+          offlinePrice = offlineCenter.oneClassPrice;
+        }
+      }
+
+      setOnlineRate(onlinePrice);
+      setOfflineRate(offlinePrice);
+    }
+  };
+
+  const updateKitItem = (index, field, value) => {
+    const newKitItems = [...kitItems];
+    newKitItems[index][field] = value;
+    setKitItems(newKitItems);
+  };
+
+  const addKitItem = () => {
+    setKitItems([...kitItems, { name: "", quantity: 0 }]);
+  };
+
+  const removeKitItem = (index) => {
+    if (kitItems.length > 1) {
+      const newKitItems = kitItems.filter((_, i) => i !== index);
+      setKitItems(newKitItems);
+    }
+  };
+
+  const preparePackageData = () => {
+    const amounts = calculateAmounts();
+
+    let packageData = {
+      enqId,
+      kidName: data?.kidName,
+      kidId: data?.kidId,
+      whatsappNumber: data?.whatsappNumber,
+      programs: data?.programs,
+      classMode: packageType,
+      discount: discount,
+      ...amounts,
+    };
+
+    if (packageType === "online" || packageType === "offline") {
+      packageData = {
+        ...packageData,
+        packageId: `${packageType.toUpperCase()}-${selectedTimeSlot.toUpperCase()}-CUSTOM`,
+        selectedPackage: `Custom ${packageType} Package (${selectedTimeSlot})`,
+        onlineClasses: packageType === "online" ? numberOfClasses : 0,
+        offlineClasses: packageType === "offline" ? numberOfClasses : 0,
+        centerId: selectedCenter,
+        centerName:
+          availableCenters.find((c) => c.centerId === selectedCenter)
+            ?.centerName || "",
+        timeSlot: selectedTimeSlot,
+        classRate: classRate,
+      };
+    } else if (packageType === "hybrid") {
+      packageData = {
+        ...packageData,
+        packageId: "HYBRID-CUSTOM",
+        selectedPackage: "Custom Hybrid Package",
+        onlineClasses: Number(onlineClasses),
+        offlineClasses: Number(offlineClasses),
+        centerId: selectedCenter,
+        centerName:
+          centersList.find((c) => c.centerId === selectedCenter)?.centerName ||
+          "",
+        onlineRate: onlineRate,
+        offlineRate: offlineRate,
+      };
+    } else if (packageType === "kit") {
+      packageData = {
+        ...packageData,
+        packageId: "KIT-ITEMS",
+        selectedPackage: "Kit Items",
+        kitItems: kitItems.map((item) => ({
+          name:
+            kitItemsList.find((k) => k._id === item.name)?.packageName || "",
+          quantity: item.quantity,
+        })),
+      };
+    }
+
+    return packageData;
+  };
+
+  const handleRazorpayPayment = async () => {
+    if (!packageType) {
+      toast.error("Please select a package type");
+      return;
+    }
+
+    if (packageType === "online" || packageType === "offline") {
+      if (!selectedTimeSlot) {
+        toast.error("Please select day or night option");
+        return;
+      }
+      if (!selectedCenter) {
+        toast.error("Please select a center");
+        return;
+      }
+      if (numberOfClasses === 0) {
+        toast.error("Please enter number of classes");
+        return;
+      }
+    }
+
+    if (packageType === "hybrid") {
+      if (!selectedCenter) {
+        toast.error("Please select a center for hybrid package");
+        return;
+      }
+      if (onlineClasses + offlineClasses === 0) {
+        toast.error("Please enter number of classes");
+        return;
+      }
+    }
+
+    if (
+      packageType === "kit" &&
+      (!kitItems[0].name || kitItems[0].quantity === 0)
+    ) {
+      toast.error("Please select at least one kit item");
+      return;
+    }
+
+    setIsProcessingPayment(true);
+
+    try {
+      const packageData = preparePackageData();
+
+      const options = {
+        key: RAZORPAY_KEY,
+        amount: totalAmount * 100,
+        currency: "INR",
+        name: "MindMentorz",
+        description: `${packageType} Package for ${data.kidName}`,
+        image: logo,
+        handler: async (response) => {
+          try {
+            const finalData = {
+              ...packageData,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpayOrderId: response.razorpay_order_id,
+              razorpaySignature: response.razorpay_signature,
+            };
+
+            const submitResponse = await parentSelectPackageData(
+              finalData,
+              enqId,
+              parentId
+            );
+
+            if (submitResponse.status === 201) {
+              const receivedPaymentId = submitResponse?.data?.paymentId;
+              setPaymentId(receivedPaymentId);
+              toast.success(
+                "Package selection and payment completed successfully!"
               );
-              setSelectedPackage(selected);
-            }}
-            value={selectedPackage?._id || ""}
-          >
-            <option value="">Select a package</option>
-            {packages[packageType].map((pkg) => (
-              <option key={pkg._id} value={pkg._id}>
-                {pkg.packageName} - ₹{pkg.pricing.amount}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="w-4 h-4 text-gray-500 absolute right-3 top-[38px]" />
+
+              setTimeout(() => {
+                navigate(
+                  `/parent/kid/attendance/${data?.kidId}`
+                );
+              }, 2000);
+            } else {
+              toast.error("Package submission failed after payment");
+            }
+          } catch (error) {
+            console.error("Error submitting package after payment:", error);
+            toast.error("Error submitting package details after payment");
+          }
+        },
+        prefill: {
+          name: "Parent Name",
+          email: "parent@example.com",
+          contact: data.whatsappNumber || "",
+        },
+        theme: {
+          color: "#6c63ff",
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+
+      rzp.on("payment.failed", (response) => {
+        toast.error(`Payment failed: ${response.error.description}`);
+      });
+    } catch (error) {
+      console.error("Payment initialization error:", error);
+      toast.error("Failed to initialize payment");
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
+  useEffect(() => {
+    calculateAmounts();
+  }, [
+    packageType,
+    numberOfClasses,
+    classRate,
+    onlineClasses,
+    offlineClasses,
+    kitItems,
+    selectedCenter,
+    onlineRate,
+    offlineRate,
+  ]);
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm">
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <h1 className="text-xl font-semibold">
+              Choose Package for {data?.kidName}
+            </h1>
+            <button
+              onClick={() => navigate(-1)}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </div>
 
-      <PackageDetails selectedPackage={selectedPackage} discount={discount} />
-      <ToastContainer />
+      <div className="max-w-4xl mx-auto p-4">
+        {/* Step 1: Choose Package Type */}
+        <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-4">
+            1. Choose How You Want to Learn
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { value: "online", label: "Online", icon: "💻" },
+              { value: "offline", label: "Center", icon: "🏢" },
+              { value: "hybrid", label: "Both", icon: "🔄" },
+              { value: "kit", label: "Kit Only", icon: "📦" },
+            ].map((option) => (
+              <button
+                key={option.value}
+                onClick={() => handlePackageTypeChange(option.value)}
+                className={`p-4 rounded-lg border-2 text-center ${
+                  packageType === option.value
+                    ? "border-primary bg-primary"
+                    : "border-gray-200 hover:border-primary"
+                }`}
+              >
+                <div className="text-2xl mb-2">{option.icon}</div>
+                <div className="font-medium">{option.label}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Step 2: Configure Package */}
+        {packageType && (
+          <div className="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 className="text-lg font-semibold mb-4">
+              2. Set Up Your Classes
+            </h2>
+
+            {/* Online/Offline Config */}
+            {(packageType === "online" || packageType === "offline") && (
+              <div className="space-y-6">
+                {/* Time Slot */}
+                <div>
+                  <label className="block font-medium mb-3">
+                    When do you prefer classes?
+                  </label>
+                  <div className="grid grid-cols-2 gap-4 max-w-sm">
+                    {["day", "night"].map((slot) => (
+                      <label
+                        key={slot}
+                        className="flex items-center cursor-pointer"
+                      >
+                        <input
+                          type="radio"
+                          name="timeSlot"
+                          value={slot}
+                          checked={selectedTimeSlot === slot}
+                          onChange={(e) => handleTimeSlotChange(e.target.value)}
+                          className="mr-2"
+                        />
+                        <span className="capitalize">{slot} Time</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Center Selection */}
+                {selectedTimeSlot && (
+                  <div>
+                    <label className="block font-medium mb-3">
+                      Choose Center
+                    </label>
+                    <select
+                      value={selectedCenter}
+                      onChange={(e) =>
+                        handleCenterSelectionForTimeSlot(e.target.value)
+                      }
+                      className="w-full max-w-md p-3 border rounded-lg"
+                    >
+                      <option value="">Select a center</option>
+                      {availableCenters.map((center) => (
+                        <option key={center.centerId} value={center.centerId}>
+                          {center.centerName} - ₹{center.oneClassPrice}/class
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Number of Classes */}
+                {selectedCenter && classRate > 0 && (
+                  <div>
+                    <label className="block font-medium mb-3">
+                      How many classes?
+                    </label>
+                    <input
+                      type="number"
+                      value={numberOfClasses}
+                      onChange={(e) =>
+                        setNumberOfClasses(Number(e.target.value))
+                      }
+                      className="w-32 p-3 border rounded-lg text-center"
+                      min="1"
+                    />
+                    <span className="ml-3 text-gray-600">
+                      ₹{classRate} per class
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Hybrid Config */}
+            {packageType === "hybrid" && (
+              <div className="space-y-6">
+                <div>
+                  <label className="block font-medium mb-3">
+                    Choose Center
+                  </label>
+                  <select
+                    value={selectedCenter}
+                    onChange={handleCenterChange}
+                    className="w-full max-w-md p-3 border rounded-lg"
+                  >
+                    <option value="">Select a center</option>
+                    {centersList.map((center) => (
+                      <option key={center.centerId} value={center.centerId}>
+                        {center.centerName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {selectedCenter && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block font-medium mb-3">
+                        Online Classes
+                      </label>
+                      <input
+                        type="number"
+                        value={onlineClasses}
+                        onChange={(e) =>
+                          setOnlineClasses(Number(e.target.value))
+                        }
+                        className="w-full p-3 border rounded-lg"
+                        min="0"
+                      />
+                      <p className="text-sm text-gray-600 mt-1">
+                        ₹{onlineRate} per class
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block font-medium mb-3">
+                        Center Classes
+                      </label>
+                      <input
+                        type="number"
+                        value={offlineClasses}
+                        onChange={(e) =>
+                          setOfflineClasses(Number(e.target.value))
+                        }
+                        className="w-full p-3 border rounded-lg"
+                        min="0"
+                      />
+                      <p className="text-sm text-gray-600 mt-1">
+                        ₹{offlineRate} per class
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Kit Config */}
+            {packageType === "kit" && (
+              <div className="space-y-4">
+                {kitItems.map((item, index) => (
+                  <div key={index} className="border rounded-lg p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="md:col-span-2">
+                        <label className="block font-medium mb-2">
+                          Choose Kit
+                        </label>
+                        <select
+                          value={item.name}
+                          onChange={(e) =>
+                            updateKitItem(index, "name", e.target.value)
+                          }
+                          className="w-full p-3 border rounded-lg"
+                        >
+                          <option value="">Select kit</option>
+                          {kitItemsList.map((kit) => (
+                            <option key={kit._id} value={kit._id}>
+                              {kit.packageName} - ₹{kit.amount}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block font-medium mb-2">
+                          Quantity
+                        </label>
+                        <div className="flex items-center">
+                          <input
+                            type="number"
+                            value={item.quantity}
+                            onChange={(e) =>
+                              updateKitItem(
+                                index,
+                                "quantity",
+                                Number(e.target.value)
+                              )
+                            }
+                            className="flex-1 p-3 border rounded-lg text-center"
+                            min="1"
+                          />
+                          {kitItems.length > 1 && (
+                            <button
+                              onClick={() => removeKitItem(index)}
+                              className="ml-2 text-red-500 hover:text-red-700"
+                            >
+                              <X className="w-5 h-5" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <button
+                  onClick={addKitItem}
+                  className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-primary"
+                >
+                  + Add Kit
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Step 3: Payment */}
+        {packageType && totalAmount > 0 && (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold mb-4">3. Complete Payment</h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="font-medium mb-3">Summary</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Package:</span>
+                    <span className="capitalize">{packageType}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Amount:</span>
+                    <span>₹{baseAmount.toFixed(2)}</span>
+                  </div>
+                  {discount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Discount:</span>
+                      <span>-₹{discount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between font-semibold text-lg border-t pt-2">
+                    <span>Total:</span>
+                    <span>₹{totalAmount.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-end">
+                <button
+                  onClick={handleRazorpayPayment}
+                  disabled={
+                    !packageType || totalAmount <= 0 || isProcessingPayment
+                  }
+                  className="w-full bg-primary text-white py-3 px-4 rounded-lg hover:bg-primary disabled:opacity-50 font-medium"
+                >
+                  {isProcessingPayment
+                    ? "Processing..."
+                    : `Pay ₹${totalAmount.toFixed(2)}`}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Payment Success */}
+        {paymentId && (
+          <div className="bg-white rounded-lg shadow p-6 text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-green-600" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Payment Successful!</h3>
+            <p className="text-gray-600 mb-4">Payment ID: {paymentId}</p>
+          </div>
+        )}
+      </div>
+
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </div>
   );
 };

@@ -25,6 +25,7 @@ const ParentRegistration = () => {
   const { phoneNumber } = state || {};
   const { currentStep, nextStep } = useContext(StepperContext);
   const regFormData = useSelector((state) => state.formData);
+  console.log("regFormData",regFormData)
 
   // Initialize form state from Redux
   const [formState, setFormState] = useState({
