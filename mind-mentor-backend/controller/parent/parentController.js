@@ -258,6 +258,8 @@ const parentStudentRegistration = async (req, res) => {
         formData.enqId,
         {
           $set: {
+            kidFirstName:formData.kidsName,
+          
             kidsAge: formData.age,
             kidsGender: formData.gender,
             pincode: formData.pincode,
