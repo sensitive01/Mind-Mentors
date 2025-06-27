@@ -236,7 +236,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                 <DetailCard title="ENQUIRY FIELD" value={data.enquiryField} />
               </Grid>
               <Grid item xs={12} md={3}>
-                <DetailCard title="PAYMENT STATUS" value={data.payment} />
+                <DetailCard title="PAYMENT STATUS" value={data.paymentStatus} />
               </Grid>
               <Grid item xs={12} md={3}>
                 <DetailCard title="SOURCE" value={data.source} />

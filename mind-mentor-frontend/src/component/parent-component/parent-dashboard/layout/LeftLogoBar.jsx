@@ -1,34 +1,32 @@
-import { ArrowLeft } from "lucide-react"
-import  mindMentorImage from "../../../../images/mindmentorz_logo.png"
-import { useNavigate } from "react-router-dom"
+import { ArrowLeft } from "lucide-react";
+import mindMentorImage from "../../../../images/mindmentorz_logo.png";
+import { useNavigate } from "react-router-dom";
 
 const LeftLogoBar = () => {
-    const navigate = useNavigate()
+  const navigate = useNavigate();
   return (
-    <div className="bg-[#642b8f]
- text-white lg:w-2/5 p-2 sm:p-6 lg:p-8 flex flex-col justify-between relative min-h-[30vh] lg:min-h-screen">
-    <div className="flex-grow flex flex-col justify-center items-center lg:items-start">
-      <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight ">
-        Welcome to
-      </h2>
-      <img
-        src={mindMentorImage}
-        alt="mindMentorImage"
-        className="w-auto max-w-[80%] sm:max-w-[60%] lg:max-w-[80%] h-auto object-contain"
-        style={{marginTop:"-30px"}}
-      />
+    <div className="bg-[#642b8f] text-white w-full lg:w-2/5 flex flex-col justify-between min-h-[40vh] md:min-h-[60vh] lg:min-h-screen px-4 py-6 sm:px-6 lg:p-8">
+      <div className="flex-grow flex flex-col justify-center items-center lg:items-start text-center lg:text-left">
+        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight mb-4">
+          Welcome to
+        </h2>
+        <img
+          src={mindMentorImage}
+          alt="Mind Mentorz Logo"
+          className="w-full max-w-xs sm:max-w-sm lg:max-w-[80%] h-auto object-contain"
+        />
+      </div>
+      <div className="flex justify-center lg:justify-start items-center w-full mt-6">
+        <button
+          onClick={() => navigate("/")}
+          className="flex items-center text-xs sm:text-sm hover:underline transition-all duration-300 hover:opacity-80"
+        >
+          <ArrowLeft size={16} className="mr-1 sm:mr-2" />
+          Back to site
+        </button>
+      </div>
     </div>
+  );
+};
 
-    <div className="flex justify-between items-center w-full mt-4 lg:mt-0">
-      <button
-        onClick={() => navigate("/")}
-        className="flex items-center text-xs sm:text-sm hover:underline transition-all duration-300 hover:opacity-80"
-      >
-        <ArrowLeft size={16} className="mr-1 sm:mr-2" /> back to site
-      </button>
-    </div>
-  </div>
-  )
-}
-
-export default LeftLogoBar
+export default LeftLogoBar;

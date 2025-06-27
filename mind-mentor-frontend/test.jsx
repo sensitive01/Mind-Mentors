@@ -432,3 +432,54 @@ const ClassPricingDialog = ({
 
 export default ClassPricingDialog;
 
+
+
+
+
+
+{
+  "message": {
+    "messageType": "template",
+    "name": "v1_login_otp",
+    "language": "en_US",
+    "components": [
+      {
+        "componentType": "header",
+        "parameters": [
+          {
+            "type": "media",
+            "mediaLink": "https://prodimagelist.s3.ap-south-1.amazonaws.com/113970908185070/89f5d129437c4dc88a155289f61af25e.pdf",
+            "mediaType": "document"
+          }
+        ]
+      },
+      {
+        "componentType": "body",
+        "parameters": [
+          {
+            "type": "text",
+            "text": "Parent Name Here"
+          },
+          {
+            "type": "text",
+            "text": "Student Name Here"
+          },
+          {
+            "type": "text",
+            "text": "ChessKid123"
+          },
+          {
+            "type": "date_time",
+            "date": "2024-06-26T10:00:00Z"
+          },
+          {
+            "type": "text",
+            "text": "ChessKid123"
+          }
+        ]
+      }
+    ]
+  },
+  "to": "917559889322",
+  "phoneNumberId": "100310736237302"
+}

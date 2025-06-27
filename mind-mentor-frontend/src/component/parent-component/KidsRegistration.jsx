@@ -15,6 +15,7 @@ const KidsRegistration = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { state } = location;
+  console.log("new state",state)
   const { previousStep } = useContext(StepperContext);
 
   const [enrollments, setEnrollments] = useState([
@@ -30,6 +31,7 @@ const KidsRegistration = () => {
   const [uniqueLevels, setUniqueLevels] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const regFormData = useSelector((state) => state.formData);
+  const [isCooldown, setIsCooldown] = useState(false);
 
   // Function to get next occurrence of a specific day
   const getNextDateForDay = (dayName) => {
@@ -206,13 +208,15 @@ const KidsRegistration = () => {
     );
 
     try {
+      console.log("FormData:", formData, state);
       const response = await parentBookDemoClass(formData, state);
+      console.log("Registration response:", response);
 
       if (response.status === 200) {
         toast.success(
           "Registration successful! Your demo class has been scheduled."
         );
-        localStorage.setItem("parentId", response?.data?.parent._id);
+        localStorage.setItem("parentId", formData.parentId);
         setTimeout(() => {
           navigate("/parent/dashboard");
         }, 1500);
@@ -222,15 +226,19 @@ const KidsRegistration = () => {
       toast.error("Registration failed. Please try again.");
     }
   };
+  const handleSkipDashboard = () => {
+    if (state?.parent) {
+      localStorage.setItem("parentId", state?.parent?._id);
+    }
+    toast.info("Kids Registration is incomplete, moving to dashboard");
+    if (isCooldown) return;
+    setIsCooldown(true);
+    setTimeout(() => setIsCooldown(false), 5000);
 
-  // Debug: Log current state
-  console.log("Current state:", {
-    enrollments,
-    availableSlots: availableSlots.length,
-    uniquePrograms,
-    uniqueLevels,
-    selectedSlot,
-  });
+    setTimeout(() => {
+      navigate("/parent/dashboard");
+    }, 1500);
+  };
 
   if (isLoading) {
     return (
@@ -519,7 +527,7 @@ const KidsRegistration = () => {
                   <button
                     type="button"
                     className="order-3 lg:order-2 w-full lg:w-1/2 bg-secondary text-white py-2 px-3 rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary transition duration-300 text-sm"
-                    onClick={() => navigate("/parent/dashboard")}
+                    onClick={handleSkipDashboard}
                   >
                     Skip to Dashboard
                   </button>

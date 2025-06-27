@@ -7,6 +7,7 @@ import { StepperContext } from "../completion-status-bar/StepperContext";
 import Stepper from "../completion-status-bar/Stepper";
 import { useDispatch, useSelector } from "react-redux";
 import { setFormData } from "../../store/regDataParentKidsSlice";
+import { registerKidData } from "../../api/service/parent/ParentService";
 
 const phoneInputStyle = {
   container: "!w-full",
@@ -21,11 +22,11 @@ const ParentRegistration = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { state } = useLocation();
-  console.log("state-->",state)
+  console.log("state-->", state);
   const { phoneNumber } = state || {};
   const { currentStep, nextStep } = useContext(StepperContext);
   const regFormData = useSelector((state) => state.formData);
-  console.log("regFormData",regFormData)
+  console.log("regFormData", regFormData);
 
   // Initialize form state from Redux
   const [formState, setFormState] = useState({
@@ -34,9 +35,10 @@ const ParentRegistration = () => {
     name: regFormData.name || "",
     childName: regFormData.childName || "",
     isMobileWhatsapp: regFormData.isMobileWhatsapp || true,
-    enqId:state.data.enqId
+    enqId: state.data.enqId,
+    parentId: state.data.parentId,
   });
-  
+
   const [country, setCountry] = useState("in");
   const [isCooldown, setIsCooldown] = useState(false);
 
@@ -49,25 +51,25 @@ const ParentRegistration = () => {
   };
 
   const handleMobileChange = (value, countryData) => {
-    handleFieldChange('mobile', value);
+    handleFieldChange("mobile", value);
     setCountry(countryData.countryCode);
   };
 
   const handleCheckboxChange = (e) => {
     const checked = e.target.checked;
-    handleFieldChange('isMobileWhatsapp', checked);
+    handleFieldChange("isMobileWhatsapp", checked);
     if (checked) {
-      handleFieldChange('mobile', phoneNumber || "");
+      handleFieldChange("mobile", phoneNumber || "");
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (isCooldown) return;
 
     const { mobile, email, name, childName, isMobileWhatsapp } = formState;
-    
+
     if (!email || !name || !childName || !mobile) {
       toast.error("Please fill out all fields before submitting.");
       setIsCooldown(true);
@@ -78,12 +80,16 @@ const ParentRegistration = () => {
     setIsCooldown(true);
     setTimeout(() => setIsCooldown(false), 5000);
 
-    // Update Redux store
     dispatch(setFormData(formState));
-    
-    // Navigate to next page
-    nextStep();
-    navigate("/parent/parent-kids-registration", { state: formState });
+
+    const response = await registerKidData(formState);
+    if (response.status === 200) {
+      toast.success(response.data.message);
+      setTimeout(() => {
+        nextStep();
+        navigate("/parent/parent-kids-registration", { state: formState });
+      }, 1000);
+    }
   };
 
   const handleSkipDashboard = () => {
@@ -154,7 +160,9 @@ const ParentRegistration = () => {
                     required: true,
                     autoFocus: true,
                     disabled: formState.isMobileWhatsapp,
-                    placeholder: formState.isMobileWhatsapp ? "" : "Enter your number",
+                    placeholder: formState.isMobileWhatsapp
+                      ? ""
+                      : "Enter your number",
                   }}
                   containerClass={phoneInputStyle.container}
                   inputClass={phoneInputStyle.input}
@@ -176,7 +184,7 @@ const ParentRegistration = () => {
               <input
                 type="email"
                 value={formState.email}
-                onChange={(e) => handleFieldChange('email', e.target.value)}
+                onChange={(e) => handleFieldChange("email", e.target.value)}
                 className="w-full p-3 border border-gray-300 rounded-md"
                 placeholder="Enter your email ID"
                 aria-label="Email input"
@@ -192,7 +200,7 @@ const ParentRegistration = () => {
                 <input
                   type="text"
                   value={formState.name}
-                  onChange={(e) => handleFieldChange('name', e.target.value)}
+                  onChange={(e) => handleFieldChange("name", e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-md"
                   placeholder="Enter your name"
                   aria-label="Name input"
@@ -206,7 +214,9 @@ const ParentRegistration = () => {
                 <input
                   type="text"
                   value={formState.childName}
-                  onChange={(e) => handleFieldChange('childName', e.target.value)}
+                  onChange={(e) =>
+                    handleFieldChange("childName", e.target.value)
+                  }
                   className="w-full p-3 border border-gray-300 rounded-md"
                   placeholder="Enter your child name"
                   aria-label="Child name input"

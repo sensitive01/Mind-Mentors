@@ -30,6 +30,7 @@ const ParentKidsRegistration = () => {
     city: regFormData.city || "",
     state: regFormData.state || "",
     enqId: state.enqId || "",
+    parentId: state?.parentId||""
   });
   const [isCooldown, setIsCooldown] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
@@ -149,7 +150,7 @@ const ParentKidsRegistration = () => {
   }, [previousStep]);
 
   const handleSkipDashboard = () => {
-    localStorage.getItem("parentId", state?.data?.parentId);
+    localStorage.setItem("parentId", formData.parentId);
     toast.info("Kids Registration is incomplete, moving to dashboard");
     if (isCooldown) return;
     setIsCooldown(true);

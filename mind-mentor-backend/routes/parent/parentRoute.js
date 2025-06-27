@@ -42,6 +42,9 @@ parentRoute.post("/save-payment-information-data/:parentId",parentController.sav
 parentRoute.post("/send-selected-package/:parentId",parentController.parentSelectThePackage)
 parentRoute.post("/parent-add-new-kid-data/:parentId",parentController.parentAddNewKidData)
 
+parentRoute.post("/parent-save-kid-name",parentController.parentSaveKidData)
+
+
 
 
 

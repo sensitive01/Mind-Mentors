@@ -1,0 +1,109 @@
+/* Additional CSS for enhanced animations and effects */
+
+/* Custom gradient animation for the left panel */
+.gradient-animation {
+  background: linear-gradient(-45deg, #642b8f, #8338ec, #ff006e, #3a86ff);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Enhanced phone input styling */
+.react-tel-input .country-list {
+  max-height: 200px;
+  scrollbar-width: thin;
+  scrollbar-color: #8338ec #f1f1f1;
+}
+
+.react-tel-input .country-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.react-tel-input .country-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.react-tel-input .country-list::-webkit-scrollbar-thumb {
+  background: #8338ec;
+  border-radius: 3px;
+}
+
+.react-tel-input .country-list::-webkit-scrollbar-thumb:hover {
+  background: #642b8f;
+}
+
+/* Button hover effects */
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.btn-primary::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.btn-primary:hover::before {
+  left: 100%;
+}
+
+/* Card shadow animation */
+.login-card {
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.login-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Form input focus effects */
+.form-input {
+  transition: all 0.3s ease;
+  border: 2px solid #e5e7eb;
+}
+
+.form-input:focus {
+  border-color: #8338ec;
+  box-shadow: 0 0 0 3px rgba(131, 56, 236, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 1024px) {
+  .gradient-animation {
+    min-height: 50vh;
+  }
+}
+
+@media (max-width: 768px) {
+  .login-card {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+}

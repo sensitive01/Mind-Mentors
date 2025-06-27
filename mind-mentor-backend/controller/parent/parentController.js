@@ -36,7 +36,7 @@ const parentSubmitEnquiryForm = async (req, res) => {
     const newEnquiry = new operationDeptModel({
       parentFirstName,
       parentLastName: parentLastName || "",
-      kidFirstName:childName,
+      kidFirstName: childName,
       kidLastName: kidLastName || "",
       contactNumber: parentMobile,
       whatsappNumber: parentMobile,
@@ -120,6 +120,21 @@ const parentLogin = async (req, res) => {
 
       console.log("Saving the data in enquiry list", enqList);
 
+      const logEntry = {
+        enqId: enqList._id,
+        logs: [
+          {
+            employeeName: "Parent ",
+            comment: "New enquiry form submission done by parent",
+            createdAt: new Date(),
+          },
+        ],
+      };
+      const logData = await enquiryLogs.create(logEntry);
+
+      enqList.logs = logData._id;
+      await enqList.save();
+
       res.status(201).json({
         success: true,
         message:
@@ -186,66 +201,116 @@ const parentVerifyOtp = async (req, res) => {
 const parentStudentRegistration = async (req, res) => {
   try {
     console.log("Welcome to parent kids registration", req.body);
-
     const { formData, state } = req.body;
-    const chessId = generateChessId();
-    const kidPin = generateOTP();
 
+    // Step 1: Check if parent exists
     let parentData = await parentModel.findOne({
       parentMobile: formData.mobile,
     });
 
-    const newKid = new kidModel({
-      kidsName: formData.kidsName,
-      age: formData.age,
-      gender: formData.gender,
-      pincode: formData.pincode,
-      parentId: parentData ? parentData._id : null,
-      chessId: chessId,
-      kidPin,
-      enqId: formData.enqId,
-    });
-
-    await newKid.save();
-
-    console.log("New kid data", newKid);
-
-    if (parentData) {
+    // Step 2: If parent does not exist, create one
+    if (!parentData) {
+      parentData = new parentModel({
+        parentMobile: formData.mobile,
+        parentName: formData.name,
+        parentEmail: formData.email,
+        state: state,
+        kids: [],
+        type: "exist",
+      });
+      await parentData.save();
+    } else {
+      // Optional: update parent fields if needed
       parentData = await parentModel.findOneAndUpdate(
         { parentMobile: formData.mobile },
         {
-          $push: { kids: { kidId: newKid._id } },
           $set: {
-            parentEmail: formData.email,
             parentName: formData.name,
+            parentEmail: formData.email,
+            state: state,
             type: "exist",
           },
         },
         { new: true }
       );
-    } else {
-      parentData = new parentModel({
-        parentMobile: formData.mobile,
-        parentEmail: formData.email,
-        parentName: formData.name,
-        isMobileWhatsapp: formData.isMobileWhatsapp,
-        kids: [newKid._id],
-        type: "exist",
-      });
-      await parentData.save();
     }
 
-    const updateEnqData = await operationDeptModel.findOneAndUpdate(
-      { _id: formData.enqId },
-      { $set: { kidFirstName: formData.kidName, kidId: newKid._id } }
-    );
+    // Step 3: Check if kid already exists for this parent and enqId
+    let kidData = await kidModel.findOne({
+      enqId: formData.enqId,
+    });
+    console.log("kidData", kidData);
 
+    if (kidData) {
+      // Step 4a: Update existing kid
+      kidData = await kidModel.findOneAndUpdate(
+        { _id: kidData._id },
+        {
+          $set: {
+            age: formData.age,
+            gender: formData.gender,
+            pincode: formData.pincode,
+          },
+        },
+        { new: true }
+      );
+      await operationDeptModel.findByIdAndUpdate(
+        formData.enqId,
+        {
+          $set: {
+            kidsAge: formData.age,
+            kidsGender: formData.gender,
+            pincode: formData.pincode,
+            paymentStatus: "Pending",
+            source: "MindMentorz website",
+          },
+        },
+        { new: true }
+      );
+    } else {
+      // Step 4b: Create new kid
+      kidData = new kidModel({
+        kidsName: formData.childName,
+        parentId: parentData._id,
+        enqId: formData.enqId,
+        age: formData.age,
+        gender: formData.gender,
+        pincode: formData.pincode,
+      });
+      await kidData.save();
+
+      // Add kid to parent's kids list
+      await parentModel.findByIdAndUpdate(
+        parentData._id,
+        {
+          $push: { kids: { kidId: kidData._id } },
+        },
+        { new: true }
+      );
+      await operationDeptModel.findByIdAndUpdate(
+        formData.enqId,
+        {
+          $set: {
+            kidsAge: formData.age,
+            kidsGender: formData.gender,
+            pincode: formData.pincode,
+            paymentStatus: "pending",
+            source: "MindMentorz website",
+          },
+        },
+        { new: true }
+      );
+    }
+
+    // Final Response
     res.status(201).json({
       success: true,
-      message: "Parent and kid registration completed successfully.",
+      message: kidData.wasNew
+        ? "Parent and new kid registered successfully."
+        : "Parent and kid updated successfully.",
       data: {
         parent: parentData,
-        kid: newKid,
+        kid: kidData,
       },
     });
   } catch (err) {
@@ -346,76 +411,69 @@ const createEnquiryParent = async (formData, state) => {
 
     return savedOperationDept;
   } catch (error) {
-    console.error("Error creating/updating OperationDept entry with log:", error);
+    console.error(
+      "Error creating/updating OperationDept entry with log:",
+      error
+    );
     throw error;
   }
 };
-
 
 const parentBookDemoClass = async (req, res) => {
   try {
     const { formData, state } = req.body;
     const { parent, kid } = state;
 
+    // 1. Find class schedule
     const classSchedule = await ClassSchedule.findById(formData.scheduleId);
-
     if (!classSchedule) {
       return res.status(404).json({ message: "Class schedule not found." });
     }
 
-    const studentExists = classSchedule.demoAssignedKid.some(
+    // 2. Check if kid is already assigned
+    const isAlreadyAssigned = classSchedule.demoAssignedKid.some(
       (student) => student.kidId.toString() === kid._id.toString()
     );
 
-    if (!studentExists) {
+    // 3. Push only if not assigned
+    if (!isAlreadyAssigned) {
       classSchedule.demoAssignedKid.push({
         kidId: kid._id,
         kidName: kid.kidsName,
         status: "Scheduled",
       });
+      await classSchedule.save();
     }
 
-    const demoKidExists = classSchedule.demoAssignedKid.some(
-      (student) => student.kidId.toString() === kid._id.toString()
-    );
-
-    if (!demoKidExists) {
-      classSchedule.demoAssignedKid.push({
-        kidId: kid._id,
-        kidName: kid.kidsName,
-        status: "Scheduled",
-      });
-    }
-
-    await classSchedule.save();
-
-    await operationDeptModel.findOneAndUpdate(
-      { _id: kid.enqId },
-      { $set: { "scheduleDemo.status": "Scheduled" } },
+    // 4. Update operation department
+    await operationDeptModel.findByIdAndUpdate(
+      kid.enqId,
+      { $set: { "scheduleDemo.status": "Scheduled", enquiryType: "cold" } },
       { new: true }
     );
 
-    const parentUpdate = await parentModel.findByIdAndUpdate(
+    // 5. Add kid to parent.kids only if not present
+    await parentModel.findByIdAndUpdate(
       parent._id,
       {
-        $addToSet: { kids: { kidId: kid._id } },
+        $addToSet: { kids: { kidId: kid._id } }, // prevents duplicates
         $set: { type: "exist" },
       },
       { new: true }
     );
 
-    const updatedKid = await kidModel.findByIdAndUpdate(
-      kid._id,
-      {},
-      { new: true }
-    );
+    // 6. Optionally update kid info (currently empty)
+    await kidModel.findByIdAndUpdate(kid._id, {}, { new: true });
 
+    // 7. Log the activity
     const logResult = await createEnquiryParent(formData, state);
 
     res.status(200).json({
       success: true,
-      message: "Demo class booked and kid assigned successfully!",
-      parent: parentUpdate,
+      message: isAlreadyAssigned
+        ? "Kid already assigned to demo class."
+        : "Demo class booked and kid assigned successfully!",
+        parentId:parent._id
     });
   } catch (err) {
     console.error("Error in parentBookDemoClass:", err);
@@ -755,7 +813,6 @@ const getKidDemoClassDetails = async (req, res) => {
     const demoClassDetails = await ClassSchedule.findOne({
       "demoAssignedKid.kidId": kidId,
       status: "Scheduled",
-
     });
     console.log("demoClassDetails", demoClassDetails);
 
@@ -1712,7 +1769,13 @@ const parentSelectThePackage = async (req, res) => {
 
     await operationDeptModel.findOneAndUpdate(
       { _id: finalData.enqId },
-      { $set: { enquiryStatus: "Active", paymentStatus: "Success", isNewUser: false  } }
+      {
+        $set: {
+          enquiryStatus: "Active",
+          paymentStatus: "Success",
+          isNewUser: false,
+        },
+      }
     );
 
     let comment = `Parent selected package for kid: ${
@@ -1842,7 +1905,97 @@ const parentAddNewKidData = async (req, res) => {
   }
 };
 
+const parentSaveKidData = async (req, res) => {
+  try {
+    console.log("welcome in adding the new kid:", req.body);
+    const { formData } = req.body;
+
+    const parentData = await parentModel.findById(formData.parentId);
+    if (!parentData) {
+      return res.status(404).json({ message: "Parent not found." });
+    }
+
+    // ✅ Check if kid with same name and parent already exists
+    let existingKid = await kidModel.findOne({
+      kidsName: formData.childName,
+      parentId: parentData._id,
+    });
+
+    let kidPin = generateOTP();
+    let chessId = existingKid ? existingKid.chessId : generateChessId();
+
+    if (existingKid) {
+      // ✅ Update existing kid
+      existingKid.kidPin = kidPin; // optional
+      existingKid.enqId = formData.enqId;
+      await existingKid.save();
+    } else {
+      // ✅ Create new kid
+      const newKid = new kidModel({
+        kidsName: formData.childName,
+        parentId: parentData._id,
+        chessId: chessId,
+        kidPin,
+        enqId: formData.enqId,
+      });
+      existingKid = await newKid.save();
+
+      // ✅ Update parent's kids list
+      await parentModel.findByIdAndUpdate(
+        parentData._id,
+        {
+          $push: { kids: { kidId: existingKid._id } },
+          $set: {
+            parentEmail: formData.email,
+            parentName: formData.name,
+            type: "exist",
+          },
+        },
+        { new: true }
+      );
+    }
+
+    // ✅ Update operation department record
+    const updateEnqData = await operationDeptModel.findByIdAndUpdate(
+      formData.enqId,
+      {
+        $set: {
+          kidFirstName: formData.childName,
+          kidId: existingKid._id,
+          parentFirstName: formData.name,
+        },
+      },
+      { new: true }
+    );
+
+    // ✅ Add log entry
+    await enquiryLogs.findByIdAndUpdate(
+      updateEnqData.logs,
+      {
+        $push: {
+          logs: {
+            employeeName: "Parent",
+            comment: `Parent ${
+              existingKid ? "updated" : "registered"
+            } a kid named ${formData.childName}`,
+            createdAt: new Date(),
+          },
+        },
+      },
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: `Kid ${existingKid ? "updated" : "registered"} successfully.`,
+    });
+  } catch (err) {
+    console.error("Error in saving/updating the kid:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 module.exports = {
+  parentSaveKidData,
   parentAddNewKidData,
   parentSelectThePackage,
   getTheKidEnqId,

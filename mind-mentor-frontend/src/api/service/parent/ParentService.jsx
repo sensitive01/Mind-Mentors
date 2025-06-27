@@ -372,3 +372,18 @@ export const parentAddNewKid = async (formData,parentId) => {
     return err;
   }
 };
+
+
+
+export const registerKidData = async (formData) => {
+  try {
+   
+    const response = await parentInstance.post(
+      `/parent/parent-save-kid-name`,{formData},
+ 
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
