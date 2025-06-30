@@ -116,19 +116,18 @@ const ClassScheduleForm = () => {
       if (availabilityResponse.data && availabilityResponse.data.success) {
         setAvailabilityData(availabilityResponse.data.availableDays);
 
+        // Extract centers from availability data (for offline mode)
         const uniqueCentersMap = new Map();
         availabilityResponse.data.availableDays.forEach((item) => {
-          if (
-            item.centerInfo &&
-            item.coachInfo &&
-            !uniqueCentersMap.has(item.centerInfo.centerId)
-          ) {
-            uniqueCentersMap.set(item.centerInfo.centerId, {
-              id: item.centerInfo.centerId,
-              name: item.coachInfo.centerName,
-              centerType: item.centerInfo.centerType,
-              businessHours: item.centerInfo.businessHours,
-            });
+          if (item.centerInfo && item.coachInfo) {
+            if (!uniqueCentersMap.has(item.centerInfo.centerId)) {
+              uniqueCentersMap.set(item.centerInfo.centerId, {
+                id: item.centerInfo.centerId,
+                name: item.coachInfo.centerName,
+                centerType: item.centerInfo.centerType,
+                businessHours: item.centerInfo.businessHours,
+              });
+            }
           }
         });
         setCenterData(Array.from(uniqueCentersMap.values()));
@@ -161,7 +160,15 @@ const ClassScheduleForm = () => {
       if (item.coachId !== schedule.coachId) return false;
       if (item.day !== schedule.day) return false;
       if (!item.coachInfo?.modes.includes(schedule.mode)) return false;
-      if (item.centerInfo?.centerId !== schedule.centerId) return false;
+
+      // For offline mode, check center match
+      if (
+        schedule.mode === "offline" &&
+        item.centerInfo?.centerId !== schedule.centerId
+      ) {
+        return false;
+      }
+
       const itemFrom = timeToMinutes(item.fromTime);
       const itemTo = timeToMinutes(item.toTime);
       const schFrom = timeToMinutes(fromTime);
@@ -171,23 +178,29 @@ const ClassScheduleForm = () => {
 
     if (availableSlots.length === 0) return false;
 
-    const businessHours = getCenterBusinessHoursForDay(
-      schedule.centerId,
-      schedule.day
-    );
-    if (!businessHours) return false;
-    if (businessHours.isClosed) return false;
+    // For offline mode, check business hours
+    if (schedule.mode === "offline") {
+      const businessHours = getCenterBusinessHoursForDay(
+        schedule.centerId,
+        schedule.day
+      );
+      if (!businessHours) return false;
+      if (businessHours.isClosed) return false;
 
-    const schFrom = timeToMinutes(fromTime);
-    const schTo = timeToMinutes(toTime);
+      const schFrom = timeToMinutes(fromTime);
+      const schTo = timeToMinutes(toTime);
 
-    const fitsBusinessHours = businessHours.periods.some((period) => {
-      const openMins = timeToMinutes(period.openTime);
-      const closeMins = timeToMinutes(period.closeTime);
-      return schFrom >= openMins && schTo <= closeMins;
-    });
+      const fitsBusinessHours = businessHours.periods.some((period) => {
+        const openMins = timeToMinutes(period.openTime);
+        const closeMins = timeToMinutes(period.closeTime);
+        return schFrom >= openMins && schTo <= closeMins;
+      });
 
-    return fitsBusinessHours;
+      return fitsBusinessHours;
+    }
+
+    // For online mode, no business hours to check
+    return true;
   };
 
   const getFilteredCoaches = (schedule) => {
@@ -199,11 +212,14 @@ const ClassScheduleForm = () => {
         item.coachInfo?.modes?.includes(schedule.mode)
       );
     }
-    if (schedule.centerId) {
+
+    // For offline mode, filter by center
+    if (schedule.mode === "offline" && schedule.centerId) {
       filtered = filtered.filter(
         (item) => item.centerInfo?.centerId === schedule.centerId
       );
     }
+
     if (schedule.program) {
       filtered = filtered.filter((item) => item.program === schedule.program);
     }
@@ -226,8 +242,10 @@ const ClassScheduleForm = () => {
         coachesMap.set(item.coachId, {
           id: item.coachId,
           name: item.coachName,
-          centerId: item.coachInfo?.centerId || "",
-          centerName: item.coachInfo?.centerName || "",
+          centerId: item.coachInfo?.centerId || item.centerInfo?.centerId || "",
+          centerName:
+            item.coachInfo?.centerName || item.centerInfo?.centerName || "",
+          modes: item.coachInfo?.modes || [],
         });
       }
     });
@@ -237,16 +255,12 @@ const ClassScheduleForm = () => {
   };
 
   const getFilteredCenters = (schedule) => {
-    if (!centerData?.length) return [];
+    if (!centerData?.length || schedule.mode === "online") return [];
+
     let filtered = centerData;
 
-    if (schedule.mode) {
-      filtered = filtered.filter((center) => {
-        if (typeof center.centerType === "string") {
-          return center.centerType.includes(schedule.mode);
-        }
-        return false;
-      });
+    if (schedule.mode === "offline") {
+      filtered = filtered.filter((center) => center.centerType === "offline");
     }
 
     if (schedule.coachId) {
@@ -325,7 +339,7 @@ const ClassScheduleForm = () => {
         item.coachInfo?.modes?.includes(schedule.mode)
       );
     }
-    if (schedule.centerId) {
+    if (schedule.centerId && schedule.mode === "offline") {
       filtered = filtered.filter(
         (item) => item.centerInfo?.centerId === schedule.centerId
       );
@@ -359,7 +373,7 @@ const ClassScheduleForm = () => {
         item.coachInfo?.modes?.includes(schedule.mode)
       );
     }
-    if (schedule.centerId) {
+    if (schedule.centerId && schedule.mode === "offline") {
       filtered = filtered.filter(
         (item) => item.centerInfo?.centerId === schedule.centerId
       );
@@ -402,7 +416,7 @@ const ClassScheduleForm = () => {
         item.coachInfo?.modes?.includes(schedule.mode)
       );
     }
-    if (schedule.centerId) {
+    if (schedule.centerId && schedule.mode === "offline") {
       filtered = filtered.filter(
         (item) => item.centerInfo?.centerId === schedule.centerId
       );
@@ -445,32 +459,31 @@ const ClassScheduleForm = () => {
       padTime(maxAvailable)
     );
 
-    // Now, intersect center business hours for selected day to disable unavailable start times in UI
+    // For offline mode, intersect with center business hours
+    if (schedule.mode === "offline") {
+      const businessHours = getCenterBusinessHoursForDay(
+        schedule.centerId,
+        schedule.day
+      );
+      if (businessHours && !businessHours.isClosed) {
+        const openPeriods = businessHours.periods.map((p) => {
+          return [timeToMinutes(p.openTime), timeToMinutes(p.closeTime)];
+        });
 
-    const businessHours = getCenterBusinessHoursForDay(
-      schedule.centerId,
-      schedule.day
-    );
-    if (businessHours && !businessHours.isClosed) {
-      // Get open-close periods as array of [startMinutes, endMinutes]
-      const openPeriods = businessHours.periods.map((p) => {
-        return [timeToMinutes(p.openTime), timeToMinutes(p.closeTime)];
-      });
+        const filteredOptions = options.filter((timeStr) => {
+          const timeMins = timeToMinutes(timeStr);
+          return openPeriods.some(
+            ([start, end]) => timeMins >= start && timeMins <= end
+          );
+        });
 
-      // Filter time options to those inside any open period
-      const filteredOptions = options.filter((timeStr) => {
-        const timeMins = timeToMinutes(timeStr);
-        return openPeriods.some(
-          ([start, end]) => timeMins >= start && timeMins <= end
-        );
-      });
-
-      return {
-        min: padTime(minAvailable),
-        max: padTime(maxAvailable),
-        options: filteredOptions,
-        slots: filtered,
-      };
+        return {
+          min: padTime(minAvailable),
+          max: padTime(maxAvailable),
+          options: filteredOptions,
+          slots: filtered,
+        };
+      }
     }
 
     return {
@@ -493,8 +506,15 @@ const ClassScheduleForm = () => {
     switch (field) {
       case "mode":
         schedule.mode = value;
-        schedule.centerId = "";
-        schedule.centerName = "";
+        if (value === "online") {
+          // For online mode, set default center values
+          schedule.centerId = "online-center";
+          schedule.centerName = "Online Center";
+        } else {
+          // For offline mode, reset center fields
+          schedule.centerId = "";
+          schedule.centerName = "";
+        }
         schedule.coachId = "";
         schedule.coachName = "";
         schedule.program = "";
@@ -512,7 +532,20 @@ const ClassScheduleForm = () => {
           if (selectedCoach) {
             schedule.coachName = selectedCoach.name;
             schedule.coachId = selectedCoach.id;
-            if (!schedule.centerId && selectedCoach.centerId) {
+
+            // For online mode, set center from coach info
+            if (schedule.mode === "online") {
+              const coachData = availabilityData.find(
+                (item) =>
+                  item.coachId === selectedCoach.id &&
+                  item.coachInfo?.modes?.includes("online")
+              );
+              if (coachData?.coachInfo) {
+                schedule.centerName =
+                  coachData.coachInfo.centerName || "Online Center";
+              }
+            } else if (!schedule.centerId && selectedCoach.centerId) {
+              // For offline mode
               schedule.centerId = selectedCoach.centerId;
               schedule.centerName = selectedCoach.centerName;
             }
@@ -548,25 +581,27 @@ const ClassScheduleForm = () => {
       case "day":
         schedule.day = value;
         if (value) {
-          // Check center business hours for that day
-          const businessHours = getCenterBusinessHoursForDay(
-            schedule.centerId,
-            value
-          );
-          if (!businessHours || businessHours.isClosed) {
-            toast.error(
-              `Center "${schedule.centerName}" is closed on ${value}. Please select another day or center.`
+          // For offline mode, check center business hours
+          if (schedule.mode === "offline") {
+            const businessHours = getCenterBusinessHoursForDay(
+              schedule.centerId,
+              value
             );
-            schedule.day = "";
-            schedule.date = "";
-            schedule.fromTime = "";
-            schedule.toTime = "";
-          } else {
-            schedule.date = getNextDayDate(value);
-            // Reset times on day change
-            schedule.fromTime = "";
-            schedule.toTime = "";
+            if (!businessHours || businessHours.isClosed) {
+              toast.error(
+                `Center "${schedule.centerName}" is closed on ${value}. Please select another day or center.`
+              );
+              schedule.day = "";
+              schedule.date = "";
+              schedule.fromTime = "";
+              schedule.toTime = "";
+              break;
+            }
           }
+          schedule.date = getNextDayDate(value);
+          // Reset times on day change
+          schedule.fromTime = "";
+          schedule.toTime = "";
         } else {
           schedule.date = "";
           schedule.fromTime = "";
@@ -599,6 +634,10 @@ const ClassScheduleForm = () => {
         schedule.isDemo = value;
         break;
 
+      case "maxKids":
+        schedule.maxKids = value;
+        break;
+
       default:
         schedule[field] = value;
     }
@@ -623,6 +662,7 @@ const ClassScheduleForm = () => {
         fromTime: "",
         toTime: "",
         isDemo: false,
+        maxKids: 0,
       },
     ]);
   };
@@ -646,6 +686,7 @@ const ClassScheduleForm = () => {
         toTime,
         centerId,
         centerName,
+        maxKids,
       } = schedule;
 
       if (
@@ -657,8 +698,8 @@ const ClassScheduleForm = () => {
         !day ||
         !fromTime ||
         !toTime ||
-        !centerId ||
-        !centerName
+        !maxKids ||
+        (mode === "offline" && (!centerId || !centerName))
       ) {
         toast.error("Please fill in all required fields for all schedules.");
         return;
@@ -674,7 +715,7 @@ const ClassScheduleForm = () => {
 
     try {
       const response = await sheduleTimeTable(empId, schedules);
-      console.log(response)
+      console.log(response);
 
       if (response.status === 201) {
         toast.success(
@@ -694,6 +735,7 @@ const ClassScheduleForm = () => {
             fromTime: "",
             toTime: "",
             isDemo: false,
+            maxKids: 0,
           },
         ]);
         setTimeout(() => {
@@ -723,6 +765,7 @@ const ClassScheduleForm = () => {
         fromTime: "",
         toTime: "",
         isDemo: false,
+        maxKids: 0,
       },
     ]);
   };
@@ -748,7 +791,7 @@ const ClassScheduleForm = () => {
           <button
             onClick={() =>
               navigate("/super-admin/department/class-timetable-list")
-            } // replace with your actual handler
+            }
             className="bg-white text-[#642b8f] px-4 py-2 rounded font-medium hover:bg-gray-100 transition"
           >
             View Schedule
@@ -908,7 +951,7 @@ const ClassScheduleForm = () => {
                       <FormControl
                         size="small"
                         fullWidth
-                        required
+                        required={schedule.mode === "offline"}
                         aria-label="Center select"
                       >
                         <InputLabel>Center</InputLabel>
@@ -922,9 +965,15 @@ const ClassScheduleForm = () => {
                               e.target.value
                             )
                           }
-                          disabled={!schedule.mode}
+                          disabled={
+                            !schedule.mode || schedule.mode === "online"
+                          }
                         >
-                          {centers.length ? (
+                          {schedule.mode === "online" ? (
+                            <MenuItem value={schedule.centerName}>
+                              {schedule.centerName || "Online Center"}
+                            </MenuItem>
+                          ) : centers.length ? (
                             centers.map((center) => (
                               <MenuItem key={center.id} value={center.name}>
                                 {center.name}
@@ -1023,19 +1072,27 @@ const ClassScheduleForm = () => {
                         >
                           {days.length ? (
                             days.map((day) => {
-                              // Disable days where center is closed
-                              const bh = getCenterBusinessHoursForDay(
-                                schedule.centerId,
-                                day
-                              );
-                              const disabled = !bh || bh.isClosed;
+                              // For offline mode, disable days where center is closed
+                              if (schedule.mode === "offline") {
+                                const bh = getCenterBusinessHoursForDay(
+                                  schedule.centerId,
+                                  day
+                                );
+                                const disabled = !bh || bh.isClosed;
+                                return (
+                                  <MenuItem
+                                    key={day}
+                                    value={day}
+                                    disabled={disabled}
+                                  >
+                                    {day} {disabled ? "(Closed)" : ""}
+                                  </MenuItem>
+                                );
+                              }
+                              // For online mode, all days are enabled
                               return (
-                                <MenuItem
-                                  key={day}
-                                  value={day}
-                                  disabled={disabled}
-                                >
-                                  {day} {disabled ? "(Closed)" : ""}
+                                <MenuItem key={day} value={day}>
+                                  {day}
                                 </MenuItem>
                               );
                             })

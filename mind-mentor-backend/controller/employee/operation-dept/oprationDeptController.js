@@ -778,10 +778,17 @@ const getAllEnquiries = async (req, res) => {
         const formatDate = (date) => {
           if (!date) return null;
           const d = new Date(date);
+
           const day = String(d.getDate()).padStart(2, "0");
           const month = String(d.getMonth() + 1).padStart(2, "0");
           const year = d.getFullYear();
-          return `${day}-${month}-${year}`;
+
+          let hours = d.getHours();
+          const minutes = String(d.getMinutes()).padStart(2, "0");
+          const ampm = hours >= 12 ? "PM" : "AM";
+          hours = hours % 12 || 12;
+
+          return `${day}-${month}-${year} ${hours}:${minutes} ${ampm}`;
         };
 
         const createdAt = formatDate(enquiry.createdAt);
@@ -1466,8 +1473,8 @@ const cancelDemoClassForKid = async (req, res) => {
         $push: {
           logs: {
             employeeId: empId,
-            employeeName: empData.firstName, 
-            department:empData.department,
+            employeeName: empData.firstName,
+            department: empData.department,
             comment: `Demo class cancelled for the ${classSchedule.program}`,
             createdAt: new Date(),
           },
@@ -1554,7 +1561,7 @@ const rescheduleDemoClass = async (req, res) => {
               logs: {
                 employeeId: empId,
                 employeeName: empData.firstName,
-                department:empData.department,
+                department: empData.department,
                 comment: `Demo class resheduled for the ${classSchedule.program} program at the ${classSchedule.level} level with coach ${classSchedule.coachName}`,
                 createdAt: new Date(),
               },
@@ -1829,12 +1836,11 @@ const getMyLeaveData = async (req, res) => {
         formattedLeaves,
       });
     } else {
-     res.status(200).json({
-  success: true,
-  message: "No leave data found for this employee",
-  formattedLeaves: [], 
-});
-
+      res.status(200).json({
+        success: true,
+        message: "No leave data found for this employee",
+        formattedLeaves: [],
+      });
     }
   } catch (err) {
     console.error("Error in fetching my leaves", err);
