@@ -3,15 +3,15 @@ import { CheckCircle, X } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate, useParams } from "react-router-dom";
+
 import {
-  fetchPackageDetails,
-  getDiscountAmount,
-} from "../../../../api/service/employee/EmployeeService";
-import { getTheEnqId, parentSelectPackageData } from "../../../../api/service/parent/ParentService";
+  fetchParentPackageDetails,
+  getTheEnqId,
+  parentSelectPackageData,
+} from "../../../../api/service/parent/ParentService";
 const RAZORPAY_KEY = import.meta.env.VITE_RAZORPAY_KEY_ID;
 import logo from "../../../../assets/mindmentorz.png";
-
-
+import {  getPParentDiscountAmount } from "../../../../api/service/employee/EmployeeService";
 
 const ParentPackageSelection = () => {
   const { kidId } = useParams();
@@ -31,9 +31,9 @@ const ParentPackageSelection = () => {
   const [selectedTimeSlot, setSelectedTimeSlot] = useState("");
   const [availableCenters, setAvailableCenters] = useState([]);
   const [classRate, setClassRate] = useState(0);
-  const [numberOfClasses, setNumberOfClasses] = useState(0);
-  const [onlineClasses, setOnlineClasses] = useState(0);
-  const [offlineClasses, setOfflineClasses] = useState(0);
+  const [numberOfClasses, setNumberOfClasses] = useState(4); // Changed default to 4
+  const [onlineClasses, setOnlineClasses] = useState(4); // Changed default to 4
+  const [offlineClasses, setOfflineClasses] = useState(4); // Changed default to 4
   const [onlineRate, setOnlineRate] = useState(100);
   const [offlineRate, setOfflineRate] = useState(125);
   const [kitItems, setKitItems] = useState([{ name: "", quantity: 0 }]);
@@ -43,6 +43,7 @@ const ParentPackageSelection = () => {
   const [totalAmount, setTotalAmount] = useState(0);
   const [paymentId, setPaymentId] = useState("");
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [selectedCenterAddress, setSelectedCenterAddress] = useState(""); // Added for address display
   const [data, setData] = useState({
     kidId: kidId,
     kidName: "",
@@ -50,10 +51,33 @@ const ParentPackageSelection = () => {
     programs: [],
   });
 
+  // Helper function to format time display
+  const getTimeSlotDisplay = (timeSlot) => {
+    if (timeSlot === "day") {
+      return "10:30 AM - 7:30 PM (Day)";
+    } else if (timeSlot === "night") {
+      return "7:30 PM - 10:30 AM (Night)";
+    }
+    return timeSlot;
+  };
+
+  useEffect(()=>{
+    const fetchData = async()=>{
+      const response = await getPParentDiscountAmount(parentId,kidId)
+      console.log(response)
+      if(response.status===200){
+        setDiscount(response.data.discountAmount)
+      }
+
+    }
+    fetchData()
+
+  },[])
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const packageResponse = await fetchPackageDetails();
+        const packageResponse = await fetchParentPackageDetails();
         if (packageResponse.status === 200) {
           const packageData = packageResponse?.data?.data;
           setPackages({
@@ -118,22 +142,24 @@ const ParentPackageSelection = () => {
     setSelectedTimeSlot("");
     setAvailableCenters([]);
     setClassRate(0);
-    setNumberOfClasses(0);
-    setOnlineClasses(0);
-    setOfflineClasses(0);
+    setNumberOfClasses(4); // Reset to minimum 4
+    setOnlineClasses(4); // Reset to minimum 4
+    setOfflineClasses(4); // Reset to minimum 4
     setKitItems([{ name: "", quantity: 0 }]);
     setBaseAmount(0);
     setTotalAmount(0);
     setPaymentId("");
     setOnlineRate(100);
     setOfflineRate(125);
+    setSelectedCenterAddress(""); // Reset address
   };
 
   const handleTimeSlotChange = (timeSlot) => {
     setSelectedTimeSlot(timeSlot);
     setSelectedCenter("");
+    setSelectedCenterAddress("");
     setClassRate(0);
-    setNumberOfClasses(0);
+    setNumberOfClasses(4); // Reset to minimum 4
 
     let centers = [];
 
@@ -170,6 +196,7 @@ const ParentPackageSelection = () => {
           centerId: center.centerId,
           centerName: center.centerName,
           oneClassPrice: center.oneClassPrice || 125,
+          address: center.address || "", // Include address for offline centers
         }));
       }
     }
@@ -179,6 +206,12 @@ const ParentPackageSelection = () => {
     ];
 
     setAvailableCenters(uniqueCenters);
+
+    // Auto-select if only one center available for online
+    if (packageType === "online" && uniqueCenters.length === 1) {
+      setSelectedCenter(uniqueCenters[0].centerId);
+      setClassRate(uniqueCenters[0].oneClassPrice);
+    }
   };
 
   const handleCenterSelectionForTimeSlot = (centerId) => {
@@ -189,6 +222,10 @@ const ParentPackageSelection = () => {
     );
     if (selectedCenterData) {
       setClassRate(selectedCenterData.oneClassPrice);
+      // Set address for offline centers
+      if (packageType === "offline" && selectedCenterData.address) {
+        setSelectedCenterAddress(selectedCenterData.address);
+      }
     }
   };
 
@@ -221,28 +258,39 @@ const ParentPackageSelection = () => {
     setSelectedCenter(centerId);
 
     if (packageType === "hybrid" && centerId) {
-      let onlinePrice = 100;
+      // Get online rate for the selected center
+      let onlinePrice = 100; // default
       if (packages.online.length > 0) {
-        const onlineCenter = packages.online[0].centers?.find(
-          (c) => c.centerId === centerId
+        // Find online packages for this center
+        const onlinePackagesForCenter = packages.online.filter((pkg) =>
+          pkg.centers?.some((center) => center.centerId === centerId)
         );
-        if (onlineCenter) {
-          const onlinePackagesForCenter = packages.online.filter((pkg) =>
-            pkg.centers?.some((center) => center.centerId === centerId)
-          );
-          if (onlinePackagesForCenter.length > 0) {
-            onlinePrice = onlinePackagesForCenter[0].oneClassPrice;
-          }
+        if (onlinePackagesForCenter.length > 0) {
+          // Get the day rate as default, or first available
+          const dayPackage =
+            onlinePackagesForCenter.find((pkg) =>
+              pkg.packageName.toLowerCase().includes("day")
+            ) || onlinePackagesForCenter[0];
+          onlinePrice = dayPackage.oneClassPrice;
         }
       }
 
-      let offlinePrice = 125;
+      // Get offline rate for the selected center
+      let offlinePrice = 125; // default
       if (packages.offline.length > 0) {
         const offlineCenter = packages.offline[0].centers.find(
           (c) => c.centerId === centerId
         );
         if (offlineCenter) {
-          offlinePrice = offlineCenter.oneClassPrice;
+          // Get day rate as default
+          const dayCenterData = packages.offline[0].centers.find(
+            (c) =>
+              c.centerId === centerId &&
+              c.packageName?.toLowerCase().includes("day")
+          );
+          offlinePrice = dayCenterData
+            ? dayCenterData.oneClassPrice
+            : offlineCenter.oneClassPrice;
         }
       }
 
@@ -341,8 +389,8 @@ const ParentPackageSelection = () => {
         toast.error("Please select a center");
         return;
       }
-      if (numberOfClasses === 0) {
-        toast.error("Please enter number of classes");
+      if (numberOfClasses < 4) {
+        toast.error("Minimum 4 classes required");
         return;
       }
     }
@@ -352,8 +400,8 @@ const ParentPackageSelection = () => {
         toast.error("Please select a center for hybrid package");
         return;
       }
-      if (onlineClasses + offlineClasses === 0) {
-        toast.error("Please enter number of classes");
+      if (onlineClasses < 4 || offlineClasses < 4) {
+        toast.error("Minimum 4 classes required for both online and offline");
         return;
       }
     }
@@ -401,9 +449,7 @@ const ParentPackageSelection = () => {
               );
 
               setTimeout(() => {
-                navigate(
-                  `/parent/kid/attendance/${data?.kidId}`
-                );
+                navigate(`/parent/kid/attendance/${data?.kidId}`);
               }, 2000);
             } else {
               toast.error("Package submission failed after payment");
@@ -478,9 +524,9 @@ const ParentPackageSelection = () => {
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { value: "online", label: "Online", icon: "💻" },
-              { value: "offline", label: "Center", icon: "🏢" },
-              { value: "hybrid", label: "Both", icon: "🔄" },
+              { value: "online", label: "Online Class", icon: "💻" },
+              { value: "offline", label: "Center Class", icon: "🏢" },
+              { value: "hybrid", label: "Hybrid Class", icon: "🔄" },
               { value: "kit", label: "Kit Only", icon: "📦" },
             ].map((option) => (
               <button
@@ -488,8 +534,8 @@ const ParentPackageSelection = () => {
                 onClick={() => handlePackageTypeChange(option.value)}
                 className={`p-4 rounded-lg border-2 text-center ${
                   packageType === option.value
-                    ? "border-primary bg-primary"
-                    : "border-gray-200 hover:border-primary"
+                    ? "border-blue-500 bg-blue-50 text-blue-700"
+                    : "border-gray-200 hover:border-blue-300"
                 }`}
               >
                 <div className="text-2xl mb-2">{option.icon}</div>
@@ -514,11 +560,11 @@ const ParentPackageSelection = () => {
                   <label className="block font-medium mb-3">
                     When do you prefer classes?
                   </label>
-                  <div className="grid grid-cols-2 gap-4 max-w-sm">
+                  <div className="grid grid-cols-1 gap-4 max-w-md">
                     {["day", "night"].map((slot) => (
                       <label
                         key={slot}
-                        className="flex items-center cursor-pointer"
+                        className="flex items-center cursor-pointer p-3 border rounded-lg hover:bg-gray-50"
                       >
                         <input
                           type="radio"
@@ -526,9 +572,9 @@ const ParentPackageSelection = () => {
                           value={slot}
                           checked={selectedTimeSlot === slot}
                           onChange={(e) => handleTimeSlotChange(e.target.value)}
-                          className="mr-2"
+                          className="mr-3"
                         />
-                        <span className="capitalize">{slot} Time</span>
+                        <span>{getTimeSlotDisplay(slot)}</span>
                       </label>
                     ))}
                   </div>
@@ -538,22 +584,45 @@ const ParentPackageSelection = () => {
                 {selectedTimeSlot && (
                   <div>
                     <label className="block font-medium mb-3">
-                      Choose Center
+                      {packageType === "online" && availableCenters.length === 1
+                        ? "Center"
+                        : "Choose Center"}
                     </label>
-                    <select
-                      value={selectedCenter}
-                      onChange={(e) =>
-                        handleCenterSelectionForTimeSlot(e.target.value)
-                      }
-                      className="w-full max-w-md p-3 border rounded-lg"
-                    >
-                      <option value="">Select a center</option>
-                      {availableCenters.map((center) => (
-                        <option key={center.centerId} value={center.centerId}>
-                          {center.centerName} - ₹{center.oneClassPrice}/class
-                        </option>
-                      ))}
-                    </select>
+                    {packageType === "online" &&
+                    availableCenters.length === 1 ? (
+                      <div className="p-3 bg-gray-50 border rounded-lg">
+                        <span className="font-medium">
+                          {availableCenters[0].centerName}
+                        </span>
+                        <span className="ml-2 text-gray-600">
+                          - ₹{availableCenters[0].oneClassPrice}/class
+                        </span>
+                      </div>
+                    ) : (
+                      <select
+                        value={selectedCenter}
+                        onChange={(e) =>
+                          handleCenterSelectionForTimeSlot(e.target.value)
+                        }
+                        className="w-full max-w-md p-3 border rounded-lg"
+                      >
+                        <option value="">Select a center</option>
+                        {availableCenters.map((center) => (
+                          <option key={center.centerId} value={center.centerId}>
+                            {center.centerName} - ₹{center.oneClassPrice}/class
+                          </option>
+                        ))}
+                      </select>
+                    )}
+
+                    {/* Display address for offline centers */}
+                    {packageType === "offline" && selectedCenterAddress && (
+                      <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-sm text-blue-800">
+                          <strong>Address:</strong> {selectedCenterAddress}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -561,16 +630,16 @@ const ParentPackageSelection = () => {
                 {selectedCenter && classRate > 0 && (
                   <div>
                     <label className="block font-medium mb-3">
-                      How many classes?
+                      How many classes? (Minimum 4)
                     </label>
                     <input
                       type="number"
                       value={numberOfClasses}
                       onChange={(e) =>
-                        setNumberOfClasses(Number(e.target.value))
+                        setNumberOfClasses(e.target.value)
                       }
                       className="w-32 p-3 border rounded-lg text-center"
-                      min="1"
+                      min="4"
                     />
                     <span className="ml-3 text-gray-600">
                       ₹{classRate} per class
@@ -605,16 +674,16 @@ const ParentPackageSelection = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block font-medium mb-3">
-                        Online Classes
+                        Online Classes (Minimum 4)
                       </label>
                       <input
                         type="number"
                         value={onlineClasses}
                         onChange={(e) =>
-                          setOnlineClasses(Number(e.target.value))
+                          setOnlineClasses(e.target.value)
                         }
                         className="w-full p-3 border rounded-lg"
-                        min="0"
+                        min="4"
                       />
                       <p className="text-sm text-gray-600 mt-1">
                         ₹{onlineRate} per class
@@ -623,16 +692,16 @@ const ParentPackageSelection = () => {
 
                     <div>
                       <label className="block font-medium mb-3">
-                        Center Classes
+                        Center Classes (Minimum 4)
                       </label>
                       <input
                         type="number"
                         value={offlineClasses}
                         onChange={(e) =>
-                          setOfflineClasses(Number(e.target.value))
+                          setOfflineClasses(e.target.value)
                         }
                         className="w-full p-3 border rounded-lg"
-                        min="0"
+                        min="4"
                       />
                       <p className="text-sm text-gray-600 mt-1">
                         ₹{offlineRate} per class
@@ -701,7 +770,7 @@ const ParentPackageSelection = () => {
                 ))}
                 <button
                   onClick={addKitItem}
-                  className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-primary"
+                  className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-400"
                 >
                   + Add Kit
                 </button>
@@ -724,7 +793,7 @@ const ParentPackageSelection = () => {
                     <span className="capitalize">{packageType}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Amount:</span>
+                    <span>Amount (Includes GST):</span>
                     <span>₹{baseAmount.toFixed(2)}</span>
                   </div>
                   {discount > 0 && (
@@ -734,7 +803,7 @@ const ParentPackageSelection = () => {
                     </div>
                   )}
                   <div className="flex justify-between font-semibold text-lg border-t pt-2">
-                    <span>Total:</span>
+                    <span>Total (Includes GST):</span>
                     <span>₹{totalAmount.toFixed(2)}</span>
                   </div>
                 </div>
@@ -746,7 +815,7 @@ const ParentPackageSelection = () => {
                   disabled={
                     !packageType || totalAmount <= 0 || isProcessingPayment
                   }
-                  className="w-full bg-primary text-white py-3 px-4 rounded-lg hover:bg-primary disabled:opacity-50 font-medium"
+                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium"
                 >
                   {isProcessingPayment
                     ? "Processing..."

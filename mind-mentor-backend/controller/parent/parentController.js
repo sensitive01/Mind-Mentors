@@ -13,6 +13,11 @@ const notificationSchema = require("../../model/notification/notificationSchema"
 const wholeClassModel = require("../../model/wholeClassAssignedModel");
 const { v4: uuidv4 } = require("uuid");
 const packagePaymentData = require("../../model/packagePaymentModel");
+const onlineClassPackage = require("../../model/class/onlineClassPackage");
+const offlineClassPackage = require("../../model/class/offlineClassPackage");
+const hybridClassPackage = require("../../model/class/hybridClassPackage");
+const kitPackages = require("../../model/class/kitPrice");
+const physicalCenterShema = require("../../model/physicalcenter/physicalCenterShema");
 
 const parentSubmitEnquiryForm = async (req, res) => {
   try {
@@ -258,8 +263,9 @@ const parentStudentRegistration = async (req, res) => {
         formData.enqId,
         {
           $set: {
-            kidFirstName:formData.kidsName,
-          
+            kidFirstName: formData.kidsName,
+            email: formData.email,
+
             kidsAge: formData.age,
             kidsGender: formData.gender,
             pincode: formData.pincode,
@@ -298,6 +304,7 @@ const parentStudentRegistration = async (req, res) => {
             pincode: formData.pincode,
             paymentStatus: "pending",
             source: "MindMentorz website",
+            email: formData.email,
           },
         },
         { new: true }
@@ -426,18 +433,19 @@ const parentBookDemoClass = async (req, res) => {
     const { formData, state } = req.body;
     const { parent, kid } = state;
 
-    // 1. Find class schedule
+    console.log("formData:", formData);
+    console.log("parent:", parent);
+    console.log("kid:", kid);
+
     const classSchedule = await ClassSchedule.findById(formData.scheduleId);
     if (!classSchedule) {
       return res.status(404).json({ message: "Class schedule not found." });
     }
 
-    // 2. Check if kid is already assigned
     const isAlreadyAssigned = classSchedule.demoAssignedKid.some(
       (student) => student.kidId.toString() === kid._id.toString()
     );
 
-    // 3. Push only if not assigned
     if (!isAlreadyAssigned) {
       classSchedule.demoAssignedKid.push({
         kidId: kid._id,
@@ -447,27 +455,41 @@ const parentBookDemoClass = async (req, res) => {
       await classSchedule.save();
     }
 
-    // 4. Update operation department
     await operationDeptModel.findByIdAndUpdate(
       kid.enqId,
-      { $set: { "scheduleDemo.status": "Scheduled", enquiryType: "cold" } },
+      {
+        $set: {
+          "scheduleDemo.status": "Scheduled",
+          enquiryType: "cold",
+          programs: formData?.programs,
+        },
+      },
       { new: true }
     );
 
-    // 5. Add kid to parent.kids only if not present
     await parentModel.findByIdAndUpdate(
       parent._id,
       {
-        $addToSet: { kids: { kidId: kid._id } }, // prevents duplicates
+        $addToSet: { kids: { kidId: kid._id } },
         $set: { type: "exist" },
       },
       { new: true }
     );
 
-    // 6. Optionally update kid info (currently empty)
-    await kidModel.findByIdAndUpdate(kid._id, {}, { new: true });
+    await kidModel.findByIdAndUpdate(
+      kid._id,
+      {
+        $push: {
+          selectedProgram: {
+            program: formData.programs[0].program,
+            level: formData.programs[0].programLevel,
+            pgmStatus: "Active",
+          },
+        },
+      },
+      { new: true }
+    );
 
-    // 7. Log the activity
     const logResult = await createEnquiryParent(formData, state);
 
     res.status(200).json({
@@ -475,7 +497,7 @@ const parentBookDemoClass = async (req, res) => {
       message: isAlreadyAssigned
         ? "Kid already assigned to demo class."
         : "Demo class booked and kid assigned successfully!",
-        parentId:parent._id
+      parentId: parent._id,
     });
   } catch (err) {
     console.error("Error in parentBookDemoClass:", err);
@@ -1618,23 +1640,24 @@ const getMyKidData = async (req, res) => {
       { kidsName: 1, selectedProgram: 1, enqId: 1, gender: 1 }
     );
 
-    if (!kidData || kidData.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "No kids found for this parent",
-      });
-    }
-
     const updatedKidData = await Promise.all(
       kidData.map(async (kid) => {
-        const enqData = await operationDeptModel.findOne(
-          { _id: kid.enqId },
-          { scheduleDemo: 1 }
-        );
+        const [enqData, demoClass] = await Promise.all([
+          operationDeptModel.findOne({ _id: kid.enqId }, { scheduleDemo: 1 }),
+          ClassSchedule.findOne(
+            {
+              isDemoAdded: true,
+              "demoAssignedKid.kidId": kid._id,
+              "demoAssignedKid.status": "Scheduled",
+            },
+            { day: 1, classTime: 1, coachName: 1, program: 1, level: 1 }
+          ),
+        ]);
 
         return {
           ...kid.toObject(),
-          scheduleDemo: enqData ? enqData.scheduleDemo : null,
+          scheduleDemo: enqData?.scheduleDemo || null,
+          demoClass: demoClass || null,
         };
       })
     );
@@ -1645,6 +1668,7 @@ const getMyKidData = async (req, res) => {
       kidData: updatedKidData,
     });
   } catch (err) {
+    console.error("Error in getMyKidData:", err);
     res.status(500).json({
       success: false,
       message: "Failed to retrieve kid data. Please try again later.",
@@ -1996,7 +2020,79 @@ const parentSaveKidData = async (req, res) => {
   }
 };
 
+const getThePackageData = async (req, res) => {
+  try {
+    const onlinePackageData = await onlineClassPackage.find();
+    const offlineClassPackageData = await offlineClassPackage.find();
+    const hybridClassPackageData = await hybridClassPackage.find();
+    const kitPrice = await kitPackages.find();
+    const physicalCenters = await physicalCenterShema.find({}, { _id: 1, address: 1 });
+
+    // Create centerId => address map
+    const centerAddressMap = {};
+    physicalCenters.forEach(center => {
+      centerAddressMap[center._id.toString()] = center.address;
+    });
+
+    // Add address to offline package centers
+    const offlineClassPackageDataWithAddress = offlineClassPackageData.map(pkg => {
+      const newCenters = pkg.centers.map(center => {
+        const centerIdStr = center.centerId?.toString();
+        const address = centerAddressMap[centerIdStr] || "";
+        return {
+          ...(center.toObject ? center.toObject() : center),
+          address,
+        };
+      });
+
+      return {
+        ...(pkg.toObject ? pkg.toObject() : pkg),
+        centers: newCenters,
+      };
+    });
+
+    // Add address to online package centers
+    const onlinePackageDataWithAddress = onlinePackageData.map(pkg => {
+      const newCenters = pkg.centers.map(center => {
+        const centerIdStr = center.centerId?.toString();
+        const address = centerAddressMap[centerIdStr] || "";
+        return {
+          ...(center.toObject ? center.toObject() : center),
+          address,
+        };
+      });
+
+      return {
+        ...(pkg.toObject ? pkg.toObject() : pkg),
+        centers: newCenters,
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "All package data fetched successfully",
+      data: {
+        onlinePackageData: onlinePackageDataWithAddress,
+        offlineClassPackageData: offlineClassPackageDataWithAddress,
+        hybridClassPackageData,
+        kitPrice,
+      },
+    });
+  } catch (err) {
+    console.error("Error fetching package data:", err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch package data",
+      error: err.message,
+    });
+  }
+};
+
+
+
+
 module.exports = {
+  getThePackageData,
   parentSaveKidData,
   parentAddNewKidData,
   parentSelectThePackage,

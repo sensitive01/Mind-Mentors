@@ -6,9 +6,9 @@ const voucherSchema = new mongoose.Schema(
     code: { type: String }, // FREE500
     mmKidId: [{ type: String }],
     value: { type: Number },
-    // remarks: { type: String },
-    // type: { type: String, }, 
-    // condition: { type: String, enum: ["new user", "existing user"] },
+    remarks: { type: String },
+    type: { type: String, }, 
+    condition: { type: String,  },
     slots: { type: Number },
     startDate: { type: Date },
     expiry: { type: Date },

@@ -1,4 +1,7 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+
 import ChessLoader from "../../landingPage/loader/ChessLoader";
 import Sidebar from "../../component/parent-component/parent-dashboard/layout/SideBar";
 import Topbar from "../../component/parent-component/parent-dashboard/layout/Topbar";
@@ -8,6 +11,7 @@ import { gettingKidsData } from "../../api/service/parent/ParentService";
 const ParentKidsDetailsPage = () => {
   const [loading, setLoading] = useState(true);
   const [kids, setKids] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -36,6 +40,8 @@ const ParentKidsDetailsPage = () => {
     if (parentId) fetchKidsData();
   }, [parentId]);
 
+  const handleBack = () => navigate(-1);
+
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
       {loading ? (
@@ -45,11 +51,19 @@ const ParentKidsDetailsPage = () => {
       ) : (
         <>
           <Sidebar />
-
           <div className="flex-1 flex flex-col h-full">
             <Topbar />
-
             <div className="flex-1 p-8">
+              {/* Back Button */}
+              <button
+                onClick={handleBack}
+                className="flex items-center text-blue-600 hover:text-blue-800 mb-4 transition"
+              >
+                <ArrowLeft className="w-5 h-5 mr-2" />
+                Back
+              </button>
+
+              {/* Kids Data */}
               <KidsDetails kids={kids} />
             </div>
           </div>

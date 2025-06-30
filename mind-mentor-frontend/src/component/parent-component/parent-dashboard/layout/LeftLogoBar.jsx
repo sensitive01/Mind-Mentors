@@ -1,5 +1,5 @@
 import { ArrowLeft } from "lucide-react";
-import mindMentorImage from "../../../../images/mindmentorz_logo.png";
+import mindMentorImage from "../../../../assets/newLogo.png";
 import { useNavigate } from "react-router-dom";
 
 const LeftLogoBar = () => {

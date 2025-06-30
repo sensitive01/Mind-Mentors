@@ -25,7 +25,7 @@ const MenuGrid = () => {
   const parentId = localStorage.getItem("parentId");
   const [link, setLink] = useState();
   const [demoStatus, setDemoStatus] = useState(null);
-  const [paymentStatus,setPaymentStatus] = useState(null)
+  const [paymentStatus, setPaymentStatus] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -50,8 +50,7 @@ const MenuGrid = () => {
         const response = await fetchEnquiryStatus(id, parentId);
         if (response.status === 200) {
           setDemoStatus(response.data.data.scheduleDemo?.status || "Pending");
-          setPaymentStatus(response.data.data.paymentStatus)
-
+          setPaymentStatus(response.data.data.paymentStatus);
         }
       } catch (error) {
         console.error("Error fetching enquiry status:", error);
@@ -63,7 +62,7 @@ const MenuGrid = () => {
   }, [id, parentId]);
 
   const getMenuItems = () => {
-    if (demoStatus === "Pending"&& paymentStatus!=="Success") {
+    if (demoStatus === "Pending" && paymentStatus !== "Success") {
       return [
         {
           id: id,
@@ -74,10 +73,28 @@ const MenuGrid = () => {
           gradient: "from-indigo-600 to-indigo-700",
           route: `/parent/kid/demo-class/${id}`,
         },
+        {
+          id: id,
+          icon: <Settings className="w-6 h-6 text-white" />,
+          title: "Manage",
+          subtitle: "Child Profile",
+          bgColor: "bg-violet-600",
+          gradient: "from-violet-600 to-violet-700",
+          route: `/parent/kid/manage-login/${id}`,
+        },
+        {
+          id: id,
+          icon: <FileText className="w-6 h-6 text-white" />,
+          title: "Package Selection",
+          subtitle: "(Detailed View)",
+          bgColor: "bg-blue-600",
+          gradient: "from-blue-600 to-blue-700",
+          route: `/parent-package-selection/${id}`,
+        },
       ];
     }
     // If demo is scheduled but enquiry is still pending, show demo view, manage kids and package
-    else if (demoStatus === "Scheduled"&& paymentStatus!=="Success") {
+    else if (demoStatus === "Scheduled" && paymentStatus !== "Success") {
       return [
         {
           id: id,
@@ -92,7 +109,7 @@ const MenuGrid = () => {
           id: id,
           icon: <Settings className="w-6 h-6 text-white" />,
           title: "Manage",
-          subtitle: "Child Profile",
+          subtitle: "Child Login",
           bgColor: "bg-violet-600",
           gradient: "from-violet-600 to-violet-700",
           route: `/parent/kid/manage-login/${id}`,

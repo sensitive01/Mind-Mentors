@@ -1,28 +1,48 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  mobile: '',
-  email: '',
-  name: '',
-  childName: '',
+  mobile: "",
+  email: "",
+  name: "",
+  childName: "",
   isMobileWhatsapp: false,
-  age: '',
-  gender: '',
-  intention: '',
-  schoolName: '',
-  address: '',
-  pincode: '',
+  age: "",
+  gender: "",
+  intention: "",
+  state: "",
+  city: "",
+  pincode: "",
   programs: [],
-  usePredefineSlot:false,
-  enqId:""
+  enqId: "",
 };
 
+
+
 const regDataParentKidsSlice = createSlice({
-  name: 'formData',
+  name: "formData",
   initialState,
   reducers: {
     setFormData: (state, action) => {
-      return { ...state, ...action.payload }; // Merge new data with existing state
+      console.log("action.payload", action);
+      const { payload } = action;
+      return {
+        ...state,
+        childName: payload.childName||payload.kidsName,
+        mobile: payload.mobile,
+        email: payload.email,
+        name: payload.name,
+        isMobileWhatsapp: payload.isMobileWhatsapp,
+        enqId: payload.enqId,
+        parentId: payload.parentId,
+        age:payload.age,
+        gender: payload.gender,
+        intention: payload.intention,
+        state: payload.state,
+        city: payload.city,
+        pincode: payload.pincode,
+        programs: payload.programs,
+
+      };
     },
     resetFormData: () => initialState, // Reset state to initial
   },

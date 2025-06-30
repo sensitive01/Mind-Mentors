@@ -387,3 +387,17 @@ export const registerKidData = async (formData) => {
     return err;
   }
 };
+
+
+export const fetchParentPackageDetails = async () => {
+  try {
+   
+    const response = await parentInstance.get(
+      `/parent/get-parent-package-data`,
+ 
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};

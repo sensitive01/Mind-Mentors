@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   changeChildPin,
   ParentManageChildLogin,
@@ -10,6 +10,7 @@ import "react-toastify/dist/ReactToastify.css";
 import "./float.css";
 
 const ManageChildLogin = () => {
+  const navigate = useNavigate()
   const { id } = useParams();
   const [child, setChild] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -30,11 +31,9 @@ const ManageChildLogin = () => {
             response.data.kidPin !== null &&
             response.data.kidPin !== undefined
           ) {
-            // Convert to string and ensure 4 digits with padding
             const pinString = String(response.data.kidPin).padStart(4, "0");
             console.log("Formatted PIN string:", pinString);
 
-            // Split into array for individual inputs
             setPinValues(pinString.split(""));
           }
         }
@@ -49,13 +48,11 @@ const ManageChildLogin = () => {
     fetchChildData();
   }, [id]);
 
-  // Debug current pin values
   useEffect(() => {
     console.log("Current pinValues:", pinValues);
   }, [pinValues]);
 
   const handlePinChange = (index, value) => {
-    // Allow only digits
     const newValue = value.replace(/\D/g, "");
 
     if (newValue.length <= 1) {
@@ -93,6 +90,10 @@ const ManageChildLogin = () => {
         if (response.status === 200) {
           setChild((prev) => ({ ...prev, kidPin: combinedPin }));
           toast.success(response.data.message || "PIN updated successfully");
+          setTimeout(() => {
+            navigate(`/parent/kid/attendance/${id}`)
+            
+          },1500);
         }
       } catch (error) {
         console.error("Error updating PIN:", error);
@@ -143,7 +144,7 @@ const ManageChildLogin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center py-4 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden transform transition-all duration-300 hover:shadow-2xl">
           {/* Header Section */}

@@ -22,11 +22,10 @@ const ParentRegistration = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { state } = useLocation();
-  console.log("state-->", state);
   const { phoneNumber } = state || {};
   const { currentStep, nextStep } = useContext(StepperContext);
   const regFormData = useSelector((state) => state.formData);
-  console.log("regFormData", regFormData);
+  console.log("regFormData",regFormData)
 
   // Initialize form state from Redux
   const [formState, setFormState] = useState({

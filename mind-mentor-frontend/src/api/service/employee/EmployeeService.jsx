@@ -755,9 +755,18 @@ export const fetchPackageDetails = async () => {
 
 
 
+
+
 export const getDiscountAmount = async (enqId) => {
   const response = await operationDeptInstance.get(
     `/get-discount-vouchers/${enqId}`
+  );
+  return response;
+};
+
+export const getPParentDiscountAmount = async (parentId,kidId) => {
+  const response = await operationDeptInstance.get(
+    `/get-parent-discount-vouchers/${parentId}/${kidId}`
   );
   return response;
 };

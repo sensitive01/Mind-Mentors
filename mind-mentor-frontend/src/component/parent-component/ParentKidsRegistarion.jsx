@@ -14,23 +14,21 @@ const ParentKidsRegistration = () => {
   const location = useLocation();
   const { nextStep, previousStep } = useContext(StepperContext);
   const { state } = location;
-  console.log("State",state)
   const regFormData = useSelector((state) => state.formData);
-  console.log("Toolkit datas in ParentKidsRegistration", regFormData);
 
   const [formData, setFormDatas] = useState({
-    isMobileWhatsapp:state?.isMobileWhatsapp,
-    email:state?.email,
-    mobile:state?.mobile,
-    name:state?.name,
-    kidsName: state?.childName || "",
+    isMobileWhatsapp:regFormData?.isMobileWhatsapp,
+    email:regFormData?.email,
+    mobile:regFormData?.mobile,
+    name:regFormData?.name,
+    kidsName: regFormData?.childName || "",
     age: regFormData.age || "",
     gender: regFormData.gender || "",
     pincode: regFormData.pincode || "",
     city: regFormData.city || "",
     state: regFormData.state || "",
-    enqId: state.enqId || "",
-    parentId: state?.parentId||""
+    enqId: regFormData.enqId || "",
+    parentId: regFormData?.parentId||""
   });
   const [isCooldown, setIsCooldown] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);

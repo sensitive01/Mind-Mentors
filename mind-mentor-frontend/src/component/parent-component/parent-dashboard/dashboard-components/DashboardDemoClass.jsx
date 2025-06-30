@@ -8,9 +8,7 @@ import {
   Video,
   RefreshCw,
   Check,
-
   Clock,
-  
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getDemoClass } from "../../../../api/service/parent/ParentService";
@@ -22,18 +20,52 @@ const DashboardDemoClass = () => {
   const [error, setError] = useState(null);
   const [isJoining, setIsJoining] = useState(false);
 
+  // Function to calculate the next date for a given day
+  const getNextDateForDay = (dayName) => {
+    const days = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
+    const today = new Date();
+    const todayIndex = today.getDay();
+    const targetIndex = days.indexOf(dayName);
+
+    if (targetIndex === -1) return null;
+
+    let daysUntilTarget = targetIndex - todayIndex;
+    if (daysUntilTarget <= 0) {
+      daysUntilTarget += 7; // Next week
+    }
+
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() + daysUntilTarget);
+
+    return targetDate.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
   useEffect(() => {
     const fetchDemoClass = async () => {
       try {
         const response = await getDemoClass(id);
-        if (response.data.combinedData && response.data.combinedData.status === "Conducted") {
+        if (
+          response.data.combinedData &&
+          response.data.combinedData.status === "Conducted"
+        ) {
           setDemoClass(response.data.combinedData);
         } else {
           setDemoClass(response.data.classDetails);
         }
       } catch (err) {
         console.log("Error in getting demo class", err);
-
       }
     };
 
@@ -46,12 +78,16 @@ const DashboardDemoClass = () => {
 
   const renderConductedClass = () => {
     const { classDetails, student } = demoClass;
+    const nextDate = getNextDateForDay(classDetails.day);
+
     return (
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Main Info Card */}
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm overflow-hidden">
           <div className="p-6 border-b border-gray-100">
-            <h3 className="text-xl font-semibold text-gray-800">Class Details</h3>
+            <h3 className="text-xl font-semibold text-gray-800">
+              Class Details
+            </h3>
           </div>
           <div className="p-6">
             <div className="grid sm:grid-cols-2 gap-6 mb-6">
@@ -61,8 +97,17 @@ const DashboardDemoClass = () => {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Schedule</p>
-                  <p className="text-gray-800 font-medium mt-1">{classDetails.day}</p>
-                  <p className="text-gray-600 text-sm">{classDetails.classTime}</p>
+                  <p className="text-gray-800 font-medium mt-1">
+                    {classDetails.day}
+                  </p>
+                  {nextDate && (
+                    <p className="text-blue-600 text-sm font-medium">
+                      {nextDate}
+                    </p>
+                  )}
+                  <p className="text-gray-600 text-sm">
+                    {classDetails.classTime}
+                  </p>
                 </div>
               </div>
               <div className="flex items-start space-x-4">
@@ -71,19 +116,25 @@ const DashboardDemoClass = () => {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Program</p>
-                  <p className="text-gray-800 font-medium mt-1">{classDetails.program}</p>
-                  <p className="text-gray-600 text-sm">Level: {classDetails.level}</p>
+                  <p className="text-gray-800 font-medium mt-1">
+                    {classDetails.program}
+                  </p>
+                  <p className="text-gray-600 text-sm">
+                    Level: {classDetails.level}
+                  </p>
                 </div>
               </div>
             </div>
-            
+
             <div className="flex items-start space-x-4">
               <div className="bg-green-50 p-3 rounded-xl">
                 <Users className="w-6 h-6 text-green-600" />
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500">Coach</p>
-                <p className="text-gray-800 font-medium mt-1">{classDetails.coachName}</p>
+                <p className="text-gray-800 font-medium mt-1">
+                  {classDetails.coachName}
+                </p>
                 <p className="text-gray-600 text-sm">Expert Instructor</p>
               </div>
             </div>
@@ -93,7 +144,9 @@ const DashboardDemoClass = () => {
         {/* Status Card */}
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
           <div className="p-6 border-b border-gray-100">
-            <h3 className="text-xl font-semibold text-gray-800">Class Status</h3>
+            <h3 className="text-xl font-semibold text-gray-800">
+              Class Status
+            </h3>
           </div>
           <div className="p-6 space-y-6">
             <div className="bg-green-50 p-4 rounded-xl">
@@ -107,15 +160,21 @@ const DashboardDemoClass = () => {
 
             <div className="space-y-4">
               <div>
-                <p className="text-sm font-medium text-gray-500 mb-2">Attendance</p>
+                <p className="text-sm font-medium text-gray-500 mb-2">
+                  Attendance
+                </p>
                 <div className="flex items-center space-x-2">
                   <Check className="w-5 h-5 text-green-500" />
-                  <span className="text-gray-800 font-medium">{student.attendance}</span>
+                  <span className="text-gray-800 font-medium">
+                    {student.attendance}
+                  </span>
                 </div>
               </div>
 
               <div>
-                <p className="text-sm font-medium text-gray-500 mb-2">Feedback</p>
+                <p className="text-sm font-medium text-gray-500 mb-2">
+                  Feedback
+                </p>
                 <div className="bg-gray-50 p-4 rounded-xl">
                   <p className="text-gray-700">{student.feedback}</p>
                 </div>
@@ -128,12 +187,16 @@ const DashboardDemoClass = () => {
   };
 
   const renderUpcomingClass = () => {
+    const nextDate = getNextDateForDay(demoClass.day);
+
     return (
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Main Info Card */}
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm overflow-hidden">
           <div className="p-6 border-b border-gray-100">
-            <h3 className="text-xl font-semibold text-gray-800">Upcoming Class Details</h3>
+            <h3 className="text-xl font-semibold text-gray-800">
+              Upcoming Class Details
+            </h3>
           </div>
           <div className="p-6">
             <div className="grid sm:grid-cols-2 gap-6 mb-6">
@@ -143,7 +206,14 @@ const DashboardDemoClass = () => {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Schedule</p>
-                  <p className="text-gray-800 font-medium mt-1">{demoClass.day}</p>
+                  <p className="text-gray-800 font-medium mt-1">
+                    {demoClass.day}
+                  </p>
+                  {nextDate && (
+                    <p className="text-blue-600 text-sm font-medium">
+                      {nextDate}
+                    </p>
+                  )}
                   <p className="text-gray-600 text-sm">{demoClass.classTime}</p>
                 </div>
               </div>
@@ -153,19 +223,25 @@ const DashboardDemoClass = () => {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Program</p>
-                  <p className="text-gray-800 font-medium mt-1">{demoClass.program}</p>
-                  <p className="text-gray-600 text-sm">Level: {demoClass.level}</p>
+                  <p className="text-gray-800 font-medium mt-1">
+                    {demoClass.program}
+                  </p>
+                  <p className="text-gray-600 text-sm">
+                    Level: {demoClass.level}
+                  </p>
                 </div>
               </div>
             </div>
-            
+
             <div className="flex items-start space-x-4">
               <div className="bg-green-50 p-3 rounded-xl">
                 <Users className="w-6 h-6 text-green-600" />
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500">Coach</p>
-                <p className="text-gray-800 font-medium mt-1">{demoClass.coachName}</p>
+                <p className="text-gray-800 font-medium mt-1">
+                  {demoClass.coachName}
+                </p>
                 <p className="text-gray-600 text-sm">Expert Instructor</p>
               </div>
             </div>
@@ -175,20 +251,11 @@ const DashboardDemoClass = () => {
         {/* Action Card */}
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
           <div className="p-6 border-b border-gray-100">
-            <h3 className="text-xl font-semibold text-gray-800">Quick Actions</h3>
+            <h3 className="text-xl font-semibold text-gray-800">
+              Quick Actions
+            </h3>
           </div>
           <div className="p-6 space-y-4">
-            <button
-              className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 px-4 rounded-xl font-medium hover:from-green-600 hover:to-green-700 transition-all duration-200 flex items-center justify-center space-x-2 shadow-sm"
-              disabled={isJoining}
-              onClick={() => {
-                window.location.href = demoClass.meetingLink;
-              }}
-            >
-              <Video className="w-5 h-5" />
-              <span>{isJoining ? "Joining..." : "Join Class"}</span>
-            </button>
-
             <button
               className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 px-4 rounded-xl font-medium hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center justify-center space-x-2 shadow-sm"
               onClick={handleRequestDemo}
@@ -196,6 +263,18 @@ const DashboardDemoClass = () => {
               <RefreshCw className="w-5 h-5" />
               <span>Reschedule Class</span>
             </button>
+
+            {/* Schedule Information */}
+            <div className="mt-6 p-4 bg-blue-50 rounded-xl">
+              <h4 className="font-medium text-gray-800 mb-3">
+                Schedule Information
+              </h4>
+              <p className="text-gray-600 text-sm leading-relaxed">
+                Every class happens at a minimum schedule of 1 hour and your
+                final schedule will be assigned by the service delivery team as
+                per your child's convenient timings.
+              </p>
+            </div>
 
             <div className="mt-6 p-4 bg-gray-50 rounded-xl">
               <h4 className="font-medium text-gray-800 mb-3">Guidelines</h4>
@@ -242,6 +321,15 @@ const DashboardDemoClass = () => {
           <Calendar className="w-5 h-5" />
           <span className="font-medium">Schedule Demo Class</span>
         </button>
+
+        {/* Schedule Information for No Class state */}
+        <div className="mt-6 p-4 bg-blue-50 rounded-xl">
+          <p className="text-gray-600 text-sm leading-relaxed">
+            Every class happens at a minimum schedule of 1 hour and your final
+            schedule will be assigned by the service delivery team as per your
+            child's convenient timings.
+          </p>
+        </div>
       </div>
     </div>
   );

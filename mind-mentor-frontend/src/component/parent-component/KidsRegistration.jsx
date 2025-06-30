@@ -15,8 +15,9 @@ const KidsRegistration = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { state } = location;
-  console.log("new state",state)
   const { previousStep } = useContext(StepperContext);
+  const regFormData = useSelector((state) => state.formData);
+  console.log("regFormData", regFormData);
 
   const [enrollments, setEnrollments] = useState([
     {
@@ -30,7 +31,6 @@ const KidsRegistration = () => {
   const [uniquePrograms, setUniquePrograms] = useState([]);
   const [uniqueLevels, setUniqueLevels] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const regFormData = useSelector((state) => state.formData);
   const [isCooldown, setIsCooldown] = useState(false);
 
   // Function to get next occurrence of a specific day
@@ -83,7 +83,6 @@ const KidsRegistration = () => {
         // Check if response has the expected structure
         if (response && response.data && response.data.scheduleData) {
           const scheduleData = response.data.scheduleData;
-          console.log("Schedule Data:", scheduleData); // Debug log
 
           setAvailableSlots(scheduleData);
 
@@ -93,14 +92,12 @@ const KidsRegistration = () => {
               scheduleData.map((slot) => slot.program).filter(Boolean)
             ),
           ];
-          console.log("Unique Programs:", programs); // Debug log
           setUniquePrograms(programs);
 
           // Extract unique levels - Add null check
           const levels = [
             ...new Set(scheduleData.map((slot) => slot.level).filter(Boolean)),
           ];
-          console.log("Unique Levels:", levels); // Debug log
           setUniqueLevels(levels);
         } else {
           console.error("Unexpected API response structure:", response);
@@ -210,7 +207,7 @@ const KidsRegistration = () => {
     try {
       const response = await parentBookDemoClass(formData, state);
       console.log("Registration response:", response);
-      
+
       if (response.status === 200) {
         toast.success(
           "Registration successful! Your demo class has been scheduled."

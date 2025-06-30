@@ -791,8 +791,10 @@ const getAllEnquiries = async (req, res) => {
           return `${day}-${month}-${year} ${hours}:${minutes} ${ampm}`;
         };
 
+        const time = formatDate(enquiry.createdAt);
+        console.log("time", time);
+
         const createdAt = formatDate(enquiry.createdAt);
-        const updatedAt = formatDate(enquiry.updatedAt);
 
         return {
           ...enquiry.toObject(),
@@ -802,7 +804,6 @@ const getAllEnquiries = async (req, res) => {
           lastNoteAction: lastNoteAction?.disposition || "None",
           createdOn: lastNoteAction?.createdOn || "createdOn",
           createdAt,
-          updatedAt,
         };
       })
     );
@@ -852,10 +853,17 @@ const getProspectsData = async (req, res) => {
         const formatDate = (date) => {
           if (!date) return null;
           const d = new Date(date);
+
           const day = String(d.getDate()).padStart(2, "0");
           const month = String(d.getMonth() + 1).padStart(2, "0");
           const year = d.getFullYear();
-          return `${day}-${month}-${year}`;
+
+          let hours = d.getHours();
+          const minutes = String(d.getMinutes()).padStart(2, "0");
+          const ampm = hours >= 12 ? "PM" : "AM";
+          hours = hours % 12 || 12;
+
+          return `${day}-${month}-${year} ${hours}:${minutes} ${ampm}`;
         };
 
         const createdAt = formatDate(enquiry.createdAt);
@@ -3473,6 +3481,60 @@ const getDiscountVouchers = async (req, res) => {
   }
 };
 
+const getParentDiscoauntVouchers = async (req, res) => {
+  try {
+    const { parentId, kidId } = req.params;
+    console.log("parentId", parentId);
+    console.log("kidId", kidId);
+
+    const DiscountUser = await OperationDept.findOne({
+      kidId: kidId,
+      isNewUser: true,
+    });
+
+    if (!DiscountUser) {
+      return res
+        .status(200)
+        .json({ discountAmount: 0, message: "Not a new user" });
+    }
+
+    const enquiryId = DiscountUser._id.toString();
+    const today = new Date();
+
+    const voucherChck = await Voucher.find();
+    console.log("voucherChck", voucherChck);
+
+    const validVouchers = await Voucher.find({
+      status: "active",
+      startDate: { $lte: today },
+      expiry: { $gte: today },
+      $expr: { $lt: ["$usedCount", "$slots"] },
+      "voucherUsed.enqId": { $ne: enquiryId },
+    });
+
+    console.log("validVouchers:", validVouchers);
+
+    let discountAmount = 0;
+    let appliedVoucherCode = null;
+
+    if (validVouchers.length > 0) {
+      // Use the first valid one (you can change this logic)
+      const selectedVoucher = validVouchers[0];
+      discountAmount = selectedVoucher.value;
+      appliedVoucherCode = selectedVoucher.code;
+    }
+    console.log("appliedVoucherCode", discountAmount);
+
+    res.status(200).json({
+      discountAmount,
+      voucherCode: appliedVoucherCode,
+    });
+  } catch (err) {
+    console.error("Error in getting the discount for new enquiry", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 const departmentPayNowOption = async (req, res) => {
   try {
     console.log("Welcome to making the department payment option", req.body);
@@ -3952,6 +4014,7 @@ const getMyAttendanceData = async (req, res) => {
 };
 
 module.exports = {
+  getParentDiscoauntVouchers,
   getMyAttendanceData,
   isAttendanceMarked,
   getEmployeeData,

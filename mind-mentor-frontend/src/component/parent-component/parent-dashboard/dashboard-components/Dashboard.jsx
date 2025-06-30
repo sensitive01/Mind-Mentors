@@ -2,35 +2,91 @@ import React, { useEffect, useState } from "react";
 import boyAvatar from "../../../../assets/boyavatar.avif";
 import girlAvatar from "../../../../assets/girlavatar.jpg";
 import { getMyKidData } from "../../../../api/service/parent/ParentService";
+import { useNavigate } from "react-router-dom"; // Assuming you're using React Router
 
 const ParentDashboard = () => {
+  const navigate = useNavigate();
   const parentId = localStorage.getItem("parentId");
   const [selectedChild, setSelectedChild] = useState(0);
   const [childrenData, setChildrenData] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Function to calculate the next occurrence of a given day
+  const getNextDateForDay = (dayName) => {
+    const days = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
+    const today = new Date();
+    const targetDay = days.indexOf(dayName);
+
+    if (targetDay === -1) return "Invalid day";
+
+    const todayDay = today.getDay();
+    let daysUntilTarget = targetDay - todayDay;
+
+    // If the target day is today or has passed this week, get next week's occurrence
+    if (daysUntilTarget <= 0) {
+      daysUntilTarget += 7;
+    }
+
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() + daysUntilTarget);
+
+    return targetDate.toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  // Function to format demo class info
+  const formatDemoClassInfo = (demoClass) => {
+    if (!demoClass) return null;
+
+    const nextClassDate = getNextDateForDay(demoClass.day);
+
+    return {
+      ...demoClass,
+      nextClassDate,
+      formattedTime: demoClass.classTime,
+      displayText: `${demoClass.day}, ${demoClass.classTime}`,
+    };
+  };
 
   useEffect(() => {
     const fetchMyKid = async () => {
       try {
         setLoading(true);
         const response = await getMyKidData(parentId);
-        
-        if (response.status===200) {
-    
-          const transformedData = response.data.kidData.map(kid => {
+
+        if (response.status === 200) {
+          const transformedData = response.data.kidData.map((kid) => {
             // Get the first program (if exists)
-            const program = kid.selectedProgram && kid.selectedProgram.length > 0 
-              ? kid.selectedProgram[0] 
-              : { program: "Not selected", level: "Not assigned" };
-            
+            const program =
+              kid.selectedProgram && kid.selectedProgram.length > 0
+                ? kid.selectedProgram[0]
+                : { program: "Not selected", level: "Not assigned" };
+
             // Determine demo status
             const demoStatus = kid.scheduleDemo?.status || "Pending";
-            
+
+            // Format demo class info if available
+            const demoClassInfo = kid.demoClass
+              ? formatDemoClassInfo(kid.demoClass)
+              : null;
+
             // Create default stats based on demo status
             let stats = {};
             let attendance = {};
             let recentAchievements = [];
-            
+
             if (demoStatus === "Completed") {
               // Full dashboard data for completed demos
               stats = {
@@ -42,18 +98,26 @@ const ParentDashboard = () => {
                 avgTime: program.program === "Rubik's Cube" ? "1:45" : "",
                 bestTime: program.program === "Rubik's Cube" ? "1:20" : "",
                 timeSpent: "12h",
-                nextMilestone: program.program === "Chess" ? "Learn castle move" : "Learn advanced F2L",
+                nextMilestone:
+                  program.program === "Chess"
+                    ? "Learn castle move"
+                    : "Learn advanced F2L",
               };
-              
+
               attendance = {
                 total: 16,
                 attended: 9,
-                nextClass: "Today, 4:00 PM",
+                nextClass: demoClassInfo
+                  ? demoClassInfo.displayText
+                  : "Today, 4:00 PM",
               };
-              
+
               recentAchievements = [
                 {
-                  title: program.program === "Chess" ? "First Checkmate!" : "Sub 2-minute Solve",
+                  title:
+                    program.program === "Chess"
+                      ? "First Checkmate!"
+                      : "Sub 2-minute Solve",
                   date: "2 days ago",
                   icon: program.program === "Chess" ? "♟️" : "🎲",
                   color: "bg-purple-100",
@@ -65,7 +129,10 @@ const ParentDashboard = () => {
                   color: "bg-orange-100",
                 },
                 {
-                  title: program.program === "Chess" ? "Completed Pawn Lesson" : "Mastered White Cross",
+                  title:
+                    program.program === "Chess"
+                      ? "Completed Pawn Lesson"
+                      : "Mastered White Cross",
                   date: "Yesterday",
                   icon: "📚",
                   color: "bg-blue-100",
@@ -79,13 +146,15 @@ const ParentDashboard = () => {
                 streak: 0,
                 nextMilestone: "Attend first class",
               };
-              
+
               attendance = {
                 total: 0,
                 attended: 0,
-                nextClass: "Demo class (Scheduled)",
+                nextClass: demoClassInfo
+                  ? demoClassInfo.displayText
+                  : "Demo class (Scheduled)",
               };
-              
+
               recentAchievements = [
                 {
                   title: "Demo Class Scheduled!",
@@ -102,28 +171,29 @@ const ParentDashboard = () => {
                 streak: 0,
                 nextMilestone: "Schedule demo class",
               };
-              
+
               attendance = {
                 total: 0,
                 attended: 0,
                 nextClass: "Not scheduled yet",
               };
-              
+
               recentAchievements = [];
             }
-            
+
             return {
               id: kid._id,
               name: kid.kidsName,
               avatar: kid.gender === "female" ? girlAvatar : boyAvatar,
               program: program.program,
               demoStatus,
+              demoClassInfo, // Add demo class info
               attendance,
               stats,
               recentAchievements,
             };
           });
-          
+
           setChildrenData(transformedData);
         } else {
           console.error("Error fetching kid data:", response.message);
@@ -136,11 +206,16 @@ const ParentDashboard = () => {
         setLoading(false);
       }
     };
-    
+
     fetchMyKid();
   }, [parentId]);
 
-  // If no children data or loading, show loading state
+
+  const handleAddKid = () => {
+    navigate("/parent/add-kid"); 
+  };
+
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-4 md:p-6 flex items-center justify-center">
@@ -158,8 +233,18 @@ const ParentDashboard = () => {
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-4 md:p-6 flex items-center justify-center">
         <div className="text-center max-w-md">
           <div className="text-5xl mb-4">👶</div>
-          <h2 className="text-2xl font-bold text-slate-800 mb-2">No children found</h2>
-          <p className="text-slate-600">It looks like you haven't added any children to your account yet.</p>
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">
+            No children found
+          </h2>
+          <p className="text-slate-600 mb-6">
+            It looks like you haven't added any children to your account yet.
+          </p>
+          <button
+            onClick={handleAddKid}
+            className="px-6 py-3 bg-indigo-500 text-white rounded-lg font-medium hover:bg-indigo-600 transition-colors"
+          >
+            Add Your First Child
+          </button>
         </div>
       </div>
     );
@@ -172,8 +257,10 @@ const ParentDashboard = () => {
       {/* Header Section */}
       <div className="mb-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <h1 className="text-3xl font-bold text-slate-800">Learning Dashboard</h1>
-          <div className="flex gap-3">
+          <h1 className="text-3xl font-bold text-slate-800">
+            Learning Dashboard
+          </h1>
+          <div className="flex gap-3 items-center">
             {childrenData.map((child, index) => (
               <button
                 key={child.id}
@@ -184,10 +271,34 @@ const ParentDashboard = () => {
                     : "bg-white text-slate-600 hover:bg-slate-50"
                 }`}
               >
-                <img src={child.avatar} alt={child.name} className="w-8 h-8 rounded-full" />
+                <img
+                  src={child.avatar}
+                  alt={child.name}
+                  className="w-8 h-8 rounded-full"
+                />
                 <span className="font-medium">{child.name}</span>
               </button>
             ))}
+            {/* Add Kid Button */}
+            <button
+              onClick={handleAddKid}
+              className="flex items-center justify-center w-12 h-12 bg-white text-indigo-500 hover:bg-indigo-50 rounded-full transition-all shadow-sm border border-slate-200 hover:border-indigo-200"
+              title="Add new child"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
+            </button>
           </div>
         </div>
 
@@ -206,7 +317,8 @@ const ParentDashboard = () => {
                 </>
               ) : (
                 <>
-                  <span className="text-xl">❓</span> {selectedChildData.program || "Not Selected"}
+                  <span className="text-xl">❓</span>{" "}
+                  {selectedChildData.program || "Not Selected"}
                 </>
               )}
             </div>
@@ -215,12 +327,12 @@ const ParentDashboard = () => {
           <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
             <div className="text-sm text-slate-500">Demo Status</div>
             <div className="font-semibold text-slate-700 mt-1">
-              <span 
+              <span
                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  selectedChildData.demoStatus === "Completed" 
-                    ? "bg-green-100 text-green-800" 
-                    : selectedChildData.demoStatus === "Scheduled" 
-                    ? "bg-blue-100 text-blue-800" 
+                  selectedChildData.demoStatus === "Completed"
+                    ? "bg-green-100 text-green-800"
+                    : selectedChildData.demoStatus === "Scheduled"
+                    ? "bg-blue-100 text-blue-800"
                     : "bg-yellow-100 text-yellow-800"
                 }`}
               >
@@ -262,9 +374,12 @@ const DemoPendingView = ({ childData }) => (
   <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 text-center py-12">
     <div className="max-w-md mx-auto">
       <div className="text-5xl mb-6">📅</div>
-      <h2 className="text-2xl font-bold text-slate-800 mb-3">Demo Class Not Scheduled</h2>
+      <h2 className="text-2xl font-bold text-slate-800 mb-3">
+        Demo Class Not Scheduled
+      </h2>
       <p className="text-slate-600 mb-6">
-        The demo class for {childData.name} hasn't been scheduled yet. Once scheduled, you'll be able to see more details here.
+        The demo class for {childData.name} hasn't been scheduled yet. Once
+        scheduled, you'll be able to see more details here.
       </p>
       <button className="px-6 py-3 bg-indigo-500 text-white rounded-lg font-medium hover:bg-indigo-600 transition-colors">
         Schedule Demo Class
@@ -281,29 +396,61 @@ const DemoScheduledView = ({ childData }) => (
         <div className="flex items-center gap-3 mb-6">
           <span className="text-3xl">📅</span>
           <h3 className="text-lg font-semibold text-slate-800">
-            Upcoming Demo Class
+            Scheduled Demo Class
           </h3>
         </div>
 
         <div className="space-y-6">
-          <div className="bg-blue-50 rounded-lg p-4">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">🎉</span>
-              <div>
-                <div className="font-medium text-slate-800">
-                  Demo Class Scheduled!
+          {/* Demo Class Details */}
+          {childData.demoClassInfo && (
+            <div className="bg-blue-50 rounded-lg p-6">
+              <div className="flex items-start gap-4">
+                <span className="text-3xl">🎯</span>
+                <div className="flex-1">
+                  <h4 className="font-semibold text-slate-800 text-lg mb-3">
+                    Class Details
+                  </h4>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-white rounded-lg p-4">
+                      <div className="text-sm text-slate-600">
+                        Next Class Date
+                      </div>
+                      <div className="font-medium text-slate-800 mt-1">
+                        {childData.demoClassInfo.nextClassDate}
+                      </div>
+                    </div>
+
+                    <div className="bg-white rounded-lg p-4">
+                      <div className="text-sm text-slate-600">Time</div>
+                      <div className="font-medium text-slate-800 mt-1">
+                        {childData.demoClassInfo.classTime}
+                      </div>
+                    </div>
+
+                    <div className="bg-white rounded-lg p-4">
+                      <div className="text-sm text-slate-600">Coach</div>
+                      <div className="font-medium text-slate-800 mt-1">
+                        {childData.demoClassInfo.coachName}
+                      </div>
+                    </div>
+
+                    <div className="bg-white rounded-lg p-4">
+                      <div className="text-sm text-slate-600">
+                        Program & Level
+                      </div>
+                      <div className="font-medium text-slate-800 mt-1">
+                        {childData.demoClassInfo.program} -{" "}
+                        {childData.demoClassInfo.level}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-sm text-slate-600">Get ready for your first class</div>
               </div>
             </div>
-          </div>
+          )}
 
-          <div className="bg-slate-50 rounded-lg p-4">
-            <div className="text-sm text-slate-600">Program</div>
-            <div className="font-medium text-slate-800 mt-1">
-              {childData.program} - {childData.stats.level}
-            </div>
-          </div>
+          
         </div>
       </div>
     </div>
@@ -319,15 +466,21 @@ const DemoScheduledView = ({ childData }) => (
               <div className="flex items-center gap-4 p-3 bg-blue-50 rounded-lg">
                 <span className="text-2xl">♟️</span>
                 <div className="flex-1">
-                  <div className="font-medium text-slate-800">Basic Chess Rules</div>
-                  <div className="text-sm text-slate-500">Learn how pieces move</div>
+                  <div className="font-medium text-slate-800">
+                    Basic Chess Rules
+                  </div>
+                  <div className="text-sm text-slate-500">
+                    Learn how pieces move
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-4 p-3 bg-purple-50 rounded-lg">
                 <span className="text-2xl">🏆</span>
                 <div className="flex-1">
                   <div className="font-medium text-slate-800">First Game</div>
-                  <div className="text-sm text-slate-500">Play with an instructor</div>
+                  <div className="text-sm text-slate-500">
+                    Play with an instructor
+                  </div>
                 </div>
               </div>
             </>
@@ -336,15 +489,21 @@ const DemoScheduledView = ({ childData }) => (
               <div className="flex items-center gap-4 p-3 bg-blue-50 rounded-lg">
                 <span className="text-2xl">🎲</span>
                 <div className="flex-1">
-                  <div className="font-medium text-slate-800">Cube Notation</div>
-                  <div className="text-sm text-slate-500">Learn basic movements</div>
+                  <div className="font-medium text-slate-800">
+                    Cube Notation
+                  </div>
+                  <div className="text-sm text-slate-500">
+                    Learn basic movements
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-4 p-3 bg-purple-50 rounded-lg">
                 <span className="text-2xl">🔄</span>
                 <div className="flex-1">
                   <div className="font-medium text-slate-800">First Layer</div>
-                  <div className="text-sm text-slate-500">Solving techniques</div>
+                  <div className="text-sm text-slate-500">
+                    Solving techniques
+                  </div>
                 </div>
               </div>
             </>
@@ -393,7 +552,9 @@ const CompleteDashboardView = ({ childData }) => (
           {/* Progress Bar */}
           <div>
             <div className="flex justify-between mb-2">
-              <span className="text-sm text-slate-600">Progress to next level</span>
+              <span className="text-sm text-slate-600">
+                Progress to next level
+              </span>
               <span className="text-sm font-medium text-slate-700">
                 {childData.stats.progress}%
               </span>
@@ -411,14 +572,19 @@ const CompleteDashboardView = ({ childData }) => (
             <div className="flex justify-between mb-2">
               <span className="text-sm text-slate-600">Class Attendance</span>
               <span className="text-sm font-medium text-slate-700">
-                {childData.attendance.attended}/{childData.attendance.total} Classes
+                {childData.attendance.attended}/{childData.attendance.total}{" "}
+                Classes
               </span>
             </div>
             <div className="h-2 bg-slate-100 rounded-full">
               <div
                 className="h-full bg-indigo-500 rounded-full"
                 style={{
-                  width: `${(childData.attendance.attended / Math.max(childData.attendance.total, 1)) * 100}%`,
+                  width: `${
+                    (childData.attendance.attended /
+                      Math.max(childData.attendance.total, 1)) *
+                    100
+                  }%`,
                 }}
               />
             </div>
@@ -432,7 +598,9 @@ const CompleteDashboardView = ({ childData }) => (
                 <div className="font-medium text-slate-800">
                   {childData.stats.streak} Day Streak!
                 </div>
-                <div className="text-sm text-slate-600">Keep practicing daily</div>
+                <div className="text-sm text-slate-600">
+                  Keep practicing daily
+                </div>
               </div>
             </div>
           </div>
@@ -463,8 +631,12 @@ const CompleteDashboardView = ({ childData }) => (
               >
                 <span className="text-2xl">{achievement.icon}</span>
                 <div className="flex-1">
-                  <div className="font-medium text-slate-800">{achievement.title}</div>
-                  <div className="text-sm text-slate-500">{achievement.date}</div>
+                  <div className="font-medium text-slate-800">
+                    {achievement.title}
+                  </div>
+                  <div className="text-sm text-slate-500">
+                    {achievement.date}
+                  </div>
                 </div>
               </div>
             ))

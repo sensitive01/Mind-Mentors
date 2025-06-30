@@ -6,7 +6,7 @@ import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { useNavigate } from "react-router-dom";
 import { parentLogin } from "../../api/service/parent/ParentService";
-import mindMentorImage from "../../images/mindmentorz_logo.png";
+import mindMentorImage from "../../assets/newLogo.png";
 
 const ParentLogin = () => {
   const navigate = useNavigate();

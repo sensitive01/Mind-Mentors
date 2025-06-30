@@ -38,6 +38,11 @@ operationRoute.get("/assign-task-to-others/:id", operationController.assignTaskT
 operationRoute.get("/tasks/:id", operationController.getTaskById);
 operationRoute.get("/taskslogs/:id", operationController.getActivityLogsByTaskId);
 operationRoute.get("/get-attandance-data/:id",operationController.getAllAttandanceData);
+operationRoute.get(
+  "/get-parent-discount-vouchers/:parentId/:kidId",
+  operationController.getParentDiscoauntVouchers
+);
+
 
 
 

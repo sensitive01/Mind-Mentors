@@ -3,7 +3,7 @@ import { ArrowRight, ArrowLeft } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import { verifyOtp, parentLogin } from "../../api/service/parent/ParentService";
-import mindMentorImage from "../../images/mindmentorz_logo.png";
+import mindMentorImage from "../../assets/newLogo.png";
 
 const ParentOtpPage = () => {
   const navigate = useNavigate();
