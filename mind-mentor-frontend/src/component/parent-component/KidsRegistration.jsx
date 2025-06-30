@@ -208,15 +208,15 @@ const KidsRegistration = () => {
     );
 
     try {
-      console.log("FormData:", formData, state);
       const response = await parentBookDemoClass(formData, state);
       console.log("Registration response:", response);
-
+      
       if (response.status === 200) {
         toast.success(
           "Registration successful! Your demo class has been scheduled."
         );
-        localStorage.setItem("parentId", formData.parentId);
+        console.log("FormData formData.parentId:", state, formData.parentId);
+        localStorage.setItem("parentId", state?.parent?._id);
         setTimeout(() => {
           navigate("/parent/dashboard");
         }, 1500);
