@@ -4,7 +4,6 @@ import { ArrowLeft } from "lucide-react";
 
 import Sidebar from "../component/parent-component/parent-dashboard/layout/SideBar";
 import Topbar from "../component/parent-component/parent-dashboard/layout/Topbar";
-import AttendanceList from "../components/attandance/AttandanceList";
 import MenuGrid from "../components/attandance/MenuGrid";
 import ChessLoader from "../landingPage/loader/ChessLoader";
 
@@ -52,10 +51,7 @@ const AttendancePage = () => {
               </button>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-                {/* Optional: Add AttendanceList here */}
-                {/* <div className="bg-white rounded-lg shadow-sm p-4"> */}
-                {/*   <AttendanceList /> */}
-                {/* </div> */}
+     
 
                 <div className="bg-white rounded-lg shadow-sm p-4 lg:col-span-2">
                   <MenuGrid />
