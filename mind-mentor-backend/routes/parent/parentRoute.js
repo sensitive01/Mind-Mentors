@@ -23,7 +23,7 @@ parentRoute.get("/get-enqId-of-kid/:kidId",parentController.getTheKidEnqId)
 parentRoute.get("/get-parent-package-data",parentController.getThePackageData)
 parentRoute.get("/get-kid-belong-to-data-support/:parentId",parentController.getKidDataParentBelongsTo)
 parentRoute.get("/get-all-ticket-of-parent/:parentId",parentController.getAllTicketOfParent)
-parentRoute.get("/get-my-referal-data/:referalId",parentController.getMyReferalData)
+// parentRoute.get("/get-my-referal-data/:referalId",parentController.getMyReferalData)
 parentRoute.get("/get-my-selected-package-data/:parentId/:kidId",parentController.getMyselectedPackageData)
 
 
