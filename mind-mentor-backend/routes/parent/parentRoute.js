@@ -54,7 +54,7 @@ parentRoute.post("/parent-add-new-kid-data/:parentId",parentController.parentAdd
 parentRoute.post("/parent-save-kid-name",parentController.parentSaveKidData)
 
 parentRoute.post("/create-ticket-for-parent",parentController.createTicketForParent)
-parentRoute.post("/send-referal-data/:parentId",parentController.sendReferalData)
+// parentRoute.post("/send-referal-data/:parentId",parentController.sendReferalData)
 
 
 
