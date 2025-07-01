@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
 import Sidebar from "../component/parent-component/parent-dashboard/layout/SideBar";
-import Topbar from "../component/parent-component/parent-dashboard/layout/Topbar";
+import Topbar from "../component/parent-component/parent-dashboard/layout/ParentTopBar";
 import ManageKidLogin from "../component/parent-component/parent-dashboard/dashboard-components/ManageKidLogin";
 import ChessLoader from "../landingPage/loader/ChessLoader";
 

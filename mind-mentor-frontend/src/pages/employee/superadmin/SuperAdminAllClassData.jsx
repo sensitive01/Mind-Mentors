@@ -1,5 +1,5 @@
 import ScheduleList from "../../../department-components/coach/components/ScheduleList";
-import Topbar from "../../../component/parent-component/parent-dashboard/layout/Topbar";
+import Topbar from '../../../component/parent-component/parent-dashboard/layout/EmployeeTopBar';
 import Sidebar from "../../../department-components/superadmin/Layout/Sidebar";
 
 const SuperAdminAllClassData = () => {

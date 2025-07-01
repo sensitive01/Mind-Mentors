@@ -1,5 +1,5 @@
 import CompleteEnquiryLogs from "../../../../department-components/common-components/enquiries/CompleteEnquiryLogs";
-import Topbar from "../../../../component/parent-component/parent-dashboard/layout/Topbar";
+import Topbar from '../../../../component/parent-component/parent-dashboard/layout/EmployeeTopBar';
 import Sidebar from "../../../../department-components/superadmin/Layout/Sidebar";
 
 const SuperAdminAllEnquiryLogs = () => {

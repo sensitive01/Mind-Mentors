@@ -1,7 +1,7 @@
 import PackageForm from "../../../../department-components/common-components/package/PackageForm";
 
 import Sidebar from "../../../../department-components/superadmin/Layout/Sidebar";
-import Topbar from '../../../../component/parent-component/parent-dashboard/layout/Topbar';
+import Topbar from '../../../../component/parent-component/parent-dashboard/layout/EmployeeTopBar';
 
 const SuperAdminAddPackageForm = () => {
   return (

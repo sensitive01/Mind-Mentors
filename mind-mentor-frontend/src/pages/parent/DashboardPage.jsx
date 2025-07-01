@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import ChessLoader from "../../landingPage/loader/ChessLoader";
 import Sidebar from "../../component/parent-component/parent-dashboard/layout/SideBar";
-import Topbar from "../../component/parent-component/parent-dashboard/layout/Topbar";
+import Topbar from "../../component/parent-component/parent-dashboard/layout/ParentTopBar";
 import Dashboard from "../../component/parent-component/parent-dashboard/dashboard-components/Dashboard";
 
 const DashboardPage = () => {
@@ -36,7 +36,7 @@ const DashboardPage = () => {
             </div>
 
             <div
-              className="flex-1 p-8"
+              className="flex-1 p-8 mt-5"
               style={{
                 overflow: "auto",
                 scrollbarWidth: "none", 

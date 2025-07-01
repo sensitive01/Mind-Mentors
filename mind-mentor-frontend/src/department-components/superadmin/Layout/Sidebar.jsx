@@ -81,29 +81,29 @@ const ModernSidebar = () => {
   const themeColor = "#642b8f";
   const themeColorLight = alpha(themeColor, 0.1);
 
-  useEffect(() => {
-    const fetchEmployee = async () => {
-      try {
-        const empId = localStorage.getItem("empId");
-        if (!empId) {
-          console.error("Employee ID not found in localStorage");
-          return;
-        }
+  // useEffect(() => {
+  //   const fetchEmployee = async () => {
+  //     try {
+  //       const empId = localStorage.getItem("empId");
+  //       if (!empId) {
+  //         console.error("Employee ID not found in localStorage");
+  //         return;
+  //       }
 
-        const response = await getEmployeeData(empId);
+  //       const response = await getEmployeeData(empId);
 
-        if (response && response.status === 200) {
-          setEmpData(response.data);
-        } else {
-          console.error("Failed to fetch employee data:", response);
-        }
-      } catch (error) {
-        console.error("Error fetching employee data:", error);
-      }
-    };
+  //       if (response && response.status === 200) {
+  //         setEmpData(response.data);
+  //       } else {
+  //         console.error("Failed to fetch employee data:", response);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching employee data:", error);
+  //     }
+  //   };
 
-    fetchEmployee();
-  }, []);
+  //   fetchEmployee();
+  // }, []);
 
   useEffect(() => {
     setActiveItem(location.pathname);
@@ -629,7 +629,7 @@ const ModernSidebar = () => {
         </ToggleButton>
       </Box>
 
-      {!isCollapsed && (
+      {/* {!isCollapsed && (
         <Box
           px={4}
           py={3}
@@ -723,11 +723,11 @@ const ModernSidebar = () => {
           </Link>
           <Divider sx={{ mt: 2, mb: 1 }} />
         </Box>
-      )}
+      )} */}
 
       <Box
         sx={{
-          height: "calc(100vh - 200px)",
+          height: "calc(100vh)",
           overflow: "auto",
           "&::-webkit-scrollbar": {
             width: "4px",

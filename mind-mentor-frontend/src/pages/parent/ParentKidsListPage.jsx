@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 
 import ChessLoader from "../../landingPage/loader/ChessLoader";
 import Sidebar from "../../component/parent-component/parent-dashboard/layout/SideBar";
-import Topbar from "../../component/parent-component/parent-dashboard/layout/Topbar";
+import Topbar from "../../component/parent-component/parent-dashboard/layout/ParentTopBar";
 import KidsDetails from "../../component/parent-component/parent-dashboard/dashboard-components/KidsDetails";
 import { gettingKidsData } from "../../api/service/parent/ParentService";
 
@@ -53,7 +53,7 @@ const ParentKidsDetailsPage = () => {
           <Sidebar />
           <div className="flex-1 flex flex-col h-full overflow-hidden">
             <Topbar />
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto bg-gray-100 mt-5">
               <div className="p-6">
                 {/* Back Button */}
                 <button

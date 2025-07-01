@@ -15,13 +15,13 @@ const referralSchema = new mongoose.Schema(
       type: String,
       default: "Pending",
     },
-    referrerId:{
-      type:String
-    }
+    referrerId: {
+      type: String,
+    },
   },
   {
     timestamps: true,
   }
 );
 
-export default mongoose.model("referralModel", referralSchema);
+module.exports = mongoose.model("referralModel", referralSchema);

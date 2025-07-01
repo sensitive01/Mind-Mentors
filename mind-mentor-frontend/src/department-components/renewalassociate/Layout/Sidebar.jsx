@@ -249,50 +249,10 @@ const ModernSidebar = () => {
           justifyContent: "space-between",
           py: 2,
           px: 2,
+          marginTop:8
         }}
       >
-        {!isCollapsed && (
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              width: "100%",
-              gap: 1,
-            }}
-          >
-            <Box
-              onClick={() =>
-                navigate("/renewal-associate/department/renewalprofile")
-              }
-              sx={{
-                width: 60,
-                height: 60,
-                backgroundColor: iconColors.profile,
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: 2,
-                cursor: "pointer", // Added cursor pointer
-                "&:hover": {
-                  opacity: 0.9,
-                },
-              }}
-            >
-              <ProfileIcon sx={{ color: "white", fontSize: 30 }} />
-            </Box>
-            <Typography
-              variant="body2"
-              color="#642b8f"
-              fontWeight="bold"
-              textAlign="center"
-            >
-              Renewal Associates
-            </Typography>
-            <Divider sx={{ width: "100%", my: 1 }} />
-          </Box>
-        )}
+       
         <IconButton
           onClick={() => setIsCollapsed(!isCollapsed)}
           sx={{

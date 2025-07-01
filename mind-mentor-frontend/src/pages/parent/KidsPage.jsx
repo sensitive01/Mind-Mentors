@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 
 import ChessLoader from "../../landingPage/loader/ChessLoader";
 import Sidebar from "../../component/parent-component/parent-dashboard/layout/SideBar";
-import Topbar from "../../component/parent-component/parent-dashboard/layout/Topbar";
+import Topbar from "../../component/parent-component/parent-dashboard/layout/ParentTopBar";
 import Calendar from "../../components/kidsNav/Calender";
 
 const KidsPage = () => {
@@ -28,24 +28,24 @@ const KidsPage = () => {
       ) : (
         <div className="flex w-full h-full">
           <Sidebar />
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col ">
             <Topbar />
             <div className="flex-1 p-8 overflow-y-auto bg-gray-100">
               {/* 🔙 Back Button */}
               <button
                 onClick={handleBack}
-                className="flex items-center text-blue-600 hover:text-blue-800 mb-4 transition"
+                className="flex items-center text-blue-600 hover:text-blue-800 mb-4 transition "
               >
                 <ArrowLeft className="w-5 h-5 mr-2" />
                 Back
               </button>
 
-              <div className="flex flex-col lg:flex-row gap-8">
+              <div className="flex flex-col lg:flex-row gap-8  mt-5">
                 {/* <div className="lg:w-1/3">
                   <Stats />
                 </div> */}
 
-                <div className="lg:w-full">
+                <div className="lg:w-full ">
                   <Calendar />
                 </div>
               </div>

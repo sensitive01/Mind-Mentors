@@ -5,7 +5,8 @@ import { getEmployeeData } from "../../../../api/service/employee/EmployeeServic
 
 const EmployeeTopBar = () => {
   const navigate = useNavigate();
-  const department = localStorage.getItem("department")
+  const department = localStorage.getItem("department");
+
   const [empData, setEmpData] = useState({});
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);

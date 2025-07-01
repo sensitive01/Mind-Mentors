@@ -217,35 +217,11 @@ const ModernSidebar = () => {
         alignItems: 'center',
         justifyContent: 'space-between',
         py: 2,
-        px: 2
+        px: 2,
+        marginTop:8
+
       }}>
-        {!isCollapsed && (
-          <Box display="flex" flexDirection="column" alignItems="center" mt={2}>
-            {/* Profile Icon */}
-            <Box
-              sx={{
-                width: 60,
-                height: 60,
-                backgroundColor: iconColors.profile || 'primary.main',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                mb: 1,
-              }}
-            >
-              <ProfileIcon sx={{ color: 'white', fontSize: 30 }} />
-            </Box>
-            {/* Name and Role */}
-            <Typography variant="body2" color="#642b8f" fontWeight="bold">
-              Coach
-            </Typography>
-            <Divider/>
-            {/* <Typography variant="body2" color="text.secondary">
-              mindmentorz
-            </Typography> */}
-          </Box>
-        )}
+       
         <IconButton onClick={toggleSidebar}>
           {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
         </IconButton>

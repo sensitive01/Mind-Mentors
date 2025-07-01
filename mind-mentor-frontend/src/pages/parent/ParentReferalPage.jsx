@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 
 import ChessLoader from "../../landingPage/loader/ChessLoader";
 import Sidebar from "../../component/parent-component/parent-dashboard/layout/SideBar";
-import Topbar from "../../component/parent-component/parent-dashboard/layout/Topbar";
+import Topbar from "../../component/parent-component/parent-dashboard/layout/ParentTopBar";
 import ReferralPage from "../../component/parent-component/parent-dashboard/dashboard-components/ReferalPage";
 
 const ParentReferalPage = () => {
@@ -31,7 +31,7 @@ const ParentReferalPage = () => {
           <div className="flex-1 flex flex-col h-full">
             <Topbar className="h-16 shadow-2xl" />
 
-            <div className="flex-1 p-8 overflow-hidden bg-gray-100">
+            <div className="flex-1 p-8 bg-gray-100 overflow-auto">
               {/* 🔙 Back Button */}
               <button
                 onClick={handleBack}
@@ -41,9 +41,12 @@ const ParentReferalPage = () => {
                 Back
               </button>
 
-              <div className="flex flex-col lg:flex-row gap-8 h-full">
-                <div className="lg:w-full h-full">
-                  <ReferralPage />
+              <div className="flex flex-col lg:flex-row gap-8">
+                <div className="lg:w-full">
+                  {/* Wrapper with scroll for ReferralPage */}
+                  <div className="h-[calc(100vh-200px)] overflow-auto bg-white rounded-lg shadow-sm">
+                    <ReferralPage />
+                  </div>
                 </div>
               </div>
             </div>

@@ -19,7 +19,7 @@ const hybridClassPackage = require("../../model/class/hybridClassPackage");
 const kitPackages = require("../../model/class/kitPrice");
 const physicalCenterShema = require("../../model/physicalcenter/physicalCenterShema");
 const supportTiket = require("../../model/supportTiket");
-// const { default: referralModel } = require("../../model/referralModel");
+const referralModel = require("../../model/referralModel")
 
 const parentSubmitEnquiryForm = async (req, res) => {
   try {
@@ -1902,9 +1902,9 @@ const parentAddNewKidData = async (req, res) => {
       kidsAge: formData.age,
       kidsGender: formData.gender,
       enquiryStatus: "Pending",
-      enquiryType: "cold",
+      enquiryType: "warm",
       disposition: "None",
-      enquiryField: "prospects",
+      enquiryField: "enquiryList",
       payment: "Pending",
       logs: savedLog._id,
       scheduleDemo: {

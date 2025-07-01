@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
 import Sidebar from "../component/parent-component/parent-dashboard/layout/SideBar";
-import Topbar from "../component/parent-component/parent-dashboard/layout/Topbar";
+import Topbar from "../component/parent-component/parent-dashboard/layout/ParentTopBar";
 import MenuGrid from "../components/attandance/MenuGrid";
 import ChessLoader from "../landingPage/loader/ChessLoader";
 
@@ -33,14 +33,14 @@ const AttendancePage = () => {
           </div>
 
           {/* Main content */}
-          <div className="flex-1 flex flex-col h-full bg-gray-50">
+          <div className="flex-1 flex flex-col h-full bg-gray-100">
             {/* Topbar */}
             <div className="h-16">
               <Topbar />
             </div>
 
             {/* Content area */}
-            <div className="flex-1 overflow-auto p-6">
+            <div className="flex-1 overflow-auto p-6 mt-5">
               {/* Back Button */}
               <button
                 onClick={handleBack}

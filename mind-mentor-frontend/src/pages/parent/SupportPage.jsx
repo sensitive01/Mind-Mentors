@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 
 import ChessLoader from '../../landingPage/loader/ChessLoader';
 import Sidebar from '../../component/parent-component/parent-dashboard/layout/SideBar';
-import Topbar from '../../component/parent-component/parent-dashboard/layout/Topbar';
+import Topbar from '../../component/parent-component/parent-dashboard/layout/ParentTopBar';
 import Support from '../../component/parent-component/parent-dashboard/dashboard-components/Support';
 
 const SupportPage = () => {

@@ -1,5 +1,5 @@
 import DisplaySelectedClass from "../../../department-components/common-components/assign-class/DisplaySelectedClass";
-import Topbar from "../../../component/parent-component/parent-dashboard/layout/Topbar";
+import Topbar from '../../../component/parent-component/parent-dashboard/layout/EmployeeTopBar';
 import Sidebar from "../../../department-components/superadmin/Layout/Sidebar";
 
 const SuperAdminDisplayWholeClassKid = () => {

@@ -182,15 +182,15 @@ const MenuGrid = () => {
           gradient: "from-purple-600 to-purple-700",
           route: "/parent/certificate",
         },
-        {
-          id: id,
-          icon: <Clock className="w-6 h-6 text-white" />,
-          title: "Availability",
-          subtitle: "Availability",
-          bgColor: "bg-cyan-600",
-          gradient: "from-cyan-600 to-cyan-700",
-          route: `/parent/add-kid-availability/${id}`,
-        },
+        // {
+        //   id: id,
+        //   icon: <Clock className="w-6 h-6 text-white" />,
+        //   title: "Availability",
+        //   subtitle: "Availability",
+        //   bgColor: "bg-cyan-600",
+        //   gradient: "from-cyan-600 to-cyan-700",
+        //   route: `/parent/add-kid-availability/${id}`,
+        // },
       ];
     }
   };

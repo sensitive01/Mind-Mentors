@@ -1,5 +1,5 @@
 import Invoices from "../../../department-components/centeradmin-components/dashboard/Invoices";
-import Topbar from '../../../component/parent-component/parent-dashboard/layout/Topbar';
+import Topbar from '../../../component/parent-component/parent-dashboard/layout/EmployeeTopBar';
 import Sidebar from "../../../department-components/superadmin/Layout/Sidebar";
 
 const SuperAdminInvoicePage = () => {

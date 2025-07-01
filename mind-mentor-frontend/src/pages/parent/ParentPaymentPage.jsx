@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import ChessLoader from "../../landingPage/loader/ChessLoader";
 import Sidebar from "../../component/parent-component/parent-dashboard/layout/SideBar";
-import Topbar from "../../component/parent-component/parent-dashboard/layout/Topbar";
+import Topbar from "../../component/parent-component/parent-dashboard/layout/ParentTopBar";
 import ParentPayment from "../../component/parent-component/parent-dashboard/dashboard-components/ParentPayment";
 
 

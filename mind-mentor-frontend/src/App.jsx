@@ -321,6 +321,7 @@ import CenterAdminDisplayAssignClass from "./pages/employee/centeradmin/CenterAd
 import EnrollmentVerifyPayment from "./pages/employee/operation-employee/EnrollmentVerifyPayment";
 import SuperAdminParentSupports from "./pages/employee/superadmin/SuperAdminParentSupports";
 import MySelectedPackagePage from "./pages/parent/MySelectedPackagePage";
+import ClassRatingComponent from "./department-components/classRatings/ClassRatingComponent";
 
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
@@ -329,6 +330,16 @@ function App() {
     <>
       <Router>
         <Routes>
+
+          <Route path="/class-feed-back" element={<ClassRatingComponent />} />
+
+
+
+
+
+
+
+
           <Route path="/sample-coach" element={<CoachClassMeeting />} />
           <Route path="/kid/join-kid-class" element={<BlueButtonKidLiveClass />}/>
           <Route path="/join-the-meeting-blue" element={<BlueButton />} />
@@ -438,7 +449,7 @@ function App() {
           <Route path="/operation/department/assign-demo-class-individually/:classId"  element={<AssignDemoClassIndividualPage />} /> */}
 
           <Route path="/payment-details/:encodedData" element={<EnrollmentPaymentPage />}/>   
-          <Route path="/operation/department/enrollment-profile" element={<Profile />}/>        
+          <Route path="/operation/department/profile" element={<Profile />}/>        
           <Route path="/operation/department/dashboard" element={<OperationDashboardPage />}/> 
           <Route path="/operation/department/enrollment-data" element={<EnquiryProspectsTabPage />}/>
           <Route path="/operation/department/task-table" element={<MyTaskAssinedTaskTable />}/>     
@@ -514,7 +525,7 @@ function App() {
           {/* <Route path="/serviceLogin" element={<ServiceLogin />} /> */}
 
           <Route path="/renewal/department/dashboard"  element={<RenewalDashboard />}/>  
-          <Route path="/renewal-associate/department/renewalprofile"  element={<RenewalProfile />} />    
+          <Route path="/renewal-associate/department/profile"  element={<RenewalProfile />} />    
           <Route path="/renewal/department/leaves"  element={<RenewalLeaves />}/>      
           <Route path="/renewal/department/leaves/add"  element={<RenewalLeavesAdd />}/>       
           <Route path="/renewal/department/edit-leaves/:id"  element={<RenewalLeavesAdd />}/>
@@ -543,7 +554,7 @@ function App() {
           <Route path="/renewalReferrals" element={<RenewalReferal />} />
 
           <Route path="/coach/start-class-room" element={<CoachCreateMeetings />}/>
-          <Route path="/coachProfile" element={<CoachProfile />} />
+          <Route path="/coach/department/profile" element={<CoachProfile />} />
           <Route path="/coach/department/dashboard" element={<CoachDashboard />}/>
           <Route path="/coach/department/leaves" element={<CoachLeaves />} />
           <Route path="/coach/department/leaves/add" element={<CoachLeavesAdd />}/>
@@ -592,7 +603,7 @@ function App() {
           {/* <Route path="/marketingLogin" element={<MarketingLogin />} /> */}
           {/* <Route path="/centeradmin-login" element={<CenterLoginPage />} /> */}
 
-          <Route path="/centeradmin/profile" element={<CenterProfile />} />
+          <Route path="/centeradmin/department/profile" element={<CenterProfile />} />
           <Route path="/centeradmin/department/enrollment-data"  element={<CenterListingEnquiries />} />
           <Route path="/centeradmin/department/enquiry-form"  element={<CenterSEnquiryFormPage />}/>
           <Route path="/centeradmin-kids" element={<CenterAdminKidsPage />} />
@@ -693,6 +704,8 @@ function App() {
           <Route path="/super-admin/department/display-whole-selectedClass/:enqId"  element={<SuperAdminDisplayWholeClassKid />}/>
           <Route path="/super-admin/department/allowdeduct" element={<AllowDeductTable />} />
           <Route path="/super-admin/department/parent-tickets"  element={<SuperAdminParentSupports />}/>
+          <Route path="/super-admin/department/profile" element={<SuperadminProfile />} />
+
 
 
           {/* <Route path="/super-admin/department/show-complete-enquiry-logs/:id" element={<ShowAllEnquiryLogs />} /> */}
@@ -721,9 +734,8 @@ function App() {
           <Route path="/expenses/" element={<ExpensesTable />} />
           <Route path="/transactions/" element={<TransactionTable />} />
           <Route path="/transactions/add" element={<TransactionForm />} />
-          <Route path="/superadminProfile" element={<SuperadminProfile />} />
           <Route path="/superadminSupport/add" element={<SuperadminSupport />}/> 
-          <Route  path="/superadminMessageStatus/" element={<SuperadminMessageStusTrackPage />} />  
+          <Route path="/superadminMessageStatus/" element={<SuperadminMessageStusTrackPage />} />  
           <Route path="/notifications/add" element={<NotificationForm />} />
           <Route path="/allowdeduct/add" element={<AllowDeductForm />} />
           <Route path="/expenses/add" element={<ExpenseForm />} />

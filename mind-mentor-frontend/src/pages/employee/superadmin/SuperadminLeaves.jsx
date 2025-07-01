@@ -1,5 +1,5 @@
 import LeavesTable from "../../../department-components/common-components/leaves/LeavesTable";
-import Topbar from '../../../component/parent-component/parent-dashboard/layout/Topbar';
+import Topbar from '../../../component/parent-component/parent-dashboard/layout/EmployeeTopBar';
 import Sidebar from "../../../department-components/superadmin/Layout/Sidebar";
 
 const ListingEnquiries = () => {

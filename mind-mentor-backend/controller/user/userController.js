@@ -1511,16 +1511,49 @@ const getAllParentData = async (req, res) => {
         .json({ success: false, message: "No parent data found" });
     }
 
+    // Extract all kidIds
+    const allKidIds = parentData.flatMap(parent =>
+      parent.kids.map(kid => kid.kidId)
+    );
+
+    // Get all enrollment data for the collected kidIds
+    const allEnrollments = await enquiryData.find({
+      kidId: { $in: allKidIds }
+    });
+
+    // Convert enrollment array into a map for quick access
+    const enrollmentMap = {};
+    allEnrollments.forEach(enrollment => {
+      enrollmentMap[enrollment.kidId] = enrollment;
+    });
+
+    // Attach corresponding enrollment to each kid inside parent.kids
+    const enrichedParentData = parentData.map(parent => {
+      const updatedKids = parent.kids.map(kid => {
+        return {
+          ...kid._doc,
+          enrollment: enrollmentMap[kid.kidId] || null
+        };
+      });
+
+      return {
+        ...parent._doc,
+        kids: updatedKids
+      };
+    });
+
     res.status(200).json({
       success: true,
-      message: "Parent data retrieved successfully",
-      parentData,
+      message: "Parent data retrieved successfully with enrollment info",
+      parentData: enrichedParentData,
     });
+
   } catch (err) {
     console.error("Error in getting the parent data", err);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
+
 
 function toTitleCase(str) {
   if (typeof str !== "string") return "";

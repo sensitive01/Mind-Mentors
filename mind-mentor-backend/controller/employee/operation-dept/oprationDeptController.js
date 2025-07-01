@@ -3783,7 +3783,7 @@ const makeaCallToParent = async (req, res) => {
 const getEmployeeData = async (req, res) => {
   try {
     const { empId } = req.params;
-    const employeeData = await Employee.findOne({ _id: empId });
+    const employeeData = await Employee.findOne({ _id: empId },{firstName:1,email:1,department:1,role:1});
 
     if (!employeeData) {
       return res.status(404).json({ message: "Employee not found" });
