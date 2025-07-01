@@ -985,3 +985,16 @@ export const changePassword = async (currentPassword,newPassword,empId) => {
   const response = await userInstance.put(`/change-the-employee-password/${empId}`,{currentPassword,newPassword});
   return response;
 };
+
+
+export const fetchParentTikets = async () => {
+  const response = await userInstance.get(`/get-parent-tickets-data`,);
+  return response;
+};
+
+export const reponseToTickets = async (message, ticketId, empId) => {
+  const response = await userInstance.put(`/response-to-ticket/${ticketId}`, { message, empId });
+  return response;
+};
+
+

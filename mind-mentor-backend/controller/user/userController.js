@@ -11,6 +11,7 @@ const Voucher = require("../../model/discount_voucher/voucherModel");
 const parentModel = require("../../model/parentModel");
 const leavesModel = require("../../model/leavesModel");
 const OnlineClass = require("../../model/class/onlineClassPackage");
+const parentTicket = require("../../model/supportTiket");
 const {
   Tournament,
   Notification,
@@ -3010,7 +3011,7 @@ const sendSelectedPackageData = async (req, res) => {
             employeeId: empId,
             employeeName: empData.firstName,
             department: empData.department,
-            comment:comment,
+            comment: comment,
             action: "Package Selection",
           },
         },
@@ -3178,7 +3179,74 @@ const changeThePassword = async (req, res) => {
   }
 };
 
+const getParentTicketsData = async (req, res) => {
+  try {
+    const ticketsData = await parentTicket.find().sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      message: "All Parent Support Tickets",
+      data: ticketsData,
+    });
+  } catch (err) {
+    console.log("Error in getting the parent support data", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch parent support tickets",
+      error: err.message || "Internal Server Error",
+    });
+  }
+};
+
+const reponseToTicket = async (req, res) => {
+  try {
+    const { ticketId } = req.params;
+    const { message, empId } = req.body;
+
+    const time = new Date().toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    const newMessage = {
+      senderId: empId,
+      message,
+      time,
+    };
+
+    const updatedTicket = await parentTicket.findByIdAndUpdate(
+      ticketId,
+      {
+        $push: { messages: newMessage },
+        $set: { updatedAt: new Date() },
+      },
+      { new: true }
+    );
+
+    if (!updatedTicket) {
+      return res.status(404).json({
+        success: false,
+        message: "Ticket not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Response added successfully",
+      data: updatedTicket,
+    });
+  } catch (err) {
+    console.error("Error in response to tickets", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
 module.exports = {
+  reponseToTicket,
+  getParentTicketsData,
   changeThePassword,
   getThePaymentId,
   getInvoiceData,
@@ -3270,5 +3338,6 @@ module.exports = {
   getChatByTicketId,
   updateChat,
   deleteChat,
+  getAllEmployeesByName,
   getAllEmployeesByName,
 };

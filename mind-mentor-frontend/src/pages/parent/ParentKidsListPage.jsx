@@ -43,28 +43,30 @@ const ParentKidsDetailsPage = () => {
   const handleBack = () => navigate(-1);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div className="flex h-screen bg-gray-50">
       {loading ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
           <ChessLoader />
         </div>
       ) : (
         <>
           <Sidebar />
-          <div className="flex-1 flex flex-col h-full">
+          <div className="flex-1 flex flex-col h-full overflow-hidden">
             <Topbar />
-            <div className="flex-1 p-8">
-              {/* Back Button */}
-              <button
-                onClick={handleBack}
-                className="flex items-center text-blue-600 hover:text-blue-800 mb-4 transition"
-              >
-                <ArrowLeft className="w-5 h-5 mr-2" />
-                Back
-              </button>
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-6">
+                {/* Back Button */}
+                <button
+                  onClick={handleBack}
+                  className="flex items-center text-blue-600 hover:text-blue-800 mb-4 transition-colors duration-200"
+                >
+                  <ArrowLeft className="w-5 h-5 mr-2" />
+                  Back
+                </button>
 
-              {/* Kids Data */}
-              <KidsDetails kids={kids} />
+                {/* Kids Data */}
+                <KidsDetails kids={kids} />
+              </div>
             </div>
           </div>
         </>

@@ -73,6 +73,7 @@ const ModernSidebar = () => {
   const [openCenters, setOpenCenters] = useState(false);
   const [openSubscriptions, setOpenSubscriptions] = useState(false);
   const [openTournaments, setOpenTournaments] = useState(false);
+  const [openSupports, setOpenSupports] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeItem, setActiveItem] = useState("");
   const [empData, setEmpData] = useState({});
@@ -138,7 +139,9 @@ const ModernSidebar = () => {
       currentPath.includes("/super-admin/department/package-table") ||
       currentPath.includes("/super-admin/department/list-all-programme") ||
       currentPath.includes("/superadminFeedback") ||
-      currentPath.includes("/super-admin/department/student-attandace-report") ||
+      currentPath.includes(
+        "/super-admin/department/student-attandace-report"
+      ) ||
       currentPath.includes("/super-admin/department/all-class-details")
     ) {
       setOpenClasses(true);
@@ -156,6 +159,11 @@ const ModernSidebar = () => {
       currentPath.includes("/participents")
     ) {
       setOpenTournaments(true);
+    } else if (
+      currentPath.includes("/super-admin/department/parent-tickets") ||
+      currentPath.includes("/superadminSupport")
+    ) {
+      setOpenSupports(true);
     }
   }, [location.pathname]);
 
@@ -289,6 +297,7 @@ const ModernSidebar = () => {
     setOpenCenters(false);
     setOpenSubscriptions(false);
     setOpenTournaments(false);
+    setOpenSupports(false);
   };
 
   // Event handlers for toggling submenus
@@ -326,6 +335,11 @@ const ModernSidebar = () => {
     if (e) e.preventDefault();
     closeAllSubmenus();
     setOpenTournaments(true);
+  };
+  const handleSupportsClick = (e) => {
+    if (e) e.preventDefault();
+    closeAllSubmenus();
+    setOpenSupports(true);
   };
 
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
@@ -517,9 +531,23 @@ const ModernSidebar = () => {
     },
     {
       icon: <SupportIcon />,
-      text: "Support",
-      link: "/superadminSupport",
+      text: "Supports",
+      subItems: [
+        {
+          icon: <SupportIcon />,
+          text: "Parent Tickets",
+          link: "/super-admin/department/parent-tickets",
+        },
+        {
+          icon: <SupportIcon />,
+          text: "Internal Supports",
+          link: "/superadminSupport",
+        },
+      ],
+      open: openSupports,
+      onClick: handleSupportsClick,
     },
+
     {
       icon: <DocumentsIcon />,
       text: "Documents",

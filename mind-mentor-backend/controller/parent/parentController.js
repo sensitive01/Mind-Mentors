@@ -18,6 +18,8 @@ const offlineClassPackage = require("../../model/class/offlineClassPackage");
 const hybridClassPackage = require("../../model/class/hybridClassPackage");
 const kitPackages = require("../../model/class/kitPrice");
 const physicalCenterShema = require("../../model/physicalcenter/physicalCenterShema");
+const supportTiket = require("../../model/supportTiket");
+const { default: referralModel } = require("../../model/referralModel");
 
 const parentSubmitEnquiryForm = async (req, res) => {
   try {
@@ -1491,19 +1493,21 @@ const getKidPaidFeeData = async (req, res) => {
   try {
     const { kidId } = req.params;
 
-    const paymentData = await classPaymentModel.find(
+    const paymentData = await packagePaymentData.find(
       { kidId: kidId },
       {
-        amount: 1,
-        status: 1,
+        totalAmount: 1,
+        baseAmount:1,
+        discount:1,
+        paymentStatus: 1,
         kidName: 1,
         kidId: 1,
-        selectionType: 1,
         timestamp: 1,
-        raz_transaction_id: 1,
+        paymentId: 1,
         enqId: 1,
       }
     );
+    console.log("paymentData",paymentData)
 
     if (!paymentData || paymentData.length === 0) {
       return res
@@ -2026,34 +2030,39 @@ const getThePackageData = async (req, res) => {
     const offlineClassPackageData = await offlineClassPackage.find();
     const hybridClassPackageData = await hybridClassPackage.find();
     const kitPrice = await kitPackages.find();
-    const physicalCenters = await physicalCenterShema.find({}, { _id: 1, address: 1 });
+    const physicalCenters = await physicalCenterShema.find(
+      {},
+      { _id: 1, address: 1 }
+    );
 
     // Create centerId => address map
     const centerAddressMap = {};
-    physicalCenters.forEach(center => {
+    physicalCenters.forEach((center) => {
       centerAddressMap[center._id.toString()] = center.address;
     });
 
     // Add address to offline package centers
-    const offlineClassPackageDataWithAddress = offlineClassPackageData.map(pkg => {
-      const newCenters = pkg.centers.map(center => {
-        const centerIdStr = center.centerId?.toString();
-        const address = centerAddressMap[centerIdStr] || "";
-        return {
-          ...(center.toObject ? center.toObject() : center),
-          address,
-        };
-      });
+    const offlineClassPackageDataWithAddress = offlineClassPackageData.map(
+      (pkg) => {
+        const newCenters = pkg.centers.map((center) => {
+          const centerIdStr = center.centerId?.toString();
+          const address = centerAddressMap[centerIdStr] || "";
+          return {
+            ...(center.toObject ? center.toObject() : center),
+            address,
+          };
+        });
 
-      return {
-        ...(pkg.toObject ? pkg.toObject() : pkg),
-        centers: newCenters,
-      };
-    });
+        return {
+          ...(pkg.toObject ? pkg.toObject() : pkg),
+          centers: newCenters,
+        };
+      }
+    );
 
     // Add address to online package centers
-    const onlinePackageDataWithAddress = onlinePackageData.map(pkg => {
-      const newCenters = pkg.centers.map(center => {
+    const onlinePackageDataWithAddress = onlinePackageData.map((pkg) => {
+      const newCenters = pkg.centers.map((center) => {
         const centerIdStr = center.centerId?.toString();
         const address = centerAddressMap[centerIdStr] || "";
         return {
@@ -2088,10 +2097,255 @@ const getThePackageData = async (req, res) => {
   }
 };
 
+const getKidDataParentBelongsTo = async (req, res) => {
+  try {
+    const { parentId } = req.params;
 
+    const parentKidData = await parentModel.findOne(
+      { _id: parentId },
+      { kids: 1 }
+    );
 
+    if (
+      !parentKidData ||
+      !parentKidData.kids ||
+      parentKidData.kids.length === 0
+    ) {
+      return res.status(404).json({ message: "No kids found for this parent" });
+    }
+
+    const kidIds = parentKidData.kids.map((k) => k.kidId);
+
+    const kidData = await kidModel.find(
+      { _id: { $in: kidIds } },
+      { _id: 1, kidsName: 1 }
+    );
+
+    const result = kidData.map((kid) => ({
+      kidId: kid._id,
+      kidName: kid?.kidsName,
+    }));
+
+    console.log("Result:", result);
+
+    res.status(200).json(result);
+  } catch (err) {
+    console.log("Error in getting the kid data", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+const createTicketForParent = async (req, res) => {
+  try {
+    const { ticketData } = req.body;
+    console.log("ticket data", ticketData);
+
+    const {
+      topic,
+      description,
+      kidId,
+      kidName,
+      parentId,
+      status = "open",
+      priority = "medium",
+    } = ticketData;
+
+    const count = await supportTiket.countDocuments();
+    const ticketId = `MMTKT${(count + 1).toString().padStart(7, "0")}`;
+
+    // ✅ Create new ticket with ticketId
+    const newTicket = new supportTiket({
+      ticketId, // ← here
+      topic,
+      description,
+      kidId,
+      kidName,
+      parentId,
+      status,
+      priority,
+      messages: [],
+    });
+
+    await newTicket.save();
+
+    return res.status(201).json({
+      success: true,
+      message: "Ticket created successfully",
+      data: newTicket,
+    });
+  } catch (err) {
+    console.error("Error in creating the ticket for parent:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+const getAllTicketOfParent = async (req, res) => {
+  try {
+    const { parentId } = req.params;
+
+    const tickets = await supportTiket
+      .find({ parentId })
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      message: "All Ticket of Parent",
+      data: tickets,
+    });
+  } catch (err) {
+    console.log("Error in getting the ticket of parent", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to retrieve tickets",
+      error: err.message || "Internal Server Error",
+    });
+  }
+};
+
+const updateSupportChats = async (req, res) => {
+  try {
+    const { ticketId } = req.params;
+    const { message, parentId } = req.body;
+
+    console.log("ticketId", ticketId, "message", message, "parentId", parentId);
+
+    const time = new Date().toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    const newMessage = {
+      senderId: parentId,
+      message,
+      time,
+    };
+
+    const updatedTicket = await supportTiket.findByIdAndUpdate(
+      ticketId,
+      {
+        $push: { messages: newMessage },
+        $set: { updatedAt: new Date() },
+      },
+      { new: true }
+    );
+
+    if (!updatedTicket) {
+      return res.status(404).json({
+        success: false,
+        message: "Ticket not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Message added successfully",
+      data: updatedTicket,
+    });
+  } catch (err) {
+    console.error("Error in updateSupportChats", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+const sendReferalData = async (req, res) => {
+  try {
+    const { parentId } = req.params;
+    const { referral } = req.body;
+
+    console.log("referral", referral);
+
+    const { phoneNumber, name } = referral;
+
+    if (!phoneNumber || !name) {
+      return res.status(400).json({
+        success: false,
+        message: "Parent name and mobile number are required",
+      });
+    }
+
+    const newReferral = new referralModel({
+      name: name,
+      phoneNumber: phoneNumber,
+      mobileNumber: phoneNumber,
+      status: "Pending",
+      referrerId: parentId,
+    });
+
+    const savedReferral = await newReferral.save();
+
+    return res.status(201).json({
+      success: true,
+      message: "Referral saved successfully",
+      data: savedReferral,
+    });
+  } catch (err) {
+    console.log("Error in saving the referral data", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
+const getMyReferalData = async (req, res) => {
+  try {
+    const { referalId } = req.params;
+
+    const referalData = await referralModel
+      .find({ referrerId: referalId })
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      message: "Referral data fetched successfully",
+      data: referalData,
+    });
+  } catch (err) {
+    console.log("Error in getting the referral data", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch referral data",
+      error: err.message,
+    });
+  }
+};
+
+const getMyselectedPackageData = async (req, res) => {
+  try {
+    const { parentId, kidId } = req.params;
+
+    const selectedPackage = await packagePaymentData.find({ kidId: kidId });
+
+    return res.status(200).json({
+      success: true,
+      message: "Selected package data fetched successfully",
+      data: selectedPackage,
+    });
+  } catch (err) {
+    console.log("Error in getting the selected package data", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch selected package data",
+      error: err.message,
+    });
+  }
+};
 
 module.exports = {
+  getMyselectedPackageData,
+  getMyReferalData,
+  sendReferalData,
+  updateSupportChats,
+  getAllTicketOfParent,
+  createTicketForParent,
+  getKidDataParentBelongsTo,
   getThePackageData,
   parentSaveKidData,
   parentAddNewKidData,

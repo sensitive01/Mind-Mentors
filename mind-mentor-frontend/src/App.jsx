@@ -319,6 +319,8 @@ import CenterAdminActiveKidData from "./pages/employee/centeradmin/CenterAdminAc
 import CenterAdminAssignWholeClass from "./pages/employee/centeradmin/CenterAdminAssignWholeClass";
 import CenterAdminDisplayAssignClass from "./pages/employee/centeradmin/CenterAdminDisplayAssignClass";
 import EnrollmentVerifyPayment from "./pages/employee/operation-employee/EnrollmentVerifyPayment";
+import SuperAdminParentSupports from "./pages/employee/superadmin/SuperAdminParentSupports";
+import MySelectedPackagePage from "./pages/parent/MySelectedPackagePage";
 
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
@@ -419,6 +421,10 @@ function App() {
           <Route
             path="/parent-package-selection/:kidId"
             element={<ParentPackageSelectionPage />}
+          />
+          <Route
+            path="/parent-my-package-data/:kidId"
+            element={<MySelectedPackagePage />}
           />
           <Route
             path="/paranet-registraton"
@@ -686,6 +692,8 @@ function App() {
           <Route path="/super-admin/department/assign-whole-plan-class/:enqId" element={<SuperAdminAssignWholeClassToKid />} />
           <Route path="/super-admin/department/display-whole-selectedClass/:enqId"  element={<SuperAdminDisplayWholeClassKid />}/>
           <Route path="/super-admin/department/allowdeduct" element={<AllowDeductTable />} />
+          <Route path="/super-admin/department/parent-tickets"  element={<SuperAdminParentSupports />}/>
+
 
           {/* <Route path="/super-admin/department/show-complete-enquiry-logs/:id" element={<ShowAllEnquiryLogs />} /> */}
           {/* <Route path="/super-admin/department/list-task-assigned-me" element={<SuperadminMyAssignTasksTable />}/>         */}

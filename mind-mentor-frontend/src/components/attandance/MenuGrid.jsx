@@ -28,20 +28,20 @@ const MenuGrid = () => {
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const paymentNotification = async () => {
-      try {
-        const response = await fetchPaymentNotifications(id, parentId);
-        if (response.status === 200) {
-          setIsModalOpen(true);
-          setLink(response.data.paymentLink);
-        }
-      } catch (error) {
-        console.error("Error fetching payment notifications:", error);
-      }
-    };
-    paymentNotification();
-  }, [id, parentId]);
+  // useEffect(() => {
+  //   const paymentNotification = async () => {
+  //     try {
+  //       const response = await fetchPaymentNotifications(id, parentId);
+  //       if (response.status === 200) {
+  //         setIsModalOpen(true);
+  //         setLink(response.data.paymentLink);
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching payment notifications:", error);
+  //     }
+  //   };
+  //   paymentNotification();
+  // }, [id, parentId]);
 
   useEffect(() => {
     const getEnquiryStatus = async () => {
@@ -85,11 +85,11 @@ const MenuGrid = () => {
         {
           id: id,
           icon: <FileText className="w-6 h-6 text-white" />,
-          title: "Package Selection",
+          title: "My Active Package",
           subtitle: "(Detailed View)",
           bgColor: "bg-blue-600",
           gradient: "from-blue-600 to-blue-700",
-          route: `/parent-package-selection/${id}`,
+          route: `/parent-my-package-data/${id}`,
         },
       ];
     }
@@ -117,11 +117,11 @@ const MenuGrid = () => {
         {
           id: id,
           icon: <FileText className="w-6 h-6 text-white" />,
-          title: "Package Selection",
+          title: "My Active Package",
           subtitle: "(Detailed View)",
           bgColor: "bg-blue-600",
           gradient: "from-blue-600 to-blue-700",
-          route: `/parent-package-selection/${id}`,
+          route: `/parent-my-package-data/${id}`,
         },
       ];
     }
@@ -158,11 +158,11 @@ const MenuGrid = () => {
         {
           id: id,
           icon: <FileText className="w-6 h-6 text-white" />,
-          title: "Package Selection",
+          title: "My Active Package",
           subtitle: "(Detailed View)",
           bgColor: "bg-blue-600",
           gradient: "from-blue-600 to-blue-700",
-          route: `/parent-package-selection/${id}`,
+          route: `/parent-my-package-data/${id}`,
         },
         {
           id: id,

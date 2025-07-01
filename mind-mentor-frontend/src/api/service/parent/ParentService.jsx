@@ -401,3 +401,74 @@ export const fetchParentPackageDetails = async () => {
     return err;
   }
 };
+
+export const getKidBelongsToData = async (parentId) => {
+  try {
+   
+    const response = await parentInstance.get(`/parent/get-kid-belong-to-data-support/${parentId}`);
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+export const createTiketForParent = async (ticketData) => {
+  try {
+   
+    const response = await parentInstance.post(`/parent/create-ticket-for-parent`,{ticketData});
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+export const getTicketsofParents = async (parentId) => {
+  try {
+   
+    const response = await parentInstance.get(`/parent/get-all-ticket-of-parent/${parentId}`);
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+export const updateTicketChats = async (message,tiketId,parentId) => {
+  try {
+   
+    const response = await parentInstance.put(`/parent/update-ticket-chats/${tiketId}`,{message,parentId});
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+export const sendReferealDeatails = async (referral,parentId) => {
+  try {
+   
+    const response = await parentInstance.post(`/parent/send-referal-data/${parentId}`,{referral});
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+
+export const getMyReferal = async (parentId) => {
+  try {
+   
+    const response = await parentInstance.get(`/parent/get-my-referal-data/${parentId}`);
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+
+export const getMySubscriptionData = async (parentId,kidId) => {
+  try {
+   
+    const response = await parentInstance.get(`/parent/get-my-selected-package-data/${parentId}/${kidId}`);
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
