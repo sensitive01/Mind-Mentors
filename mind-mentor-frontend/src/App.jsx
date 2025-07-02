@@ -322,6 +322,7 @@ import EnrollmentVerifyPayment from "./pages/employee/operation-employee/Enrollm
 import SuperAdminParentSupports from "./pages/employee/superadmin/SuperAdminParentSupports";
 import MySelectedPackagePage from "./pages/parent/MySelectedPackagePage";
 import ClassRatingComponent from "./department-components/classRatings/ClassRatingComponent";
+import ThankYouPage from "./department-components/classRatings/ThankYouPage";
 
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
@@ -332,6 +333,8 @@ function App() {
         <Routes>
 
           <Route path="/class-feed-back" element={<ClassRatingComponent />} />
+          <Route path="/thank-you-page" element={<ThankYouPage />} />
+
 
 
 

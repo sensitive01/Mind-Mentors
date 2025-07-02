@@ -80,6 +80,8 @@
         transition: all 0.3s ease;
         margin-top: 10px;
         box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        border: none;
+        cursor: pointer;
       }
 
       .button:hover {
@@ -206,6 +208,10 @@
         We look forward to seeing you in the next session!
       </p>
 
+      <button class="button" onclick="returnToDashboard()">
+        Return to Dashboard
+      </button>
+
       <div class="footer">© 2025 • Have a great day!</div>
     </div>
 
@@ -216,6 +222,18 @@
           document.querySelector(".logo").classList.add("animated");
         }, 500);
       });
+
+      // Function to return to dashboard
+      function returnToDashboard() {
+        // Replace this URL with your actual dashboard URL
+        window.location.href = "/dashboard";
+
+        // Alternative: If you want to go back to the previous page
+        // window.history.back();
+
+        // Alternative: If you want to redirect to a specific URL
+        // window.location.href = "https://your-dashboard-url.com";
+      }
     </script>
   </body>
 </html>
