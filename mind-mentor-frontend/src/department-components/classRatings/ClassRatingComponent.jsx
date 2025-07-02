@@ -8,12 +8,13 @@ import {
   Sparkles,
   Send,
 } from "lucide-react";
+import mindmentorzLogo from "../../assets/newLogo.png";
 
 const ClassFeedbackSystem = ({
   userType = "kid",
   classId = "default-class",
   sessionEnded = true,
-  logoUrl = null,
+  logoUrl = mindmentorzLogo,
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
@@ -61,6 +62,7 @@ const ClassFeedbackSystem = ({
     },
   ];
 
+  // Handle kid question response
   const handleKidResponse = (questionId, rating) => {
     setKidResponses((prev) => ({
       ...prev,
@@ -68,6 +70,7 @@ const ClassFeedbackSystem = ({
     }));
   };
 
+  // Submit kid feedback
   const submitKidFeedback = async () => {
     const answeredQuestions = Object.keys(kidResponses).length;
     if (answeredQuestions < kidQuestions.length) {
@@ -80,13 +83,16 @@ const ClassFeedbackSystem = ({
     setIsSubmitting(true);
     setMessage("");
 
+    // Calculate total score
     const totalScore = Object.values(kidResponses).reduce(
       (sum, rating) => sum + rating,
       0
     );
 
     try {
+      // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
+
       setKidFeedbackSubmitted(true);
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 3000);
@@ -102,6 +108,7 @@ const ClassFeedbackSystem = ({
     }
   };
 
+  // Submit coach feedback
   const submitCoachFeedback = async () => {
     if (!coachFeedback.trim()) {
       setMessage("Please share your feedback before submitting! 💭");
@@ -112,7 +119,9 @@ const ClassFeedbackSystem = ({
     setMessage("");
 
     try {
+      // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
+
       setCoachFeedbackSubmitted(true);
       setMessage("✨ Your feedback has been shared with our team!");
       setTimeout(() => setShowThankYou(true), 2000);
@@ -124,578 +133,397 @@ const ClassFeedbackSystem = ({
     }
   };
 
+  // Calculate progress for kids
   const getProgress = () => {
     const answered = Object.keys(kidResponses).length;
     return (answered / kidQuestions.length) * 100;
   };
 
-  const styles = {
-    container: {
-      minHeight: "100vh",
-      background:
-        "linear-gradient(135deg, #f8f0ff 0%, #fce7f3 50%, #e0e7ff 100%)",
-    },
-    headerGradient: {
-      background: "linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)",
-      color: "white",
-    },
-    feedbackCard: {
-      background: "rgba(255, 255, 255, 0.9)",
-      backdropFilter: "blur(10px)",
-      border: "1px solid rgba(255, 255, 255, 0.5)",
-      boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
-    },
-    progressGradient: {
-      background: "linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)",
-    },
-    btnGradient: {
-      background: "linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)",
-      border: "none",
-      color: "white",
-      transition: "all 0.3s ease",
-    },
-    btnCoach: {
-      backgroundColor: "#3b82f6",
-      border: "none",
-      color: "white",
-      transition: "all 0.3s ease",
-    },
-    thumbBtn: {
-      transition: "all 0.3s ease",
-      border: "2px solid",
-      width: "60px",
-      height: "60px",
-      borderRadius: "50%",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    questionCard: {
-      background: "#f9fafb",
-      border: "1px solid #e5e7eb",
-      transition: "transform 0.2s ease",
-    },
-    logoContainer: {
-      width: "2.5rem",
-      height: "2.5rem",
-      background: "linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)",
-      borderRadius: "0.5rem",
-    },
-    overlay: {
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: "rgba(0, 0, 0, 0.5)",
-      backdropFilter: "blur(5px)",
-      zIndex: 1050,
-    },
-    confettiContainer: {
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      pointerEvents: "none",
-      overflow: "hidden",
-      zIndex: 1040,
-    },
-  };
-
-  // Bootstrap Classes
-  const bootstrapClasses = `
-    .btn-gradient:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(139, 92, 246, 0.4);
-    }
-    .btn-coach:hover {
-      background-color: #2563eb !important;
-      transform: translateY(-2px);
-    }
-    .thumb-btn:hover {
-      transform: scale(1.1);
-    }
-    .thumb-btn:active {
-      transform: scale(0.95);
-    }
-    .question-card:hover {
-      transform: translateY(-2px);
-    }
-    @keyframes confetti-fall {
-      0% { transform: translateY(-100vh) rotate(0deg); }
-      100% { transform: translateY(100vh) rotate(360deg); }
-    }
-    .confetti-item {
-      animation: confetti-fall 3s linear infinite;
-    }
-    @media (max-width: 576px) {
-      .thumb-btn { width: 50px !important; height: 50px !important; }
-      .logo-container { width: 2rem !important; height: 2rem !important; }
-    }
-  `;
-
   return (
-    <>
-      <style>{bootstrapClasses}</style>
-      <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-      />
-
-      <div style={styles.container} className="d-flex flex-column">
-        {/* Header Row */}
-        <div className="container-fluid" style={styles.headerGradient}>
-          <div className="row align-items-center py-2 py-md-3">
-            <div className="col-6 col-md-8">
-              <div className="d-flex align-items-center">
-                {logoUrl ? (
-                  <img
-                    src={logoUrl}
-                    alt="Logo"
-                    className="img-fluid"
-                    style={{ height: "2rem", maxHeight: "3rem" }}
-                  />
-                ) : (
-                  <div
-                    className="d-flex align-items-center justify-content-center"
-                    style={styles.logoContainer}
-                  >
-                    <Sparkles size={16} />
-                  </div>
-                )}
-                <span className="ms-2 fw-bold d-none d-sm-inline">
-                  Class Feedback
-                </span>
+    <div className="h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50 flex flex-col overflow-hidden">
+      {/* Header with Logo - Fixed height */}
+      <div className="flex-shrink-0 bg-primary backdrop-blur-sm border-b border-purple-100 shadow-sm">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 py-2 sm:py-3 flex items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center">
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt="Logo"
+                className="h-8 sm:h-10 lg:h-12 w-auto"
+              />
+            ) : (
+              <div className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                <Sparkles
+                  className="text-white"
+                  size={
+                    window.innerWidth < 640
+                      ? 16
+                      : window.innerWidth < 1024
+                      ? 20
+                      : 24
+                  }
+                />
               </div>
-            </div>
-            <div className="col-6 col-md-4 text-end">
-              <span className="badge bg-dark bg-opacity-25 px-2 py-1 rounded-pill small">
-                {isCoach ? "Coach View" : "Student View"}
-              </span>
-            </div>
+            )}
+            <span className="ml-1 sm:ml-2 font-bold text-gray-800 text-sm sm:text-base lg:text-lg hidden xs:block">
+              Class Feedback
+            </span>
+          </div>
+
+          {/* Status indicator */}
+          <div className="text-xs sm:text-sm lg:text-base text-white bg-black/20 px-2 py-1 rounded-full">
+            {isCoach ? "Coach View" : "Student View"}
           </div>
         </div>
+      </div>
 
-        {/* Main Content Row */}
-        <div
-          className="container-fluid flex-grow-1 py-2 py-md-3"
-          style={{ minHeight: "calc(100vh - 80px)" }}
-        >
-          <div className="row h-100">
-            {/* Main Card - Full width on mobile, centered on larger screens */}
-            <div className="col-12 col-xl-10 offset-xl-1 col-xxl-8 offset-xxl-2 h-100">
-              <div
-                className="card h-100 border-0 rounded-3"
-                style={styles.feedbackCard}
-              >
-                {/* Card Header */}
-                <div
-                  className="card-header border-0 text-center py-3 py-md-4"
-                  style={styles.headerGradient}
-                >
-                  <div className="container-fluid">
-                    <div className="row">
-                      <div className="col-12">
-                        <h2 className="h4 h-md-3 h-lg-2 mb-1 mb-md-2 fw-bold">
-                          {isCoach
-                            ? "🎯 Coach Feedback"
-                            : "⭐ Tell Us About Your Class!"}
-                        </h2>
-                        <p className="mb-0 small opacity-75">
-                          {isCoach
-                            ? "Share your session insights with our team"
-                            : "Your feedback helps us make classes better!"}
-                        </p>
-                      </div>
-                    </div>
+      {/* Main Content - Flexible height with internal scrolling */}
+      <div className="flex-1 overflow-hidden">
+        <div className="h-full max-w-7xl mx-auto p-2 sm:p-4 lg:p-6 flex flex-col">
+          {/* Thank You Overlay */}
+          {showThankYou && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
+              <div className="max-w-xs sm:max-w-sm w-full bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 text-center shadow-2xl mx-2">
+                <div className="mb-3 sm:mb-4">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mx-auto flex items-center justify-center">
+                    <Sparkles
+                      className="text-white"
+                      size={window.innerWidth < 640 ? 24 : 32}
+                    />
                   </div>
                 </div>
 
-                {/* Card Body - Scrollable Content */}
+                <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-2 sm:mb-3">
+                  Thanks for your feedback!
+                </h2>
+
+                <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">
+                  Your input helps us make classes even better.
+                </p>
+
+                <button
+                  onClick={() => setShowThankYou(false)}
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 sm:px-6 py-2 rounded-full font-semibold hover:from-purple-600 hover:to-pink-600 transition-all duration-300 text-sm sm:text-base"
+                >
+                  Continue
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Confetti Effect */}
+          {showConfetti && (
+            <div className="fixed inset-0 pointer-events-none overflow-hidden z-40">
+              {[
+                ...Array(
+                  window.innerWidth < 640
+                    ? 15
+                    : window.innerWidth < 1024
+                    ? 20
+                    : 30
+                ),
+              ].map((_, i) => (
                 <div
-                  className="card-body flex-grow-1 p-2 p-md-3 p-lg-4"
+                  key={i}
+                  className="absolute animate-bounce"
                   style={{
-                    overflowY: "auto",
-                    maxHeight: "calc(100vh - 300px)",
+                    left: `${Math.random() * 100}%`,
+                    top: `${Math.random() * 100}%`,
+                    animationDelay: `${Math.random() * 2}s`,
+                    animationDuration: `${1 + Math.random()}s`,
                   }}
                 >
-                  <div className="container-fluid">
-                    {/* Kid Feedback Section */}
-                    {!isCoach && (
-                      <>
-                        {/* Progress Bar Row */}
-                        <div className="row mb-3 mb-md-4">
-                          <div className="col-12">
-                            <div className="d-flex justify-content-between small text-muted mb-2">
-                              <span>Progress</span>
-                              <span>
-                                {Object.keys(kidResponses).length}/
-                                {kidQuestions.length}
+                  <Star
+                    className="text-yellow-400"
+                    size={
+                      Math.random() * (window.innerWidth < 640 ? 8 : 12) +
+                      (window.innerWidth < 640 ? 6 : 8)
+                    }
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg border border-white/50 overflow-hidden flex flex-col h-full">
+            {/* Header Section - Fixed */}
+            <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-3 sm:p-4 lg:p-6 flex-shrink-0">
+              <div className="text-center">
+                <h2 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold mb-1 sm:mb-2">
+                  {isCoach
+                    ? "🎯 Coach Feedback"
+                    : "⭐ Tell Us About Your Class!"}
+                </h2>
+                <p className="text-purple-100 text-xs sm:text-sm lg:text-base">
+                  {isCoach
+                    ? "Share your session insights with our team"
+                    : "Your feedback helps us make classes better!"}
+                </p>
+              </div>
+            </div>
+
+            {/* Content Area - Scrollable */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-3 sm:p-4 lg:p-6">
+                {/* Kid Feedback Section */}
+                {!isCoach && (
+                  <div className="space-y-3 sm:space-y-4">
+                    {/* Progress Bar */}
+                    <div className="mb-4 sm:mb-6">
+                      <div className="flex justify-between text-xs sm:text-sm text-gray-600 mb-2">
+                        <span>Progress</span>
+                        <span>
+                          {Object.keys(kidResponses).length}/
+                          {kidQuestions.length}
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-2">
+                        <div
+                          className="bg-gradient-to-r from-purple-500 to-pink-500 h-1.5 sm:h-2 rounded-full transition-all duration-500"
+                          style={{ width: `${getProgress()}%` }}
+                        ></div>
+                      </div>
+                    </div>
+
+                    {/* Questions */}
+                    <div className="space-y-3 sm:space-y-4">
+                      {kidQuestions.map((q, index) => (
+                        <div
+                          key={q.id}
+                          className="bg-gray-50 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-gray-200"
+                        >
+                          <div className="flex items-start mb-2 sm:mb-3">
+                            <span className="text-lg sm:text-xl mr-2 flex-shrink-0">
+                              {q.emoji}
+                            </span>
+                            <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-800 leading-tight">
+                              {index + 1}. {q.question}
+                            </h3>
+                          </div>
+
+                          <div className="flex justify-center space-x-4 sm:space-x-6 lg:space-x-8">
+                            {/* Thumbs Up */}
+                            <button
+                              onClick={() => handleKidResponse(q.id, 1)}
+                              disabled={kidResponses[q.id] !== undefined}
+                              className={`p-2 sm:p-3 lg:p-4 rounded-full transition-all duration-300 transform hover:scale-110 active:scale-95 ${
+                                kidResponses[q.id] === 1
+                                  ? "bg-green-500 text-white shadow-lg"
+                                  : kidResponses[q.id] === undefined
+                                  ? "bg-green-100 text-green-600 hover:bg-green-200"
+                                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                              }`}
+                            >
+                              <ThumbsUp
+                                size={
+                                  window.innerWidth < 640
+                                    ? 20
+                                    : window.innerWidth < 1024
+                                    ? 24
+                                    : 28
+                                }
+                              />
+                            </button>
+
+                            {/* Thumbs Down */}
+                            <button
+                              onClick={() => handleKidResponse(q.id, -1)}
+                              disabled={kidResponses[q.id] !== undefined}
+                              className={`p-2 sm:p-3 lg:p-4 rounded-full transition-all duration-300 transform hover:scale-110 active:scale-95 ${
+                                kidResponses[q.id] === -1
+                                  ? "bg-red-500 text-white shadow-lg"
+                                  : kidResponses[q.id] === undefined
+                                  ? "bg-red-100 text-red-600 hover:bg-red-200"
+                                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                              }`}
+                            >
+                              <ThumbsDown
+                                size={
+                                  window.innerWidth < 640
+                                    ? 20
+                                    : window.innerWidth < 1024
+                                    ? 24
+                                    : 28
+                                }
+                              />
+                            </button>
+                          </div>
+
+                          {/* Response indicator */}
+                          {kidResponses[q.id] !== undefined && (
+                            <div className="text-center mt-2 sm:mt-3">
+                              <span
+                                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                  kidResponses[q.id] === 1
+                                    ? "bg-green-100 text-green-700"
+                                    : "bg-red-100 text-red-700"
+                                }`}
+                              >
+                                <CheckCircle size={12} className="mr-1" />
+                                {kidResponses[q.id] === 1
+                                  ? "Great!"
+                                  : "Got it!"}
                               </span>
                             </div>
-                            <div
-                              className="progress"
-                              style={{ height: "0.5rem" }}
-                            >
-                              <div
-                                className="progress-bar"
-                                style={{
-                                  ...styles.progressGradient,
-                                  width: `${getProgress()}%`,
-                                  transition: "width 0.5s ease",
-                                }}
-                              ></div>
-                            </div>
-                          </div>
+                          )}
                         </div>
+                      ))}
+                    </div>
 
-                        {/* Questions Grid */}
-                        <div className="row g-2 g-md-3">
-                          {kidQuestions.map((q, index) => (
-                            <div key={q.id} className="col-12 col-lg-6">
-                              <div
-                                className="card h-100 question-card"
-                                style={styles.questionCard}
-                              >
-                                <div className="card-body p-3">
-                                  <div className="row align-items-start mb-2 mb-md-3">
-                                    <div className="col-2 col-md-1">
-                                      <span className="fs-5">{q.emoji}</span>
-                                    </div>
-                                    <div className="col-10 col-md-11">
-                                      <h6 className="card-title mb-0 small fw-semibold">
-                                        {index + 1}. {q.question}
-                                      </h6>
-                                    </div>
-                                  </div>
-
-                                  <div className="row justify-content-center">
-                                    <div className="col-auto">
-                                      <div className="d-flex gap-3 justify-content-center">
-                                        {/* Thumbs Up */}
-                                        <button
-                                          onClick={() =>
-                                            handleKidResponse(q.id, 1)
-                                          }
-                                          disabled={
-                                            kidResponses[q.id] !== undefined
-                                          }
-                                          className="btn thumb-btn"
-                                          style={{
-                                            ...styles.thumbBtn,
-                                            borderColor: "#22c55e",
-                                            color:
-                                              kidResponses[q.id] === 1
-                                                ? "white"
-                                                : "#22c55e",
-                                            backgroundColor:
-                                              kidResponses[q.id] === 1
-                                                ? "#22c55e"
-                                                : "rgba(34, 197, 94, 0.1)",
-                                            opacity:
-                                              kidResponses[q.id] ===
-                                                undefined ||
-                                              kidResponses[q.id] === 1
-                                                ? 1
-                                                : 0.5,
-                                          }}
-                                        >
-                                          <ThumbsUp size={20} />
-                                        </button>
-
-                                        {/* Thumbs Down */}
-                                        <button
-                                          onClick={() =>
-                                            handleKidResponse(q.id, -1)
-                                          }
-                                          disabled={
-                                            kidResponses[q.id] !== undefined
-                                          }
-                                          className="btn thumb-btn"
-                                          style={{
-                                            ...styles.thumbBtn,
-                                            borderColor: "#ef4444",
-                                            color:
-                                              kidResponses[q.id] === -1
-                                                ? "white"
-                                                : "#ef4444",
-                                            backgroundColor:
-                                              kidResponses[q.id] === -1
-                                                ? "#ef4444"
-                                                : "rgba(239, 68, 68, 0.1)",
-                                            opacity:
-                                              kidResponses[q.id] ===
-                                                undefined ||
-                                              kidResponses[q.id] === -1
-                                                ? 1
-                                                : 0.5,
-                                          }}
-                                        >
-                                          <ThumbsDown size={20} />
-                                        </button>
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  {/* Response Indicator */}
-                                  {kidResponses[q.id] !== undefined && (
-                                    <div className="text-center mt-2 mt-md-3">
-                                      <span
-                                        className={`badge ${
-                                          kidResponses[q.id] === 1
-                                            ? "bg-success bg-opacity-25 text-success"
-                                            : "bg-danger bg-opacity-25 text-danger"
-                                        }`}
-                                      >
-                                        <CheckCircle
-                                          size={12}
-                                          className="me-1"
-                                        />
-                                        {kidResponses[q.id] === 1
-                                          ? "Great!"
-                                          : "Got it!"}
-                                      </span>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Score Display */}
-                        {kidFeedbackSubmitted && (
-                          <div className="row mt-3 mt-md-4">
-                            <div className="col-12">
-                              <div className="alert alert-success">
-                                <h6 className="alert-heading">
-                                  Feedback Submitted!
-                                </h6>
-                                <p className="mb-0">
-                                  Your Score:{" "}
-                                  <strong>
-                                    {Object.values(kidResponses).reduce(
-                                      (sum, rating) => sum + rating,
-                                      0
-                                    )}
-                                    /{kidQuestions.length}
-                                  </strong>
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </>
+                    {/* Score Display */}
+                    {kidFeedbackSubmitted && (
+                      <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-green-50 rounded-lg sm:rounded-xl border border-green-200">
+                        <h3 className="text-base sm:text-lg font-bold text-green-700 mb-1">
+                          Feedback Submitted!
+                        </h3>
+                        <p className="text-sm sm:text-base text-green-600 font-medium">
+                          Your Score:{" "}
+                          {Object.values(kidResponses).reduce(
+                            (sum, rating) => sum + rating,
+                            0
+                          )}
+                          /{kidQuestions.length}
+                        </p>
+                      </div>
                     )}
+                  </div>
+                )}
 
-                    {/* Coach Feedback Section */}
-                    {isCoach && sessionEnded && (
-                      <>
-                        <div className="row mb-3 mb-md-4">
-                          <div className="col-12">
-                            <div className="d-flex align-items-center">
-                              <div className="bg-primary p-2 rounded me-2 me-md-3">
-                                <MessageSquare size={20} color="white" />
-                              </div>
-                              <h5 className="mb-0 text-primary fw-bold">
-                                Session Feedback
-                              </h5>
-                            </div>
-                          </div>
-                        </div>
+                {/* Coach Feedback Section */}
+                {isCoach && sessionEnded && (
+                  <div className="space-y-3 sm:space-y-4">
+                    <div className="flex items-center mb-3 sm:mb-4">
+                      <div className="bg-blue-500 p-1.5 sm:p-2 rounded-lg mr-2 sm:mr-3">
+                        <MessageSquare
+                          className="text-white"
+                          size={window.innerWidth < 640 ? 16 : 20}
+                        />
+                      </div>
+                      <h3 className="text-base sm:text-lg lg:text-xl font-bold text-blue-600">
+                        Session Feedback
+                      </h3>
+                    </div>
 
-                        {!coachFeedbackSubmitted ? (
-                          <div className="row">
-                            <div className="col-12">
-                              <textarea
-                                value={coachFeedback}
-                                onChange={(e) =>
-                                  setCoachFeedback(e.target.value)
-                                }
-                                placeholder="Share your feedback about the session:
+                    {!coachFeedbackSubmitted ? (
+                      <div className="space-y-3 sm:space-y-4">
+                        <textarea
+                          value={coachFeedback}
+                          onChange={(e) => setCoachFeedback(e.target.value)}
+                          placeholder="Share your feedback about the session:
 • Student engagement levels
 • Learning objectives achieved
 • Technical issues (if any)
 • Overall session quality
 • Suggestions for improvement"
-                                className="form-control border-2 border-primary"
-                                rows={window.innerWidth < 768 ? 4 : 6}
-                                disabled={isSubmitting}
-                                style={{
-                                  resize: "none",
-                                  backgroundColor: "white",
-                                }}
-                              />
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="row">
-                            <div className="col-12">
-                              <div className="alert alert-primary mb-3">
-                                <p className="mb-0 fst-italic">
-                                  "{coachFeedback}"
-                                </p>
-                              </div>
-                              <div className="alert alert-success d-flex align-items-center">
-                                <CheckCircle size={20} className="me-2" />
-                                <span className="fw-semibold">
-                                  Feedback Submitted Successfully
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </>
-                    )}
-
-                    {/* Status Message */}
-                    {message && (
-                      <div className="row mt-3 mt-md-4">
-                        <div className="col-12">
-                          <div
-                            className={`alert text-center ${
-                              message.includes("Oops") ||
-                              message.includes("wrong") ||
-                              message.includes("Please answer")
-                                ? "alert-danger"
-                                : "alert-success"
-                            }`}
-                          >
-                            {message}
-                          </div>
+                          className="w-full p-3 sm:p-4 border-2 border-blue-200 rounded-lg sm:rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition-all duration-300 bg-white text-gray-700 placeholder-gray-500 text-sm sm:text-base"
+                          rows={window.innerWidth < 640 ? "4" : "6"}
+                          disabled={isSubmitting}
+                        />
+                      </div>
+                    ) : (
+                      <div className="space-y-3 sm:space-y-4">
+                        <div className="bg-blue-50 p-3 sm:p-4 rounded-lg sm:rounded-xl border border-blue-200 max-h-24 sm:max-h-32 overflow-y-auto">
+                          <p className="text-sm sm:text-base text-gray-700 italic">
+                            "{coachFeedback}"
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-center p-2 sm:p-3 rounded-lg sm:rounded-xl bg-green-100 text-green-700">
+                          <CheckCircle
+                            size={window.innerWidth < 640 ? 16 : 20}
+                            className="mr-2"
+                          />
+                          <span className="font-semibold text-sm sm:text-base">
+                            Feedback Submitted Successfully
+                          </span>
                         </div>
                       </div>
                     )}
                   </div>
-                </div>
+                )}
 
-                {/* Card Footer - Submit Button */}
-                <div className="card-footer border-0 bg-transparent p-2 p-md-3 p-lg-4 pt-0">
-                  <div className="container-fluid">
-                    <div className="row">
-                      <div className="col-12">
-                        {/* Submit Button for Kids */}
-                        {!isCoach && !kidFeedbackSubmitted && (
-                          <button
-                            onClick={submitKidFeedback}
-                            disabled={
-                              isSubmitting ||
-                              Object.keys(kidResponses).length <
-                                kidQuestions.length
-                            }
-                            className="btn w-100 py-2 py-md-3 fw-semibold btn-gradient"
-                            style={styles.btnGradient}
-                          >
-                            {isSubmitting ? (
-                              <div className="d-flex align-items-center justify-content-center">
-                                <div
-                                  className="spinner-border spinner-border-sm me-2"
-                                  role="status"
-                                ></div>
-                                <span>Submitting...</span>
-                              </div>
-                            ) : (
-                              <div className="d-flex align-items-center justify-content-center">
-                                <Send size={18} className="me-2" />
-                                <span>Submit My Feedback</span>
-                              </div>
-                            )}
-                          </button>
-                        )}
-
-                        {/* Submit Button for Coach */}
-                        {isCoach && sessionEnded && !coachFeedbackSubmitted && (
-                          <button
-                            onClick={submitCoachFeedback}
-                            disabled={isSubmitting || !coachFeedback.trim()}
-                            className="btn w-100 py-2 py-md-3 fw-semibold btn-coach"
-                            style={styles.btnCoach}
-                          >
-                            {isSubmitting ? (
-                              <div className="d-flex align-items-center justify-content-center">
-                                <div
-                                  className="spinner-border spinner-border-sm me-2"
-                                  role="status"
-                                ></div>
-                                <span>Submitting...</span>
-                              </div>
-                            ) : (
-                              <div className="d-flex align-items-center justify-content-center">
-                                <Send size={18} className="me-2" />
-                                <span>Submit Feedback</span>
-                              </div>
-                            )}
-                          </button>
-                        )}
-                      </div>
-                    </div>
+                {/* Status Message */}
+                {message && (
+                  <div
+                    className={`text-center p-2 sm:p-3 rounded-lg sm:rounded-xl mt-3 sm:mt-4 font-medium text-sm sm:text-base ${
+                      message.includes("Oops") ||
+                      message.includes("wrong") ||
+                      message.includes("Please answer")
+                        ? "bg-red-100 text-red-700 border border-red-200"
+                        : "bg-green-100 text-green-700 border border-green-200"
+                    }`}
+                  >
+                    {message}
                   </div>
-                </div>
+                )}
               </div>
+            </div>
+
+            {/* Footer - Fixed Submit Button */}
+            <div className="flex-shrink-0 p-3 sm:p-4 lg:p-6 pt-0">
+              {/* Submit Button for Kids */}
+              {!isCoach && !kidFeedbackSubmitted && (
+                <button
+                  onClick={submitKidFeedback}
+                  disabled={
+                    isSubmitting ||
+                    Object.keys(kidResponses).length < kidQuestions.length
+                  }
+                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-2.5 sm:py-3 lg:py-4 px-4 sm:px-6 rounded-lg sm:rounded-xl font-semibold hover:from-purple-600 hover:to-pink-600 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transition-all duration-300 shadow-lg text-sm sm:text-base lg:text-lg"
+                >
+                  {isSubmitting ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-2 border-white border-t-transparent mr-2"></div>
+                      <span className="text-sm sm:text-base">
+                        Submitting...
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center">
+                      <Send
+                        size={window.innerWidth < 640 ? 16 : 18}
+                        className="mr-2"
+                      />
+                      <span className="text-sm sm:text-base">
+                        Submit My Feedback
+                      </span>
+                    </div>
+                  )}
+                </button>
+              )}
+
+              {/* Submit Button for Coach */}
+              {isCoach && sessionEnded && !coachFeedbackSubmitted && (
+                <button
+                  onClick={submitCoachFeedback}
+                  disabled={isSubmitting || !coachFeedback.trim()}
+                  className="w-full bg-blue-500 text-white py-2.5 sm:py-3 lg:py-4 px-4 sm:px-6 rounded-lg sm:rounded-xl font-semibold hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-300 text-sm sm:text-base lg:text-lg"
+                >
+                  {isSubmitting ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-2 border-white border-t-transparent mr-2"></div>
+                      <span className="text-sm sm:text-base">
+                        Submitting...
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center">
+                      <Send
+                        size={window.innerWidth < 640 ? 16 : 18}
+                        className="mr-2"
+                      />
+                      <span className="text-sm sm:text-base">
+                        Submit Feedback
+                      </span>
+                    </div>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         </div>
-
-        {/* Thank You Modal */}
-        {showThankYou && (
-          <div
-            style={styles.overlay}
-            className="d-flex align-items-center justify-content-center p-3"
-          >
-            <div className="modal-dialog modal-sm">
-              <div className="modal-content border-0 shadow-lg">
-                <div className="modal-body text-center p-4">
-                  <div className="mb-3">
-                    <div
-                      className="d-inline-flex align-items-center justify-content-center rounded-circle mx-auto"
-                      style={{
-                        width: "4rem",
-                        height: "4rem",
-                        background:
-                          "linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)",
-                      }}
-                    >
-                      <Sparkles size={32} color="white" />
-                    </div>
-                  </div>
-                  <h5 className="mb-3">Thanks for your feedback!</h5>
-                  <p className="text-muted mb-4">
-                    Your input helps us make classes even better.
-                  </p>
-                  <button
-                    onClick={() => setShowThankYou(false)}
-                    className="btn btn-gradient px-4"
-                    style={styles.btnGradient}
-                  >
-                    Continue
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Confetti Effect */}
-        {showConfetti && (
-          <div style={styles.confettiContainer}>
-            {[...Array(20)].map((_, i) => (
-              <div
-                key={i}
-                className="confetti-item position-absolute"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  animationDelay: `${Math.random() * 2}s`,
-                  animationDuration: `${2 + Math.random()}s`,
-                }}
-              >
-                <Star className="text-warning" size={Math.random() * 8 + 8} />
-              </div>
-            ))}
-          </div>
-        )}
       </div>
-    </>
+    </div>
   );
 };
 
