@@ -1,334 +1,702 @@
-import React, { useState } from 'react';
-import { ThumbsUp, ThumbsDown, MessageSquare, CheckCircle, Star, Sparkles } from 'lucide-react';
+import React, { useState } from "react";
+import {
+  ThumbsUp,
+  ThumbsDown,
+  MessageSquare,
+  CheckCircle,
+  Star,
+  Sparkles,
+  Send,
+} from "lucide-react";
 
-const ClassRating = ({ userType = 'kid', classId = 'default-class', sessionEnded = false }) => {
-  const [rating, setRating] = useState(null);
+const ClassFeedbackSystem = ({
+  userType = "kid",
+  classId = "default-class",
+  sessionEnded = true,
+  logoUrl = null,
+}) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState('');
-  const [remark, setRemark] = useState('');
-  const [remarkSubmitted, setRemarkSubmitted] = useState(false);
-  const [remarkLookedInto, setRemarkLookedInto] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
+  const [message, setMessage] = useState("");
   const [showThankYou, setShowThankYou] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
-  const isCoach = userType === 'coach';
+  const [coachFeedback, setCoachFeedback] = useState("");
+  const [coachFeedbackSubmitted, setCoachFeedbackSubmitted] = useState(false);
 
-  const submitRating = async (value) => {
-    setIsSubmitting(true);
-    setMessage('');
-    
-    try {
-      const response = await fetch('/api/rate-class', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          rating: value,
-          classId: classId,
-          userType: userType,
-          timestamp: new Date().toISOString()
-        }),
-      });
+  const [kidResponses, setKidResponses] = useState({});
+  const [kidFeedbackSubmitted, setKidFeedbackSubmitted] = useState(false);
 
-      if (response.ok) {
-        setRating(value);
-        setShowConfetti(true);
-        setTimeout(() => setShowConfetti(false), 3000);
-        setMessage(value === 1 ? '🎉 Amazing! Thanks for the positive vibes!' : '💙 Thank you for your honest feedback!');
-        // Show thank you message after a delay
-        setTimeout(() => setShowThankYou(true), 2000);
-      } else {
-        throw new Error('Failed to submit rating');
-      }
-    } catch (error) {
-      console.error('Error submitting rating:', error);
-      setMessage('Oops! Something went wrong. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
+  const isCoach = userType === "coach";
+
+  const kidQuestions = [
+    {
+      id: "understanding",
+      question: "Did you understand today's lesson?",
+      emoji: "🧠",
+    },
+    {
+      id: "quality",
+      question: "How was the class quality?",
+      emoji: "⭐",
+    },
+    {
+      id: "video_quality",
+      question: "Was the video and audio clear?",
+      emoji: "📹",
+    },
+    {
+      id: "activities",
+      question: "Did you enjoy the class activities?",
+      emoji: "🎯",
+    },
+    {
+      id: "engagement",
+      question: "Were you engaged throughout the class?",
+      emoji: "🚀",
+    },
+    {
+      id: "pace",
+      question: "Was the class pace just right for you?",
+      emoji: "⏰",
+    },
+  ];
+
+  const handleKidResponse = (questionId, rating) => {
+    setKidResponses((prev) => ({
+      ...prev,
+      [questionId]: rating,
+    }));
   };
 
-  const submitRemark = async () => {
-    if (!remark.trim()) {
-      setMessage('Please share your thoughts before submitting! 💭');
+  const submitKidFeedback = async () => {
+    const answeredQuestions = Object.keys(kidResponses).length;
+    if (answeredQuestions < kidQuestions.length) {
+      setMessage(
+        `Please answer all questions! (${answeredQuestions}/${kidQuestions.length} completed)`
+      );
       return;
     }
 
     setIsSubmitting(true);
-    setMessage('');
-    
-    try {
-      const response = await fetch('/api/submit-remark', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          remark: remark.trim(),
-          classId: classId,
-          coachId: userType,
-          timestamp: new Date().toISOString(),
-          status: 'pending'
-        }),
-      });
+    setMessage("");
 
-      if (response.ok) {
-        setRemarkSubmitted(true);
-        setMessage('✨ Your insights have been shared with our team!');
-        // Show thank you message after remark submission
-        setTimeout(() => setShowThankYou(true), 2000);
-      } else {
-        throw new Error('Failed to submit remark');
-      }
+    const totalScore = Object.values(kidResponses).reduce(
+      (sum, rating) => sum + rating,
+      0
+    );
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setKidFeedbackSubmitted(true);
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 3000);
+      setMessage(
+        `🎉 Awesome! Your feedback score: ${totalScore}/${kidQuestions.length}`
+      );
+      setTimeout(() => setShowThankYou(true), 2000);
     } catch (error) {
-      console.error('Error submitting remark:', error);
-      setMessage('Oops! Failed to submit your remark. Please try again.');
+      console.error("Error submitting kid feedback:", error);
+      setMessage("Oops! Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleThumbsUp = () => {
-    if (rating === null) {
-      submitRating(1);
+  const submitCoachFeedback = async () => {
+    if (!coachFeedback.trim()) {
+      setMessage("Please share your feedback before submitting! 💭");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setMessage("");
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setCoachFeedbackSubmitted(true);
+      setMessage("✨ Your feedback has been shared with our team!");
+      setTimeout(() => setShowThankYou(true), 2000);
+    } catch (error) {
+      console.error("Error submitting coach feedback:", error);
+      setMessage("Oops! Failed to submit your feedback. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleThumbsDown = () => {
-    if (rating === null) {
-      submitRating(-1);
-    }
+  const getProgress = () => {
+    const answered = Object.keys(kidResponses).length;
+    return (answered / kidQuestions.length) * 100;
   };
+
+  const styles = {
+    container: {
+      minHeight: "100vh",
+      background:
+        "linear-gradient(135deg, #f8f0ff 0%, #fce7f3 50%, #e0e7ff 100%)",
+    },
+    headerGradient: {
+      background: "linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)",
+      color: "white",
+    },
+    feedbackCard: {
+      background: "rgba(255, 255, 255, 0.9)",
+      backdropFilter: "blur(10px)",
+      border: "1px solid rgba(255, 255, 255, 0.5)",
+      boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
+    },
+    progressGradient: {
+      background: "linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)",
+    },
+    btnGradient: {
+      background: "linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)",
+      border: "none",
+      color: "white",
+      transition: "all 0.3s ease",
+    },
+    btnCoach: {
+      backgroundColor: "#3b82f6",
+      border: "none",
+      color: "white",
+      transition: "all 0.3s ease",
+    },
+    thumbBtn: {
+      transition: "all 0.3s ease",
+      border: "2px solid",
+      width: "60px",
+      height: "60px",
+      borderRadius: "50%",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    questionCard: {
+      background: "#f9fafb",
+      border: "1px solid #e5e7eb",
+      transition: "transform 0.2s ease",
+    },
+    logoContainer: {
+      width: "2.5rem",
+      height: "2.5rem",
+      background: "linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)",
+      borderRadius: "0.5rem",
+    },
+    overlay: {
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: "rgba(0, 0, 0, 0.5)",
+      backdropFilter: "blur(5px)",
+      zIndex: 1050,
+    },
+    confettiContainer: {
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      pointerEvents: "none",
+      overflow: "hidden",
+      zIndex: 1040,
+    },
+  };
+
+  // Bootstrap Classes
+  const bootstrapClasses = `
+    .btn-gradient:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(139, 92, 246, 0.4);
+    }
+    .btn-coach:hover {
+      background-color: #2563eb !important;
+      transform: translateY(-2px);
+    }
+    .thumb-btn:hover {
+      transform: scale(1.1);
+    }
+    .thumb-btn:active {
+      transform: scale(0.95);
+    }
+    .question-card:hover {
+      transform: translateY(-2px);
+    }
+    @keyframes confetti-fall {
+      0% { transform: translateY(-100vh) rotate(0deg); }
+      100% { transform: translateY(100vh) rotate(360deg); }
+    }
+    .confetti-item {
+      animation: confetti-fall 3s linear infinite;
+    }
+    @media (max-width: 576px) {
+      .thumb-btn { width: 50px !important; height: 50px !important; }
+      .logo-container { width: 2rem !important; height: 2rem !important; }
+    }
+  `;
 
   return (
-    <div className="relative mt-24">
-      {/* Thank You Overlay */}
-      {showThankYou && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
-          <div className="max-w-md w-full bg-white rounded-3xl p-8 text-center shadow-2xl transform animate-slideUp">
-            {/* Animated Confetti */}
-            <div className="absolute inset-0 overflow-hidden rounded-3xl">
-              {[...Array(12)].map((_, i) => (
-                <div
-                  key={i}
-                  className="absolute w-3 h-3 animate-bounce"
-                  style={{
-                    left: `${Math.random() * 100}%`,
-                    top: `${Math.random() * 100}%`,
-                    backgroundColor: ['#ffd700', '#ff6347', '#4169e1', '#32cd32', '#ff1493', '#00ced1'][i % 6],
-                    animationDelay: `${Math.random() * 2}s`,
-                    animationDuration: `${2 + Math.random() * 2}s`,
-                    borderRadius: '50%'
-                  }}
-                />
-              ))}
-            </div>
-            
-            {/* Logo/Icon */}
-            <div className="mb-6 relative">
-              <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mx-auto flex items-center justify-center transform hover:scale-105 transition-transform duration-300">
-                <Sparkles className="text-white" size={40} />
+    <>
+      <style>{bootstrapClasses}</style>
+      <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+      />
+
+      <div style={styles.container} className="d-flex flex-column">
+        {/* Header Row */}
+        <div className="container-fluid" style={styles.headerGradient}>
+          <div className="row align-items-center py-2 py-md-3">
+            <div className="col-6 col-md-8">
+              <div className="d-flex align-items-center">
+                {logoUrl ? (
+                  <img
+                    src={logoUrl}
+                    alt="Logo"
+                    className="img-fluid"
+                    style={{ height: "2rem", maxHeight: "3rem" }}
+                  />
+                ) : (
+                  <div
+                    className="d-flex align-items-center justify-content-center"
+                    style={styles.logoContainer}
+                  >
+                    <Sparkles size={16} />
+                  </div>
+                )}
+                <span className="ms-2 fw-bold d-none d-sm-inline">
+                  Class Feedback
+                </span>
               </div>
             </div>
-            
-            {/* Thank You Message */}
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">
-              Thanks for joining today!
-            </h2>
-            
-            <p className="text-gray-600 text-lg leading-relaxed mb-6">
-              Hope the {isCoach ? 'session' : 'classes'} {isCoach ? 'was' : 'were'} productive and engaging.<br />
-              We look forward to seeing you in the next session!
-            </p>
-            
-            {/* Close Button */}
-            <button
-              onClick={() => setShowThankYou(false)}
-              className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-3 rounded-full font-semibold hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all duration-300 shadow-lg"
-            >
-              Continue
-            </button>
-            
-            {/* Footer */}
-            <div className="mt-6 text-sm text-gray-500">
-              © 2025 • Have a great day!
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Confetti Effect */}
-      {showConfetti && (
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {[...Array(50)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute animate-bounce"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 3}s`,
-                animationDuration: `${2 + Math.random() * 2}s`
-              }}
-            >
-              <Star className="text-yellow-400" size={Math.random() * 16 + 8} />
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="max-w-lg mx-auto p-8 bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50 rounded-3xl shadow-2xl border border-white/50 backdrop-blur-sm">
-        {/* Header Section */}
-        <div className="text-center mb-8 relative">
-          <div className="absolute -top-4 -right-4">
-            <Sparkles className="text-purple-400 animate-pulse" size={24} />
-          </div>
-          <div className="absolute -top-2 -left-2">
-            <Star className="text-pink-400 animate-spin" size={16} />
-          </div>
-          
-          <div className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-            <h2 className="text-3xl font-black mb-3 tracking-tight">
-              {isCoach ? '🎯 Coach Feedback Hub' : '⭐ Rate Your Experience'}
-            </h2>
-          </div>
-          <p className="text-gray-600 font-medium text-lg">
-            {isCoach ? 'Share your session insights!' : 'Tell us how awesome it was!'}
-          </p>
-        </div>
-
-        {/* Rating Section */}
-        <div className="flex justify-center space-x-12 mb-8">
-          {/* Thumbs Up Button */}
-          <div className="relative">
-            <button
-              onClick={handleThumbsUp}
-              disabled={rating !== null || isSubmitting}
-              className={`relative p-6 rounded-full transition-all duration-300 transform hover:scale-125 active:scale-95 ${
-                rating === 1
-                  ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-2xl shadow-green-300/50 animate-pulse'
-                  : rating === null
-                  ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-600 hover:from-green-200 hover:to-emerald-200 hover:shadow-xl shadow-lg'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              } ${isSubmitting ? 'animate-bounce' : ''}`}
-            >
-              <ThumbsUp size={40} className="drop-shadow-sm" />
-              {rating === 1 && (
-                <div className="absolute -top-2 -right-2 bg-yellow-400 rounded-full p-1 animate-ping">
-                  <Star size={12} className="text-white" />
-                </div>
-              )}
-            </button>
-            <p className="text-center mt-3 font-semibold text-green-600">Love it!</p>
-          </div>
-
-          {/* Thumbs Down Button */}
-          <div className="relative">
-            <button
-              onClick={handleThumbsDown}
-              disabled={rating !== null || isSubmitting}
-              className={`relative p-6 rounded-full transition-all duration-300 transform hover:scale-125 active:scale-95 ${
-                rating === -1
-                  ? 'bg-gradient-to-r from-red-400 to-rose-500 text-white shadow-2xl shadow-red-300/50 animate-pulse'
-                  : rating === null
-                  ? 'bg-gradient-to-r from-red-100 to-rose-100 text-red-600 hover:from-red-200 hover:to-rose-200 hover:shadow-xl shadow-lg'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              } ${isSubmitting ? 'animate-bounce' : ''}`}
-            >
-              <ThumbsDown size={40} className="drop-shadow-sm" />
-              {rating === -1 && (
-                <div className="absolute -top-2 -right-2 bg-blue-400 rounded-full p-1 animate-ping">
-                  <CheckCircle size={12} className="text-white" />
-                </div>
-              )}
-            </button>
-            <p className="text-center mt-3 font-semibold text-red-600">Needs work</p>
-          </div>
-        </div>
-
-        {/* Coach Remark Section */}
-        {isCoach && sessionEnded && (
-          <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border-2 border-blue-200/50 shadow-inner">
-            <div className="flex items-center mb-4">
-              <div className="bg-gradient-to-r from-blue-500 to-indigo-500 p-2 rounded-xl mr-3">
-                <MessageSquare className="text-white" size={24} />
-              </div>
-              <h3 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                Session Insights
-              </h3>
-            </div>
-            
-            {!remarkSubmitted ? (
-              <div className="space-y-4">
-                <textarea
-                  value={remark}
-                  onChange={(e) => setRemark(e.target.value)}
-                  placeholder="Share your thoughts about the session... What went well? Any challenges? ✨"
-                  className="w-full p-4 border-2 border-blue-200 rounded-xl resize-none focus:outline-none focus:ring-4 focus:ring-blue-300/50 focus:border-blue-400 transition-all duration-300 bg-white/80 backdrop-blur-sm text-gray-700 placeholder-gray-500"
-                  rows="4"
-                  disabled={isSubmitting}
-                />
-                <button
-                  onClick={submitRemark}
-                  disabled={isSubmitting || !remark.trim()}
-                  className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 px-6 rounded-xl font-bold text-lg hover:from-blue-600 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
-                >
-                  {isSubmitting ? (
-                    <div className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></div>
-                      Sharing insights...
-                    </div>
-                  ) : (
-                    '🚀 Share My Insights'
-                  )}
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="bg-white/80 p-4 rounded-xl border border-blue-200 shadow-sm">
-                  <p className="text-gray-700 italic font-medium">"{remark}"</p>
-                </div>
-                <div className={`flex items-center justify-center p-3 rounded-xl ${
-                  remarkLookedInto 
-                    ? 'bg-green-100 text-green-700 border border-green-200' 
-                    : 'bg-orange-100 text-orange-700 border border-orange-200'
-                }`}>
-                  <CheckCircle size={20} className="mr-2" />
-                  <span className="font-semibold">
-                    {remarkLookedInto ? '✅ Reviewed by SD Team' : '⏳ Awaiting SD Team Review'}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Status Message */}
-        {message && (
-          <div className={`text-center p-4 rounded-2xl mt-6 font-semibold text-lg shadow-lg ${
-            message.includes('Oops') || message.includes('wrong')
-              ? 'bg-gradient-to-r from-red-100 to-rose-100 text-red-700 border border-red-200' 
-              : 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 border border-green-200'
-          } transform transition-all duration-500 ${showConfetti ? 'animate-bounce' : ''}`}>
-            {message}
-          </div>
-        )}
-
-        {/* Rating Status */}
-        {rating !== null && !isSubmitting && (
-          <div className="text-center mt-6 p-4 bg-white/60 rounded-2xl border border-purple-200">
-            <p className="text-gray-600 font-medium">
-              You rated this {isCoach ? 'session' : 'class'}: 
-              <span className={`ml-2 font-bold text-lg ${rating === 1 ? 'text-green-600' : 'text-red-600'}`}>
-                {rating === 1 ? '🎉 Awesome!' : '💙 Thanks for the feedback!'}
+            <div className="col-6 col-md-4 text-end">
+              <span className="badge bg-dark bg-opacity-25 px-2 py-1 rounded-pill small">
+                {isCoach ? "Coach View" : "Student View"}
               </span>
-            </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content Row */}
+        <div
+          className="container-fluid flex-grow-1 py-2 py-md-3"
+          style={{ minHeight: "calc(100vh - 80px)" }}
+        >
+          <div className="row h-100">
+            {/* Main Card - Full width on mobile, centered on larger screens */}
+            <div className="col-12 col-xl-10 offset-xl-1 col-xxl-8 offset-xxl-2 h-100">
+              <div
+                className="card h-100 border-0 rounded-3"
+                style={styles.feedbackCard}
+              >
+                {/* Card Header */}
+                <div
+                  className="card-header border-0 text-center py-3 py-md-4"
+                  style={styles.headerGradient}
+                >
+                  <div className="container-fluid">
+                    <div className="row">
+                      <div className="col-12">
+                        <h2 className="h4 h-md-3 h-lg-2 mb-1 mb-md-2 fw-bold">
+                          {isCoach
+                            ? "🎯 Coach Feedback"
+                            : "⭐ Tell Us About Your Class!"}
+                        </h2>
+                        <p className="mb-0 small opacity-75">
+                          {isCoach
+                            ? "Share your session insights with our team"
+                            : "Your feedback helps us make classes better!"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card Body - Scrollable Content */}
+                <div
+                  className="card-body flex-grow-1 p-2 p-md-3 p-lg-4"
+                  style={{
+                    overflowY: "auto",
+                    maxHeight: "calc(100vh - 300px)",
+                  }}
+                >
+                  <div className="container-fluid">
+                    {/* Kid Feedback Section */}
+                    {!isCoach && (
+                      <>
+                        {/* Progress Bar Row */}
+                        <div className="row mb-3 mb-md-4">
+                          <div className="col-12">
+                            <div className="d-flex justify-content-between small text-muted mb-2">
+                              <span>Progress</span>
+                              <span>
+                                {Object.keys(kidResponses).length}/
+                                {kidQuestions.length}
+                              </span>
+                            </div>
+                            <div
+                              className="progress"
+                              style={{ height: "0.5rem" }}
+                            >
+                              <div
+                                className="progress-bar"
+                                style={{
+                                  ...styles.progressGradient,
+                                  width: `${getProgress()}%`,
+                                  transition: "width 0.5s ease",
+                                }}
+                              ></div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Questions Grid */}
+                        <div className="row g-2 g-md-3">
+                          {kidQuestions.map((q, index) => (
+                            <div key={q.id} className="col-12 col-lg-6">
+                              <div
+                                className="card h-100 question-card"
+                                style={styles.questionCard}
+                              >
+                                <div className="card-body p-3">
+                                  <div className="row align-items-start mb-2 mb-md-3">
+                                    <div className="col-2 col-md-1">
+                                      <span className="fs-5">{q.emoji}</span>
+                                    </div>
+                                    <div className="col-10 col-md-11">
+                                      <h6 className="card-title mb-0 small fw-semibold">
+                                        {index + 1}. {q.question}
+                                      </h6>
+                                    </div>
+                                  </div>
+
+                                  <div className="row justify-content-center">
+                                    <div className="col-auto">
+                                      <div className="d-flex gap-3 justify-content-center">
+                                        {/* Thumbs Up */}
+                                        <button
+                                          onClick={() =>
+                                            handleKidResponse(q.id, 1)
+                                          }
+                                          disabled={
+                                            kidResponses[q.id] !== undefined
+                                          }
+                                          className="btn thumb-btn"
+                                          style={{
+                                            ...styles.thumbBtn,
+                                            borderColor: "#22c55e",
+                                            color:
+                                              kidResponses[q.id] === 1
+                                                ? "white"
+                                                : "#22c55e",
+                                            backgroundColor:
+                                              kidResponses[q.id] === 1
+                                                ? "#22c55e"
+                                                : "rgba(34, 197, 94, 0.1)",
+                                            opacity:
+                                              kidResponses[q.id] ===
+                                                undefined ||
+                                              kidResponses[q.id] === 1
+                                                ? 1
+                                                : 0.5,
+                                          }}
+                                        >
+                                          <ThumbsUp size={20} />
+                                        </button>
+
+                                        {/* Thumbs Down */}
+                                        <button
+                                          onClick={() =>
+                                            handleKidResponse(q.id, -1)
+                                          }
+                                          disabled={
+                                            kidResponses[q.id] !== undefined
+                                          }
+                                          className="btn thumb-btn"
+                                          style={{
+                                            ...styles.thumbBtn,
+                                            borderColor: "#ef4444",
+                                            color:
+                                              kidResponses[q.id] === -1
+                                                ? "white"
+                                                : "#ef4444",
+                                            backgroundColor:
+                                              kidResponses[q.id] === -1
+                                                ? "#ef4444"
+                                                : "rgba(239, 68, 68, 0.1)",
+                                            opacity:
+                                              kidResponses[q.id] ===
+                                                undefined ||
+                                              kidResponses[q.id] === -1
+                                                ? 1
+                                                : 0.5,
+                                          }}
+                                        >
+                                          <ThumbsDown size={20} />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Response Indicator */}
+                                  {kidResponses[q.id] !== undefined && (
+                                    <div className="text-center mt-2 mt-md-3">
+                                      <span
+                                        className={`badge ${
+                                          kidResponses[q.id] === 1
+                                            ? "bg-success bg-opacity-25 text-success"
+                                            : "bg-danger bg-opacity-25 text-danger"
+                                        }`}
+                                      >
+                                        <CheckCircle
+                                          size={12}
+                                          className="me-1"
+                                        />
+                                        {kidResponses[q.id] === 1
+                                          ? "Great!"
+                                          : "Got it!"}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Score Display */}
+                        {kidFeedbackSubmitted && (
+                          <div className="row mt-3 mt-md-4">
+                            <div className="col-12">
+                              <div className="alert alert-success">
+                                <h6 className="alert-heading">
+                                  Feedback Submitted!
+                                </h6>
+                                <p className="mb-0">
+                                  Your Score:{" "}
+                                  <strong>
+                                    {Object.values(kidResponses).reduce(
+                                      (sum, rating) => sum + rating,
+                                      0
+                                    )}
+                                    /{kidQuestions.length}
+                                  </strong>
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {/* Coach Feedback Section */}
+                    {isCoach && sessionEnded && (
+                      <>
+                        <div className="row mb-3 mb-md-4">
+                          <div className="col-12">
+                            <div className="d-flex align-items-center">
+                              <div className="bg-primary p-2 rounded me-2 me-md-3">
+                                <MessageSquare size={20} color="white" />
+                              </div>
+                              <h5 className="mb-0 text-primary fw-bold">
+                                Session Feedback
+                              </h5>
+                            </div>
+                          </div>
+                        </div>
+
+                        {!coachFeedbackSubmitted ? (
+                          <div className="row">
+                            <div className="col-12">
+                              <textarea
+                                value={coachFeedback}
+                                onChange={(e) =>
+                                  setCoachFeedback(e.target.value)
+                                }
+                                placeholder="Share your feedback about the session:
+• Student engagement levels
+• Learning objectives achieved
+• Technical issues (if any)
+• Overall session quality
+• Suggestions for improvement"
+                                className="form-control border-2 border-primary"
+                                rows={window.innerWidth < 768 ? 4 : 6}
+                                disabled={isSubmitting}
+                                style={{
+                                  resize: "none",
+                                  backgroundColor: "white",
+                                }}
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="row">
+                            <div className="col-12">
+                              <div className="alert alert-primary mb-3">
+                                <p className="mb-0 fst-italic">
+                                  "{coachFeedback}"
+                                </p>
+                              </div>
+                              <div className="alert alert-success d-flex align-items-center">
+                                <CheckCircle size={20} className="me-2" />
+                                <span className="fw-semibold">
+                                  Feedback Submitted Successfully
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {/* Status Message */}
+                    {message && (
+                      <div className="row mt-3 mt-md-4">
+                        <div className="col-12">
+                          <div
+                            className={`alert text-center ${
+                              message.includes("Oops") ||
+                              message.includes("wrong") ||
+                              message.includes("Please answer")
+                                ? "alert-danger"
+                                : "alert-success"
+                            }`}
+                          >
+                            {message}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Card Footer - Submit Button */}
+                <div className="card-footer border-0 bg-transparent p-2 p-md-3 p-lg-4 pt-0">
+                  <div className="container-fluid">
+                    <div className="row">
+                      <div className="col-12">
+                        {/* Submit Button for Kids */}
+                        {!isCoach && !kidFeedbackSubmitted && (
+                          <button
+                            onClick={submitKidFeedback}
+                            disabled={
+                              isSubmitting ||
+                              Object.keys(kidResponses).length <
+                                kidQuestions.length
+                            }
+                            className="btn w-100 py-2 py-md-3 fw-semibold btn-gradient"
+                            style={styles.btnGradient}
+                          >
+                            {isSubmitting ? (
+                              <div className="d-flex align-items-center justify-content-center">
+                                <div
+                                  className="spinner-border spinner-border-sm me-2"
+                                  role="status"
+                                ></div>
+                                <span>Submitting...</span>
+                              </div>
+                            ) : (
+                              <div className="d-flex align-items-center justify-content-center">
+                                <Send size={18} className="me-2" />
+                                <span>Submit My Feedback</span>
+                              </div>
+                            )}
+                          </button>
+                        )}
+
+                        {/* Submit Button for Coach */}
+                        {isCoach && sessionEnded && !coachFeedbackSubmitted && (
+                          <button
+                            onClick={submitCoachFeedback}
+                            disabled={isSubmitting || !coachFeedback.trim()}
+                            className="btn w-100 py-2 py-md-3 fw-semibold btn-coach"
+                            style={styles.btnCoach}
+                          >
+                            {isSubmitting ? (
+                              <div className="d-flex align-items-center justify-content-center">
+                                <div
+                                  className="spinner-border spinner-border-sm me-2"
+                                  role="status"
+                                ></div>
+                                <span>Submitting...</span>
+                              </div>
+                            ) : (
+                              <div className="d-flex align-items-center justify-content-center">
+                                <Send size={18} className="me-2" />
+                                <span>Submit Feedback</span>
+                              </div>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Thank You Modal */}
+        {showThankYou && (
+          <div
+            style={styles.overlay}
+            className="d-flex align-items-center justify-content-center p-3"
+          >
+            <div className="modal-dialog modal-sm">
+              <div className="modal-content border-0 shadow-lg">
+                <div className="modal-body text-center p-4">
+                  <div className="mb-3">
+                    <div
+                      className="d-inline-flex align-items-center justify-content-center rounded-circle mx-auto"
+                      style={{
+                        width: "4rem",
+                        height: "4rem",
+                        background:
+                          "linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)",
+                      }}
+                    >
+                      <Sparkles size={32} color="white" />
+                    </div>
+                  </div>
+                  <h5 className="mb-3">Thanks for your feedback!</h5>
+                  <p className="text-muted mb-4">
+                    Your input helps us make classes even better.
+                  </p>
+                  <button
+                    onClick={() => setShowThankYou(false)}
+                    className="btn btn-gradient px-4"
+                    style={styles.btnGradient}
+                  >
+                    Continue
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Confetti Effect */}
+        {showConfetti && (
+          <div style={styles.confettiContainer}>
+            {[...Array(20)].map((_, i) => (
+              <div
+                key={i}
+                className="confetti-item position-absolute"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  animationDelay: `${Math.random() * 2}s`,
+                  animationDuration: `${2 + Math.random()}s`,
+                }}
+              >
+                <Star className="text-warning" size={Math.random() * 8 + 8} />
+              </div>
+            ))}
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 };
 
-export default ClassRating;
+export default ClassFeedbackSystem;
