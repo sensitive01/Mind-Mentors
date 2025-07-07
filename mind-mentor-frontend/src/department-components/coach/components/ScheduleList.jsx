@@ -223,12 +223,13 @@ const ScheduleKanban = () => {
         // For live classes, filter and modify to only include coach join URL
         const currentLiveClasses = sortedClasses
           .filter(isLiveToday)
-          .map(classItem => ({
+          .map((classItem) => ({
             ...classItem,
             // Keep only coach join URL, remove kid join URL
             joinUrl: classItem.coachJoinUrl,
+            bbTempClassId: classItem.bbTempClassId,
             // Remove kidJoinUrl to avoid confusion
-            kidJoinUrl: undefined
+            kidJoinUrl: undefined,
           }));
 
         const upcomingClassesByDay = sortedClasses

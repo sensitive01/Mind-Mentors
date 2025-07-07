@@ -8,13 +8,13 @@ import {
   Sparkles,
   Send,
 } from "lucide-react";
+import { useParams } from "react-router-dom";
 
-const ClassFeedbackSystem = ({
-  userType = "kid",
-  classId = "default-class",
-  sessionEnded = true,
-  logoUrl = null,
-}) => {
+const ClassFeedbackSystem = ({ sessionEnded = true, logoUrl = null }) => {
+  const { role, sessionId } = useParams();
+  const bbTempClassId = localStorage.getItem("bbTempClassId");
+  let userType = "coach";
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [showThankYou, setShowThankYou] = useState(false);
@@ -86,7 +86,25 @@ const ClassFeedbackSystem = ({
     );
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      let response;
+
+      if (role === "coach") {
+        response = await submitCoachFeedback(
+          bbTempClassId,
+          sessionId,
+          role,
+          coachFeedback
+          
+        );
+      } else {
+        response = await submitKidFeedback(
+          bbTempClassId,
+          sessionId,
+          role,
+          kidResponses
+        );
+      }
+
       setKidFeedbackSubmitted(true);
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 3000);
@@ -132,7 +150,8 @@ const ClassFeedbackSystem = ({
   const styles = {
     container: {
       minHeight: "100vh",
-      background: "linear-gradient(135deg, #f8f0ff 0%, #fce7f3 50%, #e0e7ff 100%)",
+      background:
+        "linear-gradient(135deg, #f8f0ff 0%, #fce7f3 50%, #e0e7ff 100%)",
     },
     headerGradient: {
       background: "linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)",
@@ -237,8 +256,11 @@ const ClassFeedbackSystem = ({
   return (
     <>
       <style>{bootstrapClasses}</style>
-      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-      
+      <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+      />
+
       <div style={styles.container} className="d-flex flex-column">
         {/* Header Row */}
         <div className="container-fluid" style={styles.headerGradient}>
@@ -274,19 +296,29 @@ const ClassFeedbackSystem = ({
         </div>
 
         {/* Main Content Row */}
-        <div className="container-fluid flex-grow-1 py-2 py-md-3" style={{ minHeight: "calc(100vh - 80px)" }}>
+        <div
+          className="container-fluid flex-grow-1 py-2 py-md-3"
+          style={{ minHeight: "calc(100vh - 80px)" }}
+        >
           <div className="row h-100">
             {/* Main Card - Full width on mobile, centered on larger screens */}
             <div className="col-12 col-xl-10 offset-xl-1 col-xxl-8 offset-xxl-2 h-100">
-              <div className="card h-100 border-0 rounded-3" style={styles.feedbackCard}>
-                
+              <div
+                className="card h-100 border-0 rounded-3"
+                style={styles.feedbackCard}
+              >
                 {/* Card Header */}
-                <div className="card-header border-0 text-center py-3 py-md-4" style={styles.headerGradient}>
+                <div
+                  className="card-header border-0 text-center py-3 py-md-4"
+                  style={styles.headerGradient}
+                >
                   <div className="container-fluid">
                     <div className="row">
                       <div className="col-12">
                         <h2 className="h4 h-md-3 h-lg-2 mb-1 mb-md-2 fw-bold">
-                          {isCoach ? "🎯 Coach Feedback" : "⭐ Tell Us About Your Class!"}
+                          {isCoach
+                            ? "🎯 Coach Feedback"
+                            : "⭐ Tell Us About Your Class!"}
                         </h2>
                         <p className="mb-0 small opacity-75">
                           {isCoach
@@ -299,9 +331,14 @@ const ClassFeedbackSystem = ({
                 </div>
 
                 {/* Card Body - Scrollable Content */}
-                <div className="card-body flex-grow-1 p-2 p-md-3 p-lg-4" style={{ overflowY: "auto", maxHeight: "calc(100vh - 300px)" }}>
+                <div
+                  className="card-body flex-grow-1 p-2 p-md-3 p-lg-4"
+                  style={{
+                    overflowY: "auto",
+                    maxHeight: "calc(100vh - 300px)",
+                  }}
+                >
                   <div className="container-fluid">
-                    
                     {/* Kid Feedback Section */}
                     {!isCoach && (
                       <>
@@ -310,9 +347,15 @@ const ClassFeedbackSystem = ({
                           <div className="col-12">
                             <div className="d-flex justify-content-between small text-muted mb-2">
                               <span>Progress</span>
-                              <span>{Object.keys(kidResponses).length}/{kidQuestions.length}</span>
+                              <span>
+                                {Object.keys(kidResponses).length}/
+                                {kidQuestions.length}
+                              </span>
                             </div>
-                            <div className="progress" style={{ height: "0.5rem" }}>
+                            <div
+                              className="progress"
+                              style={{ height: "0.5rem" }}
+                            >
                               <div
                                 className="progress-bar"
                                 style={{
@@ -329,7 +372,10 @@ const ClassFeedbackSystem = ({
                         <div className="row g-2 g-md-3">
                           {kidQuestions.map((q, index) => (
                             <div key={q.id} className="col-12 col-lg-6">
-                              <div className="card h-100 question-card" style={styles.questionCard}>
+                              <div
+                                className="card h-100 question-card"
+                                style={styles.questionCard}
+                              >
                                 <div className="card-body p-3">
                                   <div className="row align-items-start mb-2 mb-md-3">
                                     <div className="col-2 col-md-1">
@@ -347,15 +393,30 @@ const ClassFeedbackSystem = ({
                                       <div className="d-flex gap-4 justify-content-center">
                                         {/* Thumbs Up */}
                                         <button
-                                          onClick={() => handleKidResponse(q.id, 1)}
-                                          disabled={kidResponses[q.id] !== undefined}
+                                          onClick={() =>
+                                            handleKidResponse(q.id, 1)
+                                          }
+                                          disabled={
+                                            kidResponses[q.id] !== undefined
+                                          }
                                           className="btn thumb-btn"
                                           style={{
                                             ...styles.thumbBtn,
                                             borderColor: "#22c55e",
-                                            color: kidResponses[q.id] === 1 ? "white" : "#22c55e",
-                                            backgroundColor: kidResponses[q.id] === 1 ? "#22c55e" : "rgba(34, 197, 94, 0.1)",
-                                            opacity: kidResponses[q.id] === undefined || kidResponses[q.id] === 1 ? 1 : 0.5,
+                                            color:
+                                              kidResponses[q.id] === 1
+                                                ? "white"
+                                                : "#22c55e",
+                                            backgroundColor:
+                                              kidResponses[q.id] === 1
+                                                ? "#22c55e"
+                                                : "rgba(34, 197, 94, 0.1)",
+                                            opacity:
+                                              kidResponses[q.id] ===
+                                                undefined ||
+                                              kidResponses[q.id] === 1
+                                                ? 1
+                                                : 0.5,
                                           }}
                                         >
                                           <ThumbsUp size={20} />
@@ -363,15 +424,30 @@ const ClassFeedbackSystem = ({
 
                                         {/* Thumbs Down */}
                                         <button
-                                          onClick={() => handleKidResponse(q.id, -1)}
-                                          disabled={kidResponses[q.id] !== undefined}
+                                          onClick={() =>
+                                            handleKidResponse(q.id, -1)
+                                          }
+                                          disabled={
+                                            kidResponses[q.id] !== undefined
+                                          }
                                           className="btn thumb-btn"
                                           style={{
                                             ...styles.thumbBtn,
                                             borderColor: "#ef4444",
-                                            color: kidResponses[q.id] === -1 ? "white" : "#ef4444",
-                                            backgroundColor: kidResponses[q.id] === -1 ? "#ef4444" : "rgba(239, 68, 68, 0.1)",
-                                            opacity: kidResponses[q.id] === undefined || kidResponses[q.id] === -1 ? 1 : 0.5,
+                                            color:
+                                              kidResponses[q.id] === -1
+                                                ? "white"
+                                                : "#ef4444",
+                                            backgroundColor:
+                                              kidResponses[q.id] === -1
+                                                ? "#ef4444"
+                                                : "rgba(239, 68, 68, 0.1)",
+                                            opacity:
+                                              kidResponses[q.id] ===
+                                                undefined ||
+                                              kidResponses[q.id] === -1
+                                                ? 1
+                                                : 0.5,
                                           }}
                                         >
                                           <ThumbsDown size={20} />
@@ -390,8 +466,13 @@ const ClassFeedbackSystem = ({
                                             : "bg-danger bg-opacity-25 text-danger"
                                         }`}
                                       >
-                                        <CheckCircle size={12} className="me-1" />
-                                        {kidResponses[q.id] === 1 ? "Great!" : "Got it!"}
+                                        <CheckCircle
+                                          size={12}
+                                          className="me-1"
+                                        />
+                                        {kidResponses[q.id] === 1
+                                          ? "Great!"
+                                          : "Got it!"}
                                       </span>
                                     </div>
                                   )}
@@ -406,12 +487,17 @@ const ClassFeedbackSystem = ({
                           <div className="row mt-3 mt-md-4">
                             <div className="col-12">
                               <div className="alert alert-success">
-                                <h6 className="alert-heading">Feedback Submitted!</h6>
+                                <h6 className="alert-heading">
+                                  Feedback Submitted!
+                                </h6>
                                 <p className="mb-0">
                                   Your Score:{" "}
                                   <strong>
-                                    {Object.values(kidResponses).reduce((sum, rating) => sum + rating, 0)}/
-                                    {kidQuestions.length}
+                                    {Object.values(kidResponses).reduce(
+                                      (sum, rating) => sum + rating,
+                                      0
+                                    )}
+                                    /{kidQuestions.length}
                                   </strong>
                                 </p>
                               </div>
@@ -430,7 +516,9 @@ const ClassFeedbackSystem = ({
                               <div className="bg-primary p-2 rounded me-2 me-md-3">
                                 <MessageSquare size={20} color="white" />
                               </div>
-                              <h5 className="mb-0 text-primary fw-bold">Session Feedback</h5>
+                              <h5 className="mb-0 text-primary fw-bold">
+                                Session Feedback
+                              </h5>
                             </div>
                           </div>
                         </div>
@@ -440,7 +528,9 @@ const ClassFeedbackSystem = ({
                             <div className="col-12">
                               <textarea
                                 value={coachFeedback}
-                                onChange={(e) => setCoachFeedback(e.target.value)}
+                                onChange={(e) =>
+                                  setCoachFeedback(e.target.value)
+                                }
                                 placeholder="Share your feedback about the session:
 • Student engagement levels
 • Learning objectives achieved
@@ -450,7 +540,10 @@ const ClassFeedbackSystem = ({
                                 className="form-control border-2 border-primary"
                                 rows={window.innerWidth < 768 ? 4 : 6}
                                 disabled={isSubmitting}
-                                style={{ resize: "none", backgroundColor: "white" }}
+                                style={{
+                                  resize: "none",
+                                  backgroundColor: "white",
+                                }}
                               />
                             </div>
                           </div>
@@ -458,11 +551,15 @@ const ClassFeedbackSystem = ({
                           <div className="row">
                             <div className="col-12">
                               <div className="alert alert-primary mb-3">
-                                <p className="mb-0 fst-italic">"{coachFeedback}"</p>
+                                <p className="mb-0 fst-italic">
+                                  "{coachFeedback}"
+                                </p>
                               </div>
                               <div className="alert alert-success d-flex align-items-center">
                                 <CheckCircle size={20} className="me-2" />
-                                <span className="fw-semibold">Feedback Submitted Successfully</span>
+                                <span className="fw-semibold">
+                                  Feedback Submitted Successfully
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -502,14 +599,18 @@ const ClassFeedbackSystem = ({
                             onClick={submitKidFeedback}
                             disabled={
                               isSubmitting ||
-                              Object.keys(kidResponses).length < kidQuestions.length
+                              Object.keys(kidResponses).length <
+                                kidQuestions.length
                             }
                             className="btn w-100 py-2 py-md-3 fw-semibold btn-gradient"
                             style={styles.btnGradient}
                           >
                             {isSubmitting ? (
                               <div className="d-flex align-items-center justify-content-center">
-                                <div className="spinner-border spinner-border-sm me-2" role="status"></div>
+                                <div
+                                  className="spinner-border spinner-border-sm me-2"
+                                  role="status"
+                                ></div>
                                 <span>Submitting...</span>
                               </div>
                             ) : (
@@ -531,7 +632,10 @@ const ClassFeedbackSystem = ({
                           >
                             {isSubmitting ? (
                               <div className="d-flex align-items-center justify-content-center">
-                                <div className="spinner-border spinner-border-sm me-2" role="status"></div>
+                                <div
+                                  className="spinner-border spinner-border-sm me-2"
+                                  role="status"
+                                ></div>
                                 <span>Submitting...</span>
                               </div>
                             ) : (
@@ -553,7 +657,10 @@ const ClassFeedbackSystem = ({
 
         {/* Thank You Modal */}
         {showThankYou && (
-          <div style={styles.overlay} className="d-flex align-items-center justify-content-center p-3">
+          <div
+            style={styles.overlay}
+            className="d-flex align-items-center justify-content-center p-3"
+          >
             <div className="modal-dialog modal-sm">
               <div className="modal-content border-0 shadow-lg">
                 <div className="modal-body text-center p-4">
@@ -563,14 +670,17 @@ const ClassFeedbackSystem = ({
                       style={{
                         width: "4rem",
                         height: "4rem",
-                        background: "linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)",
+                        background:
+                          "linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%)",
                       }}
                     >
                       <Sparkles size={32} color="white" />
                     </div>
                   </div>
                   <h5 className="mb-3">Thanks for your feedback!</h5>
-                  <p className="text-muted mb-4">Your input helps us make classes even better.</p>
+                  <p className="text-muted mb-4">
+                    Your input helps us make classes even better.
+                  </p>
                   <button
                     onClick={() => setShowThankYou(false)}
                     className="btn btn-gradient px-4"

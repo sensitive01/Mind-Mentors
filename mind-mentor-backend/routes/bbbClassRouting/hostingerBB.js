@@ -125,6 +125,7 @@ router.post(
         startTime: new Date(),
         internalMeetingID,
         checkSum: newCheckSumData,
+        sheduledClassId,
       });
 
       await newClass.save();
@@ -144,7 +145,8 @@ router.post(
       // ✅ Update or add to ClassSchedule
       classData.coachJoinUrl = joinCoachUrl;
       classData.kidJoinUrl = joinKidUrl;
-      classData.meetingLinkCreated=true
+      classData.meetingLinkCreated = true;
+      classData.bbTempClassId = classId;
       classData.updatedAt = new Date();
 
       await classData.save();
@@ -154,7 +156,7 @@ router.post(
         classId,
         joinCoachUrl,
         joinKidUrl,
-        meetingLinkCreated:true
+        meetingLinkCreated: true,
       });
     } catch (err) {
       console.error(err.message);

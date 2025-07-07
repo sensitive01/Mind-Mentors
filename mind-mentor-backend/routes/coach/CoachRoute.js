@@ -12,6 +12,12 @@ coachRoute.get("/fetch-super-admin-sheduled-class",coachController.getSuperAdmin
 coachRoute.post("/add-class-feedback-attandance/:coachId/:classId",coachController.addFeedBackAndAttendance)
 coachRoute.get("/get-class-data/:classId",coachController.getClassData)
 
+coachRoute.post(
+  "/give-feed-back-to-class/:coachId",
+  coachController.coachGiveFeedbackToClass
+);
+
+
 
 
 // coachRoute.get("/fetch-coach-availability",coachController.getAvailableCoach)

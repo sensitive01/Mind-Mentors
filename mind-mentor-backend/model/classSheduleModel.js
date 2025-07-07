@@ -110,6 +110,7 @@ const classScheduleSchema = new mongoose.Schema({
   ],
   coachJoinUrl:{type:String},
   kidJoinUrl:{type:String},
+  bbTempClassId:{type:String},
   meetingLinkCreated:{type:Boolean,default:false}
 });
 

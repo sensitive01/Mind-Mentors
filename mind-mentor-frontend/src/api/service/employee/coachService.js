@@ -9,44 +9,50 @@ export const saveAvailableDays = async (id, data) => {
 };
 
 export const fetchCoachData = async () => {
-  const response = await coachInsatance.get(
-    `/coach/fetch-coach-availability`,
-    
-  );
+  const response = await coachInsatance.get(`/coach/fetch-coach-availability`);
   return response;
 };
 
 export const getMyClassData = async (empId) => {
   const response = await coachInsatance.get(
-    `/coach/fetch-my-sheduled-class/${empId}`,
-    
+    `/coach/fetch-my-sheduled-class/${empId}`
   );
   return response;
 };
 
 export const getSuperAdminAllClassData = async () => {
   const response = await coachInsatance.get(
-    `/coach/fetch-super-admin-sheduled-class`,
-    
+    `/coach/fetch-super-admin-sheduled-class`
   );
   return response;
 };
 
-
-export const addFeedbackAndAttandance = async (empId,classId,submissionData) => {
+export const addFeedbackAndAttandance = async (
+  empId,
+  classId,
+  submissionData
+) => {
   const response = await coachInsatance.post(
-    `/coach/add-class-feedback-attandance/${empId}/${classId}`,{submissionData},
-    
+    `/coach/add-class-feedback-attandance/${empId}/${classId}`,
+    { submissionData }
   );
   return response;
 };
-
-
 
 export const getClassData = async (classId) => {
-  const response = await coachInsatance.get(
-    `/coach/get-class-data/${classId}`,
-    
+  const response = await coachInsatance.get(`/coach/get-class-data/${classId}`);
+  return response;
+};
+
+export const submitCoachFeedback = async (
+  bbTempClassId,
+  coachId,
+  role,
+  coachFeedback
+) => {
+  const response = await coachInsatance.post(
+    `/coach/give-feed-back-to-class/${coachId}`,
+    { role, coachFeedback,bbTempClassId }
   );
   return response;
 };

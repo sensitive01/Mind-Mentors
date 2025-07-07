@@ -31,6 +31,9 @@ const bbbClassModel = new mongoose.Schema(
     internalMeetingID: {
       type: String,
     },
+    sheduledClassId:{
+      type:String
+    }
   },
   {
     timestamps: true, 

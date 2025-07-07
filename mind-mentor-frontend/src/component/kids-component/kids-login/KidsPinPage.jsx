@@ -44,6 +44,7 @@ const KidsPinPage = () => {
       console.log(response);
       if (response.status === 200) {
         toast.success(response?.data?.message);
+        localStorage.setItem("role","kid")
         localStorage.setItem("kidId",response.data.kidId)
         setTimeout(() => {
           navigate("/kids/dashboard");

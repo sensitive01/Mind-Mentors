@@ -1,11 +1,16 @@
 import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 const ThankYouPage = ({
-  onReturnToDashboard = () => (window.location.href = "/dashboard"),
   logoUrl = "https://images.squarespace-cdn.com/content/v1/5943b11db3db2be040e6fa54/1535040630596-MQ1OIS7VZQF0DO6ONZB2/download.png",
   title = "Thanks for joining today!",
   message = "Hope the classes were productive and engaging.\nWe look forward to seeing you in the next session!",
 }) => {
+  const navigate = useNavigate();
+  const coachId = localStorage.getItem("EmpId");
+  const role = localStorage.getItem("role")||localStorage.getItem("department");
+  const kidId = localStorage.getItem("kidId");
+  const sessionId = coachId || kidId;
   useEffect(() => {
     const timer = setTimeout(() => {
       const logo = document.querySelector(".logo");
@@ -16,6 +21,10 @@ const ThankYouPage = ({
 
     return () => clearTimeout(timer);
   }, []);
+
+  const onReturnToDashboard = () => {
+    navigate(`/class-feed-back/${role}/${sessionId}`);
+  };
 
   return (
     <div

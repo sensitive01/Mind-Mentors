@@ -19,7 +19,9 @@ const hybridClassPackage = require("../../model/class/hybridClassPackage");
 const kitPackages = require("../../model/class/kitPrice");
 const physicalCenterShema = require("../../model/physicalcenter/physicalCenterShema");
 const supportTiket = require("../../model/supportTiket");
-const referralModel = require("../../model/referralModel")
+const referralModel = require("../../model/referralModel");
+const sendMessage = require("../../utils/sendMessage");
+const sendOTP = require("../../utils/sendMessage");
 
 const parentSubmitEnquiryForm = async (req, res) => {
   try {
@@ -88,36 +90,33 @@ const parentSubmitEnquiryForm = async (req, res) => {
 
 const parentLogin = async (req, res) => {
   try {
-    console.log("Welcome to parent login", req.body);
-
-    const mobile = req.body.mobile;
+    const rawMobile = req.body.mobile;
+    const mobile = rawMobile.replace(/^\+/, "");
     const otp = generateOTP();
-    console.log("Generated OTP:", otp);
 
     req.app.locals.otp = otp;
     req.app.locals.mobile = mobile;
     req.app.locals.otpExpiry = Date.now() + 5 * 60 * 1000;
 
+    try {
+      const sendMessage = await sendOTP(otp, mobile);
+      console.log("sendMessage",sendMessage);
+    } catch (err) {}
+
     const parentExist = await parentModel.findOne({ parentMobile: mobile });
-    console.log("Prent exist", parentExist);
 
     if (parentExist) {
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: "Parent exists. OTP has been sent for verification.",
         value: 1,
-
-        otp,
         data: {
           parentId: parentExist._id,
           type: parentExist?.type,
         },
       });
     } else {
-      const newParent = new parentModel({
-        parentMobile: mobile,
-      });
-
+      const newParent = new parentModel({ parentMobile: mobile });
       await newParent.save();
 
       const enqList = await operationDeptModel.create({
@@ -125,30 +124,26 @@ const parentLogin = async (req, res) => {
         parentFirstName: "Parent_New Enquiry",
       });
 
-      console.log("Saving the data in enquiry list", enqList);
-
       const logEntry = {
         enqId: enqList._id,
         logs: [
           {
-            employeeName: "Parent ",
+            employeeName: "Parent",
             comment: "New enquiry form submission done by parent",
             createdAt: new Date(),
           },
         ],
       };
-      const logData = await enquiryLogs.create(logEntry);
 
+      const logData = await enquiryLogs.create(logEntry);
       enqList.logs = logData._id;
       await enqList.save();
 
-      res.status(201).json({
+      return res.status(201).json({
         success: true,
         message:
           "Parent registered successfully. OTP has been sent for verification.",
         value: 0,
-
-        otp,
         data: {
           parentId: newParent._id,
           type: newParent.type,
@@ -157,8 +152,7 @@ const parentLogin = async (req, res) => {
       });
     }
   } catch (err) {
-    console.error("Error in parent login", err);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Internal server error. Please try again later.",
     });
@@ -1497,8 +1491,8 @@ const getKidPaidFeeData = async (req, res) => {
       { kidId: kidId },
       {
         totalAmount: 1,
-        baseAmount:1,
-        discount:1,
+        baseAmount: 1,
+        discount: 1,
         paymentStatus: 1,
         kidName: 1,
         kidId: 1,
@@ -1507,7 +1501,7 @@ const getKidPaidFeeData = async (req, res) => {
         enqId: 1,
       }
     );
-    console.log("paymentData",paymentData)
+    console.log("paymentData", paymentData);
 
     if (!paymentData || paymentData.length === 0) {
       return res

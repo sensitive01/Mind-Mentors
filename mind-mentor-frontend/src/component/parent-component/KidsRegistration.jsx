@@ -239,12 +239,14 @@ const KidsRegistration = () => {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col lg:flex-row min-h-screen">
-        <LeftLogoBar />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading demo classes...</p>
+      <div className="min-h-screen bg-gray-50 p-1 xs:p-2 sm:p-4 md:p-6 lg:p-8">
+        <div className="max-w-7xl mx-auto bg-white rounded-lg sm:rounded-xl md:rounded-2xl shadow-lg overflow-hidden h-[calc(100vh-0.5rem)] xs:h-[calc(100vh-1rem)] sm:h-[calc(100vh-2rem)] md:h-[calc(100vh-3rem)] lg:h-[calc(100vh-4rem)] flex flex-col lg:flex-row">
+          <LeftLogoBar />
+          <div className="lg:w-3/5 w-full p-4 xs:p-6 sm:p-8 md:p-10 lg:p-12 overflow-y-auto max-h-full flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading demo classes...</p>
+            </div>
           </div>
         </div>
       </div>
@@ -252,292 +254,278 @@ const KidsRegistration = () => {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-gray-50 overflow-hidden">
-      <LeftLogoBar />
+    <div className="min-h-screen bg-gray-50 p-1 xs:p-2 sm:p-4 md:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto bg-white rounded-lg sm:rounded-xl md:rounded-2xl shadow-lg overflow-hidden h-[calc(100vh-0.5rem)] xs:h-[calc(100vh-1rem)] sm:h-[calc(100vh-2rem)] md:h-[calc(100vh-3rem)] lg:h-[calc(100vh-4rem)] flex flex-col lg:flex-row">
+        <LeftLogoBar />
 
-      <div className="flex-1 flex flex-col p-2 lg:p-4">
-        <div className="flex-1 bg-white rounded-lg shadow-sm overflow-hidden flex flex-col">
-          <div className="p-3 lg:p-4 flex-1 overflow-y-auto">
+        <div className="lg:w-3/5 w-full p-4 xs:p-6 sm:p-8 md:p-10 lg:p-12 overflow-y-auto max-h-full flex flex-col">
+          {/* Sticky Stepper */}
+          <div className="sticky top-0 z-10 bg-white pb-4">
             <Stepper />
+          </div>
 
-            <div className="mt-3">
-              <h2 className="text-lg lg:text-xl font-bold text-primary text-center mb-3">
-                Enrol your Program - Level
-              </h2>
+          {/* Scrollable Form Section */}
+          <div className="w-full flex-grow overflow-y-auto">
+            <h2 className="text-2xl font-bold text-primary mb-2 text-center">
+              Enrol your Program - Level
+            </h2>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Program Selection Section */}
-                <div className="border border-primary rounded-lg p-3 lg:p-4">
-                  <h3 className="text-base lg:text-lg font-semibold text-primary mb-3 lg:mb-4">
-                    Program Selection
-                  </h3>
+            <form onSubmit={handleSubmit} className="space-y-4 pr-2">
+              {/* Program Selection Section */}
+              <div className="p-4 rounded-lg shadow-md bg-white border border-primary mb-4">
+                <h3 className="text-lg font-semibold text-primary mb-3">
+                  Program Selection
+                </h3>
 
-                  <div className="space-y-4">
-                    {enrollments.map((enrollment, index) => (
-                      <div key={enrollment.id} className="relative">
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4 pr-0 lg:pr-8">
-                          <div className="flex flex-col">
-                            <label
-                              htmlFor={`program-${index}`}
-                              className="font-medium mb-1 text-gray-700 text-sm"
-                            >
-                              Program *
-                            </label>
-                            <select
-                              id={`program-${index}`}
-                              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent w-full bg-white transition-all duration-200 text-sm"
-                              value={enrollment.program}
-                              onChange={(e) => {
-                                const selectedProgram = e.target.value;
-                                console.log(
-                                  "Program selected:",
-                                  selectedProgram
-                                ); // Debug log
+                <div className="space-y-4">
+                  {enrollments.map((enrollment, index) => (
+                    <div key={enrollment.id} className="relative">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Program *
+                          </label>
+                          <select
+                            className="w-full p-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                            value={enrollment.program}
+                            onChange={(e) => {
+                              const selectedProgram = e.target.value;
+                              console.log("Program selected:", selectedProgram); // Debug log
 
-                                handleProgramChange(
-                                  enrollment.id,
-                                  "program",
-                                  selectedProgram
-                                );
-                                // Reset program level when program changes
-                                handleProgramChange(
-                                  enrollment.id,
-                                  "programLevel",
-                                  ""
-                                );
-                              }}
-                              required
-                            >
-                              <option value="">Choose a program</option>
-                              {uniquePrograms.map((program) => (
-                                <option key={program} value={program}>
-                                  {program}
-                                </option>
-                              ))}
-                            </select>
-                            {uniquePrograms.length === 0 && (
-                              <p className="text-xs text-red-500 mt-1">
-                                No programs available
-                              </p>
-                            )}
-                          </div>
-
-                          <div className="flex flex-col">
-                            <label
-                              htmlFor={`program-level-${index}`}
-                              className="font-medium mb-1 text-gray-700 text-sm"
-                            >
-                              Program Level *
-                            </label>
-                            <select
-                              id={`program-level-${index}`}
-                              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent w-full bg-white transition-all duration-200 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
-                              value={enrollment.programLevel}
-                              onChange={(e) => {
-                                const selectedLevel = e.target.value;
-                                console.log("Level selected:", selectedLevel); // Debug log
-
-                                handleProgramChange(
-                                  enrollment.id,
-                                  "programLevel",
-                                  selectedLevel
-                                );
-                              }}
-                              disabled={!enrollment.program}
-                              required
-                            >
-                              <option value="">
-                                {enrollment.program
-                                  ? "Choose a level"
-                                  : "Select program first"}
+                              handleProgramChange(
+                                enrollment.id,
+                                "program",
+                                selectedProgram
+                              );
+                              // Reset program level when program changes
+                              handleProgramChange(
+                                enrollment.id,
+                                "programLevel",
+                                ""
+                              );
+                            }}
+                            required
+                          >
+                            <option value="">Choose a program</option>
+                            {uniquePrograms.map((program) => (
+                              <option key={program} value={program}>
+                                {program}
                               </option>
-                              {getAvailableLevels(enrollment.program).map(
-                                (level) => (
-                                  <option key={level} value={level}>
-                                    {level}
-                                  </option>
-                                )
-                              )}
-                            </select>
-                            {enrollment.program &&
-                              getAvailableLevels(enrollment.program).length ===
-                                0 && (
-                                <p className="text-xs text-orange-500 mt-1">
-                                  No levels available for this program
-                                </p>
-                              )}
-                          </div>
+                            ))}
+                          </select>
+                          {uniquePrograms.length === 0 && (
+                            <p className="text-xs text-red-500 mt-1">
+                              No programs available
+                            </p>
+                          )}
                         </div>
 
-                        {/* Available Slots Section */}
-                        {enrollment.program && enrollment.programLevel && (
-                          <div className="mt-3">
-                            <h4 className="font-medium text-gray-700 mb-2 text-sm flex items-center gap-2">
-                              <Calendar size={14} className="text-primary" />
-                              Available Demo Classes
-                            </h4>
-                            {(() => {
-                              const matchingSlots = getMatchingSlots(
-                                enrollment.program,
-                                enrollment.programLevel
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Program Level *
+                          </label>
+                          <select
+                            className="w-full p-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            value={enrollment.programLevel}
+                            onChange={(e) => {
+                              const selectedLevel = e.target.value;
+                              console.log("Level selected:", selectedLevel); // Debug log
+
+                              handleProgramChange(
+                                enrollment.id,
+                                "programLevel",
+                                selectedLevel
                               );
-
-                              if (matchingSlots.length > 0) {
-                                return (
-                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                                    {matchingSlots.map((slot) => {
-                                      const nextDate = getNextDateForDay(
-                                        slot.day
-                                      );
-                                      return (
-                                        <div
-                                          key={slot._id}
-                                          className={`p-2 rounded-lg border cursor-pointer transition-all duration-200 hover:shadow-md ${
-                                            selectedSlot?._id === slot._id
-                                              ? "border-primary bg-purple-50 shadow-md"
-                                              : "border-gray-200 hover:border-primary"
-                                          }`}
-                                          onClick={() => {
-                                            console.log("Slot selected:", slot); // Debug log
-                                            setSelectedSlot(slot);
-                                          }}
-                                        >
-                                          <div className="space-y-1">
-                                            <div className="flex items-center gap-2">
-                                              <Calendar
-                                                size={12}
-                                                className="text-primary"
-                                              />
-                                              <p className="font-medium text-xs">
-                                                {slot.day}
-                                              </p>
-                                            </div>
-
-                                            <div className="flex items-center gap-2">
-                                              <Clock
-                                                size={12}
-                                                className="text-gray-600"
-                                              />
-                                              <p className="text-gray-600 text-xs">
-                                                {slot.classTime}
-                                              </p>
-                                            </div>
-
-                                            <div className="flex items-center gap-2">
-                                              <User
-                                                size={12}
-                                                className="text-gray-600"
-                                              />
-                                              <p className="text-gray-600 text-xs">
-                                                {slot.coachName}
-                                              </p>
-                                            </div>
-
-                                            {slot.centerName && (
-                                              <div className="flex items-start gap-2">
-                                                <MapPin
-                                                  size={12}
-                                                  className="text-gray-600 mt-0.5 flex-shrink-0"
-                                                />
-                                                <p className="text-gray-600 text-xs leading-tight">
-                                                  {slot.centerName}
-                                                </p>
-                                              </div>
-                                            )}
-
-                                            {nextDate && (
-                                              <div className="mt-1 pt-1 border-t border-gray-100">
-                                                <p className="text-xs text-primary font-medium">
-                                                  Next: {formatDate(nextDate)}
-                                                </p>
-                                              </div>
-                                            )}
-
-                                            {selectedSlot?._id === slot._id && (
-                                              <div className="mt-1 pt-1 border-t border-primary">
-                                                <p className="text-xs text-primary font-bold">
-                                                  ✓ Selected
-                                                </p>
-                                              </div>
-                                            )}
-                                          </div>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                );
-                              } else {
-                                return (
-                                  <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                    <p className="text-gray-600 text-xs text-center">
-                                      No scheduled demo classes available for
-                                      this program and level. You can still
-                                      register and our team will contact you to
-                                      schedule your demo class.
-                                    </p>
-                                  </div>
-                                );
-                              }
-                            })()}
-                          </div>
-                        )}
-
-                        {enrollments.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveProgram(enrollment.id)}
-                            className="absolute right-0 top-6 p-1 text-red-500 hover:text-red-700 transition-colors duration-200 hover:bg-red-50 rounded-full lg:block hidden"
-                            aria-label="Remove program"
+                            }}
+                            disabled={!enrollment.program}
+                            required
                           >
-                            <Trash2 size={16} />
-                          </button>
-                        )}
-
-                        {/* Mobile remove button */}
-                        {enrollments.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveProgram(enrollment.id)}
-                            className="mt-2 w-full flex items-center justify-center gap-2 text-red-500 hover:text-red-700 transition-colors duration-200 py-1 px-3 border border-red-200 hover:border-red-300 rounded-lg lg:hidden text-xs"
-                          >
-                            <Trash2 size={14} />
-                            <span>Remove Program</span>
-                          </button>
-                        )}
+                            <option value="">
+                              {enrollment.program
+                                ? "Choose a level"
+                                : "Select program first"}
+                            </option>
+                            {getAvailableLevels(enrollment.program).map(
+                              (level) => (
+                                <option key={level} value={level}>
+                                  {level}
+                                </option>
+                              )
+                            )}
+                          </select>
+                          {enrollment.program &&
+                            getAvailableLevels(enrollment.program).length ===
+                              0 && (
+                              <p className="text-xs text-orange-500 mt-1">
+                                No levels available for this program
+                              </p>
+                            )}
+                        </div>
                       </div>
-                    ))}
-                  </div>
+
+                      {/* Available Slots Section */}
+                      {enrollment.program && enrollment.programLevel && (
+                        <div className="mt-4">
+                          <h4 className="font-semibold text-gray-700 mb-2 text-sm flex items-center gap-2">
+                            <Calendar size={14} className="text-primary" />
+                            Available Demo Classes
+                          </h4>
+                          {(() => {
+                            const matchingSlots = getMatchingSlots(
+                              enrollment.program,
+                              enrollment.programLevel
+                            );
+
+                            if (matchingSlots.length > 0) {
+                              return (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                  {matchingSlots.map((slot) => {
+                                    const nextDate = getNextDateForDay(
+                                      slot.day
+                                    );
+                                    return (
+                                      <div
+                                        key={slot._id}
+                                        className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 hover:shadow-md ${
+                                          selectedSlot?._id === slot._id
+                                            ? "border-primary bg-purple-50 shadow-md"
+                                            : "border-gray-200 hover:border-primary"
+                                        }`}
+                                        onClick={() => {
+                                          console.log("Slot selected:", slot); // Debug log
+                                          setSelectedSlot(slot);
+                                        }}
+                                      >
+                                        <div className="space-y-2">
+                                          <div className="flex items-center gap-2">
+                                            <Calendar
+                                              size={14}
+                                              className="text-primary"
+                                            />
+                                            <p className="font-medium text-sm">
+                                              {slot.day}
+                                            </p>
+                                          </div>
+
+                                          <div className="flex items-center gap-2">
+                                            <Clock
+                                              size={14}
+                                              className="text-gray-600"
+                                            />
+                                            <p className="text-gray-600 text-sm">
+                                              {slot.classTime}
+                                            </p>
+                                          </div>
+
+                                          <div className="flex items-center gap-2">
+                                            <User
+                                              size={14}
+                                              className="text-gray-600"
+                                            />
+                                            <p className="text-gray-600 text-sm">
+                                              {slot.coachName}
+                                            </p>
+                                          </div>
+
+                                          {slot.centerName && (
+                                            <div className="flex items-start gap-2">
+                                              <MapPin
+                                                size={14}
+                                                className="text-gray-600 mt-0.5 flex-shrink-0"
+                                              />
+                                              <p className="text-gray-600 text-sm leading-tight">
+                                                {slot.centerName}
+                                              </p>
+                                            </div>
+                                          )}
+
+                                          {nextDate && (
+                                            <div className="mt-2 pt-2 border-t border-gray-100">
+                                              <p className="text-sm text-primary font-medium">
+                                                Next: {formatDate(nextDate)}
+                                              </p>
+                                            </div>
+                                          )}
+
+                                          {selectedSlot?._id === slot._id && (
+                                            <div className="mt-2 pt-2 border-t border-primary">
+                                              <p className="text-sm text-primary font-bold">
+                                                ✓ Selected
+                                              </p>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              );
+                            } else {
+                              return (
+                                <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                  <p className="text-gray-600 text-sm text-center">
+                                    No scheduled demo classes available for this
+                                    program and level. You can still register
+                                    and our team will contact you to schedule
+                                    your demo class.
+                                  </p>
+                                </div>
+                              );
+                            }
+                          })()}
+                        </div>
+                      )}
+
+                      {enrollments.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveProgram(enrollment.id)}
+                          className="absolute right-0 top-0 p-1 text-red-500 hover:text-red-700 transition-colors duration-200 hover:bg-red-50 rounded-full"
+                          aria-label="Remove program"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
                 </div>
+              </div>
 
-                <div className="flex flex-col lg:flex-row gap-2 mt-4">
-                  <button
-                    onClick={() => {
-                      previousStep();
-                      navigate(-1);
-                    }}
-                    type="button"
-                    className="order-2 lg:order-1 w-full lg:w-1/4 bg-gray-500 text-white py-2 px-3 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition duration-300 flex items-center justify-center text-sm"
-                  >
-                    ← Back
-                  </button>
+              {/* Buttons */}
+              <div className="flex justify-between gap-4 mt-6">
+                <button
+                  onClick={() => {
+                    previousStep();
+                    navigate(-1);
+                  }}
+                  type="button"
+                  className="w-1/4 bg-primary text-white py-3 px-4 rounded-md border-b-4 hover:border-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition duration-300 flex items-center justify-center"
+                >
+                  ← Back
+                </button>
 
-                  <button
-                    type="button"
-                    className="order-3 lg:order-2 w-full lg:w-1/2 bg-secondary text-white py-2 px-3 rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary transition duration-300 text-sm"
-                    onClick={handleSkipDashboard}
-                  >
-                    Skip to Dashboard
-                  </button>
+                <button
+                  type="button"
+                  className={`w-1/2 bg-primary text-white py-3 px-4 rounded-md border-b-4 hover:border-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-300 ${
+                    isCooldown ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                  onClick={handleSkipDashboard}
+                  disabled={isCooldown}
+                >
+                  Skip to Dashboard
+                </button>
 
-                  <button
-                    type="submit"
-                    className="order-1 lg:order-3 w-full lg:w-1/4 bg-primary text-white py-2 px-3 rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-300 text-sm font-medium"
-                  >
-                    Submit →
-                  </button>
-                </div>
-              </form>
-            </div>
+                <button
+                  type="submit"
+                  className={`w-1/4 bg-primary text-white py-3 px-4 rounded-md border-b-4 hover:border-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-300 ${
+                    isCooldown ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                  disabled={isCooldown}
+                >
+                  Submit →
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
@@ -550,7 +538,6 @@ const KidsRegistration = () => {
         pauseOnHover
         draggable
         pauseOnFocusLoss
-        className="mt-16 lg:mt-0 z-50"
       />
     </div>
   );

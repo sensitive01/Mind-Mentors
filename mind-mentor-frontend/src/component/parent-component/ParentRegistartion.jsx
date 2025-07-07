@@ -265,7 +265,7 @@ const ParentRegistration = () => {
                     className="bg-primary w-1/4 py-2 xs:py-2.5 sm:py-3 px-1 xs:px-2 sm:px-4 text-white font-medium rounded-md transition duration-300 flex items-center justify-center border-b-4 hover:border-secondary text-xs xs:text-sm"
                   >
                     <ArrowLeft size={12} className="mr-1" />
-                    <span className="hidden xs:inline">Back</span>
+                    <span className=" xs:inline">Back</span>
                   </button>
 
                   <button
@@ -287,7 +287,7 @@ const ParentRegistration = () => {
                     }`}
                     disabled={isCooldown}
                   >
-                    <span className="hidden xs:inline">Next</span>
+                    <span className=" xs:inline">Next</span>
                     <ArrowRight size={12} className="ml-1" />
                   </button>
                 </div>
