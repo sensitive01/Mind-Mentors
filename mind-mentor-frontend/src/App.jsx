@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes, Outlet } from "react-router-dom";
 import "./index.css";
 import "react-toastify/dist/ReactToastify.css";
 import { StepperProvider } from "./component/completion-status-bar/StepperContext";
@@ -323,6 +323,7 @@ import SuperAdminParentSupports from "./pages/employee/superadmin/SuperAdminPare
 import MySelectedPackagePage from "./pages/parent/MySelectedPackagePage";
 import ClassRatingComponent from "./department-components/classRatings/ClassRatingComponent";
 import ThankYouPage from "./department-components/classRatings/ThankYouPage";
+import ParentAuthGuard from "./ParentAuthGuard";
 
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
@@ -394,24 +395,33 @@ function App() {
             }
           />
 
-          <Route path="/parent/new-dashboard" element={<NewDashboard />} />
-          <Route path="/parent/new-dashboard/kid-1" element={<NewDashboard />}/>
-          <Route path="/parent/dashboard" element={<DashboardPage />} />
-          <Route path="/parent/kid" element={<ParentKidsDetailsPage />} />
-          <Route path="/parent/add-kid" element={<AddKid />} />
-          <Route path="/parent/kid/attendance/:id" element={<AttendancePage />}/>
-          <Route path="/parent/kid/demo-class/:id" element={<ParentDemoClassPage />}/> 
-          <Route path="/parent/kid/demo-class-shedule/:id" element={<ParentReqNewDemoClass />}/> 
-          <Route path="/parent/kid/manage-login/:id" element={<ParentManageChildLoginPage />} />  
-          <Route path="/parent/profile/manage" element={<ParentProfilePage />}/>
-          <Route path="/parent/certificate" element={<CertificatePage />} />
-          <Route path="/parent/kid/classShedule/:id" element={<KidsPage />} />
-          <Route path="/parent/new-referal" element={<ParentReferalPage />} />
-          <Route path="/parent/support" element={<SupportPage />} />
-          <Route path="/parent/walkthrough-video" element={<WalkThroughPage />}/>
-          <Route path="/parent/add-kid-availability/:kidId" element={<AddKidAvailabilityPage />}/>
-          <Route path="/parent/payment-page/payment-details/:encodedData" element={<ParentPaymentPage />}/>
-          <Route path="/parent/kid/live-class/:kidId"  element={<LiveClassPage />} />
+          <Route
+          path="/parent"
+            element={
+                 <ParentAuthGuard>
+                     <Outlet />
+                  </ParentAuthGuard>
+            }
+          >
+             <Route path="new-dashboard" element={<NewDashboard />} />
+             <Route path="new-dashboard/kid-1" element={<NewDashboard />} />
+             <Route path="dashboard" element={<DashboardPage />} />
+             <Route path="kid" element={<ParentKidsDetailsPage />} />
+             <Route path="add-kid" element={<AddKid />} />
+             <Route path="kid/attendance/:id" element={<AttendancePage />} />
+             <Route path="kid/demo-class/:id" element={<ParentDemoClassPage />} />
+             <Route path="kid/demo-class-shedule/:id" element={<ParentReqNewDemoClass />} />
+             <Route path="kid/manage-login/:id" element={<ParentManageChildLoginPage />} />
+             <Route path="profile/manage" element={<ParentProfilePage />} />
+             <Route path="certificate" element={<CertificatePage />} />
+             <Route path="kid/classShedule/:id" element={<KidsPage />} />
+            <Route path="new-referal" element={<ParentReferalPage />} />
+            <Route path="support" element={<SupportPage />} />
+            <Route path="walkthrough-video" element={<WalkThroughPage />} />
+            <Route path="add-kid-availability/:kidId" element={<AddKidAvailabilityPage />} />
+            <Route path="payment-page/payment-details/:encodedData" element={<ParentPaymentPage />} />
+           <Route path="kid/live-class/:kidId" element={<LiveClassPage />} />
+            </Route>
             
            
          

@@ -177,7 +177,7 @@ const LoginPage = () => {
     {
       title: "Kid Login",
       icon: Baby,
-      description: "Start your learning adventure!",
+      description: "Your next chess lesson is just a click away!",
       color: "from-primary/70 to-primary/90",
       path: "/kids/login",
       delay: "delay-100",

@@ -2,6 +2,8 @@ import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { parentAddNewKid } from "../../api/service/parent/ParentService";
 import { useNavigate } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const EnrolmentKid = () => {
   const navigate = useNavigate();
@@ -28,20 +30,21 @@ const EnrolmentKid = () => {
       console.log("response", response);
 
       if (response.status === 201) {
-        console.log("Success:", response.data.message);
+        toast.success("Kid added successfully!");
 
         setTimeout(() => {
           navigate("/parent/kid");
-        }, 1500);
+        }, 2000);
       }
     } catch (error) {
       console.error("Error submitting form:", error);
+      toast.error("Failed to add kid. Please try again.");
     }
   };
 
   const handleBack = () => {
     console.log("Navigate back");
-    navigate(-1)
+    navigate(-1);
   };
 
   return (
@@ -120,6 +123,9 @@ const EnrolmentKid = () => {
           </div>
         </div>
       </div>
+
+      {/* Toast notification container */}
+      <ToastContainer position="top-center" autoClose={1500} />
     </div>
   );
 };

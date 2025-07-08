@@ -75,13 +75,14 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
   const [selectedCenter, setSelectedCenter] = useState("");
   const [availablePrograms, setAvailablePrograms] = useState([]);
   const [availableLevels, setAvailableLevels] = useState([]);
+  const [isFetchingPincode, setIsFetchingPincode] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await getAllProgrameDataEnquiry();
         console.log("Response", response);
-        if (response.status===200) {
+        if (response.status === 200) {
           setProgramsData(response.data.programs);
         }
       } catch (error) {
@@ -95,18 +96,75 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
     setFormData(data);
   }, [data]);
 
+  // Fetch city and state based on pincode
+  const fetchPincodeDetails = async (pincode) => {
+    if (pincode.length === 6) {
+      setIsFetchingPincode(true);
+      try {
+        const response = await fetch(
+          `https://api.postalpincode.in/pincode/${pincode}`
+        );
+        const data = await response.json();
+
+        if (data[0].Status === "Success") {
+          const postOffice = data[0].PostOffice[0];
+          setFormData((prev) => ({
+            ...prev,
+            city: postOffice.District || prev.city,
+            state: postOffice.State || prev.state,
+          }));
+        }
+      } catch (error) {
+        console.error("Error fetching pincode details:", error);
+      } finally {
+        setIsFetchingPincode(false);
+      }
+    }
+  };
+
+  // Handle pincode change
+  const handlePincodeChange = (e) => {
+    const value = e.target.value;
+    handleInputChange("pincode", value);
+
+    // Only fetch if pincode is 6 digits
+    if (value.length === 6) {
+      fetchPincodeDetails(value);
+    }
+  };
+
   // Handle center selection and update available programs
   const handleCenterChange = (centerId) => {
     setSelectedCenter(centerId);
     const selectedCenterData = programsData.find(
       (center) => center._id === centerId
     );
+
     if (selectedCenterData) {
       setAvailablePrograms(selectedCenterData.programLevels || []);
+      // Reset levels when center changes
+      setAvailableLevels([]);
+
+      // Update programs in formData to match the new center's programs
+      const updatedPrograms =
+        formData.programs?.map((program) => {
+          const matchingProgram = selectedCenterData.programLevels.find(
+            (p) => p.program === program.program
+          );
+
+          return {
+            ...program,
+            level: matchingProgram?.levels?.includes(program.level)
+              ? program.level
+              : matchingProgram?.levels?.[0] || "",
+          };
+        }) || [];
+
+      handleInputChange("programs", updatedPrograms);
     } else {
       setAvailablePrograms([]);
+      setAvailableLevels([]);
     }
-    setAvailableLevels([]);
   };
 
   // Handle program selection and update available levels
@@ -114,6 +172,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
     const selectedProgramData = availablePrograms.find(
       (prog) => prog.program === programName
     );
+
     if (selectedProgramData) {
       setAvailableLevels(selectedProgramData.levels || []);
     } else {
@@ -125,7 +184,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
     updatedPrograms[programIndex] = {
       ...updatedPrograms[programIndex],
       program: programName,
-      level: "", // Reset level when program changes
+      level: selectedProgramData?.levels?.[0] || "", // Set to first level or empty
     };
     handleInputChange("programs", updatedPrograms);
   };
@@ -203,12 +262,6 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
               </Grid>
               <Grid item xs={12} md={3}>
                 <DetailCard title="KID STATE" value={data.state} />
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <DetailCard title="SCHOOL NAME" value={data.schoolName} />
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <DetailCard title="SCHOOL PINCODE" value={data.schoolPincode} />
               </Grid>
             </Grid>
           </Grid>
@@ -356,7 +409,6 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
 
         <DialogContent sx={{ p: 3 }}>
           <Grid container spacing={3}>
-            {/* Parent Information */}
             <Grid item xs={12}>
               <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
                 Parent Information
@@ -370,6 +422,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                     onChange={(e) =>
                       handleInputChange("parentName", e.target.value)
                     }
+                    multiline
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
@@ -378,6 +431,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                     label="Email"
                     value={formData.email || ""}
                     onChange={(e) => handleInputChange("email", e.target.value)}
+                    multiline
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
@@ -436,20 +490,9 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                     />
                   </Box>
                 </Grid>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    label="Address"
-                    value={formData.address || ""}
-                    onChange={(e) =>
-                      handleInputChange("address", e.target.value)
-                    }
-                  />
-                </Grid>
               </Grid>
             </Grid>
 
-            {/* Kid Information */}
             <Grid item xs={12}>
               <Typography
                 variant="subtitle1"
@@ -466,6 +509,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                     onChange={(e) =>
                       handleInputChange("kidName", e.target.value)
                     }
+                    multiline
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
@@ -476,42 +520,56 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                     onChange={(e) =>
                       handleInputChange("kidsAge", e.target.value)
                     }
+                    multiline
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <TextField
+                    select
                     fullWidth
                     label="Gender"
                     value={formData.kidsGender || ""}
                     onChange={(e) =>
                       handleInputChange("kidsGender", e.target.value)
                     }
+                  >
+                    <MenuItem value="Male">Male</MenuItem>
+                    <MenuItem value="Female">Female</MenuItem>
+                  </TextField>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="Pincode"
+                    value={formData.pincode || ""}
+                    onChange={handlePincodeChange}
+                    multiline
+                    disabled={isFetchingPincode}
+                    helperText={isFetchingPincode ? "Fetching location..." : ""}
+                  />
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label="City"
+                    value={formData.city || ""}
+                    onChange={(e) => handleInputChange("city", e.target.value)}
+                    multiline
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth
-                    label="School Name"
-                    value={formData.schoolName || ""}
-                    onChange={(e) =>
-                      handleInputChange("schoolName", e.target.value)
-                    }
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    label="School Pincode"
-                    value={formData.schoolPincode || ""}
-                    onChange={(e) =>
-                      handleInputChange("schoolPincode", e.target.value)
-                    }
+                    label="State"
+                    value={formData.state || ""}
+                    onChange={(e) => handleInputChange("state", e.target.value)}
+                    multiline
                   />
                 </Grid>
               </Grid>
             </Grid>
 
-            {/* Center Selection (Optional) */}
             <Grid item xs={12}>
               <Typography
                 variant="subtitle1"
@@ -548,7 +606,6 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
               </Grid>
             </Grid>
 
-            {/* Programs */}
             <Grid item xs={12}>
               <Box
                 sx={{
@@ -573,84 +630,95 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                     ];
                     handleInputChange("programs", updatedPrograms);
                   }}
+                  disabled={formData.programs?.length > 0} // Disable if at least one program exists
                 >
                   Add Program
                 </Button>
               </Box>
 
-              {formData.programs?.map((program, index) => (
-                <Card key={index} sx={{ mb: 2, p: 2 }}>
-                  <Grid container spacing={2} alignItems="center">
-                    <Grid item xs={12} md={4}>
-                      <FormControl fullWidth>
-                        <InputLabel
-                          id={`program-select-label-${index}`}
-                          sx={{ backgroundColor: "white", px: 0.5 }}
-                        >
-                          Program Name
-                        </InputLabel>
-                        <Select
-                          labelId={`program-select-label-${index}`}
-                          value={program.program || ""}
-                          onChange={(e) =>
-                            handleProgramChange(e.target.value, index)
-                          }
-                          label="Program Name"
-                        >
-                          {availablePrograms.map((prog, progIndex) => (
-                            <MenuItem key={progIndex} value={prog.program}>
-                              {prog.program}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    </Grid>
-                    <Grid item xs={12} md={4}>
-                      <FormControl fullWidth>
-                        <InputLabel
-                          id={`level-select-label-${index}`}
-                          sx={{ backgroundColor: "white", px: 0.5 }}
-                        >
-                          Level
-                        </InputLabel>
-                        <Select
-                          labelId={`level-select-label-${index}`}
-                          value={program.level || ""}
-                          onChange={(e) => {
-                            const updatedPrograms = [...formData.programs];
-                            updatedPrograms[index].level = e.target.value;
+              {formData.programs?.map((program, index) => {
+                // Get available programs for the current program selection
+                const currentProgramData = availablePrograms.find(
+                  (p) => p.program === program.program
+                );
+                const levelsForCurrentProgram =
+                  currentProgramData?.levels || [];
+
+                return (
+                  <Card key={index} sx={{ mb: 2, p: 2 }}>
+                    <Grid container spacing={2} alignItems="center">
+                      <Grid item xs={12} md={4}>
+                        <FormControl fullWidth>
+                          <InputLabel
+                            id={`program-select-label-${index}`}
+                            sx={{ backgroundColor: "white", px: 0.5 }}
+                          >
+                            Program Name
+                          </InputLabel>
+                          <Select
+                            labelId={`program-select-label-${index}`}
+                            value={program.program || ""}
+                            onChange={(e) =>
+                              handleProgramChange(e.target.value, index)
+                            }
+                            label="Program Name"
+                          >
+                            {availablePrograms.map((prog, progIndex) => (
+                              <MenuItem key={progIndex} value={prog.program}>
+                                {prog.program}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={12} md={4}>
+                        <FormControl fullWidth>
+                          <InputLabel
+                            id={`level-select-label-${index}`}
+                            sx={{ backgroundColor: "white", px: 0.5 }}
+                          >
+                            Level
+                          </InputLabel>
+                          <Select
+                            labelId={`level-select-label-${index}`}
+                            value={program.level || ""}
+                            onChange={(e) => {
+                              const updatedPrograms = [...formData.programs];
+                              updatedPrograms[index].level = e.target.value;
+                              handleInputChange("programs", updatedPrograms);
+                            }}
+                            label="Level"
+                            disabled={!program.program}
+                          >
+                            {levelsForCurrentProgram.map(
+                              (level, levelIndex) => (
+                                <MenuItem key={levelIndex} value={level}>
+                                  {level}
+                                </MenuItem>
+                              )
+                            )}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={12} md={2}>
+                        <IconButton
+                          color="error"
+                          onClick={() => {
+                            const updatedPrograms = formData.programs.filter(
+                              (_, i) => i !== index
+                            );
                             handleInputChange("programs", updatedPrograms);
                           }}
-                          label="Level"
-                          disabled={!program.program}
                         >
-                          {availableLevels.map((level, levelIndex) => (
-                            <MenuItem key={levelIndex} value={level}>
-                              {level}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
+                          <Trash2 size={20} />
+                        </IconButton>
+                      </Grid>
                     </Grid>
-                    <Grid item xs={12} md={2}>
-                      <IconButton
-                        color="error"
-                        onClick={() => {
-                          const updatedPrograms = formData.programs.filter(
-                            (_, i) => i !== index
-                          );
-                          handleInputChange("programs", updatedPrograms);
-                        }}
-                      >
-                        <Trash2 size={20} />
-                      </IconButton>
-                    </Grid>
-                  </Grid>
-                </Card>
-              ))}
+                  </Card>
+                );
+              })}
             </Grid>
 
-            {/* Status Information */}
             <Grid item xs={12}>
               <Typography
                 variant="subtitle1"
@@ -686,7 +754,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                       id="payment"
                       sx={{ backgroundColor: "white", px: 0.5 }}
                     >
-                      Payment
+                      Payment Status
                     </InputLabel>
                     <Select
                       value={formData.payment || ""}
@@ -694,6 +762,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                         handleInputChange("payment", e.target.value)
                       }
                       label="Payment"
+                      disabled
                     >
                       <MenuItem value="Pending">Pending</MenuItem>
                       <MenuItem value="Paid">Mark as Paid</MenuItem>
@@ -715,7 +784,13 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                         handleInputChange("source", e.target.value)
                       }
                     >
+                      <MenuItem value="">-Select-</MenuItem>
                       <MenuItem value="website">Website</MenuItem>
+                      <MenuItem value="web_form">Web Form</MenuItem>
+                      <MenuItem value="justdial">JustDial</MenuItem>
+                      <MenuItem value="whatsapp">WhatsApp</MenuItem>
+                      <MenuItem value="phone_call">Phone Call</MenuItem>
+                      <MenuItem value="centre_walkin">Centre Walk-in</MenuItem>
                       <MenuItem value="referral">Referral</MenuItem>
                       <MenuItem value="social">Social Media</MenuItem>
                     </Select>

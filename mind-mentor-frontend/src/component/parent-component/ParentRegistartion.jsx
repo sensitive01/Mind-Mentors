@@ -111,10 +111,8 @@ const ParentRegistration = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-1 xs:p-2 sm:p-4 md:p-6 lg:p-8">
-      {/* Main Container with margins on all sides */}
       <div className="max-w-7xl mx-auto bg-white rounded-lg sm:rounded-xl md:rounded-2xl shadow-lg overflow-hidden h-[calc(100vh-0.5rem)] xs:h-[calc(100vh-1rem)] sm:h-[calc(100vh-2rem)] md:h-[calc(100vh-3rem)] lg:h-[calc(100vh-4rem)]">
         <div className="flex flex-col lg:flex-row h-full">
-          {/* Left Side - Logo Section */}
           <div className="bg-[#642b8f] text-white w-full lg:w-2/5 flex flex-col justify-between h-[30vh] xs:h-[32vh] sm:h-[40vh] md:h-1/2 lg:h-full px-3 py-3 xs:px-4 xs:py-4 sm:px-6 sm:py-6 md:px-6 md:py-8 lg:px-8 lg:py-12">
             <div className="flex-grow flex flex-col justify-center items-center lg:items-start text-center lg:text-left">
               <h2 className="text-sm xs:text-base sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold leading-tight mb-1 xs:mb-2 sm:mb-4 md:mb-6">
@@ -137,14 +135,11 @@ const ParentRegistration = () => {
             </div>
           </div>
 
-          {/* Right Side - Registration Form Section */}
           <div className="w-full lg:w-3/5 flex flex-col h-full">
-            {/* Stepper Section */}
             <div className="px-2 xs:px-3 sm:px-4 md:px-6 lg:px-8 pt-2 xs:pt-3 sm:pt-4 pb-2 xs:pb-3 sm:pb-4 border-b border-gray-100 flex-shrink-0">
               <Stepper />
             </div>
 
-            {/* Form Content */}
             <div className="flex-1 flex flex-col justify-center px-2 xs:px-3 sm:px-4 md:px-6 lg:px-8 py-2 xs:py-3 sm:py-4">
               <div className="w-full max-w-3xl mx-auto">
                 <div className="text-center mb-3 xs:mb-4 sm:mb-6">
@@ -237,7 +232,7 @@ const ParentRegistration = () => {
                       />
 
                       <p className="text-xs text-primary">
-                        Display name / Invoice name
+                        Guardian's name / Invoice name
                       </p>
                     </div>
                     <div className="space-y-1">
@@ -252,7 +247,7 @@ const ParentRegistration = () => {
                         aria-label="Child name input"
                       />
 
-                      <p className="text-xs text-primary">Participant name</p>
+                      <p className="text-xs text-primary">Child Name</p>
                     </div>
                   </div>
                 </form>

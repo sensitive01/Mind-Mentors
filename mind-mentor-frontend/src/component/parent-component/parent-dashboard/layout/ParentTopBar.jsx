@@ -1,14 +1,20 @@
 import { useNavigate } from "react-router-dom";
 import mindmentors from "../../../../images/mindmentorz.png";
 import info from "../../../../images/info_icon.png";
-import logoout from "../../../../images/logout icon.png";
+import logoutIcon from "../../../../images/logout icon.png";
 
 const ParentTopBar = () => {
   const navigate = useNavigate();
 
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/");
+  };
+
   return (
     <div className="bg-white shadow-lg">
       <div className="flex justify-between items-center px-5 py-2">
+        {/* Left: Logo */}
         <div className="flex items-center">
           <img
             src={mindmentors}
@@ -17,28 +23,19 @@ const ParentTopBar = () => {
           />
         </div>
 
+        {/* Right: Icons */}
         <div className="flex items-center space-x-4">
-          <button className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200">
-            <img
-              src={info}
-              alt="User Profile"
-              className="w-11 h-11 object-cover rounded-full"
-            />
-          </button>
-
+          {/* Logout Button */}
           <button
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
-            onClick={() => {
-              localStorage.clear(); 
-              navigate("/");
-            }}
-            
+            onClick={handleLogout}
+            className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-md transition duration-200"
           >
             <img
-              src={logoout}
+              src={logoutIcon}
               alt="Log Out"
-              className="w-11 h-11 object-cover rounded-full"
+              className="w-8 h-8 object-cover"
             />
+            <span className="text-sm font-medium text-gray-700">Logout</span>
           </button>
         </div>
       </div>

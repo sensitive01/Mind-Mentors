@@ -369,7 +369,9 @@ const NewEnquiryFormStep = () => {
         return {
           parentFirstName: formData.parentFirstName,
           contactNumber: formData.contactNumber,
-          whatsappNumber: formData.whatsappNumber,
+          whatsappNumber: isSameAsContact
+            ? formData.whatsappNumber
+            : formData.contactNumber,
           email: formData.email,
           source: formData.source,
           empId,
@@ -847,7 +849,6 @@ const NewEnquiryFormStep = () => {
                   </div>
                 ))}
               </div>
-
 
               {/* Add Program Button */}
               {/* <button
