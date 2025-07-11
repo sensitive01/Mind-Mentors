@@ -210,11 +210,18 @@ const ParentDashboard = () => {
     fetchMyKid();
   }, [parentId]);
 
-
   const handleAddKid = () => {
-    navigate("/parent/add-kid"); 
+    navigate("/parent/add-kid");
   };
 
+  // Navigation handlers for the icon buttons
+  const handleNavigateToDemo = (kidId) => {
+    navigate(`/parent/kid/demo-class-shedule/${kidId}`);
+  };
+
+  const handleNavigateToProgram = (kidId) => {
+    navigate(`/parent/kid/demo-class-shedule/${kidId}`);
+  };
 
   if (loading) {
     return (
@@ -304,40 +311,102 @@ const ParentDashboard = () => {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-            <div className="text-sm text-slate-500">Program</div>
-            <div className="font-semibold text-slate-700 mt-1 flex items-center gap-2">
-              {selectedChildData.program === "Chess" ? (
-                <>
-                  <span className="text-xl">♟️</span> Chess Program
-                </>
-              ) : selectedChildData.program === "Rubik's Cube" ? (
-                <>
-                  <span className="text-xl">🎲</span> Rubik's Cube Program
-                </>
-              ) : (
-                <>
-                  <span className="text-xl">❓</span>{" "}
-                  {selectedChildData.program || "Not Selected"}
-                </>
-              )}
+          <div
+            className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md hover:border-blue-200 hover:bg-blue-50/30 transition-all duration-200 group"
+            onClick={() => handleNavigateToProgram(selectedChildData.id)}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <div className="text-sm text-slate-500 group-hover:text-blue-600">
+                  Program
+                </div>
+                <div className="font-semibold text-slate-700 mt-1 flex items-center gap-2 group-hover:text-blue-700">
+                  {selectedChildData.program === "Chess" ? (
+                    <>
+                      <span className="text-xl">♟️</span> Chess Program
+                    </>
+                  ) : selectedChildData.program === "Rubik's Cube" ? (
+                    <>
+                      <span className="text-xl">🎲</span> Rubik's Cube Program
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-xl">❓</span>{" "}
+                      {selectedChildData.program || "Not Selected"}
+                    </>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleNavigateToProgram(selectedChildData.id);
+                }}
+                className="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 hover:bg-blue-200 rounded-full transition-all shadow-sm group-hover:bg-blue-200"
+                title="Select/Change Program"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"
+                  />
+                </svg>
+              </button>
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-            <div className="text-sm text-slate-500">Demo Status</div>
-            <div className="font-semibold text-slate-700 mt-1">
-              <span
-                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  selectedChildData.demoStatus === "Completed"
-                    ? "bg-green-100 text-green-800"
-                    : selectedChildData.demoStatus === "Scheduled"
-                    ? "bg-blue-100 text-blue-800"
-                    : "bg-yellow-100 text-yellow-800"
-                }`}
+          <div
+            className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md hover:border-green-200 hover:bg-green-50/30 transition-all duration-200 group"
+            onClick={() => handleNavigateToDemo(selectedChildData.id)}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <div className="text-sm text-slate-500 group-hover:text-green-600">
+                  Demo Status
+                </div>
+                <div className="font-semibold text-slate-700 mt-1 group-hover:text-green-700">
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      selectedChildData.demoStatus === "Completed"
+                        ? "bg-green-100 text-green-800"
+                        : selectedChildData.demoStatus === "Scheduled"
+                        ? "bg-blue-100 text-blue-800"
+                        : "bg-yellow-100 text-yellow-800"
+                    }`}
+                  >
+                    {selectedChildData.demoStatus}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleNavigateToDemo(selectedChildData.id);
+                }}
+                className="flex items-center justify-center w-8 h-8 bg-green-100 text-green-600 hover:bg-green-200 rounded-full transition-all shadow-sm group-hover:bg-green-200"
+                title="Manage Demo Class"
               >
-                {selectedChildData.demoStatus}
-              </span>
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+              </button>
             </div>
           </div>
 
@@ -359,7 +428,7 @@ const ParentDashboard = () => {
 
       {/* Conditional Main Content based on Demo Status */}
       {selectedChildData.demoStatus === "Pending" ? (
-        <DemoPendingView childData={selectedChildData} />
+        <DemoPendingView childData={selectedChildData} navigate={navigate} />
       ) : selectedChildData.demoStatus === "Scheduled" ? (
         <DemoScheduledView childData={selectedChildData} />
       ) : (
@@ -370,7 +439,7 @@ const ParentDashboard = () => {
 };
 
 // View for when demo is pending
-const DemoPendingView = ({ childData }) => (
+const DemoPendingView = ({ childData, navigate }) => (
   <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 text-center py-12">
     <div className="max-w-md mx-auto">
       <div className="text-5xl mb-6">📅</div>
@@ -381,7 +450,10 @@ const DemoPendingView = ({ childData }) => (
         The demo class for {childData.name} hasn't been scheduled yet. Once
         scheduled, you'll be able to see more details here.
       </p>
-      <button className="px-6 py-3 bg-indigo-500 text-white rounded-lg font-medium hover:bg-indigo-600 transition-colors">
+      <button
+        className="px-6 py-3 bg-indigo-500 text-white rounded-lg font-medium hover:bg-indigo-600 transition-colors"
+        onClick={() => navigate(`/parent/kid/demo-class/${childData.id}`)}
+      >
         Schedule Demo Class
       </button>
     </div>
@@ -449,8 +521,6 @@ const DemoScheduledView = ({ childData }) => (
               </div>
             </div>
           )}
-
-          
         </div>
       </div>
     </div>

@@ -63,7 +63,7 @@ import { styled, alpha } from "@mui/material/styles";
 import { Menu as MenuIcon } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { getEmployeeData } from "../../../api/service/employee/EmployeeService";
+import logoImage from "../../../assets/mindmentorz.png";
 
 const ModernSidebar = () => {
   const location = useLocation();
@@ -76,34 +76,9 @@ const ModernSidebar = () => {
   const [openSupports, setOpenSupports] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeItem, setActiveItem] = useState("");
-  const [empData, setEmpData] = useState({});
 
   const themeColor = "#642b8f";
   const themeColorLight = alpha(themeColor, 0.1);
-
-  // useEffect(() => {
-  //   const fetchEmployee = async () => {
-  //     try {
-  //       const empId = localStorage.getItem("empId");
-  //       if (!empId) {
-  //         console.error("Employee ID not found in localStorage");
-  //         return;
-  //       }
-
-  //       const response = await getEmployeeData(empId);
-
-  //       if (response && response.status === 200) {
-  //         setEmpData(response.data);
-  //       } else {
-  //         console.error("Failed to fetch employee data:", response);
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching employee data:", error);
-  //     }
-  //   };
-
-  //   fetchEmployee();
-  // }, []);
 
   useEffect(() => {
     setActiveItem(location.pathname);
@@ -161,7 +136,7 @@ const ModernSidebar = () => {
       setOpenTournaments(true);
     } else if (
       currentPath.includes("/super-admin/department/parent-tickets") ||
-      currentPath.includes("/superadminSupport")
+      currentPath.includes("/superadmin Support")
     ) {
       setOpenSupports(true);
     }
@@ -169,7 +144,7 @@ const ModernSidebar = () => {
 
   const MenuGroupIndicator = styled(Box)(({ theme, isOpen }) => ({
     position: "absolute",
-    right: 12,
+    right: 8,
     top: "50%",
     transform: isOpen
       ? "translateY(-50%) rotate(0deg)"
@@ -181,14 +156,14 @@ const ModernSidebar = () => {
   }));
 
   const StyledDrawer = styled(Drawer)(({ theme }) => ({
-    width: isCollapsed ? 80 : 280,
+    width: isCollapsed ? 64 : 260,
     flexShrink: 0,
     "& .MuiDrawer-paper": {
-      width: isCollapsed ? 80 : 280,
+      width: isCollapsed ? 64 : 260,
       boxSizing: "border-box",
       backgroundColor: "white",
-      borderRight: `1px solid ${alpha(theme.palette.divider, 0.05)}`,
-      boxShadow: "0 0 20px rgba(0, 0, 0, 0.05)",
+      borderRight: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
+      boxShadow: "0 0 15px rgba(0, 0, 0, 0.04)",
       transition: "width 0.3s ease",
       overflow: "hidden",
     },
@@ -196,9 +171,10 @@ const ModernSidebar = () => {
 
   const StyledListItem = styled(ListItem)(
     ({ theme, isActive, isSubItem = false }) => ({
-      borderRadius: isSubItem ? "0 20px 20px 0" : 12,
-      margin: "4px 8px",
-      padding: isSubItem ? "6px 8px 6px 16px" : "8px 16px",
+      borderRadius: isSubItem ? "0 16px 16px 0" : 8,
+      margin: isSubItem ? "1px 4px 1px 8px" : "2px 8px",
+      padding: isSubItem ? "4px 8px 4px 12px" : "6px 12px",
+      minHeight: isSubItem ? 32 : 40,
       position: "relative",
       overflow: "hidden",
       transition: "all 0.2s ease",
@@ -206,87 +182,85 @@ const ModernSidebar = () => {
       "&:hover": {
         backgroundColor: isActive ? themeColorLight : alpha(themeColor, 0.05),
         "& .MuiListItemIcon-root svg": {
-          transform: "scale(1.1)",
+          transform: "scale(1.05)",
         },
       },
       ...(isActive && {
         "&::before": {
           content: '""',
           position: "absolute",
-          top: isSubItem ? 0 : "50%",
+          top: 0,
           left: 0,
-          height: isSubItem ? "100%" : "60%",
-          width: 4,
+          height: "100%",
+          width: 3,
           backgroundColor: themeColor,
-          transform: isSubItem ? "none" : "translateY(-50%)",
-          borderRadius: "0 4px 4px 0",
+          borderRadius: "0 2px 2px 0",
         },
       }),
       "& .MuiListItemIcon-root": {
-        minWidth: isSubItem ? 36 : 40,
+        minWidth: isSubItem ? 32 : 36,
         "& svg": {
+          fontSize: isSubItem ? "1.1rem" : "1.25rem",
           transition: "transform 0.2s ease",
-          color: isActive ? themeColor : alpha(theme.palette.text.primary, 0.7),
+          color: isActive
+            ? themeColor
+            : alpha(theme.palette.text.primary, 0.75),
         },
       },
       "& .MuiListItemText-primary": {
-        fontSize: isSubItem ? "0.85rem" : "0.9rem",
-        fontWeight: isActive ? 600 : 400,
+        fontSize: isSubItem ? "0.8rem" : "0.85rem",
+        fontWeight: isActive ? 600 : 500,
         color: isActive ? themeColor : theme.palette.text.primary,
         transition: "color 0.2s ease",
       },
     })
   );
 
-  const ProfileBox = styled(Box)(({ theme }) => ({
-    padding: theme.spacing(3, 2),
-    backgroundColor: alpha(themeColor, 0.02),
-    borderRadius: 16,
-    marginBottom: theme.spacing(2),
-    transition: "all 0.3s ease",
-    "&:hover": {
-      backgroundColor: alpha(themeColor, 0.05),
-      transform: "translateY(-2px)",
-    },
-  }));
-
-  const AvatarStyled = styled(Avatar)(({ theme }) => ({
-    width: 64,
-    height: 64,
-    backgroundColor: alpha(themeColor, 0.9),
-    boxShadow: `0 4px 12px ${alpha(themeColor, 0.3)}`,
-    fontSize: 24,
-    fontWeight: "bold",
-    border: `2px solid ${alpha(theme.palette.background.paper, 0.8)}`,
-    transition: "transform 0.3s ease, box-shadow 0.3s ease",
-    "&:hover": {
-      transform: "scale(1.05)",
-      boxShadow: `0 6px 16px ${alpha(themeColor, 0.4)}`,
-    },
-  }));
-
-  const Badge = styled(Typography)(({ theme }) => ({
-    backgroundColor: alpha(themeColor, 0.1),
-    color: themeColor,
-    padding: theme.spacing(0.3, 1),
-    borderRadius: 12,
-    fontSize: "0.7rem",
-    fontWeight: 600,
-    display: "inline-block",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  }));
-
   const ToggleButton = styled(IconButton)(({ theme }) => ({
     backgroundColor: alpha(themeColor, 0.05),
-    borderRadius: 8,
-    padding: 8,
+    borderRadius: 6,
+    padding: 6,
     "&:hover": {
       backgroundColor: alpha(themeColor, 0.1),
     },
     "& svg": {
       color: themeColor,
+      fontSize: "1.2rem",
     },
+  }));
+
+  // Updated header container that combines logo and toggle button
+  const HeaderContainer = styled(Box)(({ theme }) => ({
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "12px 16px",
+    minHeight: 64,
+    "& .logo-container": {
+      display: "flex",
+      alignItems: "center",
+      flex: 1,
+    },
+    "& .toggle-container": {
+      display: "flex",
+      alignItems: "center",
+      flexShrink: 0,
+    },
+    // When collapsed, center the toggle button
+    ...(isCollapsed && {
+      justifyContent: "center",
+      "& .logo-container": {
+        display: "none",
+      },
+    }),
+  }));
+
+  const LogoImage = styled("img")(({ theme }) => ({
+    height: 40,
+    width: "auto",
+    maxWidth: 140,
+    objectFit: "contain",
+    transition: "all 0.3s ease",
   }));
 
   // Function to close all open submenus
@@ -344,28 +318,20 @@ const ModernSidebar = () => {
 
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
 
-  // Check if a menu item is currently active
   const isItemActive = (link, subItems, isOpen) => {
-    // If this is a main menu with open submenu, highlight it
     if (isOpen && subItems && subItems.length > 0) {
       return true;
     }
 
-    // If this exact link is active
     if (link && activeItem === link) {
       return true;
     }
 
-    // If this item has subitems, check if any of them are active
     if (subItems) {
       return subItems.some((subItem) => activeItem === subItem.link);
     }
 
     return false;
-  };
-
-  const getInitials = (name) => {
-    return name ? name.charAt(0).toUpperCase() : "U";
   };
 
   const menuItems = [
@@ -388,11 +354,6 @@ const ModernSidebar = () => {
           text: "Parents",
           link: "/super-admin/department/parents-data",
         },
-        // {
-        //   icon: <KidsIcon />,
-        //   text: "Kids (All / Active / Paused)",
-        //   link: "/super-admin/department/kids-data",
-        // },
         {
           icon: <ActiveIcon />,
           text: "Active Kids",
@@ -547,7 +508,6 @@ const ModernSidebar = () => {
       open: openSupports,
       onClick: handleSupportsClick,
     },
-
     {
       icon: <DocumentsIcon />,
       text: "Documents",
@@ -572,7 +532,7 @@ const ModernSidebar = () => {
       onClick: handleTournamentsClick,
     },
     {
-      icon: <HolidayIcon />,
+      ikon: <HolidayIcon />,
       text: "Holidays",
       link: "/holiday",
     },
@@ -616,128 +576,33 @@ const ModernSidebar = () => {
 
   return (
     <StyledDrawer variant="permanent">
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "flex-end",
-          padding: 2,
-          position: "relative",
-        }}
-      >
-        <ToggleButton onClick={toggleSidebar} size="small">
-          {isCollapsed ? <ChevronRight /> : <MenuIcon size={20} />}
-        </ToggleButton>
-      </Box>
+      {/* Combined header with logo and toggle button */}
+      <HeaderContainer>
+        <div className="logo-container">
+          <LogoImage src={logoImage} alt="Chess Academy Logo" />
+        </div>
+        <div className="toggle-container">
+          <ToggleButton onClick={toggleSidebar} size="small">
+            {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
+          </ToggleButton>
+        </div>
+      </HeaderContainer>
 
-      {/* {!isCollapsed && (
-        <Box
-          px={4}
-          py={3}
-          mb={3}
-          sx={{
-            backgroundColor: "background.paper",
-            borderRadius: 2,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-            transition: "box-shadow 0.3s ease",
-            "&:hover": {
-              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-            },
-          }}
-        >
-          <Link to="/superadminProfile" style={{ textDecoration: "none" }}>
-            <Box>
-              <Box display="flex" alignItems="center" mb={2}>
-                <Avatar
-                  sx={{
-                    bgcolor: themeColor,
-                    width: 48,
-                    height: 48,
-                    fontWeight: "bold",
-                  }}
-                >
-                  {getInitials(empData.firstName)}
-                </Avatar>
-                <Box ml={2}>
-                  <Typography
-                    variant="h6"
-                    color={themeColor}
-                    fontWeight="600"
-                    sx={{ fontSize: "1.1rem", lineHeight: 1.2 }}
-                  >
-                    {empData?.firstName || "Loading..."}
-                  </Typography>
-                </Box>
-              </Box>
-
-              <Box
-                display="flex"
-                gap={1.5}
-                flexWrap="wrap"
-                alignItems="center"
-                mt={1}
-              >
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    fontSize: "0.75rem",
-                  }}
-                >
-                  <EmailIcon
-                    sx={{ fontSize: 14, mr: 0.5, color: themeColor }}
-                  />
-                  {empData?.email || "loading@example.com"}
-                </Typography>
-                <Box display="flex" gap={1}>
-                  <Badge
-                    sx={{
-                      backgroundColor: `${themeColor}20`,
-                      color: themeColor,
-                      borderRadius: "4px",
-                      px: 1,
-                      py: 0.5,
-                      fontSize: "0.7rem",
-                      fontWeight: 500,
-                    }}
-                  >
-                    {empData?.department || "Dept"}
-                  </Badge>
-                  <Badge
-                    sx={{
-                      backgroundColor: `${themeColor}20`,
-                      color: themeColor,
-                      borderRadius: "4px",
-                      px: 1,
-                      py: 0.5,
-                      fontSize: "0.7rem",
-                      fontWeight: 500,
-                    }}
-                  >
-                    {empData?.role || "Role"}
-                  </Badge>
-                </Box>
-              </Box>
-            </Box>
-          </Link>
-          <Divider sx={{ mt: 2, mb: 1 }} />
-        </Box>
-      )} */}
+      <Divider sx={{ mx: 1.5 }} />
 
       <Box
         sx={{
-          height: "calc(100vh)",
+          height: "calc(100vh - 64px)", // Adjusted to account for the header height
           overflow: "auto",
           "&::-webkit-scrollbar": {
-            width: "4px",
+            width: "3px",
           },
           "&::-webkit-scrollbar-track": {
             background: "transparent",
           },
           "&::-webkit-scrollbar-thumb": {
             background: alpha(themeColor, 0.2),
-            borderRadius: "4px",
+            borderRadius: "2px",
           },
           "&::-webkit-scrollbar-thumb:hover": {
             background: alpha(themeColor, 0.4),
@@ -745,7 +610,7 @@ const ModernSidebar = () => {
           scrollBehavior: "smooth",
         }}
       >
-        <List disablePadding>
+        <List disablePadding sx={{ py: 0.5 }}>
           {menuItems.map((item, index) => {
             const isActive = isItemActive(item.link, item.subItems, item.open);
 
@@ -763,14 +628,10 @@ const ModernSidebar = () => {
                         isActive={isActive}
                         sx={{
                           justifyContent: isCollapsed ? "center" : "flex-start",
-                          px: isCollapsed ? 2 : undefined,
+                          px: isCollapsed ? 1.5 : undefined,
                         }}
                       >
-                        <ListItemIcon>
-                          {React.cloneElement(item.icon, {
-                            fontSize: isCollapsed ? "medium" : "small",
-                          })}
-                        </ListItemIcon>
+                        <ListItemIcon>{item.icon}</ListItemIcon>
                         {!isCollapsed && <ListItemText primary={item.text} />}
                       </StyledListItem>
                     </Link>
@@ -781,14 +642,10 @@ const ModernSidebar = () => {
                       isActive={isActive}
                       sx={{
                         justifyContent: isCollapsed ? "center" : "flex-start",
-                        px: isCollapsed ? 2 : undefined,
+                        px: isCollapsed ? 1.5 : undefined,
                       }}
                     >
-                      <ListItemIcon>
-                        {React.cloneElement(item.icon, {
-                          fontSize: isCollapsed ? "medium" : "small",
-                        })}
-                      </ListItemIcon>
+                      <ListItemIcon>{item.icon}</ListItemIcon>
                       {!isCollapsed && (
                         <>
                           <ListItemText primary={item.text} />
@@ -824,19 +681,15 @@ const ModernSidebar = () => {
                               isActive={isSubItemActive}
                               isSubItem={true}
                               sx={{
-                                pl: 4,
-                                ml: 2,
-                                borderLeft: `1px dashed ${alpha(
+                                pl: 3,
+                                ml: 1.5,
+                                borderLeft: `2px solid ${alpha(
                                   themeColor,
-                                  isSubItemActive ? 0.5 : 0.1
+                                  isSubItemActive ? 0.3 : 0.1
                                 )}`,
                               }}
                             >
-                              <ListItemIcon>
-                                {React.cloneElement(subItem.icon, {
-                                  fontSize: "small",
-                                })}
-                              </ListItemIcon>
+                              <ListItemIcon>{subItem.icon}</ListItemIcon>
                               <ListItemText primary={subItem.text} />
                             </StyledListItem>
                           </Link>
@@ -855,13 +708,13 @@ const ModernSidebar = () => {
         <Box
           sx={{
             mt: "auto",
-            p: 2,
+            p: 1.5,
             textAlign: "center",
-            color: alpha(themeColor, 0.7),
-            fontSize: "0.75rem",
+            color: alpha(themeColor, 0.6),
+            fontSize: "0.7rem",
           }}
         >
-          <Typography variant="caption">
+          <Typography variant="small">
             © {new Date().getFullYear()} Chess Academy
           </Typography>
         </Box>

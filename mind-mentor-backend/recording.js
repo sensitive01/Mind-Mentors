@@ -3,7 +3,7 @@ const axios = require("axios");
 
 const BBB_SECRET = "InhUDw8YmwzaScfbnu14ItbUukbRNPqNQs1XAFiwk";
 const BBB_URL = "https://aswinraj.online/bigbluebutton/api";
-const meetingID = "class-uyj3m7lv";
+const meetingID = "class-k0jqe5d6";
 
 // Step 1: Create string to hash
 const query = `meetingID=${meetingID}`;

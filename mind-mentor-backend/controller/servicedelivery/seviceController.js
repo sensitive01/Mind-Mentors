@@ -672,6 +672,7 @@ const getActiveKidAndClassData = async (req, res) => {
       enqId: enqId,
       paymentStatus: "Success",
     });
+    console.log("paymentClassData".paymentClassData)
 
     if (!paymentClassData) {
       return res.status(404).json({
@@ -702,6 +703,8 @@ const getActiveKidAndClassData = async (req, res) => {
       centerType: programData?.centerType,
       level: programData?.level,
       program: programData?.program,
+      selectedLevel:paymentClassData?.selectedLevel,
+      selectedProgram:paymentClassData?.selectedProgram
     };
 
     // Format dates

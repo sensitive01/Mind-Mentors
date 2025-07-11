@@ -4,9 +4,8 @@ const axios = require("axios");
 const Class = require("../../model/bbbClassModel/bbbClassModel");
 const { buildUrl } = require("../../utils/bigblue"); // Utility function to build signed BBB URLs
 
-const BASE_URL = "http://64.227.185.227:3000";
+const BASE_URL = "http://aswinraj.online";
 const SECRET = "InhUDw8YmwzaScfbnu14ItbUukbRNPqNQs1XAFiwk";
-
 // ✅ Route 1: Create a new class
 router.post("/create-class", async (req, res) => {
   const { className, coachName } = req.body;
@@ -113,6 +112,36 @@ router.post("/sign-join-url", async (req, res) => {
   } catch (error) {
     console.error("Error signing URL:", error);
     res.status(500).json({ error: "Failed to sign join URL" });
+  }
+});
+
+router.get("/get-recordings-link/:meetingID", async (req, res) => {
+  const { meetingID } = req.params;
+  console.log("Requested meetingID:", meetingID);
+
+  if (!meetingID) {
+    return res
+      .status(400)
+      .json({ error: "meetingID query parameter is required" });
+  }
+
+  try {
+    const classRecord = await Class.findOne(
+      { meetingID },
+      { internalMeetingID: 1 }
+    );
+
+    if (classRecord && classRecord.internalMeetingID) {
+      const link = `https://aswinraj.online/playback/presentation/2.3/${classRecord.internalMeetingID}`;
+      return res.status(200).json({ links: link });
+    } else {
+      return res
+        .status(404)
+        .json({ message: "No recording found for the given meetingID" });
+    }
+  } catch (error) {
+    console.error("Error in getting the recordings:", error);
+    res.status(500).json({ error: "Failed to get the recordings" });
   }
 });
 

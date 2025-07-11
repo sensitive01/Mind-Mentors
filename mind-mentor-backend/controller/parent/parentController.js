@@ -65,9 +65,8 @@ const parentSubmitEnquiryForm = async (req, res) => {
       enqId: newEnquiry._id,
       logs: [
         {
-          employeeId: "",
-          employeeName: "",
-          comment: "Enquiry form submission",
+          employeeName: "Parent",
+          comment: `Enquiry form submitted by parent: ${parentFirstName}`,
           action: `Enquiry form submitted by parent: ${parentFirstName}  on ${new Date().toLocaleString()}`,
           createdAt: new Date(),
         },
@@ -100,7 +99,7 @@ const parentLogin = async (req, res) => {
 
     try {
       const sendMessage = await sendOTP(otp, mobile);
-      console.log("sendMessage",sendMessage);
+      console.log("sendMessage", sendMessage);
     } catch (err) {}
 
     const parentExist = await parentModel.findOne({ parentMobile: mobile });
@@ -129,7 +128,7 @@ const parentLogin = async (req, res) => {
         logs: [
           {
             employeeName: "Parent",
-            comment: "New enquiry form submission done by parent",
+            comment: "New parent regsiter done through MindMentorz online ",
             createdAt: new Date(),
           },
         ],
@@ -1414,7 +1413,13 @@ const savePaymentData = async (req, res) => {
         $set: { status: "Active" },
       }),
       operationDeptModel.findByIdAndUpdate(paymentData.enqId, {
-        $set: { status: "Active", payment: "Success", isNewUser: false },
+        $set: {
+          enquiryStatus: "Active",
+          paymentStatus: "Success",
+          isNewUser: false,
+          enquiryType: "cold",
+          enquiryField: "prospects",
+        },
       }),
     ]);
 
@@ -1560,24 +1565,27 @@ const parentBookDemoClassInProfile = async (req, res) => {
 
     const { kidId } = req.params;
     const { formData } = req.body;
-    const { programs, scheduleId } = formData;
+    const { programs, scheduleId } = formData; // programs = { program: "...", level: "..." }
+    console.log(programs[0]);
+    const { program, programLevel } = programs[0];
+    console.log(" program, programLevel", program, programLevel);
 
-    // Find the kid's data
+    // 1. Find the kid
     const kidData = await kidModel.findOne(
       { _id: kidId },
       { kidsName: 1, chessId: 1, enqId: 1 }
     );
+    console.log("kidData", kidData);
 
     if (!kidData) {
       return res.status(404).json({ success: false, message: "Kid not found" });
     }
 
-    // Find the kid's existing scheduled class
+    // 2. Remove from existing schedule if any
     const existingClass = await ClassSchedule.findOne({
       "demoAssignedKid.kidId": kidId,
     });
 
-    // Remove the kid from the existing class if found
     if (existingClass) {
       await ClassSchedule.updateOne(
         { _id: existingClass._id },
@@ -1588,7 +1596,7 @@ const parentBookDemoClassInProfile = async (req, res) => {
       );
     }
 
-    // Find the new class schedule
+    // 3. Add to new schedule
     const newClass = await ClassSchedule.findOne({ _id: scheduleId });
 
     if (!newClass) {
@@ -1597,7 +1605,6 @@ const parentBookDemoClassInProfile = async (req, res) => {
         .json({ success: false, message: "Class schedule not found" });
     }
 
-    // Add the kid to the new class schedule
     const newStudent = {
       kidId: kidId,
       chessKid: kidData.chessId,
@@ -1610,17 +1617,51 @@ const parentBookDemoClassInProfile = async (req, res) => {
       { $push: { demoAssignedKid: newStudent } }
     );
 
-    // Update the inquiry schedule status
+    // 4. Update enquiry's program list
     const enqData = await operationDeptModel.findOne({ _id: kidData.enqId });
+    console.log("enqData", enqData);
 
-    if (enqData && enqData.scheduleDemo) {
+    if (enqData) {
+      // Only add if the program doesn't already exist
+      const alreadyExists = enqData.programs?.some(
+        (pgm) => pgm.program === program && pgm.level === programLevel
+      );
+
+      if (!alreadyExists) {
+        console.log("alreadyExists");
+        enqData.programs.push({ program, level: programLevel });
+      }
+
       enqData.scheduleDemo.status = "Scheduled";
+      enqData.enquiryField = "prospects";
+      enqData.enquiryType = "cold";
+
       await enqData.save();
     }
 
-    res.status(200).json({
+    // 5. Update kid's selectedProgram
+    const kid = await kidModel.findById(kidId);
+
+    if (kid) {
+      const existing = kid.selectedProgram?.some(
+        (pgm) => pgm.program === program && pgm.level === programLevel
+      );
+
+      if (!existing) {
+        kid.selectedProgram.push({
+          program,
+          level: programLevel,
+          chessKidId: kid.chessId,
+          pgmStatus: "Active",
+        });
+      }
+
+      await kid.save();
+    }
+
+    return res.status(200).json({
       success: true,
-      message: "Demo class rebooked successfully",
+      message: "Demo class booked successfully and programs updated",
       data: newStudent,
     });
   } catch (err) {
@@ -1637,6 +1678,8 @@ const getMyKidData = async (req, res) => {
       { parentId: parentId },
       { kidsName: 1, selectedProgram: 1, enqId: 1, gender: 1 }
     );
+
+    console.log("Kid data", kidData);
 
     const updatedKidData = await Promise.all(
       kidData.map(async (kid) => {
@@ -1758,8 +1801,11 @@ const parentSelectThePackage = async (req, res) => {
     }
     const kidData = await kidModel.findOne(
       { _id: finalData.kidId },
-      { kidsName: 1, programs: 1, whatsappNumber: 1, contactNumber: 1 }
+      { kidsName: 1, selectedProgram: 1, whatsappNumber: 1, contactNumber: 1 }
     );
+
+    const { selectedProgram } = kidData;
+    console.log(selectedProgram);
 
     const paymentId = `PAY-${uuidv4().slice(0, 8).toUpperCase()}`;
 
@@ -1770,6 +1816,8 @@ const parentSelectThePackage = async (req, res) => {
       kidId: finalData.kidId,
       whatsappNumber: kidData.whatsappNumber || kidData.contactNumber,
       programs: kidData.programs,
+      selectedProgram: selectedProgram[0].program,
+      selectedLevel: selectedProgram[0].level,
       classMode: finalData.classMode,
       discount: finalData.discount,
       baseAmount: finalData.baseAmount,
@@ -1786,7 +1834,7 @@ const parentSelectThePackage = async (req, res) => {
       paymentStatus: "Success",
     });
     const savedPackage = await newPackage.save();
-    await kidModel.findOneAndUpdate(
+    const newKidData = await kidModel.findOneAndUpdate(
       { _id: finalData.kidId },
       { $set: { status: "Active" } }
     );
@@ -1798,12 +1846,13 @@ const parentSelectThePackage = async (req, res) => {
           enquiryStatus: "Active",
           paymentStatus: "Success",
           isNewUser: false,
+          enquiryField: "prospects",
         },
       }
     );
 
     let comment = `Parent selected package for kid: ${
-      finalData.kidName || "N/A"
+      kidData.kidsName || newKidData.kidsName || "N/A"
     }`;
 
     const online = finalData.onlineClasses;
@@ -1819,7 +1868,7 @@ const parentSelectThePackage = async (req, res) => {
       {
         $push: {
           logs: {
-            parentId: parentId,
+            employeeName: "Parent",
             comment: comment,
             action: "Parent Package Selection",
           },
@@ -1844,21 +1893,22 @@ const parentSelectThePackage = async (req, res) => {
 
 const parentAddNewKidData = async (req, res) => {
   try {
+    console.log("parent add new kid in profile", req.body);
     const { parentId } = req.params;
     const { formData } = req.body;
 
-    // 1️⃣  Get parent
+    // 1️⃣ Get parent
     const parentData = await parentModel.findById(parentId);
     if (!parentData) {
       return res.status(404).json({ message: "Parent not found." });
     }
 
-    // 2️⃣  Generate a new MM ID and PIN for kid
+    // 2️⃣ Generate new kidPin and chessId
     const kidCount = await kidModel.countDocuments({});
     const newKidPin = 1000 + kidCount + 1;
-    const newMMID = `MM${Math.floor(1000000 + Math.random() * 9000000)}`; // MM + 7-digit random
+    const newMMID = `MM${Math.floor(1000000 + Math.random() * 9000000)}`;
 
-    // 3️⃣  Create new Kid
+    // 3️⃣ Create new Kid
     const newKid = new kidModel({
       kidsName: formData.kidsName,
       age: formData.age,
@@ -1869,14 +1919,13 @@ const parentAddNewKidData = async (req, res) => {
       status: "Pending",
       role: "Kid",
     });
-
     const savedKid = await newKid.save();
 
-    // 4️⃣  Create OperationDept Enquiry for this kid
+    // 4️⃣ Create log
     const newLog = new enquiryLogs({
       logs: [
         {
-          comment: `New Kid ${formData.kidsName} added by parent ${parentData.parentName}`,
+          comment: `New Kid ${formData.kidsName} added by parent.`,
           createdAt: new Date(),
           employeeId: "",
           employeeName: "Parent",
@@ -1885,40 +1934,105 @@ const parentAddNewKidData = async (req, res) => {
     });
     const savedLog = await newLog.save();
 
-    const newOperationDept = new operationDeptModel({
-      parentFirstName: parentData.parentName,
-      kidFirstName: formData.kidsName,
-      kidLastName: formData.kidsName?.split(" ")[1] || "",
-      whatsappNumber: parentData.parentMobile,
-      email: parentData.parentEmail,
-      source: "Parent Added New Kid",
-      kidId: savedKid._id,
-      kidsAge: formData.age,
-      kidsGender: formData.gender,
-      enquiryStatus: "Pending",
-      enquiryType: "warm",
-      disposition: "None",
-      enquiryField: "enquiryList",
-      payment: "Pending",
-      logs: savedLog._id,
-      scheduleDemo: {
-        status: "Pending",
-      },
-    });
-    const savedOperationDept = await newOperationDept.save();
+    let savedEnquiry = null;
 
-    // Link log back to enquiry
-    savedLog.enqId = savedOperationDept._id;
-    await savedLog.save();
+    console.log("parentData.kids.length ", parentData.kids.length);
 
-    // 5️⃣  Attach kid to parent
+    // 5️⃣ Main condition: Parent has 0 kids ➜ update existing enquiry
+    if (parentData.kids.length === 0) {
+      const existingEnquiry = await operationDeptModel.findOne({
+        $or: [
+          { whatsappNumber: parentData.parentMobile },
+          { contactNumber: parentData.parentMobile },
+        ],
+      });
+
+      if (existingEnquiry) {
+        // ✅ Update existing enquiry
+        existingEnquiry.kidFirstName = formData.kidsName;
+        existingEnquiry.kidLastName = formData.kidsName?.split(" ")[1] || "";
+        existingEnquiry.kidsAge = formData.age;
+        existingEnquiry.kidsGender = formData.gender;
+        existingEnquiry.kidId = savedKid._id;
+        await existingEnquiry.save();
+
+        savedEnquiry = existingEnquiry;
+
+        await enquiryLogs.findByIdAndUpdate(
+          existingEnquiry.logs,
+          {
+            $push: {
+              logs: {
+                employeeName: "Parent",
+                comment: `Parent registered his first kid.`,
+                createdAt: new Date(),
+              },
+            },
+          },
+          { new: true }
+        );
+      } else {
+        // Fallback: create if somehow not found
+        const fallbackEnquiry = new operationDeptModel({
+          parentFirstName: parentData.parentName || "Parent_New Enquiry",
+          kidFirstName: formData.kidsName,
+          kidLastName: formData.kidsName?.split(" ")[1] || "",
+          whatsappNumber: parentData.parentMobile,
+          email: parentData.parentEmail,
+          source: "Parent Added New Kid",
+          kidId: savedKid._id,
+          kidsAge: formData.age,
+          kidsGender: formData.gender,
+          enquiryStatus: "Pending",
+          enquiryType: "warm",
+          disposition: "None",
+          enquiryField: "enquiryList",
+          payment: "Pending",
+          logs: savedLog._id,
+          scheduleDemo: { status: "Pending" },
+        });
+        savedEnquiry = await fallbackEnquiry.save();
+
+        savedLog.enqId = savedEnquiry._id;
+        await savedLog.save();
+      }
+    } else {
+      // 6️⃣ Parent has existing kids ➜ create a NEW enquiry
+      const newEnquiry = new operationDeptModel({
+        parentFirstName: parentData.parentName || "Parent_New Enquiry",
+        kidFirstName: formData.kidsName,
+        kidLastName: formData.kidsName?.split(" ")[1] || "",
+        whatsappNumber: parentData.parentMobile,
+        email: parentData.parentEmail,
+        source: "Parent Added New Kid",
+        kidId: savedKid._id,
+        kidsAge: formData.age,
+        kidsGender: formData.gender,
+        enquiryStatus: "Pending",
+        enquiryType: "warm",
+        disposition: "None",
+        enquiryField: "enquiryList",
+        payment: "Pending",
+        logs: savedLog._id,
+        scheduleDemo: { status: "Pending" },
+      });
+      savedEnquiry = await newEnquiry.save();
+
+      savedLog.enqId = savedEnquiry._id;
+      await savedLog.save();
+    }
+
+    // 7️⃣ Link kid to parent and set enqId
     parentData.kids.push({ kidId: savedKid._id });
     await parentData.save();
 
-    // 6️⃣  Respond success
+    newKid.enqId = savedEnquiry._id;
+    await newKid.save();
+
+    // 8️⃣ Respond
     res.status(201).json({
       success: true,
-      message: "New kid added and enquiry created successfully!",
+      message: "New kid added and enquiry handled successfully!",
     });
   } catch (err) {
     console.error("Error in adding the new kid:", err);

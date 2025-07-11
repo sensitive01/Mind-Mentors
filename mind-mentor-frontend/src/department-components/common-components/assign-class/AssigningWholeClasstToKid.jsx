@@ -741,6 +741,9 @@ const AssigningWholeClassToKid = () => {
               value={
                 kidData.classDetails?.program && kidData.classDetails?.level
                   ? `${kidData.classDetails.program} - ${kidData.classDetails.level}`
+                  : kidData.classDetails?.selectedProgram &&
+                    kidData?.classDetails?.selectedLevel
+                  ? `${kidData?.classDetails?.selectedProgram} - ${kidData?.classDetails?.selectedLevel}`
                   : "Not Specified"
               }
             />
@@ -767,11 +770,17 @@ const AssigningWholeClassToKid = () => {
                     </>
                   ) : (
                     <>
-                      {kidData.classDetails?.numberOfClasses && (
+                      {(kidData.classDetails.numberOfClasses ||
+                        kidData.classDetails.offlineClasses ||
+                        kidData.classDetails.onlineClasses) && (
                         <p>
-                          Total Classes: {kidData.classDetails.numberOfClasses}
+                          Total Classes:{" "}
+                          {kidData.classDetails.numberOfClasses ||
+                            kidData.classDetails.offlineClasses ||
+                            kidData.classDetails.onlineClasses}
                         </p>
                       )}
+
                       {kidData.classDetails?.classMode && (
                         <p>Class Mode: {kidData.classDetails.classMode}</p>
                       )}

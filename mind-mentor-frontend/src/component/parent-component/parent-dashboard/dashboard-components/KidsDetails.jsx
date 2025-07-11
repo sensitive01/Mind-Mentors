@@ -71,7 +71,7 @@ const KidsDetails = ({ kids }) => {
         }
 
         .animate-moving-line {
-          animation: moving-line 3s infinite linear;
+          animation: moving-line 5s infinite linear;
         }
       `}</style>
 

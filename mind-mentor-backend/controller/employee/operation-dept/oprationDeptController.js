@@ -743,7 +743,7 @@ const moveBackToEnquiry = async (req, res) => {
 
 const getAllEnquiries = async (req, res) => {
   try {
-    const enquiries = await OperationDept.find({ enquiryField: "enquiryList" });
+    const enquiries = await OperationDept.find({ enquiryField: "enquiryList" }).sort({createdAt:-1});
 
     const customizedEnquiries = await Promise.all(
       enquiries.map(async (enquiry) => {
@@ -754,6 +754,7 @@ const getAllEnquiries = async (req, res) => {
           enquiry.kidLastName || ""
         }`.trim();
 
+        // Get latest action from logs
         let latestAction = null;
         if (enquiry.logs) {
           const lastLog = await enquiryLogs.findOne({ _id: enquiry.logs });
@@ -765,36 +766,32 @@ const getAllEnquiries = async (req, res) => {
           }
         }
 
+        // Get last note disposition
         let lastNoteAction = null;
         const noteSection = await NotesSection.findOne(
           { enqId: enquiry._id },
           { notes: 1, createdOn: 1 }
         );
         if (noteSection?.notes?.length) {
-          // Assuming notes are in chronological order
           lastNoteAction = noteSection.notes[noteSection.notes.length - 1];
         }
 
+        // ✅ Format date in IST
         const formatDate = (date) => {
-          if (!date) return null;
-          const d = new Date(date);
-
-          const day = String(d.getDate()).padStart(2, "0");
-          const month = String(d.getMonth() + 1).padStart(2, "0");
-          const year = d.getFullYear();
-
-          let hours = d.getHours();
-          const minutes = String(d.getMinutes()).padStart(2, "0");
-          const ampm = hours >= 12 ? "PM" : "AM";
-          hours = hours % 12 || 12;
-
-          return `${day}-${month}-${year} ${hours}:${minutes} ${ampm}`;
+          if (!date) return "N/A";
+          return new Date(date).toLocaleString("en-IN", {
+            timeZone: "Asia/Kolkata",
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          });
         };
 
-        const time = formatDate(enquiry.createdAt);
-        console.log("time", time);
-
         const createdAt = formatDate(enquiry.createdAt);
+        const createdOn = formatDate(lastNoteAction?.createdOn);
 
         return {
           ...enquiry.toObject(),
@@ -802,7 +799,7 @@ const getAllEnquiries = async (req, res) => {
           kidName,
           latestAction,
           lastNoteAction: lastNoteAction?.disposition || "None",
-          createdOn: lastNoteAction?.createdOn || "createdOn",
+          createdOn,
           createdAt,
         };
       })
@@ -817,7 +814,7 @@ const getAllEnquiries = async (req, res) => {
 
 const getProspectsData = async (req, res) => {
   try {
-    const enquiries = await OperationDept.find({ enquiryField: "prospects" });
+    const enquiries = await OperationDept.find({ enquiryField: "prospects" }).sort({createdAt:-1});
     console.log("enquiries", enquiries);
 
     const customizedEnquiries = await Promise.all(
@@ -829,18 +826,19 @@ const getProspectsData = async (req, res) => {
           enquiry.kidLastName || ""
         }`.trim();
 
+        // Get latest action from logs
         let latestAction = null;
         if (enquiry.logs) {
-          const lastLog = await enquiryLogs
-            .findOne({ _id: enquiry.logs })
-            .sort({ createdAt: -1 })
-            .limit(1);
-          const sortedLogs = lastLog.logs.sort(
-            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-          );
-          latestAction = sortedLogs[0].action;
+          const lastLog = await enquiryLogs.findOne({ _id: enquiry.logs });
+          if (lastLog?.logs?.length) {
+            const sortedLogs = lastLog.logs.sort(
+              (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+            );
+            latestAction = sortedLogs[0]?.action || null;
+          }
         }
 
+        // Get last note action
         let lastNoteAction = null;
         const noteSection = await NotesSection.findOne(
           { enqId: enquiry._id },
@@ -850,24 +848,23 @@ const getProspectsData = async (req, res) => {
           lastNoteAction = noteSection.notes[noteSection.notes.length - 1];
         }
 
+        // ✅ IST Date formatting function
         const formatDate = (date) => {
-          if (!date) return null;
-          const d = new Date(date);
-
-          const day = String(d.getDate()).padStart(2, "0");
-          const month = String(d.getMonth() + 1).padStart(2, "0");
-          const year = d.getFullYear();
-
-          let hours = d.getHours();
-          const minutes = String(d.getMinutes()).padStart(2, "0");
-          const ampm = hours >= 12 ? "PM" : "AM";
-          hours = hours % 12 || 12;
-
-          return `${day}-${month}-${year} ${hours}:${minutes} ${ampm}`;
+          if (!date) return "N/A";
+          return new Date(date).toLocaleString("en-IN", {
+            timeZone: "Asia/Kolkata",
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          });
         };
 
         const createdAt = formatDate(enquiry.createdAt);
         const updatedAt = formatDate(enquiry.updatedAt);
+        const createdOn = formatDate(lastNoteAction?.createdOn);
 
         return {
           ...enquiry.toObject(),
@@ -875,8 +872,7 @@ const getProspectsData = async (req, res) => {
           kidName,
           latestAction,
           lastNoteAction: lastNoteAction?.disposition || "None",
-          createdOn: lastNoteAction?.createdOn || "Created On",
-
+          createdOn,
           createdAt,
           updatedAt,
         };
@@ -3783,7 +3779,10 @@ const makeaCallToParent = async (req, res) => {
 const getEmployeeData = async (req, res) => {
   try {
     const { empId } = req.params;
-    const employeeData = await Employee.findOne({ _id: empId },{firstName:1,email:1,department:1,role:1});
+    const employeeData = await Employee.findOne(
+      { _id: empId },
+      { firstName: 1, email: 1, department: 1, role: 1 }
+    );
 
     if (!employeeData) {
       return res.status(404).json({ message: "Employee not found" });

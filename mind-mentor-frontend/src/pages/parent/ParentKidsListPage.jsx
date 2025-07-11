@@ -51,14 +51,14 @@ const ParentKidsDetailsPage = () => {
       ) : (
         <>
           <Sidebar />
-          <div className="flex-1 flex flex-col h-full overflow-hidden">
+          <div className="flex-1 flex flex-col h-full bg-gray-100 overflow-hidden">
             <Topbar />
             <div className="flex-1 overflow-y-auto bg-gray-100 mt-5">
-              <div className="p-6">
+              <div className="p-4">
                 {/* Back Button */}
                 <button
                   onClick={handleBack}
-                  className="flex items-center text-blue-600 hover:text-blue-800 mb-4 transition-colors duration-200"
+                  className="flex items-center bg-gray-100 text-blue-600 hover:text-blue-800 mb-4 transition-colors duration-200"
                 >
                   <ArrowLeft className="w-5 h-5 mr-2" />
                   Back

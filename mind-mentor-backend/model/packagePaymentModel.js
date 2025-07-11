@@ -19,6 +19,8 @@ const packageSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.Mixed,
       },
     ],
+    selectedProgram:{type:String},
+    selectedLevel:{type:String},
     classMode: {
       type: String,
       enum: ["online", "offline", "hybrid"],

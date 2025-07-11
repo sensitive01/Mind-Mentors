@@ -8,6 +8,7 @@ import {
   HelpCircle,
   Award,
   Users,
+  Package,
 } from "lucide-react";
 import account from "../../../../images/boy.png";
 import refer from "../../../../images/Refer.png";
@@ -40,19 +41,25 @@ const Sidebar = () => {
   }, [audio]);
 
   const navLinks = [
-    { path: "/parent/dashboard", icon: Home, label: "Home", iconSize: 24 },
-    { path: "/parent/kid", icon: Users, label: "Kids", iconSize: 24 },
+    { path: "/parent/dashboard", icon: Home, label: "Home", iconSize: 19 },
+    { path: "/parent/kid", icon: Users, label: "Kids", iconSize: 19 },
+    {
+      path: "/parent-kid-package-selection",
+      icon: Package,
+      label: "Package Selection",
+      iconSize: 19,
+    },
     {
       path: "/parent/walkthrough-video",
       icon: PlayCircle,
       label: "Walkthrough",
-      iconSize: 24,
+      iconSize: 19,
     },
     {
       path: "/parent/support",
       icon: HelpCircle,
       label: "Support",
-      iconSize: 24,
+      iconSize: 19,
     },
   ];
 
@@ -71,13 +78,13 @@ const Sidebar = () => {
   return (
     <aside className="w-[130px] bg-white flex flex-col h-screen sticky top-0 left-0">
       {/* Profile Section */}
-      <div className="h-[80px] flex items-center justify-center mb-6">
+      <div className="h-[80px] flex items-center justify-center mb-4">
         <button
           onClick={() => navigate("/parent/profile/manage")}
           className="relative group"
           onMouseEnter={playHoverSound}
         >
-          <div className="w-12 h-12 rounded-full overflow-hidden transform transition-all duration-500 ease-in-out group-hover:scale-110 group-hover:shadow-lg group-hover:ring-4 group-hover:ring-[#642b8f]">
+          <div className="w-12 h-12 rounded-full overflow-hidden transform transition-all duration-500 ease-in-out group-hover:scale-110 group-hover:shadow-lg group-hover:ring-4 group-hover:ring-[#642b8f] mt-6">
             <img
               src={account}
               alt="Profile"
@@ -90,7 +97,7 @@ const Sidebar = () => {
 
       {/* Navigation Links */}
       <nav className={`flex-1 py-4 ${isScrolled ? "hidden" : ""}`}>
-        <div className="space-y-8 px-2">
+        <div className="space-y-4 px-1">
           {navLinks.map((link) => (
             <Link
               key={link.path}
