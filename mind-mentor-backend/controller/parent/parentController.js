@@ -1573,7 +1573,7 @@ const parentBookDemoClassInProfile = async (req, res) => {
     // 1. Find the kid
     const kidData = await kidModel.findOne(
       { _id: kidId },
-      { kidsName: 1, chessId: 1, enqId: 1 }
+      { kidsName: 1, chessId: 1, enqId: 1, program: 1 }
     );
     console.log("kidData", kidData);
 
@@ -1620,15 +1620,21 @@ const parentBookDemoClassInProfile = async (req, res) => {
     // 4. Update enquiry's program list
     const enqData = await operationDeptModel.findOne({ _id: kidData.enqId });
     console.log("enqData", enqData);
+    const isExistPrograms = enqData.programs;
 
     if (enqData) {
       // Only add if the program doesn't already exist
-      const alreadyExists = enqData.programs?.some(
-        (pgm) => pgm.program === program && pgm.level === programLevel
-      );
+      if (isExistPrograms.length === 0) {
+        const alreadyExists = enqData.programs?.some(
+          (pgm) => pgm.program === program && pgm.level === programLevel
+        );
 
-      if (!alreadyExists) {
-        console.log("alreadyExists");
+        if (!alreadyExists) {
+          console.log("alreadyExists");
+          enqData.programs.push({ program, level: programLevel });
+        }
+      } else {
+        enqData.programs.pop();
         enqData.programs.push({ program, level: programLevel });
       }
 
@@ -1643,11 +1649,21 @@ const parentBookDemoClassInProfile = async (req, res) => {
     const kid = await kidModel.findById(kidId);
 
     if (kid) {
-      const existing = kid.selectedProgram?.some(
-        (pgm) => pgm.program === program && pgm.level === programLevel
-      );
+      if (kid.selectedProgram.length === 0) {
+        const existing = kid.selectedProgram?.some(
+          (pgm) => pgm.program === program && pgm.level === programLevel
+        );
 
-      if (!existing) {
+        if (!existing) {
+          kid.selectedProgram.push({
+            program,
+            level: programLevel,
+            chessKidId: kid.chessId,
+            pgmStatus: "Active",
+          });
+        }
+      } else {
+        kid.selectedProgram.pop();
         kid.selectedProgram.push({
           program,
           level: programLevel,
@@ -2446,7 +2462,61 @@ const getMyselectedPackageData = async (req, res) => {
   }
 };
 
+const saveProgramAndLevel = async (req, res) => {
+  try {
+    const { kidId } = req.params;
+    const { program, level } = req.body;
+
+    console.log("kidId ==>", kidId);
+    console.log("program ==>", program);
+    console.log("level ==>", level);
+
+    // 1. Update OperationDept model
+    await operationDeptModel.updateOne(
+      { kidId },
+      {
+        $push: {
+          programs: {
+            program,
+            level,
+            status: "Enquiry Kid", // or set based on logic
+            enrolledDate: new Date(),
+            totalClass: 0,
+            attendedClass: 0,
+            remainingClass: 0,
+          },
+        },
+      }
+    );
+
+    // 2. Update Kid model
+    await kidModel.updateOne(
+      { _id: kidId },
+      {
+        $push: {
+          selectedProgram: {
+            program,
+            level,
+            pgmStatus: "Active",
+          },
+        },
+      }
+    );
+
+    res
+      .status(200)
+      .json({
+        success: true,
+        message: "Program and level updated in both models.",
+      });
+  } catch (err) {
+    console.error("Error saving program and level:", err);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
 module.exports = {
+  saveProgramAndLevel,
   getMyselectedPackageData,
   getMyReferalData,
   sendReferalData,

@@ -472,3 +472,16 @@ export const getMySubscriptionData = async (parentId,kidId) => {
     return err;
   }
 };
+
+export const setProgramAndLevel = async (program,level,kidId) => {
+  try {
+   
+    const response = await parentInstance.post(
+      `/parent/save-program-level/${kidId}`,
+      { program, level }
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};

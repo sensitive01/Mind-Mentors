@@ -13,8 +13,10 @@ import {
   Snackbar,
   Alert,
   IconButton,
+  InputAdornment,
 } from "@mui/material";
 import { ArrowBack } from "@mui/icons-material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useState, useEffect } from "react";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
@@ -30,6 +32,8 @@ const AddEmployeeForm = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(empId ? true : false);
+  const [showPassword, setShowPassword] = useState(false);
+
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -44,6 +48,7 @@ const AddEmployeeForm = () => {
     gender: "",
     department: "",
     role: "",
+    password: "",
     centerId: "",
     centerName: "",
     status: "Active",
@@ -120,6 +125,7 @@ const AddEmployeeForm = () => {
             centerName: employeeData.centerName || "",
             status: employeeData.status || "Active",
             modes: modesObj,
+            password: employeeData.password || "",
           });
 
           // If the employee has a center or is offline, show the center dropdown
@@ -257,6 +263,7 @@ const AddEmployeeForm = () => {
         email: formData.email,
         phoneNumber: formData.phoneNumber,
         address: formData.address,
+        password: formData.password,
         gender: formData.gender,
         department: formData.department,
         role: formData.role,
@@ -474,7 +481,29 @@ const AddEmployeeForm = () => {
                   </div>
                 </FormControl>
               </div>
-
+              <TextField
+                label="Password"
+                type={showPassword ? "text" : "password"}
+                variant="outlined"
+                className="flex-1"
+                value={formData.password}
+                onChange={(e) => handleInputChange("password", e.target.value)}
+                required
+                fullWidth
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={() => setShowPassword(!showPassword)}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
               {/* Department, Mode Checkboxes, and Role in one row */}
               <div className="flex gap-4 mb-4">
                 <FormControl variant="outlined" className="flex-1" required>

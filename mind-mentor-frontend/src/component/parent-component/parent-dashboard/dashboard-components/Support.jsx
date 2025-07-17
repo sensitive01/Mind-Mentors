@@ -15,10 +15,20 @@ import {
   getTicketsofParents,
   updateTicketChats,
 } from "../../../../api/service/parent/ParentService";
+import axios from "axios";
+import io from "socket.io-client";
+import { DataArrayOutlined } from "@mui/icons-material";
+
+const socket = io("https://live.mindmentorz.in", {
+  transports: ["websocket"],
+  reconnectionAttempts: 5,
+  reconnectionDelay: 1000,
+});
 
 const Support = () => {
   const parentId = localStorage.getItem("parentId");
   const [selectedTicket, setSelectedTicket] = useState(null);
+  const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
@@ -26,43 +36,88 @@ const Support = () => {
   const [showFilterOptions, setShowFilterOptions] = useState(false);
   const [newTicketTopic, setNewTicketTopic] = useState("");
   const [newTicketDescription, setNewTicketDescription] = useState("");
-
-  // Real data states
   const [tickets, setTickets] = useState([]);
+  const [typingStatus, setTypingStatus] = useState("");
   const [loading, setLoading] = useState(true);
-
-  // Kid selection states
   const [kidsData, setKidsData] = useState([]);
   const [selectedKid, setSelectedKid] = useState(null);
   const [showKidDropdown, setShowKidDropdown] = useState(false);
+  const [lastSeen, setLastSeen] = useState(null);
 
-  // Ref for auto-scrolling to latest message
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
 
-  // Function to scroll to bottom
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Auto-scroll when selectedTicket changes or when new messages are added
   useEffect(() => {
-    if (selectedTicket) {
-      // Small delay to ensure DOM is updated
-      setTimeout(() => {
-        scrollToBottom();
-      }, 100);
-    }
-  }, [selectedTicket, selectedTicket?.messages]);
+    if (!parentId) return;
+
+    socket.emit("joinRoom", { userId: parentId });
+
+    const handleReceiveMessage = (data) => {
+      // if (selectedTicket && data.ticketId === selectedTicket._id) {
+      //   setMessages((prev) => [...prev, data]);
+      //   socket.emit("markAsSeen", {
+      //     ticketId: selectedTicket._id,
+      //     parentId,
+      //   });
+      // }
+
+      setTickets((prevTickets) =>
+        prevTickets.map((ticket) =>
+          ticket._id === data.ticketId
+            ? {
+                ...ticket,
+                messages: [...(ticket.messages || []), data],
+                updatedAt: new Date().toISOString(),
+              }
+            : ticket
+        )
+      );
+    };
+
+    const handleTypingStatus = ({ ticketId, isTyping, userName }) => {
+      if (selectedTicket && ticketId === selectedTicket._id && !isTyping) {
+        setTypingStatus("");
+      } else if (
+        selectedTicket &&
+        ticketId === selectedTicket._id &&
+        isTyping
+      ) {
+        setTypingStatus(`${userName} is typing...`);
+      }
+    };
+
+    const handleSeenStatus = ({ ticketId, seenAt }) => {
+      if (selectedTicket && ticketId === selectedTicket._id) {
+        setLastSeen(seenAt);
+      }
+    };
+
+    socket.on("receiveMessage", handleReceiveMessage);
+    socket.on("typingStatus", handleTypingStatus);
+    socket.on("seenStatus", handleSeenStatus);
+
+    return () => {
+      socket.off("receiveMessage", handleReceiveMessage);
+      socket.off("typingStatus", handleTypingStatus);
+      socket.off("seenStatus", handleSeenStatus);
+    };
+  }, [parentId, selectedTicket]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await getKidBelongsToData(parentId);
         setKidsData(response.data || []);
-
-        // Auto-select if only one kid
-        if (response && response.data.length === 1) {
+        if (response?.data?.length === 1) {
           setSelectedKid(response.data[0]);
         }
       } catch (error) {
@@ -71,9 +126,7 @@ const Support = () => {
       }
     };
 
-    if (parentId) {
-      fetchData();
-    }
+    if (parentId) fetchData();
   }, [parentId]);
 
   useEffect(() => {
@@ -92,10 +145,163 @@ const Support = () => {
       }
     };
 
-    if (parentId) {
-      fetchTickets();
-    }
+    if (parentId) fetchTickets();
   }, [parentId]);
+
+  const handleTyping = (e) => {
+    setNewMessage(e.target.value);
+
+    if (!selectedTicket) return;
+
+    socket.emit("typing", {
+      ticketId: selectedTicket._id,
+      isTyping: true,
+      userName: "You",
+      parentId,
+    });
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      socket.emit("typing", {
+        ticketId: selectedTicket._id,
+        isTyping: false,
+        userName: "You",
+        userId: parentId,
+      });
+    }, 1500);
+  };
+
+  const handleSelectTicket = async (ticket) => {
+    try {
+      setSelectedTicket(ticket);
+      setMessages(ticket.messages || []);
+
+      socket.emit("joinTicketRoom", { ticketId: ticket._id, userId: parentId });
+      socket.emit("markAsSeen", {
+        ticketId: ticket._id,
+        userId: parentId,
+      });
+    } catch (error) {
+      console.error("Error fetching ticket messages:", error);
+    }
+  };
+
+  const handleSendChat = async () => {
+    if (!newMessage.trim() || !selectedTicket) return;
+
+    const messageToSend = newMessage.trim();
+    const tempId = Date.now().toString();
+    const time = new Date().toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    // Create temporary message with pending status
+    const tempMessage = {
+      _id: tempId,
+      senderId: parentId,
+      message: messageToSend,
+      time,
+      status: "pending", // Add status field
+      createdAt: new Date().toISOString(),
+    };
+
+    setMessages((prev) => [...prev, tempMessage]);
+    setNewMessage("");
+
+    try {
+      const response = await updateTicketChats(
+        messageToSend,
+        selectedTicket._id,
+        parentId
+      );
+
+      if (response.status === 200) {
+        // Replace the temporary message with the confirmed one from server
+        const serverMessage = {
+          ...tempMessage,
+          _id: response.data.messageId || tempId, // Use server ID if available
+          status: "delivered", // Update status to delivered
+        };
+
+        setMessages((prev) =>
+          prev.map((msg) => (msg._id === tempId ? serverMessage : msg))
+        );
+
+        socket.emit("sendMessage", {
+          ...serverMessage,
+          userId: parentId,
+          messages: messageToSend,
+          ticketId: selectedTicket._id,
+        });
+
+        setTickets((prevTickets) =>
+          prevTickets.map((ticket) =>
+            ticket._id === selectedTicket._id
+              ? {
+                  ...ticket,
+                  messages: [...(ticket.messages || []), serverMessage],
+                  updatedAt: new Date().toISOString(),
+                }
+              : ticket
+          )
+        );
+      } else {
+        throw new Error("Failed to send message");
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      // Update the message status to failed
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg._id === tempId ? { ...msg, status: "failed" } : msg
+        )
+      );
+      setNewMessage(messageToSend);
+    }
+  };
+
+  const handleNewTicketSubmit = async () => {
+    if (
+      !newTicketTopic.trim() ||
+      !newTicketDescription.trim() ||
+      !selectedKid
+    ) {
+      alert("Please fill all fields and select a kid");
+      return;
+    }
+
+    const ticketData = {
+      topic: newTicketTopic.trim(),
+      description: newTicketDescription.trim(),
+      kidId: selectedKid.kidId,
+      kidName: selectedKid.kidName,
+      parentId: parentId,
+      status: "open",
+      priority: "medium",
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      const response = await createTiketForParent(ticketData);
+      if (response.status === 201) {
+        const ticketsResponse = await getTicketsofParents(parentId);
+        if (ticketsResponse.status === 200) {
+          setTickets(ticketsResponse.data.data || []);
+        }
+
+        setNewTicketTopic("");
+        setNewTicketDescription("");
+        setIsNewTicketModalOpen(false);
+      }
+    } catch (error) {
+      console.error("Error creating ticket:", error);
+      alert("Failed to create ticket. Please try again.");
+    }
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -115,218 +321,38 @@ const Support = () => {
   };
 
   const formatTime = (timeString) => {
-    // If it's already formatted (like "12:36 pm"), return as is
+    if (!timeString) return "";
     if (
       typeof timeString === "string" &&
       (timeString.includes("pm") || timeString.includes("am"))
     ) {
       return timeString;
     }
-
-    // Otherwise, format the date
-    const date = new Date(timeString);
-    return new Intl.DateTimeFormat("en-US", {
+    return new Date(timeString).toLocaleTimeString("en-US", {
       hour: "numeric",
       minute: "numeric",
       hour12: true,
-    }).format(date);
+    });
   };
 
-  // Helper function to check if message is from current parent
   const isCurrentUser = (senderId) => {
     return senderId === parentId;
   };
 
+  const getMessageStatus = (message) => {
+    if (!message.status) return "delivered"; // Default for older messages
+    return message.status;
+  };
+
   const filteredTickets = tickets.filter((ticket) => {
     const matchesSearch =
-      ticket.ticketId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      ticket.topic.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      ticket.description.toLowerCase().includes(searchQuery.toLowerCase());
+      ticket.ticketId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      ticket.topic?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      ticket.description?.toLowerCase().includes(searchQuery.toLowerCase());
 
     if (activeFilter === "all") return matchesSearch;
     return matchesSearch && ticket.status === activeFilter;
   });
-
-  const handleNewTicketSubmit = async () => {
-    if (
-      !newTicketTopic.trim() ||
-      !newTicketDescription.trim() ||
-      !selectedKid
-    ) {
-      alert("Please fill all fields and select a kid");
-      return;
-    }
-
-    // Prepare data to send to backend
-    const ticketData = {
-      topic: newTicketTopic.trim(),
-      description: newTicketDescription.trim(),
-      kidId: selectedKid.kidId,
-      kidName: selectedKid.kidName,
-      parentId: parentId,
-      status: "open",
-      priority: "medium",
-      createdAt: new Date().toISOString(),
-    };
-
-    try {
-      console.log("Sending ticket data to backend:", ticketData);
-
-      await createTiketForParent(ticketData);
-
-      // Refresh tickets after creating new one
-      const response = await getTicketsofParents(parentId);
-      if (response.status===200) {
-        setTickets(response.data.data || []);
-      }
-
-      // Reset form
-      setNewTicketTopic("");
-      setNewTicketDescription("");
-      setIsNewTicketModalOpen(false);
-
-      alert("Ticket created successfully!");
-    } catch (error) {
-      console.error("Error creating ticket:", error);
-      alert("Failed to create ticket. Please try again.");
-    }
-  };
-
-  const resetModalForm = () => {
-    setNewTicketTopic("");
-    setNewTicketDescription("");
-    if (kidsData.length > 1) {
-      setSelectedKid(null);
-    }
-    setShowKidDropdown(false);
-  };
-
-  const handleModalClose = () => {
-    setIsNewTicketModalOpen(false);
-    resetModalForm();
-  };
-
-  const handleSendChat = async () => {
-    if (!newMessage.trim()) return;
-
-    // Create new message object for instant UI update
-    const newMessageObj = {
-      senderId: parentId,
-      message: newMessage.trim(),
-      time: formatTime(new Date()),
-      isLocal: true, // Flag to identify locally added messages
-    };
-
-    // Store the message to send
-    const messageToSend = newMessage.trim();
-
-    // Clear input immediately for better UX
-    setNewMessage("");
-
-    // Update UI instantly - add message to selected ticket
-    setSelectedTicket((prevTicket) => ({
-      ...prevTicket,
-      messages: [...(prevTicket.messages || []), newMessageObj],
-    }));
-
-    // Also update in the tickets array for consistency
-    setTickets((prevTickets) =>
-      prevTickets.map((ticket) =>
-        ticket._id === selectedTicket._id
-          ? { ...ticket, messages: [...(ticket.messages || []), newMessageObj] }
-          : ticket
-      )
-    );
-
-    try {
-      // Send to backend
-      const response = await updateTicketChats(
-        messageToSend,
-        selectedTicket._id,
-        parentId
-      );
-
-      if (response.status===200) {
-        // Update the message to remove the local flag and add any server data
-        const serverMessageObj = {
-          senderId: parentId,
-          message: messageToSend,
-          time: formatTime(new Date()),
-          isLocal: false,
-        };
-
-        // Update the selected ticket with server confirmation
-        setSelectedTicket((prevTicket) => ({
-          ...prevTicket,
-          messages: prevTicket.messages.map((msg, index) =>
-            index === prevTicket.messages.length - 1 && msg.isLocal
-              ? serverMessageObj
-              : msg
-          ),
-        }));
-
-        // Update tickets array with server confirmation
-        setTickets((prevTickets) =>
-          prevTickets.map((ticket) =>
-            ticket._id === selectedTicket._id
-              ? {
-                  ...ticket,
-                  messages: ticket.messages.map((msg, index) =>
-                    index === ticket.messages.length - 1 && msg.isLocal
-                      ? serverMessageObj
-                      : msg
-                  ),
-                }
-              : ticket
-          )
-        );
-      } else {
-        // If server request failed, remove the optimistic message
-        setSelectedTicket((prevTicket) => ({
-          ...prevTicket,
-          messages: prevTicket.messages.filter((msg) => !msg.isLocal),
-        }));
-
-        setTickets((prevTickets) =>
-          prevTickets.map((ticket) =>
-            ticket._id === selectedTicket._id
-              ? {
-                  ...ticket,
-                  messages: ticket.messages.filter((msg) => !msg.isLocal),
-                }
-              : ticket
-          )
-        );
-
-        // Restore the message to input field
-        setNewMessage(messageToSend);
-        alert("Failed to send message. Please try again.");
-      }
-    } catch (err) {
-      console.log("Error in sending the chats", err);
-
-      // If error occurred, remove the optimistic message
-      setSelectedTicket((prevTicket) => ({
-        ...prevTicket,
-        messages: prevTicket.messages.filter((msg) => !msg.isLocal),
-      }));
-
-      setTickets((prevTickets) =>
-        prevTickets.map((ticket) =>
-          ticket._id === selectedTicket._id
-            ? {
-                ...ticket,
-                messages: ticket.messages.filter((msg) => !msg.isLocal),
-              }
-            : ticket
-        )
-      );
-
-      // Restore the message to input field
-      setNewMessage(messageToSend);
-      alert("Failed to send message. Please try again.");
-    }
-  };
 
   if (loading) {
     return (
@@ -340,6 +366,7 @@ const Support = () => {
     <div className="relative flex h-[600px] bg-gray-50 rounded-xl shadow-xl overflow-hidden">
       {/* Left Sidebar */}
       <div className="w-80 bg-white border-r flex flex-col">
+        {/* Header Section */}
         <div className="p-4 border-b">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-primary">Support Tickets</h2>
@@ -394,6 +421,8 @@ const Support = () => {
               </div>
             </div>
           </div>
+
+          {/* Search Input */}
           <div className="relative">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
             <input
@@ -406,6 +435,7 @@ const Support = () => {
           </div>
         </div>
 
+        {/* Tickets List */}
         <div className="flex-1 overflow-y-auto">
           {filteredTickets.length === 0 ? (
             <div className="p-4 text-center text-gray-500">
@@ -417,13 +447,13 @@ const Support = () => {
             filteredTickets.map((ticket) => (
               <div
                 key={ticket._id}
-                onClick={() => setSelectedTicket(ticket)}
+                onClick={() => handleSelectTicket(ticket)}
                 className={`p-4 border-b cursor-pointer transition-all duration-200 hover:bg-purple-50
-                  ${
-                    selectedTicket?._id === ticket._id
-                      ? "bg-purple-50 border-l-4 border-l-primary"
-                      : ""
-                  }`}
+              ${
+                selectedTicket?._id === ticket._id
+                  ? "bg-purple-50 border-l-4 border-l-primary"
+                  : ""
+              }`}
               >
                 <div className="flex justify-between items-start mb-2">
                   <div>
@@ -447,9 +477,11 @@ const Support = () => {
                     {ticket.status}
                   </div>
                 </div>
+
                 <div className="text-sm text-gray-500 line-clamp-2">
                   {ticket.description}
                 </div>
+
                 {ticket.messages && ticket.messages.length > 0 && (
                   <div className="mt-2">
                     <p className="text-sm text-gray-600 line-clamp-1">
@@ -460,6 +492,7 @@ const Support = () => {
                     </div>
                   </div>
                 )}
+
                 <div className="flex items-center mt-2 text-xs text-gray-400">
                   <Clock className="w-3 h-3 mr-1" />
                   {formatDate(ticket.createdAt)}
@@ -472,6 +505,7 @@ const Support = () => {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col bg-gray-50">
+        {/* New Ticket Button */}
         <button
           onClick={() => setIsNewTicketModalOpen(true)}
           className="absolute top-4 right-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary transition-colors duration-200 flex items-center space-x-2"
@@ -482,6 +516,7 @@ const Support = () => {
 
         {selectedTicket ? (
           <div className="flex-1 flex flex-col h-full">
+            {/* Ticket Header */}
             <div className="p-6 border-b bg-white">
               <div className="flex justify-between items-center">
                 <div>
@@ -498,11 +533,24 @@ const Support = () => {
                   </p>
                   <p className="text-sm text-gray-500 mt-1">
                     Created: {formatDate(selectedTicket.createdAt)}
+                    {lastSeen && (
+                      <span className="ml-2">
+                        • Seen: {formatTime(lastSeen)}
+                      </span>
+                    )}
                   </p>
+                </div>
+                <div
+                  className={`text-xs px-2 py-1 rounded-full border ${getStatusColor(
+                    selectedTicket.status
+                  )}`}
+                >
+                  {selectedTicket.status}
                 </div>
               </div>
             </div>
 
+            {/* Chat Messages */}
             <div ref={chatContainerRef} className="flex-1 p-6 overflow-y-auto">
               <div className="space-y-4">
                 {/* Initial ticket description */}
@@ -525,54 +573,58 @@ const Support = () => {
                   </div>
                 </div>
 
-                {/* Display messages if any */}
-                {selectedTicket.messages &&
-                  selectedTicket.messages.length > 0 &&
-                  selectedTicket.messages.map((message, idx) => (
+                {/* Messages */}
+                {messages.map((message, idx) => (
+                  <div
+                    key={message._id || idx}
+                    className={`flex ${
+                      isCurrentUser(message.senderId)
+                        ? "justify-end"
+                        : "justify-start"
+                    }`}
+                  >
                     <div
-                      key={idx}
-                      className={`flex ${
+                      className={`flex items-start max-w-md ${
                         isCurrentUser(message.senderId)
-                          ? "justify-end"
-                          : "justify-start"
+                          ? "flex-row-reverse"
+                          : "flex-row"
                       }`}
                     >
+                      <img
+                        src={avatar}
+                        alt={
+                          isCurrentUser(message.senderId) ? "You" : "Support"
+                        }
+                        className="w-8 h-8 rounded-full"
+                      />
                       <div
-                        className={`flex items-start max-w-md ${
+                        className={`mx-2 p-3 rounded-lg ${
                           isCurrentUser(message.senderId)
-                            ? "flex-row-reverse"
-                            : "flex-row"
+                            ? "bg-primary text-white"
+                            : "bg-white text-gray-700 shadow-sm border"
+                        } ${
+                          getMessageStatus(message) === "pending"
+                            ? "opacity-70"
+                            : ""
                         }`}
                       >
-                        <img
-                          src={avatar}
-                          alt={
-                            isCurrentUser(message.senderId) ? "You" : "Support"
-                          }
-                          className="w-8 h-8 rounded-full"
-                        />
-                        <div
-                          className={`mx-2 p-3 rounded-lg ${
+                        <p
+                          className={`text-xs mb-1 ${
                             isCurrentUser(message.senderId)
-                              ? "bg-primary text-white"
-                              : "bg-white text-gray-700 shadow-sm border"
-                          } ${message.isLocal ? "opacity-70" : ""}`}
+                              ? "text-blue-200"
+                              : "text-gray-500"
+                          }`}
                         >
+                          {isCurrentUser(message.senderId) ? "You" : "Support"}
+                          {getMessageStatus(message) === "pending" &&
+                            " (sending...)"}
+                          {getMessageStatus(message) === "failed" &&
+                            " (failed)"}
+                        </p>
+                        <p className="text-sm">{message.message}</p>
+                        <div className="flex justify-between items-center mt-1">
                           <p
-                            className={`text-xs mb-1 ${
-                              isCurrentUser(message.senderId)
-                                ? "text-blue-200"
-                                : "text-gray-500"
-                            }`}
-                          >
-                            {isCurrentUser(message.senderId)
-                              ? "You"
-                              : "Support"}
-                            {message.isLocal && " (sending...)"}
-                          </p>
-                          <p className="text-sm">{message.message}</p>
-                          <p
-                            className={`text-xs mt-1 ${
+                            className={`text-xs ${
                               isCurrentUser(message.senderId)
                                 ? "text-blue-200"
                                 : "text-gray-500"
@@ -580,11 +632,38 @@ const Support = () => {
                           >
                             {message.time || formatTime(message.createdAt)}
                           </p>
+                          {/* {isCurrentUser(message.senderId) && (
+                            <span className="text-xs ml-2">
+                              {getMessageStatus(message) === "delivered" &&
+                                "✓✓"}
+                              {getMessageStatus(message) === "pending" && "..."}
+                              {getMessageStatus(message) === "failed" && "✗"}
+                            </span>
+                          )} */}
                         </div>
                       </div>
                     </div>
-                  ))}
-                {/* Invisible element for auto-scrolling */}
+                  </div>
+                ))}
+
+                {/* Typing indicator */}
+                {typingStatus && (
+                  <div className="flex justify-start">
+                    <div className="flex items-start max-w-md">
+                      <img
+                        src={avatar}
+                        alt="Support"
+                        className="w-8 h-8 rounded-full"
+                      />
+                      <div className="mx-2 p-3 rounded-lg bg-white text-gray-700 shadow-sm border">
+                        <p className="text-xs italic text-gray-500">
+                          {typingStatus}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div ref={messagesEndRef} />
               </div>
             </div>
@@ -599,7 +678,7 @@ const Support = () => {
                 <div className="flex items-center space-x-4">
                   <textarea
                     value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
+                    onChange={handleTyping}
                     className="flex-1 p-3 h-20 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     placeholder="Type your message..."
                     onKeyDown={(e) => {
@@ -631,18 +710,20 @@ const Support = () => {
       {isNewTicketModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
+            {/* Modal Header */}
             <div className="flex justify-between items-center p-6 border-b">
               <h3 className="text-xl font-semibold text-primary">
                 Create New Ticket
               </h3>
               <button
-                onClick={handleModalClose}
+                onClick={() => setIsNewTicketModalOpen(false)}
                 className="text-gray-400 hover:text-gray-500 transition-colors duration-200"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
+            {/* Modal Content */}
             <div className="p-6 space-y-4">
               {/* Kid Selection */}
               <div>
@@ -695,6 +776,7 @@ const Support = () => {
                 )}
               </div>
 
+              {/* Topic Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Topic *
@@ -708,6 +790,7 @@ const Support = () => {
                 />
               </div>
 
+              {/* Description Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Description *
@@ -721,9 +804,10 @@ const Support = () => {
               </div>
             </div>
 
+            {/* Modal Footer */}
             <div className="flex justify-end gap-3 p-6 bg-gray-50 border-t">
               <button
-                onClick={handleModalClose}
+                onClick={() => setIsNewTicketModalOpen(false)}
                 className="px-4 py-2 text-gray-700 bg-white border rounded-lg hover:bg-gray-50 transition-colors duration-200"
               >
                 Cancel

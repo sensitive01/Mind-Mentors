@@ -1773,7 +1773,7 @@ const getEmployeeData = async (req, res) => {
         .json({ success: false, message: "Employee ID is required" });
     }
 
-    const employee = await Employee.findById(empId, { password: 0 });
+    const employee = await Employee.findById(empId);
 
     if (!employee) {
       return res
@@ -1821,6 +1821,7 @@ const updateEmployeeData = async (req, res) => {
         centerId: formData.centerId,
         mode: formData.mode || [],
         status: formData.status || "Active",
+        password:formData.password
       },
       { new: true }
     );

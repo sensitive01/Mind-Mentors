@@ -54,7 +54,10 @@ parentRoute.post("/parent-add-new-kid-data/:parentId",parentController.parentAdd
 parentRoute.post("/parent-save-kid-name",parentController.parentSaveKidData)
 
 parentRoute.post("/create-ticket-for-parent",parentController.createTicketForParent)
+parentRoute.put("/update-ticket-chats/:ticketId",parentController.updateSupportChats)
 parentRoute.post("/send-referal-data/:parentId",parentController.sendReferalData)
+
+parentRoute.post("/save-program-level/:kidId",parentController.saveProgramAndLevel)
 
 
 
@@ -66,7 +69,6 @@ parentRoute.post("/send-referal-data/:parentId",parentController.sendReferalData
 parentRoute.put("/update-kid-availability/:availId",parentController.updateKidAvailability)
 parentRoute.put("/update-kid-availability-status/:availId",parentController.updateKidAvailabilityStatus)
 parentRoute.put("/parent-book-demo-class-in-profile/:kidId",parentController.parentBookDemoClassInProfile)
-parentRoute.put("/update-ticket-chats/:ticketId",parentController.updateSupportChats)
 
 
 

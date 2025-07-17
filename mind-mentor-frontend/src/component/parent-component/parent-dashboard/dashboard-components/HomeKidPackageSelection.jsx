@@ -9,10 +9,14 @@ import {
   getMyKidData,
   getTheEnqId,
   parentSelectPackageData,
+  setProgramAndLevel,
 } from "../../../../api/service/parent/ParentService";
 const RAZORPAY_KEY = import.meta.env.VITE_RAZORPAY_KEY_ID;
 import logo from "../../../../assets/mindmentorz.png";
-import { getPParentDiscountAmount } from "../../../../api/service/employee/EmployeeService";
+import {
+  getAllProgrameData,
+  getPParentDiscountAmount,
+} from "../../../../api/service/employee/EmployeeService";
 
 const HomeKidPackageSelection = () => {
   const navigate = useNavigate();
@@ -53,6 +57,13 @@ const HomeKidPackageSelection = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
 
+  // New state variables for program selection
+  const [showProgramSelection, setShowProgramSelection] = useState(false);
+  const [selectedProgram, setSelectedProgram] = useState("");
+  const [selectedLevel, setSelectedLevel] = useState("");
+  const [availableLevels, setAvailableLevels] = useState([]);
+  const [allPrograms, setAllPrograms] = useState([]);
+
   // Helper function to format time display
   const getTimeSlotDisplay = (timeSlot) => {
     if (timeSlot === "day") {
@@ -63,7 +74,7 @@ const HomeKidPackageSelection = () => {
     return timeSlot;
   };
 
-  // Fetch kids data for the parent
+  // Fetch initial data including kids, packages, and programs
   useEffect(() => {
     const fetchInitialData = async () => {
       setIsLoading(true);
@@ -72,14 +83,14 @@ const HomeKidPackageSelection = () => {
         const kidsResponse = await getMyKidData(parentId);
         if (kidsResponse.data.success && kidsResponse.data.kidData.length > 0) {
           setKidsList(kidsResponse.data.kidData);
-          
+
           // Auto-select if only one kid
           if (kidsResponse.data.kidData.length === 1) {
             handleKidSelect(kidsResponse.data.kidData[0]._id);
           }
         }
 
-        // Fetch package details (not kid-specific)
+        // Fetch package details
         const packageResponse = await fetchParentPackageDetails();
         if (packageResponse.status === 200) {
           const packageData = packageResponse?.data?.data;
@@ -94,6 +105,12 @@ const HomeKidPackageSelection = () => {
             setKitItemsList(packageData.kitPrice);
           }
         }
+
+        // Fetch all programs data
+        const programsResponse = await getAllProgrameData();
+        if (programsResponse.status === 200) {
+          setAllPrograms(programsResponse.data.programs);
+        }
       } catch (error) {
         console.error("Error fetching initial data:", error);
         toast.error("Failed to load initial data");
@@ -101,7 +118,7 @@ const HomeKidPackageSelection = () => {
         setIsLoading(false);
       }
     };
-    
+
     fetchInitialData();
   }, [parentId]);
 
@@ -109,26 +126,41 @@ const HomeKidPackageSelection = () => {
   const handleKidSelect = async (kidId) => {
     setIsLoading(true);
     setSelectedKid(kidId);
-    
+
     try {
       // Find the selected kid from kidsList
-      const selectedKidData = kidsList.find(kid => kid._id === kidId);
-      
+      const selectedKidData = kidsList.find((kid) => kid._id === kidId);
+
       if (selectedKidData) {
+        // Check if kid has programs
+        const hasPrograms =
+          selectedKidData.selectedProgram &&
+          selectedKidData.selectedProgram.length > 0;
+
         // Set basic kid data
         setData({
           kidId: kidId,
           kidName: selectedKidData.kidsName,
-          whatsappNumber: "", // You might need to fetch this separately
-          programs: selectedKidData.selectedProgram || [],
+          whatsappNumber: "",
+          programs: hasPrograms ? selectedKidData.selectedProgram : [],
         });
+
+        // Show program selection if no programs assigned
+        setShowProgramSelection(!hasPrograms);
+        if (!hasPrograms) {
+          setSelectedProgram("");
+          setSelectedLevel("");
+        }
 
         // Fetch enrollment ID
         const getEnqId = await getTheEnqId(kidId);
         setEnqId(getEnqId?.data?.data?._id);
 
         // Fetch discount
-        const discountResponse = await getPParentDiscountAmount(parentId, kidId);
+        const discountResponse = await getPParentDiscountAmount(
+          parentId,
+          kidId
+        );
         if (discountResponse.status === 200) {
           setDiscount(discountResponse.data.discountAmount);
         }
@@ -139,6 +171,56 @@ const HomeKidPackageSelection = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Handle program selection change
+  const handleProgramChange = (e) => {
+    const programId = e.target.value;
+    setSelectedProgram(programId);
+
+    // Find the selected program to get available levels
+    const program = allPrograms.find((p) => p._id === programId);
+    if (program) {
+      setAvailableLevels(program.programLevel || []);
+    }
+    setSelectedLevel(""); // Reset level when program changes
+  };
+
+  // Handle level selection change
+  const handleLevelChange = (e) => {
+    setSelectedLevel(e.target.value);
+  };
+
+  // Save the selected program and level
+  const saveProgramSelection = async () => {
+    if (!selectedProgram || !selectedLevel) {
+      toast.error("Please select both program and level");
+      return;
+    }
+
+    const selectedProgramData = allPrograms.find(
+      (p) => p._id === selectedProgram
+    );
+    if (!selectedProgramData) return;
+
+    setData((prev) => ({
+      ...prev,
+      programs: [
+        {
+          program: selectedProgramData.programName,
+          level: selectedLevel,
+        },
+      ],
+    }));
+
+    const response = await setProgramAndLevel(
+      selectedProgramData.programName,
+      selectedLevel,
+      data.kidId
+    );
+
+    setShowProgramSelection(false);
+    toast.success("Program selected successfully");
   };
 
   const handlePackageTypeChange = (type) => {
@@ -568,15 +650,99 @@ const HomeKidPackageSelection = () => {
               <option value="">Select a child</option>
               {kidsList.map((kid) => (
                 <option key={kid._id} value={kid._id}>
-                  {kid.kidsName} - {kid.selectedProgram?.[0]?.program || "No program"}
+                  {kid.kidsName}
+           
                 </option>
               ))}
             </select>
           </div>
         )}
 
-        {/* Only show package selection if a kid is selected */}
-        {selectedKid ? (
+        {/* Program Information (shown when kid has programs) */}
+        {selectedKid && !showProgramSelection && data.programs.length > 0 && (
+          <div className="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 className="text-lg font-semibold mb-4">Program Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-500">
+                  Selected Program
+                </label>
+                <p className="mt-1 text-lg font-medium">
+                  {data.programs[0].program}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-500">
+                  Selected Level
+                </label>
+                <p className="mt-1 text-lg font-medium">
+                  {data.programs[0].level}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Program Selection (shown when kid has no programs) */}
+        {showProgramSelection && (
+          <div className="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 className="text-lg font-semibold mb-4">
+              Select Program for {data?.kidName}
+            </h2>
+
+            <div className="space-y-4">
+              {/* Program Selection */}
+              <div>
+                <label className="block font-medium mb-2">Select Program</label>
+                <select
+                  value={selectedProgram}
+                  onChange={handleProgramChange}
+                  className="w-full p-3 border rounded-lg"
+                >
+                  <option value="">Select a program</option>
+                  {allPrograms.map((program) => (
+                    <option key={program._id} value={program._id}>
+                      {program.programName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Level Selection (only shown when program is selected) */}
+              {selectedProgram && (
+                <div>
+                  <label className="block font-medium mb-2">Select Level</label>
+                  <select
+                    value={selectedLevel}
+                    onChange={handleLevelChange}
+                    className="w-full p-3 border rounded-lg"
+                  >
+                    <option value="">Select a level</option>
+                    {availableLevels.map((level) => (
+                      <option key={level} value={level}>
+                        {level}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Save Button */}
+              <div className="pt-2">
+                <button
+                  onClick={saveProgramSelection}
+                  disabled={!selectedProgram || !selectedLevel}
+                  className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                >
+                  Save Program Selection
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Only show package selection if a kid is selected and has programs */}
+        {selectedKid && !showProgramSelection ? (
           <>
             {/* Step 1: Choose Package Type */}
             <div className="bg-white rounded-lg shadow p-6 mb-6">
@@ -632,7 +798,9 @@ const HomeKidPackageSelection = () => {
                               name="timeSlot"
                               value={slot}
                               checked={selectedTimeSlot === slot}
-                              onChange={(e) => handleTimeSlotChange(e.target.value)}
+                              onChange={(e) =>
+                                handleTimeSlotChange(e.target.value)
+                              }
                               className="mr-3"
                             />
                             <span>{getTimeSlotDisplay(slot)}</span>
@@ -645,7 +813,8 @@ const HomeKidPackageSelection = () => {
                     {selectedTimeSlot && (
                       <div>
                         <label className="block font-medium mb-3">
-                          {packageType === "online" && availableCenters.length === 1
+                          {packageType === "online" &&
+                          availableCenters.length === 1
                             ? "Center"
                             : "Choose Center"}
                         </label>
@@ -669,8 +838,12 @@ const HomeKidPackageSelection = () => {
                           >
                             <option value="">Select a center</option>
                             {availableCenters.map((center) => (
-                              <option key={center.centerId} value={center.centerId}>
-                                {center.centerName} - ₹{center.oneClassPrice}/class
+                              <option
+                                key={center.centerId}
+                                value={center.centerId}
+                              >
+                                {center.centerName} - ₹{center.oneClassPrice}
+                                /class
                               </option>
                             ))}
                           </select>
@@ -696,9 +869,7 @@ const HomeKidPackageSelection = () => {
                         <input
                           type="number"
                           value={numberOfClasses}
-                          onChange={(e) =>
-                            setNumberOfClasses((e.target.value))
-                          }
+                          onChange={(e) => setNumberOfClasses(e.target.value)}
                           className="w-32 p-3 border rounded-lg text-center"
                           min="4"
                         />
@@ -740,9 +911,7 @@ const HomeKidPackageSelection = () => {
                           <input
                             type="number"
                             value={onlineClasses}
-                            onChange={(e) =>
-                              setOnlineClasses((e.target.value))
-                            }
+                            onChange={(e) => setOnlineClasses(e.target.value)}
                             className="w-full p-3 border rounded-lg"
                             min="4"
                           />
@@ -758,9 +927,7 @@ const HomeKidPackageSelection = () => {
                           <input
                             type="number"
                             value={offlineClasses}
-                            onChange={(e) =>
-                              setOfflineClasses((e.target.value))
-                            }
+                            onChange={(e) => setOfflineClasses(e.target.value)}
                             className="w-full p-3 border rounded-lg"
                             min="4"
                           />
@@ -843,7 +1010,9 @@ const HomeKidPackageSelection = () => {
             {/* Step 3: Payment */}
             {packageType && totalAmount > 0 && (
               <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-lg font-semibold mb-4">3. Complete Payment</h2>
+                <h2 className="text-lg font-semibold mb-4">
+                  3. Complete Payment
+                </h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
@@ -852,6 +1021,14 @@ const HomeKidPackageSelection = () => {
                       <div className="flex justify-between">
                         <span>Package:</span>
                         <span className="capitalize">{packageType}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Program:</span>
+                        <span>{data.programs[0]?.program || "N/A"}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Level:</span>
+                        <span>{data.programs[0]?.level || "N/A"}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Amount (Includes GST):</span>
@@ -893,7 +1070,9 @@ const HomeKidPackageSelection = () => {
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle className="w-8 h-8 text-green-600" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2">Payment Successful!</h3>
+                <h3 className="text-lg font-semibold mb-2">
+                  Payment Successful!
+                </h3>
                 <p className="text-gray-600 mb-4">Payment ID: {paymentId}</p>
               </div>
             )}

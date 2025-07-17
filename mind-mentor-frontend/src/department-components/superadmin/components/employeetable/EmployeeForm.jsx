@@ -10,6 +10,8 @@ import {
   FormControlLabel,
   Checkbox,
   Typography,
+  InputAdornment,
+  IconButton,
 } from "@mui/material";
 import axios from "axios";
 import { useState, useEffect } from "react";
@@ -20,6 +22,7 @@ import {
   addNewEmployee,
   getAllPhysicalcenters,
 } from "../../../../api/service/employee/hrService";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 const AddEmployeeForm = () => {
   const [formData, setFormData] = useState({
@@ -32,6 +35,7 @@ const AddEmployeeForm = () => {
     role: "",
     centerId: "",
     centerName: "",
+    password:"",
     modes: {
       online: false,
       offline: false,
@@ -41,6 +45,8 @@ const AddEmployeeForm = () => {
   const [centers, setCenters] = useState([]);
   const [filteredCenters, setFilteredCenters] = useState([]);
   const [showCenterDropdown, setShowCenterDropdown] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+  
 
   useEffect(() => {
     const fetchCenters = async () => {
@@ -409,6 +415,29 @@ const AddEmployeeForm = () => {
                   </Select>
                 </FormControl>
               </div>
+              <TextField
+                label="Password"
+                type={showPassword ? "text" : "password"}
+                variant="outlined"
+                className="flex-1"
+                value={formData.password}
+                onChange={(e) => handleInputChange("password", e.target.value)}
+                required
+                fullWidth
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={() => setShowPassword(!showPassword)}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
 
               {/* Conditional Center dropdown with filtered centers */}
               {showCenterDropdown && (

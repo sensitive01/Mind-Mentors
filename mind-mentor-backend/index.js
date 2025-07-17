@@ -21,23 +21,23 @@ const bbbClassRouting = require("./routes/bbbClassRouting/bbbClassLinks");
 const bbbClassRoutingNew = require("./routes/bbbClassRouting/bbMMClassLink");
 const hostingerRoutingClass = require("./routes/bbbClassRouting/hostingerBB");
 
-
+// ✅ Import socket setup function
 const { initSocket } = require("./utils/socket");
 
 const PORT = 3000;
 const app = express();
-const server = http.createServer(app); // HTTP Server for WebSocket
+const server = http.createServer(app); // Create HTTP server for Socket.IO
 
 app.set("trust proxy", true);
 
-// DATABASE CONNECTION
+// ✅ Connect to DB
 dbConnect();
 
-// Middleware
+// ✅ Middleware
 app.use(cookieParser());
 app.use(express.json());
 
-// CORS Configuration
+// ✅ CORS
 const allowedOrigins = [
   "http://localhost:5173",
   "https://mind-mentors.vercel.app",
@@ -64,25 +64,16 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+// ✅ Generate Zoom Signature
 function generateSignature(apiKey, apiSecret, meetingNumber, role) {
   const timestamp = new Date().getTime() - 30000;
-  const msg = Buffer.from(apiKey + meetingNumber + timestamp + role).toString(
-    "base64"
-  );
-  const hash = crypto
-    .createHmac("sha256", apiSecret)
-    .update(msg)
-    .digest("base64");
-  const signature = Buffer.from(
-    `${apiKey}.${meetingNumber}.${timestamp}.${role}.${hash}`
-  ).toString("base64");
-
+  const msg = Buffer.from(apiKey + meetingNumber + timestamp + role).toString("base64");
+  const hash = crypto.createHmac("sha256", apiSecret).update(msg).digest("base64");
+  const signature = Buffer.from(`${apiKey}.${meetingNumber}.${timestamp}.${role}.${hash}`).toString("base64");
   return signature;
 }
 
-app.disable("x-powered-by");
-
-// ✅ Register Routes
+// ✅ Routes
 app.use("/parent", parentRoute);
 app.use("/employee/operation", operationRoute);
 app.use("/kid", kidRoute);
@@ -94,21 +85,22 @@ app.use("/join", joinRoute);
 app.use("/zoom/api", zoomRoute);
 app.use("/api/meeting", bbRoutes);
 app.use("/sample/meeting", bbRouteSample);
-app.use("/api/class", bbbClassRouting);//do
-app.use("/api/class-new", bbbClassRoutingNew);//aws
-app.use("/api/new-class", hostingerRoutingClass); //hostinger
+app.use("/api/class", bbbClassRouting); // DO
+app.use("/api/class-new", bbbClassRoutingNew); // AWS
+app.use("/api/new-class", hostingerRoutingClass); // Hostinger
 
-
+// ✅ Serve frontend build
 app.use(express.static(path.join(__dirname, "dist")));
 
-// Handle SPA (Single Page Application) fallback
+// ✅ Fallback for React SPA
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
 
-// ✅ Initialize WebRTC Signaling (Socket.IO)
+// ✅ Initialize Socket.IO
 initSocket(server);
 
+// ✅ Start Server
 server.listen(PORT, () => {
   console.log(`✅ Server is running at http://localhost:${PORT}`);
 });
