@@ -1,4 +1,4 @@
-import SupportTable from "../../../department-components/servicedelivery/components/SupportTable";
+import SupportTable from "../../../department-components/common-components/support/ParentTicketList";
 import Sidebar from "../../../department-components/servicedelivery/Layout/Sidebar";
 import Topbar from './../../../component/parent-component/parent-dashboard/layout/Topbar';
 

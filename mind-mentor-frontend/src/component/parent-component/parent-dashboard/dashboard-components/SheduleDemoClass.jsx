@@ -10,11 +10,15 @@ import {
   ChevronDown,
   Monitor,
   Building,
+  Edit,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getDemoSheduleClass } from "../../../../api/service/employee/EmployeeService";
 import { toast, ToastContainer } from "react-toastify";
-import { parentBookDemoClassinProfile } from "../../../../api/service/parent/ParentService";
+import {
+  getKidExistProgramData,
+  parentBookDemoClassinProfile,
+} from "../../../../api/service/parent/ParentService";
 
 const SheduleDemoClass = () => {
   const { id } = useParams();
@@ -30,11 +34,12 @@ const SheduleDemoClass = () => {
   const [selectedCenterSlot, setSelectedCenterSlot] = useState(null);
   const [availablePrograms, setAvailablePrograms] = useState([]);
   const [availableLevels, setAvailableLevels] = useState([]);
+  const [existingProgram, setExistingProgram] = useState(null);
+  const [isEditingProgram, setIsEditingProgram] = useState(false);
   const navigate = useNavigate();
 
   // Function to get next occurrences of a specific day - MODIFIED to return only 1 date
   const getNextDates = (dayName, count = 1) => {
-    // Changed default from 3 to 1
     const days = [
       "Sunday",
       "Monday",
@@ -100,6 +105,26 @@ const SheduleDemoClass = () => {
     fetchDemoClass();
   }, []);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await getKidExistProgramData(id);
+        if (response.data?.programData?.length > 0) {
+          const programData = response.data.programData[0];
+          setExistingProgram(programData);
+          setFormData((prev) => ({
+            ...prev,
+            program: programData.program,
+            programLevel: programData.level,
+          }));
+        }
+      } catch (error) {
+        console.error("Error fetching kid's program data:", error);
+      }
+    };
+    fetchData();
+  }, [id]);
+
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setSelectedSlot(null);
@@ -123,6 +148,15 @@ const SheduleDemoClass = () => {
         setFormData((prev) => ({ ...prev, programLevel: "" }));
       }
     }
+  };
+
+  const handleEditProgram = () => {
+    setIsEditingProgram(true);
+    setFormData((prev) => ({
+      ...prev,
+      program: "",
+      programLevel: "",
+    }));
   };
 
   const getMatchingSlots = () => {
@@ -298,50 +332,92 @@ const SheduleDemoClass = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="flex items-center text-sm font-medium text-gray-700">
-                  <Book className="w-4 h-4 mr-2" />
-                  Select Program
-                </label>
-                <select
-                  value={formData.program}
-                  onChange={(e) => handleInputChange("program", e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white shadow-sm"
-                  required
-                >
-                  <option value="">Choose a program</option>
-                  {availablePrograms.map((program) => (
-                    <option key={program} value={program}>
-                      {program}
-                    </option>
-                  ))}
-                </select>
+            {existingProgram && !isEditingProgram ? (
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="font-medium text-blue-800">
+                      Current Program
+                    </h3>
+                    <div className="mt-2 grid grid-cols-2 gap-4">
+                      <div className="bg-white p-3 rounded-lg shadow-sm">
+                        <div className="flex items-center">
+                          <Book className="w-4 h-4 mr-2 text-blue-600" />
+                          <span className="font-medium">Program:</span>
+                        </div>
+                        <div className="mt-1 text-gray-800">
+                          {existingProgram.program}
+                        </div>
+                      </div>
+                      <div className="bg-white p-3 rounded-lg shadow-sm">
+                        <div className="flex items-center">
+                          <ChevronRight className="w-4 h-4 mr-2 text-blue-600" />
+                          <span className="font-medium">Level:</span>
+                        </div>
+                        <div className="mt-1 text-gray-800">
+                          {existingProgram.level}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleEditProgram}
+                    className="flex items-center text-sm text-blue-700 hover:text-blue-900 font-medium"
+                  >
+                    <Edit className="w-4 h-4 mr-1" />
+                    Change Program
+                  </button>
+                </div>
               </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="flex items-center text-sm font-medium text-gray-700">
+                    <Book className="w-4 h-4 mr-2" />
+                    Select Program
+                  </label>
+                  <select
+                    value={formData.program}
+                    onChange={(e) =>
+                      handleInputChange("program", e.target.value)
+                    }
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white shadow-sm"
+                    required
+                  >
+                    <option value="">Choose a program</option>
+                    {availablePrograms.map((program) => (
+                      <option key={program} value={program}>
+                        {program}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              <div className="space-y-2">
-                <label className="flex items-center text-sm font-medium text-gray-700">
-                  <ChevronRight className="w-4 h-4 mr-2" />
-                  Select Level
-                </label>
-                <select
-                  value={formData.programLevel}
-                  onChange={(e) =>
-                    handleInputChange("programLevel", e.target.value)
-                  }
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white shadow-sm"
-                  required
-                  disabled={!formData.program}
-                >
-                  <option value="">Choose a level</option>
-                  {availableLevels.map((level) => (
-                    <option key={level} value={level}>
-                      {level}
-                    </option>
-                  ))}
-                </select>
+                <div className="space-y-2">
+                  <label className="flex items-center text-sm font-medium text-gray-700">
+                    <ChevronRight className="w-4 h-4 mr-2" />
+                    Select Level
+                  </label>
+                  <select
+                    value={formData.programLevel}
+                    onChange={(e) =>
+                      handleInputChange("programLevel", e.target.value)
+                    }
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white shadow-sm"
+                    required
+                    disabled={!formData.program}
+                  >
+                    <option value="">Choose a level</option>
+                    {availableLevels.map((level) => (
+                      <option key={level} value={level}>
+                        {level}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
-            </div>
+            )}
 
             {formData.program && formData.programLevel && (
               <div className="space-y-6">

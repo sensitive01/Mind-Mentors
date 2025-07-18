@@ -1,11 +1,6 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useState } from "react";
-import {
-  Box,
-  Grid,
-  Typography,
-
-} from "@mui/material";
+import { Box, Grid, Typography } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import { Trash2, Plus } from "lucide-react";
 import { updateEnquiry } from "../../../../api/service/employee/EmployeeService";
@@ -57,7 +52,7 @@ const SectionTitle = ({ children }) => (
 
 const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
   const navigate = useNavigate();
-  const department = localStorage.getItem("department")
+  const department = localStorage.getItem("department");
 
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [formData, setFormData] = useState(data);
@@ -104,17 +99,14 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
               <Grid item xs={12} md={3}>
                 <DetailCard
                   title="WHATSAPP NUMBER"
-                  value={formatWhatsAppNumber(data.whatsappNumber)}
+                  value={formatWhatsAppNumber(data?.whatsappNumber)}
                 />
               </Grid>
               <Grid item xs={12} md={3}>
                 <DetailCard
                   title="CONTACT NUMBER"
-                  value={formatWhatsAppNumber(data.contactNumber)}
+                  value={formatWhatsAppNumber(data?.contactNumber||data?.whatsappNumber)}
                 />
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <DetailCard title="ADDRESS" value={data.address} />
               </Grid>
             </Grid>
           </Grid>
@@ -132,11 +124,9 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
               <Grid item xs={12} md={3}>
                 <DetailCard title="GENDER" value={data.kidsGender} />
               </Grid>
+
               <Grid item xs={12} md={3}>
-                <DetailCard title="SCHOOL NAME" value={data.schoolName} />
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <DetailCard title="SCHOOL PINCODE" value={data.schoolPincode} />
+                <DetailCard title="PINCODE" value={data.pincode} />
               </Grid>
             </Grid>
           </Grid>
@@ -183,7 +173,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
               <Grid item xs={12} md={3}>
                 <DetailCard title="ENQUIRY FIELD" value={data.enquiryField} />
               </Grid>
-              {data.enquiryStatus === "Active" &&!data.classAssigned&& (
+              {data.enquiryStatus === "Active" && !data.classAssigned && (
                 <Grid item xs={12} md={3} style={{ overflow: "visible" }}>
                   <DetailCard
                     title={"ASSIGN CLASS"}
@@ -204,7 +194,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                   />
                 </Grid>
               )}
-                {data.enquiryStatus === "Active" &&data.classAssigned&& (
+              {data.enquiryStatus === "Active" && data.classAssigned && (
                 <Grid item xs={12} md={3} style={{ overflow: "visible" }}>
                   <DetailCard
                     title={"VIEW ASSIGNED CLASS"}

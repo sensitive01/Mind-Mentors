@@ -7,17 +7,18 @@ import {
   Clock,
   X,
   ChevronDown,
+  Star,
 } from "lucide-react";
 import avatar from "../../../../images/accountInage.webp";
 import {
   createTiketForParent,
   getKidBelongsToData,
   getTicketsofParents,
+  submitEndChat,
   updateTicketChats,
 } from "../../../../api/service/parent/ParentService";
 import axios from "axios";
 import io from "socket.io-client";
-import { DataArrayOutlined } from "@mui/icons-material";
 
 const socket = io("https://live.mindmentorz.in", {
   transports: ["websocket"],
@@ -43,6 +44,10 @@ const Support = () => {
   const [selectedKid, setSelectedKid] = useState(null);
   const [showKidDropdown, setShowKidDropdown] = useState(false);
   const [lastSeen, setLastSeen] = useState(null);
+  const [showEndChatModal, setShowEndChatModal] = useState(false);
+  const [endChatRemark, setEndChatRemark] = useState("");
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
 
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
@@ -58,13 +63,13 @@ const Support = () => {
     socket.emit("joinRoom", { userId: parentId });
 
     const handleReceiveMessage = (data) => {
-      // if (selectedTicket && data.ticketId === selectedTicket._id) {
-      //   setMessages((prev) => [...prev, data]);
-      //   socket.emit("markAsSeen", {
-      //     ticketId: selectedTicket._id,
-      //     parentId,
-      //   });
-      // }
+      if (selectedTicket && data.ticketId === selectedTicket._id) {
+        setMessages((prev) => [...prev, data]);
+        socket.emit("markAsSeen", {
+          ticketId: selectedTicket._id,
+          parentId,
+        });
+      }
 
       setTickets((prevTickets) =>
         prevTickets.map((ticket) =>
@@ -156,7 +161,7 @@ const Support = () => {
     socket.emit("typing", {
       ticketId: selectedTicket._id,
       isTyping: true,
-      userName: "You",
+      userName: "Parent",
       parentId,
     });
 
@@ -168,7 +173,7 @@ const Support = () => {
       socket.emit("typing", {
         ticketId: selectedTicket._id,
         isTyping: false,
-        userName: "You",
+        userName: "Parent",
         userId: parentId,
       });
     }, 1500);
@@ -209,7 +214,7 @@ const Support = () => {
       createdAt: new Date().toISOString(),
     };
 
-    setMessages((prev) => [...prev, tempMessage]);
+    // setMessages((prev) => [...prev, tempMessage]);
     setNewMessage("");
 
     try {
@@ -265,11 +270,7 @@ const Support = () => {
   };
 
   const handleNewTicketSubmit = async () => {
-    if (
-      !newTicketTopic.trim() ||
-      !newTicketDescription.trim() ||
-      !selectedKid
-    ) {
+    if (!newTicketTopic.trim() || !newTicketDescription.trim()) {
       alert("Please fill all fields and select a kid");
       return;
     }
@@ -277,8 +278,8 @@ const Support = () => {
     const ticketData = {
       topic: newTicketTopic.trim(),
       description: newTicketDescription.trim(),
-      kidId: selectedKid.kidId,
-      kidName: selectedKid.kidName,
+      kidId: selectedKid?.kidId || "NA",
+      kidName: selectedKid?.kidName || "NA",
       parentId: parentId,
       status: "open",
       priority: "medium",
@@ -303,13 +304,45 @@ const Support = () => {
     }
   };
 
+  const handleEndChat = async () => {
+    if (!endChatRemark || rating === 0) {
+      alert("Please provide a remark and rating");
+      return;
+    }
+
+    try {
+      const response = await submitEndChat(
+        selectedTicket._id,
+        endChatRemark,
+        rating
+      );
+      // For now, we'll just update the local state
+      setTickets((prevTickets) =>
+        prevTickets.map((ticket) =>
+          ticket._id === selectedTicket._id
+            ? { ...ticket, status: "Resolved" }
+            : ticket
+        )
+      );
+
+      setSelectedTicket((prev) => ({ ...prev, status: "Resolved" }));
+      setShowEndChatModal(false);
+      setEndChatRemark("");
+      setRating(0);
+      alert("Ticket has been closed successfully");
+    } catch (error) {
+      console.error("Error closing ticket:", error);
+      alert("Failed to close ticket. Please try again.");
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case "open":
         return "text-yellow-600 bg-yellow-50 border-yellow-200";
       case "in-progress":
         return "text-purple-600 bg-purple-50 border-purple-200";
-      case "resolved":
+      case "Resolved":
         return "text-green-600 bg-green-50 border-green-200";
       default:
         return "text-gray-600 bg-gray-50 border-gray-200";
@@ -409,7 +442,7 @@ const Support = () => {
                     </button>
                     <button
                       onClick={() => {
-                        setActiveFilter("resolved");
+                        setActiveFilter("Resolved");
                         setShowFilterOptions(false);
                       }}
                       className="w-full px-4 py-2 text-left hover:bg-gray-100"
@@ -433,6 +466,15 @@ const Support = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
+
+          {/* New Ticket Button - Moved to left sidebar */}
+          <button
+            onClick={() => setIsNewTicketModalOpen(true)}
+            className="w-full mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary transition-colors duration-200 flex items-center justify-center space-x-2"
+          >
+            <Plus size={16} className="rounded-full bg-white text-primary" />
+            <span>Raise New Ticket</span>
+          </button>
         </div>
 
         {/* Tickets List */}
@@ -505,15 +547,6 @@ const Support = () => {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col bg-gray-50">
-        {/* New Ticket Button */}
-        <button
-          onClick={() => setIsNewTicketModalOpen(true)}
-          className="absolute top-4 right-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary transition-colors duration-200 flex items-center space-x-2"
-        >
-          <Plus size={16} className="rounded-full bg-white text-primary" />
-          <span>Raise New Ticket</span>
-        </button>
-
         {selectedTicket ? (
           <div className="flex-1 flex flex-col h-full">
             {/* Ticket Header */}
@@ -540,12 +573,22 @@ const Support = () => {
                     )}
                   </p>
                 </div>
-                <div
-                  className={`text-xs px-2 py-1 rounded-full border ${getStatusColor(
-                    selectedTicket.status
-                  )}`}
-                >
-                  {selectedTicket.status}
+                <div className="flex items-center space-x-4">
+                  <div
+                    className={`text-xs px-2 py-1 rounded-full border ${getStatusColor(
+                      selectedTicket.status
+                    )}`}
+                  >
+                    {selectedTicket.status}
+                  </div>
+                  {selectedTicket.status !== "Resolved" && (
+                    <button
+                      onClick={() => setShowEndChatModal(true)}
+                      className="px-3 py-1 text-sm bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors duration-200"
+                    >
+                      End Chat
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -632,14 +675,6 @@ const Support = () => {
                           >
                             {message.time || formatTime(message.createdAt)}
                           </p>
-                          {/* {isCurrentUser(message.senderId) && (
-                            <span className="text-xs ml-2">
-                              {getMessageStatus(message) === "delivered" &&
-                                "✓✓"}
-                              {getMessageStatus(message) === "pending" && "..."}
-                              {getMessageStatus(message) === "failed" && "✗"}
-                            </span>
-                          )} */}
                         </div>
                       </div>
                     </div>
@@ -670,7 +705,7 @@ const Support = () => {
 
             {/* Message Input Area */}
             <div className="p-4 bg-white border-t">
-              {selectedTicket.status === "resolved" ? (
+              {selectedTicket.status === "Resolved" ? (
                 <div className="text-center py-3 bg-gray-50 rounded-lg text-gray-500">
                   This ticket has been resolved and is closed for new messages
                 </div>
@@ -815,14 +850,97 @@ const Support = () => {
               <button
                 onClick={handleNewTicketSubmit}
                 disabled={
-                  !newTicketTopic.trim() ||
-                  !newTicketDescription.trim() ||
-                  !selectedKid ||
-                  kidsData.length === 0
+                  !newTicketTopic.trim() || !newTicketDescription.trim()
                 }
                 className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Create Ticket
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* End Chat Modal */}
+      {showEndChatModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex justify-between items-center p-6 border-b">
+              <h3 className="text-xl font-semibold text-primary">
+                End Chat and Rate Support
+              </h3>
+              <button
+                onClick={() => {
+                  setShowEndChatModal(false);
+                  setEndChatRemark("");
+                  setRating(0);
+                }}
+                className="text-gray-400 hover:text-gray-500 transition-colors duration-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Rate your experience (1-5 stars)
+                </label>
+                <div className="flex items-center">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setRating(star)}
+                      onMouseEnter={() => setHoverRating(star)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      className="focus:outline-none"
+                    >
+                      <Star
+                        className={`w-8 h-8 ${
+                          (hoverRating || rating) >= star
+                            ? "text-yellow-400 fill-yellow-400"
+                            : "text-gray-300"
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Remarks (optional)
+                </label>
+                <textarea
+                  value={endChatRemark}
+                  onChange={(e) => setEndChatRemark(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-lg h-24 resize-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  placeholder="Any feedback about your support experience..."
+                />
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex justify-end gap-3 p-6 bg-gray-50 border-t">
+              <button
+                onClick={() => {
+                  setShowEndChatModal(false);
+                  setEndChatRemark("");
+                  setRating(0);
+                }}
+                className="px-4 py-2 text-gray-700 bg-white border rounded-lg hover:bg-gray-50 transition-colors duration-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEndChat}
+                disabled={rating === 0}
+                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Submit & End Chat
               </button>
             </div>
           </div>

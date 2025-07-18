@@ -38,6 +38,7 @@ const operationDeptSchema = new mongoose.Schema(
     programs: {
       type: [ProgramSchema],
     },
+    isEnquiryNew:{type:Boolean,default:true},
 
     schoolName: { type: String },
     address: { type: String },

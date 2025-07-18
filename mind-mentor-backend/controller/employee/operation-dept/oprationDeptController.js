@@ -3675,7 +3675,7 @@ const updatePaymentData = async (req, res) => {
     // Update statuses
     await Promise.all([
       parentSchema.findByIdAndUpdate(parentData.parentId, {
-        $set: { status: "Active" },
+        $set: { status: "Active",isParentNew:false },
       }),
       kidSchema.findByIdAndUpdate(kidId, { $set: { status: "Active" } }),
       OperationDept.findByIdAndUpdate(enqId, {

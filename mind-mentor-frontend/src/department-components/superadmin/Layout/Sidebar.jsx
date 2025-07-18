@@ -595,7 +595,7 @@ const ModernSidebar = () => {
           height: "calc(100vh - 64px)", // Adjusted to account for the header height
           overflow: "auto",
           "&::-webkit-scrollbar": {
-            width: "3px",
+            display: "none",
           },
           "&::-webkit-scrollbar-track": {
             background: "transparent",

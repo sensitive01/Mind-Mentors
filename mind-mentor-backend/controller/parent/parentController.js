@@ -702,11 +702,20 @@ const getParentData = async (req, res) => {
 const editParentData = async (req, res) => {
   try {
     const { parentId } = req.params;
-    const updateData = req.body;
+    const { parentData } = req.body;
 
+    console.log("Update Data:", parentData);
+    console.log("parentId", parentId);
+
+    // Step 1: Update Parent model
     const updatedParent = await parentModel.findByIdAndUpdate(
       parentId,
-      updateData,
+      {
+        parentName: parentData.parentName,
+        parentEmail: parentData.parentEmail,
+        parentMobile: parentData.parentMobile,
+        parentPin: parentData.parentPin,
+      },
       {
         new: true,
         runValidators: true,
@@ -717,8 +726,24 @@ const editParentData = async (req, res) => {
       return res.status(404).json({ message: "Parent not found" });
     }
 
+    // Step 2: Update OperationDept where contactNumber or whatsappNumber matches the parent's mobile
+    await operationDeptModel.updateMany(
+      {
+        $or: [
+          { contactNumber: parentData.parentMobile },
+          { whatsappNumber: parentData.parentMobile },
+        ],
+      },
+      {
+        $set: {
+          parentFirstName: parentData.parentName,
+          email: parentData.parentEmail,
+        },
+      }
+    );
+
     return res.status(200).json({
-      message: "Parent data updated successfully",
+      message: "Parent and Operation Department data updated successfully",
       data: updatedParent,
     });
   } catch (err) {
@@ -1408,7 +1433,7 @@ const savePaymentData = async (req, res) => {
 
     console.log("paymentData", paymentData);
     await Promise.all([
-      parentModel.findByIdAndUpdate(parentId, { $set: { status: "Active" } }),
+      parentModel.findByIdAndUpdate(parentId, { $set: { status: "Active",isParentNew:false } }),
       kidModel.findByIdAndUpdate(paymentData.kidId, {
         $set: { status: "Active" },
       }),
@@ -1780,7 +1805,7 @@ const getTheKidEnqId = async (req, res) => {
 
     const kidData = await operationDeptModel.findOne(
       { kidId: kidId },
-      { kidFirstName: 1 }
+      { kidFirstName: 1, programs: 1 }
     );
 
     console.log("Kid data", kidData);
@@ -2274,6 +2299,18 @@ const createTicketForParent = async (req, res) => {
       priority = "medium",
     } = ticketData;
 
+    const parentExist = await parentModel.findOne(
+      { _id: parentId },
+      { isParentNew: 1 }
+    );
+    let tiketAssignedToDepartment;
+    const { isParentNew } = parentExist;
+    if (isParentNew) {
+      tiketAssignedToDepartment="operation";
+    } else {
+     tiketAssignedToDepartment ="service-delivery";
+    }
+
     const count = await supportTiket.countDocuments();
     const ticketId = `MMTKT${(count + 1).toString().padStart(7, "0")}`;
 
@@ -2287,6 +2324,7 @@ const createTicketForParent = async (req, res) => {
       parentId,
       status,
       priority,
+      tiketAssignedToDepartment,
       messages: [],
     });
 
@@ -2503,19 +2541,83 @@ const saveProgramAndLevel = async (req, res) => {
       }
     );
 
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "Program and level updated in both models.",
-      });
+    res.status(200).json({
+      success: true,
+      message: "Program and level updated in both models.",
+    });
   } catch (err) {
     console.error("Error saving program and level:", err);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
+const endSelectedChat = async (req, res) => {
+  try {
+    const { ticketId } = req.params;
+    console.log("ticketId", ticketId);
+    const { chatRemarks, chatRating } = req.body;
+
+    console.log("Remarks:", chatRemarks, "Rating:", chatRating);
+
+    const updatedTicket = await supportTiket.findOneAndUpdate(
+      { _id: ticketId },
+      {
+        $set: {
+          chatRemarks: chatRemarks,
+          chatRating: chatRating,
+          status: "Resolved",
+        },
+      },
+      { new: true }
+    );
+
+    if (!updatedTicket) {
+      return res.status(404).json({ message: "Ticket not found" });
+    }
+
+    return res.status(200).json({
+      message: "Chat ended and feedback saved successfully",
+      ticket: updatedTicket,
+    });
+  } catch (err) {
+    console.error("Error in ending the selected chat:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const getKidExistProgramData = async (req, res) => {
+  try {
+    const { kidId } = req.params;
+
+    const kidData = await operationDeptModel.findOne(
+      { kidId: kidId },
+      { programs: 1 }
+    );
+
+    if (!kidData || !kidData.programs || kidData.programs.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No programs found for this kid" });
+    }
+
+    // Extract _id, program and level
+    const programData = kidData.programs.map((p) => ({
+      id: p._id,
+      kidId,
+      program: p.program,
+      level: p.level,
+    }));
+
+    res.status(200).json({ programData });
+  } catch (err) {
+    console.error("Error in getting the kid's existing program data", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 module.exports = {
+  getKidExistProgramData,
+  endSelectedChat,
   saveProgramAndLevel,
   getMyselectedPackageData,
   getMyReferalData,

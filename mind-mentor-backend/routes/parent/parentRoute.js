@@ -25,6 +25,8 @@ parentRoute.get("/get-kid-belong-to-data-support/:parentId",parentController.get
 parentRoute.get("/get-all-ticket-of-parent/:parentId",parentController.getAllTicketOfParent)
 parentRoute.get("/get-my-referal-data/:referalId",parentController.getMyReferalData)
 parentRoute.get("/get-my-selected-package-data/:parentId/:kidId",parentController.getMyselectedPackageData)
+parentRoute.get("/get-kid-exist-program-data/:kidId",parentController.getKidExistProgramData)
+
 
 
 
@@ -66,6 +68,8 @@ parentRoute.post("/save-program-level/:kidId",parentController.saveProgramAndLev
 
 
 
+
+parentRoute.put("/end-selected-chat/:ticketId",parentController.endSelectedChat)
 parentRoute.put("/update-kid-availability/:availId",parentController.updateKidAvailability)
 parentRoute.put("/update-kid-availability-status/:availId",parentController.updateKidAvailabilityStatus)
 parentRoute.put("/parent-book-demo-class-in-profile/:kidId",parentController.parentBookDemoClassInProfile)
@@ -94,7 +98,7 @@ parentRoute.get("/get-child-data-profile-management/:kidId",parentController.get
 parentRoute.post("/edit-child-data-profile-management/:kidId",parentController.editKidData)
 
 parentRoute.get("/get-parent-data-profile-management/:parentId",parentController.getParentData)
-parentRoute.post("/edit-parent-data-profile-management/:parentId",parentController.editParentData)
+parentRoute.put("/edit-parent-data-profile-management/:parentId",parentController.editParentData)
 
 
 

@@ -1512,33 +1512,33 @@ const getAllParentData = async (req, res) => {
     }
 
     // Extract all kidIds
-    const allKidIds = parentData.flatMap(parent =>
-      parent.kids.map(kid => kid.kidId)
+    const allKidIds = parentData.flatMap((parent) =>
+      parent.kids.map((kid) => kid.kidId)
     );
 
     // Get all enrollment data for the collected kidIds
     const allEnrollments = await enquiryData.find({
-      kidId: { $in: allKidIds }
+      kidId: { $in: allKidIds },
     });
 
     // Convert enrollment array into a map for quick access
     const enrollmentMap = {};
-    allEnrollments.forEach(enrollment => {
+    allEnrollments.forEach((enrollment) => {
       enrollmentMap[enrollment.kidId] = enrollment;
     });
 
     // Attach corresponding enrollment to each kid inside parent.kids
-    const enrichedParentData = parentData.map(parent => {
-      const updatedKids = parent.kids.map(kid => {
+    const enrichedParentData = parentData.map((parent) => {
+      const updatedKids = parent.kids.map((kid) => {
         return {
           ...kid._doc,
-          enrollment: enrollmentMap[kid.kidId] || null
+          enrollment: enrollmentMap[kid.kidId] || null,
         };
       });
 
       return {
         ...parent._doc,
-        kids: updatedKids
+        kids: updatedKids,
       };
     });
 
@@ -1547,13 +1547,11 @@ const getAllParentData = async (req, res) => {
       message: "Parent data retrieved successfully with enrollment info",
       parentData: enrichedParentData,
     });
-
   } catch (err) {
     console.error("Error in getting the parent data", err);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
-
 
 function toTitleCase(str) {
   if (typeof str !== "string") return "";
@@ -1821,7 +1819,7 @@ const updateEmployeeData = async (req, res) => {
         centerId: formData.centerId,
         mode: formData.mode || [],
         status: formData.status || "Active",
-        password:formData.password
+        password: formData.password,
       },
       { new: true }
     );
@@ -3092,6 +3090,7 @@ const updatePaymentDetails = async (req, res) => {
     const { data } = req.body;
     console.log("data", data);
 
+    // Step 1: Get kidId and enqId from payment data
     const newData = await packagePaymentData.findOne(
       { paymentId: data.paymentId },
       { kidId: 1, enqId: 1 }
@@ -3103,6 +3102,13 @@ const updatePaymentDetails = async (req, res) => {
         .json({ message: "No data found with given paymentId" });
     }
 
+    // Step 2: Get contact/whatsapp number from enquiryData
+    const enqData = await enquiryData.findOne(
+      { _id: newData.enqId },
+      { contactNumber: 1, whatsappNumber: 1 }
+    );
+
+    // Step 3: Update payment data
     const updatedPackage = await packagePaymentData.findOneAndUpdate(
       { paymentId: data.paymentId },
       {
@@ -3115,6 +3121,13 @@ const updatePaymentDetails = async (req, res) => {
       { new: true }
     );
 
+    if (!updatedPackage) {
+      return res
+        .status(404)
+        .json({ message: "Package not found with given paymentId" });
+    }
+
+    // Step 4: If payment is successful, update kid, enquiry, and parent data
     if (data.status === "Success") {
       await kidSchema.findOneAndUpdate(
         { _id: newData.kidId },
@@ -3123,14 +3136,28 @@ const updatePaymentDetails = async (req, res) => {
 
       await enquiryData.findOneAndUpdate(
         { _id: newData.enqId },
-        { $set: { enquiryStatus: "Active", paymentStatus: "Success" } }
+        {
+          $set: {
+            enquiryStatus: "Active",
+            paymentStatus: "Success",
+          },
+        }
       );
-    }
 
-    if (!updatedPackage) {
-      return res
-        .status(404)
-        .json({ message: "Package not found with given paymentId" });
+      // Step 5: Update parentModel using either contactNumber or whatsappNumber
+      const parentQuery = {
+        $or: [
+          { parentMobile: enqData.contactNumber },
+          { parentMobile: enqData.whatsappNumber },
+        ],
+      };
+
+      await parentModel.findOneAndUpdate(parentQuery, {
+        $set: {
+          status: "Active",
+          isParentNew: false,
+        },
+      });
     }
 
     res.status(200).json({
@@ -3215,7 +3242,23 @@ const changeThePassword = async (req, res) => {
 
 const getParentTicketsData = async (req, res) => {
   try {
-    const ticketsData = await parentTicket.find().sort({ createdAt: -1 });
+    const { empId } = req.params;
+    const empData = await Employee.findOne(
+      { _id: empId },
+      { department: 1, firstName: 1 }
+    );
+    let ticketsData;
+    if (empData.department === "operation") {
+      ticketsData = await parentTicket
+        .find({ tiketAssignedToDepartment: "operation" })
+        .sort({ createdAt: -1 });
+    } else if (empData.department === "service-delivery") {
+      ticketsData = await parentTicket
+        .find({ tiketAssignedToDepartment: "service-delivery" })
+        .sort({ createdAt: -1 });
+    } else {
+      ticketsData = await parentTicket.find().sort({ createdAt: -1 });
+    }
 
     return res.status(200).json({
       success: true,
@@ -3278,7 +3321,35 @@ const reponseToTicket = async (req, res) => {
   }
 };
 
+const updateTicketPriority = async (req, res) => {
+  try {
+    const { ticketId } = req.params;
+    const { priorityStatus } = req.body;
+
+    console.log("Updating priority:", ticketId, priorityStatus);
+
+    const updatedTicket = await parentTicket.findOneAndUpdate(
+      { _id: ticketId },
+      { $set: { priority: priorityStatus } },
+      { new: true }
+    );
+
+    if (!updatedTicket) {
+      return res.status(404).json({ message: "Ticket not found" });
+    }
+
+    return res.status(200).json({
+      message: "Ticket priority updated successfully",
+      ticket: updatedTicket,
+    });
+  } catch (err) {
+    console.error("Error updating ticket priority:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 module.exports = {
+  updateTicketPriority,
   reponseToTicket,
   getParentTicketsData,
   changeThePassword,

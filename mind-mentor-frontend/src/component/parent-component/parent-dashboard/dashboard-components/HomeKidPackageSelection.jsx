@@ -74,62 +74,14 @@ const HomeKidPackageSelection = () => {
     return timeSlot;
   };
 
-  // Fetch initial data including kids, packages, and programs
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      setIsLoading(true);
-      try {
-        // Fetch kids data
-        const kidsResponse = await getMyKidData(parentId);
-        if (kidsResponse.data.success && kidsResponse.data.kidData.length > 0) {
-          setKidsList(kidsResponse.data.kidData);
-
-          // Auto-select if only one kid
-          if (kidsResponse.data.kidData.length === 1) {
-            handleKidSelect(kidsResponse.data.kidData[0]._id);
-          }
-        }
-
-        // Fetch package details
-        const packageResponse = await fetchParentPackageDetails();
-        if (packageResponse.status === 200) {
-          const packageData = packageResponse?.data?.data;
-          setPackages({
-            online: packageData.onlinePackageData || [],
-            offline: packageData.offlineClassPackageData || [],
-            hybrid: packageData.hybridClassPackageData || [],
-            kit: packageData.kitPrice || [],
-          });
-
-          if (packageData.kitPrice && packageData.kitPrice.length > 0) {
-            setKitItemsList(packageData.kitPrice);
-          }
-        }
-
-        // Fetch all programs data
-        const programsResponse = await getAllProgrameData();
-        if (programsResponse.status === 200) {
-          setAllPrograms(programsResponse.data.programs);
-        }
-      } catch (error) {
-        console.error("Error fetching initial data:", error);
-        toast.error("Failed to load initial data");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchInitialData();
-  }, [parentId]);
-
-  // Handle kid selection
-  const handleKidSelect = async (kidId) => {
+  // New function that accepts kids data as parameter
+  const handleKidSelectWithData = async (kidId, kidsData = kidsList) => {
     setIsLoading(true);
     setSelectedKid(kidId);
 
     try {
-      // Find the selected kid from kidsList
-      const selectedKidData = kidsList.find((kid) => kid._id === kidId);
+      // Find the selected kid from the provided kids data
+      const selectedKidData = kidsData.find((kid) => kid._id === kidId);
 
       if (selectedKidData) {
         // Check if kid has programs
@@ -173,6 +125,61 @@ const HomeKidPackageSelection = () => {
     }
   };
 
+  // Handle kid selection - updated to use the new function
+  const handleKidSelect = async (kidId) => {
+    await handleKidSelectWithData(kidId, kidsList);
+  };
+
+  // Fetch initial data including kids, packages, and programs
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch kids data
+        const kidsResponse = await getMyKidData(parentId);
+        if (kidsResponse.status === 200) {
+          const kidsData = kidsResponse.data.kidData;
+          setKidsList(kidsData);
+
+          // Auto-select if only one kid - FIXED VERSION
+          if (kidsData.length === 1) {
+            // Pass the kids data directly since state hasn't updated yet
+            await handleKidSelectWithData(kidsData[0]._id, kidsData);
+          }
+        }
+
+        // Fetch package details
+        const packageResponse = await fetchParentPackageDetails();
+        if (packageResponse.status === 200) { 
+          const packageData = packageResponse?.data?.data; 
+          setPackages({
+            online: packageData.onlinePackageData || [],
+            offline: packageData.offlineClassPackageData || [],
+            hybrid: packageData.hybridClassPackageData || [],
+            kit: packageData.kitPrice || [],
+          });
+
+          if (packageData.kitPrice && packageData.kitPrice.length > 0) {
+            setKitItemsList(packageData.kitPrice);
+          }
+        }
+
+        // Fetch all programs data
+        const programsResponse = await getAllProgrameData();
+        if (programsResponse.status === 200) {
+          setAllPrograms(programsResponse.data.programs);
+        }
+      } catch (error) {
+        console.error("Error fetching initial data:", error);
+        toast.error("Failed to load initial data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchInitialData();
+  }, [parentId]);
+
   // Handle program selection change
   const handleProgramChange = (e) => {
     const programId = e.target.value;
@@ -183,7 +190,7 @@ const HomeKidPackageSelection = () => {
     if (program) {
       setAvailableLevels(program.programLevel || []);
     }
-    setSelectedLevel(""); // Reset level when program changes
+    setSelectedLevel(""); // Reset level when program changes     
   };
 
   // Handle level selection change
@@ -203,24 +210,33 @@ const HomeKidPackageSelection = () => {
     );
     if (!selectedProgramData) return;
 
+    const newProgramData = {
+      program: selectedProgramData.programName,
+      level: selectedLevel,
+    };
+
     setData((prev) => ({
       ...prev,
-      programs: [
-        {
-          program: selectedProgramData.programName,
-          level: selectedLevel,
-        },
-      ],
+      programs: [newProgramData],
     }));
 
-    const response = await setProgramAndLevel(
-      selectedProgramData.programName,
-      selectedLevel,
-      data.kidId
-    );
+    try {
+      const response = await setProgramAndLevel(
+        selectedProgramData.programName,
+        selectedLevel,
+        data.kidId
+      );
 
-    setShowProgramSelection(false);
-    toast.success("Program selected successfully");
+      if (response.status === 200) {
+        setShowProgramSelection(false);
+        toast.success("Program selected successfully");
+      } else {
+        toast.error("Failed to save program selection");
+      }
+    } catch (error) {
+      console.error("Error saving program selection:", error);
+      toast.error("Failed to save program selection");
+    }
   };
 
   const handlePackageTypeChange = (type) => {
@@ -651,7 +667,6 @@ const HomeKidPackageSelection = () => {
               {kidsList.map((kid) => (
                 <option key={kid._id} value={kid._id}>
                   {kid.kidsName}
-           
                 </option>
               ))}
             </select>
@@ -741,8 +756,8 @@ const HomeKidPackageSelection = () => {
           </div>
         )}
 
-        {/* Only show package selection if a kid is selected and has programs */}
-        {selectedKid && !showProgramSelection ? (
+        {/* Only show package selection if a kid is selected and has programs (not showing program selection) */}
+        {selectedKid && !showProgramSelection && data.programs.length > 0 ? (
           <>
             {/* Step 1: Choose Package Type */}
             <div className="bg-white rounded-lg shadow p-6 mb-6">
@@ -1064,6 +1079,7 @@ const HomeKidPackageSelection = () => {
               </div>
             )}
 
+
             {/* Payment Success */}
             {paymentId && (
               <div className="bg-white rounded-lg shadow p-6 text-center">
@@ -1078,13 +1094,7 @@ const HomeKidPackageSelection = () => {
             )}
           </>
         ) : (
-          <div className="bg-white rounded-lg shadow p-6 text-center">
-            {kidsList.length === 0 ? (
-              <p>No children found for this parent</p>
-            ) : (
-              <p>Please select a child to continue</p>
-            )}
-          </div>
+         <></>
         )}
       </div>
 

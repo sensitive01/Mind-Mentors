@@ -39,6 +39,7 @@ const parentSchema = new mongoose.Schema(
       type: String,
       default: "new",
     },
+    isParentNew: { type: Boolean, default: true },
     payment: [
       {
         enqId: { type: String },

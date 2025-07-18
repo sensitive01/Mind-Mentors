@@ -185,15 +185,13 @@ const getClassShedules = async (req, res) => {
   }
 };
 
-
 const getCenterClassShedules = async (req, res) => {
   try {
     console.log("Welcome to class schedules");
     const { empId } = req.query;
-    const empData = await Employee.findOne({_id:empId},{centerId:1})
+    const empData = await Employee.findOne({ _id: empId }, { centerId: 1 });
 
-    let query = {centerId:empData.centerId};
-
+    let query = { centerId: empData.centerId };
 
     const classData = await ClassSchedule.find(query); // `query` may be empty, which fetches all
 
@@ -211,7 +209,6 @@ const getCenterClassShedules = async (req, res) => {
     });
   }
 };
-
 
 const getCoachData = async (req, res) => {
   try {
@@ -672,7 +669,7 @@ const getActiveKidAndClassData = async (req, res) => {
       enqId: enqId,
       paymentStatus: "Success",
     });
-    console.log("paymentClassData".paymentClassData)
+    console.log("paymentClassData".paymentClassData);
 
     if (!paymentClassData) {
       return res.status(404).json({
@@ -703,8 +700,8 @@ const getActiveKidAndClassData = async (req, res) => {
       centerType: programData?.centerType,
       level: programData?.level,
       program: programData?.program,
-      selectedLevel:paymentClassData?.selectedLevel,
-      selectedProgram:paymentClassData?.selectedProgram
+      selectedLevel: paymentClassData?.selectedLevel,
+      selectedProgram: paymentClassData?.selectedProgram,
     };
 
     // Format dates
@@ -804,7 +801,7 @@ const assignWholeClass = async (req, res) => {
       );
 
       if (inDemoAddedIndex !== -1 && classDoc.isDemoAdded) {
-        console.log("removing the kid in demo ")
+        console.log("removing the kid in demo ");
         classDoc.demoAssignedKid.splice(inDemoAddedIndex, 1);
         enqData.scheduleDemo.status = "Conducted";
         await enqData.save();
@@ -911,15 +908,16 @@ const getScheduledClassData = async (req, res) => {
       return res.status(404).json({ message: "Enrollment data not found" });
     }
 
-    console.log("EnqId==>", enqData);
+    const { programs } = enqData;
+    console.log("programs==>", programs);
+    const { program, level } = programs[0];
 
     // Fetch class schedule data
     const classData = await ClassSchedule.find(
-      {},
+      { program: program, level: level },
       { day: 1, classTime: 1, coachName: 1, coachId: 1, type: 1, classDate: 1 }
     );
 
-    console.log("classData", classData);
 
     // Send response to client
     res.status(200).json({
@@ -1012,7 +1010,6 @@ const resumeTheClassBack = async (req, res) => {
   }
 };
 
-
 const getClassStudentData = async (req, res) => {
   try {
     const { classId } = req.params;
@@ -1044,18 +1041,6 @@ const getClassStudentData = async (req, res) => {
     });
   }
 };
-
-
-
-
-
-
-
-
-
-
-
-
 
 module.exports = {
   getClassStudentData,

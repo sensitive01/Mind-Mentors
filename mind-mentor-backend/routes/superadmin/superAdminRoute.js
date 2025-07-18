@@ -87,8 +87,10 @@ userRoute.post('/update-payment-details', userController.updatePaymentDetails);
 userRoute.get('/get-Payment-id/:enqId', userController.getThePaymentId);
 
 
-userRoute.get('/get-parent-tickets-data', userController.getParentTicketsData);
+userRoute.get('/get-parent-tickets-data/:empId', userController.getParentTicketsData);
 userRoute.put("/response-to-ticket/:ticketId", userController.reponseToTicket);
+userRoute.put("/update-ticket-priority/:ticketId", userController.updateTicketPriority);
+
 
 
 

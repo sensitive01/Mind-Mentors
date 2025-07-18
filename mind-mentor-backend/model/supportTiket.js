@@ -11,7 +11,6 @@ const messageSchema = new mongoose.Schema(
     time: {
       type: String,
     },
-
   },
   { _id: false }
 );
@@ -39,7 +38,6 @@ const ticketSchema = new mongoose.Schema(
 
     status: {
       type: String,
-
       default: "open",
     },
     priority: {
@@ -47,7 +45,18 @@ const ticketSchema = new mongoose.Schema(
 
       default: "medium",
     },
+    chatRating: {
+      type: Number,
+    },
+    chatRemarks: {
+      type: String,
+    },
     messages: [messageSchema],
+    tiketTakenByEmpId:{type:String},
+    tiketTakenByEmpName:{type:String},
+    tiketAssignedToDepartment:{type:String},
+    tiketResolvedEmployeeRemarks:{type:String}
+
   },
   { timestamps: true }
 );

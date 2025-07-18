@@ -48,13 +48,9 @@ export const getAllProgrameDataEnquiry = async () => {
   return response;
 };
 
-
-
 // ..........................................Add New Programme.........................................................................
 
 // ..........................................Add Physical Center.........................................................................
-
-
 
 export const savePhysicalCenterData = async (formData) => {
   const response = await userInstance.post(
@@ -80,7 +76,6 @@ export const deletePhysicalCenters = async (centerId) => {
   );
   return response;
 };
-
 
 // ..........................................Add Physical Center.........................................................................
 // ..........................................Add Package Data.........................................................................
@@ -186,17 +181,19 @@ export const deleteEnquiry = async (id) => {
   return response.data;
 };
 
-
 // ..........................................Create Enquiry Data.......................................................................
 
-
 export const getClassRecodingsLink = async (meetingIDs) => {
-  const response = await hrInstance.post("/api/new-class/get-recordings-link",{meetingIDs});
+  const response = await hrInstance.post("/api/new-class/get-recordings-link", {
+    meetingIDs,
+  });
   return response;
 };
 
 export const getLearningDashboardAttandanceData = async (meetingID) => {
-  const response = await hrInstance.get(`/api/new-class/get-learning-statistic-data/${meetingID}`);
+  const response = await hrInstance.get(
+    `/api/new-class/get-learning-statistic-data/${meetingID}`
+  );
   return response;
 };
 export const getAttandanceReport = async () => {
@@ -204,23 +201,22 @@ export const getAttandanceReport = async () => {
   return response;
 };
 
-
-
 export const getInvoiceData = async () => {
   const response = await userInstance.get("/get-invoice-data");
   return response;
 };
 
-export const generateClassMeetingLink = async (classId,className,coachName) => {
-  const response = await hrInstance.post(`/api/new-class/create-new-class-link-admin/${classId}`,{coachName,className});
+export const generateClassMeetingLink = async (
+  classId,
+  className,
+  coachName
+) => {
+  const response = await hrInstance.post(
+    `/api/new-class/create-new-class-link-admin/${classId}`,
+    { coachName, className }
+  );
   return response;
 };
-
-
-
-
-
-
 
 export const createLeave = async (formData) => {
   const response = await operationDeptInstance.post("/leaves-form", formData);
@@ -639,8 +635,6 @@ export const deleteUser = async (id) => {
   return response.data;
 };
 
-
-
 export const deleteEmployee = async (id) => {
   const response = await userInstance.delete(`/employees/${id}`);
   return response.data;
@@ -753,10 +747,6 @@ export const fetchPackageDetails = async () => {
   return response;
 };
 
-
-
-
-
 export const getDiscountAmount = async (enqId) => {
   const response = await operationDeptInstance.get(
     `/get-discount-vouchers/${enqId}`
@@ -764,14 +754,12 @@ export const getDiscountAmount = async (enqId) => {
   return response;
 };
 
-export const getPParentDiscountAmount = async (parentId,kidId) => {
+export const getPParentDiscountAmount = async (parentId, kidId) => {
   const response = await operationDeptInstance.get(
     `/get-parent-discount-vouchers/${parentId}/${kidId}`
   );
   return response;
 };
-
-
 
 export const deleteEmployeeData = async (empId, status) => {
   const response = await userInstance.put(`/delete-employee-data/${empId}`, {
@@ -812,7 +800,6 @@ export const editSheduleTimeTable = async (classId, shedules) => {
   return response;
 };
 
-
 export const getPhycicalCenterData = async () => {
   const response = await userInstance.get(`/get-physcical-center-data`);
   return response;
@@ -824,10 +811,6 @@ export const getIndividualPhysicalCenterData = async (id) => {
   );
   return response;
 };
-
-
-
-
 
 export const getAllParentData = async () => {
   const response = await userInstance.get(`/get-all-parent-data`);
@@ -953,14 +936,10 @@ export const setKitPriceData = async (quantity, kitPrice) => {
   return response;
 };
 
-
-
-
-
-export const sendPackageSelection = async (packageData, enqId,empId) => {
+export const sendPackageSelection = async (packageData, enqId, empId) => {
   const response = await userInstance.post(
     `/send-selected-package-data/${enqId}`,
-    { packageData ,empId}
+    { packageData, empId }
   );
   return response;
 };
@@ -980,21 +959,31 @@ export const getThePaymentId = async (enqId) => {
   return response;
 };
 
-
-export const changePassword = async (currentPassword,newPassword,empId) => {
-  const response = await userInstance.put(`/change-the-employee-password/${empId}`,{currentPassword,newPassword});
+export const changePassword = async (currentPassword, newPassword, empId) => {
+  const response = await userInstance.put(
+    `/change-the-employee-password/${empId}`,
+    { currentPassword, newPassword }
+  );
   return response;
 };
 
-
-export const fetchParentTikets = async () => {
-  const response = await userInstance.get(`/get-parent-tickets-data`,);
+export const fetchParentTikets = async (empId) => {
+  const response = await userInstance.get(`/get-parent-tickets-data/${empId}`);
   return response;
 };
 
 export const reponseToTickets = async (message, ticketId, empId) => {
-  const response = await userInstance.put(`/response-to-ticket/${ticketId}`, { message, empId });
+  const response = await userInstance.put(`/response-to-ticket/${ticketId}`, {
+    message,
+    empId,
+  });
   return response;
 };
 
-
+export const updateTicketPriority = async (ticketId, priorityStatus) => {
+  const response = await userInstance.put(
+    `/update-ticket-priority/${ticketId}`,
+    { priorityStatus }
+  );
+  return response;
+};

@@ -229,7 +229,7 @@ export const getKidAttendace = async (kidId) => {
   }
 };
 
-export const fetchPaymentNotifications = async (kidId,parentId) => {
+export const fetchPaymentNotifications = async (kidId, parentId) => {
   try {
     const response = await parentInstance.get(
       `/parent/get-payment-notification-data/${kidId}/${parentId}`
@@ -240,19 +240,18 @@ export const fetchPaymentNotifications = async (kidId,parentId) => {
   }
 };
 
-
-export const savepaymentInfo = async (paymentData,transactionId,parentId) => {
+export const savepaymentInfo = async (paymentData, transactionId, parentId) => {
   try {
-    console.log(paymentData,transactionId,parentId)
+    console.log(paymentData, transactionId, parentId);
     const response = await parentInstance.post(
-      `/parent/save-payment-information-data/${parentId}`,{paymentData,transactionId}
+      `/parent/save-payment-information-data/${parentId}`,
+      { paymentData, transactionId }
     );
     return response;
   } catch (err) {
     return err;
   }
 };
-
 
 export const getPaidClassData = async (kidId) => {
   try {
@@ -265,18 +264,14 @@ export const getPaidClassData = async (kidId) => {
   }
 };
 
-
 export const getParentKidData = async (kidId) => {
   try {
-    const response = await parentInstance.get(
-      `/parent/get-kid-data/${kidId}`
-    );
+    const response = await parentInstance.get(`/parent/get-kid-data/${kidId}`);
     return response;
   } catch (err) {
     return err;
   }
 };
-
 
 export const fetchEnquiryStatus = async (kidId) => {
   try {
@@ -289,10 +284,9 @@ export const fetchEnquiryStatus = async (kidId) => {
   }
 };
 
-
 export const parentBookDemoClassinProfile = async (formData, kidId) => {
   try {
-    console.log(formData, kidId)
+    console.log(formData, kidId);
     const response = await parentInstance.put(
       `/parent/parent-book-demo-class-in-profile/${kidId}`,
       {
@@ -307,10 +301,8 @@ export const parentBookDemoClassinProfile = async (formData, kidId) => {
 
 export const getMyKidData = async (parentId) => {
   try {
-   
     const response = await parentInstance.get(
-      `/parent/get-my-kid-data/${parentId}`,
- 
+      `/parent/get-my-kid-data/${parentId}`
     );
     return response;
   } catch (err) {
@@ -318,13 +310,10 @@ export const getMyKidData = async (parentId) => {
   }
 };
 
-
 export const getKidLiveClass = async (kidId) => {
   try {
-   
     const response = await parentInstance.get(
-      `/parent/get-kid-live-class/${kidId}`,
- 
+      `/parent/get-kid-live-class/${kidId}`
     );
     return response;
   } catch (err) {
@@ -334,10 +323,8 @@ export const getKidLiveClass = async (kidId) => {
 
 export const getTheEnqId = async (kidId) => {
   try {
-   
     const response = await parentInstance.get(
-      `/parent/get-enqId-of-kid/${kidId}`,
- 
+      `/parent/get-enqId-of-kid/${kidId}`
     );
     return response;
   } catch (err) {
@@ -345,13 +332,11 @@ export const getTheEnqId = async (kidId) => {
   }
 };
 
-
-export const parentSelectPackageData = async (finalData,enqId,parentId) => {
+export const parentSelectPackageData = async (finalData, enqId, parentId) => {
   try {
-   
     const response = await parentInstance.post(
-      `/parent/send-selected-package/${parentId}`,{finalData,enqId},
- 
+      `/parent/send-selected-package/${parentId}`,
+      { finalData, enqId }
     );
     return response;
   } catch (err) {
@@ -359,42 +344,33 @@ export const parentSelectPackageData = async (finalData,enqId,parentId) => {
   }
 };
 
-
-export const parentAddNewKid = async (formData,parentId) => {
+export const parentAddNewKid = async (formData, parentId) => {
   try {
-   
     const response = await parentInstance.post(
-      `/parent/parent-add-new-kid-data/${parentId}`,{formData},
- 
+      `/parent/parent-add-new-kid-data/${parentId}`,
+      { formData }
     );
     return response;
   } catch (err) {
     return err;
   }
 };
-
-
 
 export const registerKidData = async (formData) => {
   try {
-   
-    const response = await parentInstance.post(
-      `/parent/parent-save-kid-name`,{formData},
- 
-    );
+    const response = await parentInstance.post(`/parent/parent-save-kid-name`, {
+      formData,
+    });
     return response;
   } catch (err) {
     return err;
   }
 };
 
-
 export const fetchParentPackageDetails = async () => {
   try {
-   
     const response = await parentInstance.get(
-      `/parent/get-parent-package-data`,
- 
+      `/parent/get-parent-package-data`
     );
     return response;
   } catch (err) {
@@ -404,8 +380,9 @@ export const fetchParentPackageDetails = async () => {
 
 export const getKidBelongsToData = async (parentId) => {
   try {
-   
-    const response = await parentInstance.get(`/parent/get-kid-belong-to-data-support/${parentId}`);
+    const response = await parentInstance.get(
+      `/parent/get-kid-belong-to-data-support/${parentId}`
+    );
     return response;
   } catch (err) {
     return err;
@@ -414,8 +391,10 @@ export const getKidBelongsToData = async (parentId) => {
 
 export const createTiketForParent = async (ticketData) => {
   try {
-   
-    const response = await parentInstance.post(`/parent/create-ticket-for-parent`,{ticketData});
+    const response = await parentInstance.post(
+      `/parent/create-ticket-for-parent`,
+      { ticketData }
+    );
     return response;
   } catch (err) {
     return err;
@@ -423,62 +402,101 @@ export const createTiketForParent = async (ticketData) => {
 };
 export const getTicketsofParents = async (parentId) => {
   try {
-   
-    const response = await parentInstance.get(`/parent/get-all-ticket-of-parent/${parentId}`);
+    const response = await parentInstance.get(
+      `/parent/get-all-ticket-of-parent/${parentId}`
+    );
     return response;
   } catch (err) {
     return err;
   }
 };
 
-export const updateTicketChats = async (message,tiketId,parentId) => {
+export const updateTicketChats = async (message, tiketId, parentId) => {
   try {
-   
-    const response = await parentInstance.put(`/parent/update-ticket-chats/${tiketId}`,{message,parentId});
+    const response = await parentInstance.put(
+      `/parent/update-ticket-chats/${tiketId}`,
+      { message, parentId }
+    );
     return response;
   } catch (err) {
     return err;
   }
 };
 
-export const sendReferealDeatails = async (referral,parentId) => {
+export const sendReferealDeatails = async (referral, parentId) => {
   try {
-   
-    const response = await parentInstance.post(`/parent/send-referal-data/${parentId}`,{referral});
+    const response = await parentInstance.post(
+      `/parent/send-referal-data/${parentId}`,
+      { referral }
+    );
     return response;
   } catch (err) {
     return err;
   }
 };
-
 
 export const getMyReferal = async (parentId) => {
   try {
-   
-    const response = await parentInstance.get(`/parent/get-my-referal-data/${parentId}`);
+    const response = await parentInstance.get(
+      `/parent/get-my-referal-data/${parentId}`
+    );
     return response;
   } catch (err) {
     return err;
   }
 };
 
-
-export const getMySubscriptionData = async (parentId,kidId) => {
+export const getMySubscriptionData = async (parentId, kidId) => {
   try {
-   
-    const response = await parentInstance.get(`/parent/get-my-selected-package-data/${parentId}/${kidId}`);
+    const response = await parentInstance.get(
+      `/parent/get-my-selected-package-data/${parentId}/${kidId}`
+    );
     return response;
   } catch (err) {
     return err;
   }
 };
 
-export const setProgramAndLevel = async (program,level,kidId) => {
+export const setProgramAndLevel = async (program, level, kidId) => {
   try {
-   
     const response = await parentInstance.post(
       `/parent/save-program-level/${kidId}`,
       { program, level }
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+export const submitEndChat = async (ticketId, chatRemarks, chatRating) => {
+  try {
+    const response = await parentInstance.put(
+      `/parent/end-selected-chat/${ticketId}`,
+      { chatRemarks, chatRating }
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+export const updateParentProfile = async (parentId, parentData) => {
+  try {
+    const response = await parentInstance.put(
+      `/parent/edit-parent-data-profile-management/${parentId}`,
+      { parentData }
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+export const getKidExistProgramData = async (kidId) => {
+  try {
+    const response = await parentInstance.get(
+      `/parent/get-kid-exist-program-data/${kidId}`
     );
     return response;
   } catch (err) {
