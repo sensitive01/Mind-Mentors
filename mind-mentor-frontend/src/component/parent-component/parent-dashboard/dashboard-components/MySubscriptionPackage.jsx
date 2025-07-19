@@ -47,6 +47,44 @@ const MySubscriptionPackage = () => {
     });
   };
 
+  // Helper function to render programs based on data structure
+  const renderPrograms = (subscription) => {
+    // Handle case where programs is an array of objects (like in first subscription)
+    if (
+      subscription.programs &&
+      Array.isArray(subscription.programs) &&
+      subscription.programs.length > 0
+    ) {
+      return subscription.programs.map((program, idx) => (
+        <span
+          key={idx}
+          className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+        >
+          {typeof program === "object" ? program.program : program}
+          {typeof program === "object" && program.level && (
+            <span className="ml-1 text-xs opacity-75">({program.level})</span>
+          )}
+        </span>
+      ));
+    }
+
+    // Handle case where there's selectedProgram and selectedLevel (like in second subscription)
+    if (subscription.selectedProgram) {
+      return (
+        <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+          {subscription.selectedProgram}
+          {subscription.selectedLevel && (
+            <span className="ml-1 text-xs opacity-75">
+              ({subscription.selectedLevel})
+            </span>
+          )}
+        </span>
+      );
+    }
+
+    return null;
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-64">
@@ -229,29 +267,19 @@ const MySubscriptionPackage = () => {
                           {formatDate(subscription.createdAt)}
                         </span>
                       </div>
-                      
                     </div>
                   </div>
                 </div>
 
                 {/* Programs Section */}
-                {subscription.programs && subscription.programs.length > 0 && (
-                  <div className="mt-6 pt-6 border-t">
-                    <h3 className="font-semibold text-gray-900 mb-3">
-                      Programs Included
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {subscription.programs.map((program, idx) => (
-                        <span
-                          key={idx}
-                          className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
-                        >
-                          {program}
-                        </span>
-                      ))}
-                    </div>
+                <div className="mt-6 pt-6 border-t">
+                  <h3 className="font-semibold text-gray-900 mb-3">
+                    Programs Included
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {renderPrograms(subscription)}
                   </div>
-                )}
+                </div>
               </div>
             </div>
           ))}

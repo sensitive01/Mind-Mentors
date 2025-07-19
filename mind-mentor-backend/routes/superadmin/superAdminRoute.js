@@ -159,6 +159,11 @@ userRoute.post('/save-kit-price-data', userController.submitKitPriceData);
 
 
 userRoute.get('/get-invoice-data', userController.getInvoiceData);
+userRoute.get(
+  "/get-enquiry-related-all-kid-data/:enqId",
+  userController.getEnquiryRelatedAllKidData
+);
+
 
 
 

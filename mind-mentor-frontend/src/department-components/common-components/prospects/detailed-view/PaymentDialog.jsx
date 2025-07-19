@@ -454,7 +454,7 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
                   Mobile
                 </label>
                 <p className="font-medium text-gray-900">
-                  {formatWhatsAppNumber(data?.whatsappNumber) || "N/A"}
+                  {formatWhatsAppNumber(data?.whatsappNumber||data?.contactNumber) || "N/A"}
                 </p>
               </div>
             </div>

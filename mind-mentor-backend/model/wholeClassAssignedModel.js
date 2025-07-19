@@ -11,7 +11,7 @@ const scheduleSchema = new mongoose.Schema({
   sessionNumber: { type: Number },
   classDate: { type: Date },
   formattedDate: { type: String },
-  status: { type: String,},
+  status: { type: String,default:"sheduled"},
 });
 
 const selectedClassSchema = new mongoose.Schema({

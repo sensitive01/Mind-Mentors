@@ -12,8 +12,9 @@ import {
   Trash2,
   ChevronDown,
   Edit3,
+  PlusCircle,
 } from "lucide-react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   dispaySelectedClass,
   getScheduledClassData,
@@ -21,9 +22,12 @@ import {
   resumeTheClass,
 } from "../../../api/service/employee/serviceDeliveryService";
 import PauseModel from "./PauseModel";
+import axios from "axios";
 
 export default function DisplaySelectedClass() {
+  const navigate = useNavigate();
   const { enqId } = useParams();
+  const department = localStorage.getItem("department");
   const [kidName, setKidName] = useState("");
   const [programData, setProgramData] = useState(null);
   const [data, setData] = useState([]);
@@ -34,6 +38,8 @@ export default function DisplaySelectedClass() {
   );
   const [pauseRemarks, setPauseRemarks] = useState("");
   const [pauseEndDate, setPauseEndDate] = useState("");
+  const [isMorePckage, setIsMorePckage] = useState(false);
+  const [extraPackageId, setExtraPackageId] = useState(null);
 
   const [isPaused, setIsPaused] = useState(false);
   const [showToast, setShowToast] = useState(false);
@@ -57,6 +63,8 @@ export default function DisplaySelectedClass() {
           setProgramData(response.data.programData);
           setData(response.data.data || []);
           setClassId(response.data.classId);
+          setIsMorePckage(response.data.isMorePckage);
+          setExtraPackageId(response.data.latestPackageId);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -127,6 +135,12 @@ export default function DisplaySelectedClass() {
     return date.toISOString();
   }, []);
 
+  const handleAddExtraClass = async () => {
+    navigate(`/${department}/department/add-extra-class/${enqId}/${classId}`, {
+      state: { extraPackageId },
+    });
+  };
+
   const getAvailableClassesForDate = useCallback(
     (date) => {
       if (!date) return [];
@@ -181,8 +195,6 @@ export default function DisplaySelectedClass() {
 
       const selectedPauseDate = new Date(pauseDate);
       const selectedPauseEndDate = pauseEndDate ? new Date(pauseEndDate) : null;
-
-  
 
       const updatedData = data.map((session) => {
         const sessionDate = session.classDate
@@ -289,57 +301,59 @@ export default function DisplaySelectedClass() {
     setModalState((prev) => ({ ...prev, action: true }));
   }, []);
 
-const handleSessionDelete = useCallback(async () => {
-  console.log("=== CANCEL SESSION DATA ===");
-  console.log("Cancelling session:", selectedSession);
-  console.log("Session ID:", selectedSession?.sessionId || selectedSession?._id);
-  console.log("Session Number:", selectedSession?.sessionNumber);
-  console.log(
-    "Original session date:",
-    selectedSession?.formattedDate || selectedSession?.classDate
-  );
-  console.log("Enquiry ID:", enqId);
+  const handleSessionDelete = useCallback(async () => {
+    console.log("=== CANCEL SESSION DATA ===");
+    console.log("Cancelling session:", selectedSession);
+    console.log(
+      "Session ID:",
+      selectedSession?.sessionId || selectedSession?._id
+    );
+    console.log("Session Number:", selectedSession?.sessionNumber);
+    console.log(
+      "Original session date:",
+      selectedSession?.formattedDate || selectedSession?.classDate
+    );
+    console.log("Enquiry ID:", enqId);
 
-  const updated = data.map((session) => {
-    const sessionId = session.sessionId || session._id;
-    const selectedId = selectedSession.sessionId || selectedSession._id;
+    const updated = data.map((session) => {
+      const sessionId = session.sessionId || session._id;
+      const selectedId = selectedSession.sessionId || selectedSession._id;
 
-    return sessionId === selectedId
-      ? { ...session, status: "cancelled" }
-      : session;
-  });
+      return sessionId === selectedId
+        ? { ...session, status: "cancelled" }
+        : session;
+    });
 
-  const newSession = generateReplacementSession(selectedSession);
-  if (newSession) {
-    console.log("Generated replacement session:", newSession);
-    updated.push(newSession);
-  }
+    const newSession = generateReplacementSession(selectedSession);
+    if (newSession) {
+      console.log("Generated replacement session:", newSession);
+      updated.push(newSession);
+    }
 
-  const sortedData = updated.sort((a, b) => {
-    const dateA = a.classDate
-      ? parseFormattedDate(a.classDate)
-      : parseFormattedDate(a.formattedDate);
-    const dateB = b.classDate
-      ? parseFormattedDate(b.classDate)
-      : parseFormattedDate(b.formattedDate);
-    return dateA - dateB;
-  });
+    const sortedData = updated.sort((a, b) => {
+      const dateA = a.classDate
+        ? parseFormattedDate(a.classDate)
+        : parseFormattedDate(a.formattedDate);
+      const dateB = b.classDate
+        ? parseFormattedDate(b.classDate)
+        : parseFormattedDate(b.formattedDate);
+      return dateA - dateB;
+    });
 
-  console.log("Updated data after cancellation:", sortedData);
+    console.log("Updated data after cancellation:", sortedData);
 
-  try {
-    const response = await resumeTheClass(enqId, sortedData, classId);
-    console.log("Resume class API response:", response);
+    try {
+      const response = await resumeTheClass(enqId, sortedData, classId);
+      console.log("Resume class API response:", response);
 
-    setData(sortedData);
-    setModalState((prev) => ({ ...prev, action: false }));
-    showToastNotification("Session cancelled and replacement scheduled");
-  } catch (error) {
-    console.error("Failed to cancel and reschedule session:", error);
-    showToastNotification("Failed to update session data");
-  }
-}, [selectedSession, generateReplacementSession, enqId, classId, data]);
-
+      setData(sortedData);
+      setModalState((prev) => ({ ...prev, action: false }));
+      showToastNotification("Session cancelled and replacement scheduled");
+    } catch (error) {
+      console.error("Failed to cancel and reschedule session:", error);
+      showToastNotification("Failed to update session data");
+    }
+  }, [selectedSession, generateReplacementSession, enqId, classId, data]);
 
   const handleRescheduleConfirm = async () => {
     if (selectedDate && selectedTimeSlot) {
@@ -602,24 +616,38 @@ const handleSessionDelete = useCallback(async () => {
                 )}
             </div>
 
-            {/* Pause/Resume Button */}
-            {hasPausedSessions ? (
-              <button
-                onClick={handleResumeClasses}
-                className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
-              >
-                <PlayCircle className="w-5 h-5" />
-                Resume Classes
-              </button>
-            ) : (
-              <button
-                onClick={() => setShowPauseModal(true)}
-                className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
-              >
-                <PauseCircle className="w-5 h-5" />
-                Pause Classes
-              </button>
-            )}
+            {/* Buttons Container with proper spacing */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              {/* Pause/Resume Button */}
+              {hasPausedSessions ? (
+                <button
+                  onClick={handleResumeClasses}
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium whitespace-nowrap"
+                >
+                  <PlayCircle className="w-5 h-5" />
+                  Resume Classes
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowPauseModal(true)}
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium whitespace-nowrap"
+                >
+                  <PauseCircle className="w-5 h-5" />
+                  Pause Classes
+                </button>
+              )}
+
+              {/* Add Class Button */}
+              {isMorePckage && (
+                <button
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium whitespace-nowrap"
+                  onClick={handleAddExtraClass}
+                >
+                  <PlusCircle className="w-5 h-5" />
+                  Add Class (parent paid extra)
+                </button>
+              )}
+            </div>
           </div>
         </div>
 

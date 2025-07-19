@@ -111,6 +111,11 @@ export const getScheduledClassData = async (enqId) => {
   return response;
 };
 
+export const getLastClassData = async (classId) => {
+  const response = await serviceInstance.get(`/service/get-last-class-data-for-extra-class/${classId}`);
+  return response;
+};
+
 export const pauseTheClass = async (enqId,updatedData,pauseRemarks,classId) => {
   const response = await serviceInstance.post(`/service/pause-class-temporary/${enqId}/${classId}`,{updatedData,pauseRemarks});
   return response;
@@ -123,5 +128,10 @@ export const resumeTheClass = async (enqId,updatedData,classId) => {
 
 export const getClassKidData = async (classId) => {
   const response = await serviceInstance.get(`/service/get-class-student-data/${classId}`);
+  return response;
+};
+
+export const addExtraClassToKid = async (classId,data) => {
+  const response = await serviceInstance.put(`/service/add-extra-class-to-kid/${classId}`,{data});
   return response;
 };

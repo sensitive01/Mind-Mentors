@@ -987,3 +987,10 @@ export const updateTicketPriority = async (ticketId, priorityStatus) => {
   );
   return response;
 };
+
+export const getKidProfileData = async (enqId) => {
+  const response = await userInstance.get(
+    `/get-enquiry-related-all-kid-data/${enqId}`
+  );
+  return response;
+};

@@ -34,6 +34,7 @@ const { v4: uuidv4 } = require("uuid");
 const kidSchema = require("../../model/kidModel");
 const enquiryData = require("../../model/operationDeptModel");
 const logsSchema = require("../../model/enquiryLogs");
+const wholeClassSchema = require("../../model/wholeClassAssignedModel");
 
 const createUser = async (req, res) => {
   try {
@@ -3108,6 +3109,8 @@ const updatePaymentDetails = async (req, res) => {
       { contactNumber: 1, whatsappNumber: 1 }
     );
 
+    const oldPackage = await packagePaymentData.find({enqId:newData.enqId,isPackageActive:true})
+
     // Step 3: Update payment data
     const updatedPackage = await packagePaymentData.findOneAndUpdate(
       { paymentId: data.paymentId },
@@ -3117,6 +3120,8 @@ const updatePaymentDetails = async (req, res) => {
         paymentMode: data.paymentMode,
         remarks: data.remarks,
         documentUrl: data.documentUrl,
+        isPackageActive:true,
+        isExtraPackage:(oldPackage.length>1)?true:false
       },
       { new: true }
     );
@@ -3348,7 +3353,49 @@ const updateTicketPriority = async (req, res) => {
   }
 };
 
+const getEnquiryRelatedAllKidData = async (req, res) => {
+  try {
+    const { enqId } = req.params;
+
+    const endData = await enquiryData.findOne({ _id: enqId });
+    if (!endData)
+      return res.status(404).json({ message: "Operation data not found" });
+
+    const kidData = await kidSchema.findOne(
+      { _id: endData.kidId },
+      { kidPin: 0 }
+    );
+    if (!kidData) return res.status(404).json({ message: "Kid not found" });
+
+    const parentData = await parentModel.findOne({ _id: kidData.parentId });
+    if (!parentData)
+      return res.status(404).json({ message: "Parent not found" });
+
+    const classPaymentData = await packagePaymentData.find({ enqId: enqId });
+
+    const selectedClassData = await wholeClassSchema.find({ enqId: enqId });
+    const logData = await logsSchema.findOne({enqId:enqId});
+
+    res.status(200).json({
+      success: true,
+      message: "Kid data retrieved successfully",
+      data: {
+        operationData: endData,
+        kid: kidData,
+        parent: parentData,
+        classPayments: classPaymentData,
+        selectedClasses: selectedClassData,
+        logData:logData
+      },
+    });
+  } catch (err) {
+    console.error("Error in getting the kid data", err);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
 module.exports = {
+  getEnquiryRelatedAllKidData,
   updateTicketPriority,
   reponseToTicket,
   getParentTicketsData,

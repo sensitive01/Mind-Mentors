@@ -1433,7 +1433,9 @@ const savePaymentData = async (req, res) => {
 
     console.log("paymentData", paymentData);
     await Promise.all([
-      parentModel.findByIdAndUpdate(parentId, { $set: { status: "Active",isParentNew:false } }),
+      parentModel.findByIdAndUpdate(parentId, {
+        $set: { status: "Active", isParentNew: false },
+      }),
       kidModel.findByIdAndUpdate(paymentData.kidId, {
         $set: { status: "Active" },
       }),
@@ -1832,6 +1834,18 @@ const parentSelectThePackage = async (req, res) => {
   try {
     const { parentId } = req.params;
     const { finalData, enqId } = req.body;
+    let doualPackage = false;
+
+    const alreadyExistPackage = await packagePaymentData
+      .findOne({
+        enqId: enqId,
+        isPackageActive: true,
+        paymentStatus: "Success",
+      })
+      .sort({ createdAt: -1 });
+    if (alreadyExistPackage) {
+      doualPackage = true;
+    }
 
     console.log("finalData", finalData, "enqId", enqId, "parentId", parentId);
 
@@ -1849,6 +1863,10 @@ const parentSelectThePackage = async (req, res) => {
     console.log(selectedProgram);
 
     const paymentId = `PAY-${uuidv4().slice(0, 8).toUpperCase()}`;
+
+    const checkId = finalData.enqId || enqId;
+
+ ;
 
     const newPackage = new packagePaymentData({
       paymentId,
@@ -1873,6 +1891,8 @@ const parentSelectThePackage = async (req, res) => {
       classRate: finalData.classRate,
       razorpayPaymentId: finalData.razorpayPaymentId,
       paymentStatus: "Success",
+      isPackageActive: true,
+      isExtraPackage:doualPackage,
     });
     const savedPackage = await newPackage.save();
     const newKidData = await kidModel.findOneAndUpdate(
@@ -2306,9 +2326,9 @@ const createTicketForParent = async (req, res) => {
     let tiketAssignedToDepartment;
     const { isParentNew } = parentExist;
     if (isParentNew) {
-      tiketAssignedToDepartment="operation";
+      tiketAssignedToDepartment = "operation";
     } else {
-     tiketAssignedToDepartment ="service-delivery";
+      tiketAssignedToDepartment = "service-delivery";
     }
 
     const count = await supportTiket.countDocuments();

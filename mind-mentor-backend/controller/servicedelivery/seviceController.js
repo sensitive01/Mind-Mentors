@@ -662,12 +662,13 @@ const timeTableShedules = async (req, res) => {
 
 const getActiveKidAndClassData = async (req, res) => {
   try {
-    console.log("Welcome to get kiddata");
     const { enqId } = req.params;
+    console.log("Welcome to get kiddata", enqId);
 
     const paymentClassData = await classPaymentModel.findOne({
       enqId: enqId,
       paymentStatus: "Success",
+      isClassAdded: false,
     });
     console.log("paymentClassData".paymentClassData);
 
@@ -830,6 +831,11 @@ const assignWholeClass = async (req, res) => {
     enqData.classAssigned = true;
     await enqData.save();
 
+    await classPaymentModel.findOneAndUpdate(
+      { enqId: studentId, isPackageActive: true },
+      { $set: { isClassAdded: true } }
+    );
+
     res.status(201).json({
       success: true,
       message: "Classes assigned and saved successfully",
@@ -837,6 +843,39 @@ const assignWholeClass = async (req, res) => {
   } catch (error) {
     console.error("Error saving selected classes:", error);
     res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+const addExtraClassToKid = async (req, res) => {
+  try {
+    const { classId } = req.params;
+    const { selectedClasses, generatedSchedule, extraPackageId } =
+      req.body.data;
+
+    await SelectedClass.updateOne(
+      { _id: classId },
+      {
+        $push: {
+          selectedClasses: { $each: selectedClasses },
+          generatedSchedule: { $each: generatedSchedule },
+        },
+      }
+    );
+    await classPaymentModel.findOneAndUpdate(
+      { _id: extraPackageId, isPackageActive: true },
+      { $set: { isClassAdded: true } }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Extra class data pushed successfully",
+    });
+  } catch (err) {
+    console.error("Error in addExtraClassToKid:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error while pushing class data",
+    });
   }
 };
 
@@ -854,6 +893,17 @@ const displaySelectedClass = async (req, res) => {
       { enqId: enqId },
       { generatedSchedule: 1, _id: 1, studentName: 1 }
     );
+
+    let isMorePckage = false;
+    let latestPackageId;
+    const morePackageData = await classPaymentModel
+      .find({ enqId: enqId, isExtraPackage: true, isClassAdded: false })
+      .sort({ createdAt: -1 });
+    console.log(morePackageData.length);
+    if (morePackageData.length >= 1) {
+      isMorePckage = true;
+      latestPackageId = morePackageData[0]._id;
+    }
 
     if (!selectedClass) {
       return res
@@ -878,6 +928,7 @@ const displaySelectedClass = async (req, res) => {
           : {}),
       };
     });
+    console.log("isMorePckage", isMorePckage, latestPackageId);
 
     res.status(200).json({
       message: "Selected class retrieved successfully",
@@ -885,6 +936,8 @@ const displaySelectedClass = async (req, res) => {
       kidName: selectedClass.studentName,
       classId: selectedClass._id,
       programData,
+      isMorePckage,
+      latestPackageId,
     });
   } catch (err) {
     console.error("Error in displaying the selected class", err);
@@ -917,7 +970,6 @@ const getScheduledClassData = async (req, res) => {
       { program: program, level: level },
       { day: 1, classTime: 1, coachName: 1, coachId: 1, type: 1, classDate: 1 }
     );
-
 
     // Send response to client
     res.status(200).json({
@@ -1042,7 +1094,42 @@ const getClassStudentData = async (req, res) => {
   }
 };
 
+const getLastClassData = async (req, res) => {
+  try {
+    const { classId } = req.params;
+
+    const classData = await SelectedClass.findOne(
+      { _id: classId },
+      { generatedSchedule: 1 }
+    );
+
+    if (!classData) {
+      return res.status(404).json({ message: "Class not found" });
+    }
+
+    const { generatedSchedule } = classData;
+
+    if (!generatedSchedule || generatedSchedule.length === 0) {
+      return res
+        .status(200)
+        .json({ message: "No classes scheduled yet", lastClass: null });
+    }
+
+    const lastClass = generatedSchedule[generatedSchedule.length - 1];
+
+    return res.status(200).json({
+      message: "Last class retrieved successfully",
+      lastClass: lastClass,
+    });
+  } catch (err) {
+    console.log("Error in getting the last class data", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 module.exports = {
+  addExtraClassToKid,
+  getLastClassData,
   getClassStudentData,
   getCenterClassShedules,
   resumeTheClassBack,

@@ -65,6 +65,10 @@ const packageSchema = new mongoose.Schema(
     paymentMode: { type: String },
     remarks: { type: String },
     documentUrl: { type: String },
+
+    isExtraPackage:{type:Boolean,default:false},
+    isPackageActive:{type:Boolean,default:false},
+    isClassAdded:{type:Boolean,default:false}
   },
   { timestamps: true }
 );

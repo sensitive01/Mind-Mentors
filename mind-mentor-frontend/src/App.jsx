@@ -330,6 +330,8 @@ import ClassRatingComponent from "./department-components/classRatings/ClassRati
 import ThankYouPage from "./department-components/classRatings/ThankYouPage";
 import ParentAuthGuard from "./ParentAuthGuard";
 import HomePackageSelection from "./pages/parent/HomePackageSelection";
+import SuperAdminKidEnquiryProfile from "./pages/employee/superadmin/SuperAdminKidEnquiryProfile";
+import SuperAdminAddExtraClass from "./pages/employee/superadmin/SuperAdminAddExtraClass";
 
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
@@ -1242,6 +1244,11 @@ function App() {
             element={<SuperAdminDisplayWholeClassKid />}
           />
           <Route
+            path="/super-admin/department/add-extra-class/:enqId/:classId"
+            element={<SuperAdminAddExtraClass />}
+          />
+
+          <Route
             path="/super-admin/department/allowdeduct"
             element={<AllowDeductTable />}
           />
@@ -1252,6 +1259,10 @@ function App() {
           <Route
             path="/super-admin/department/profile"
             element={<SuperadminProfile />}
+          />
+          <Route
+            path="/super-admin/department/kid-enquiry-profile"
+            element={<SuperAdminKidEnquiryProfile />}
           />
 
           {/* <Route path="/super-admin/department/show-complete-enquiry-logs/:id" element={<ShowAllEnquiryLogs />} /> */}

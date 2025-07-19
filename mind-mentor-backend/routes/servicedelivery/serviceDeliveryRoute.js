@@ -15,6 +15,8 @@ serviceRoute.get("/get-active-kid-class-data/:enqId", serviceController.getActiv
 serviceRoute.get("/display-selected-class/:enqId", serviceController.displaySelectedClass);
 serviceRoute.get("/get-all-scheduled-class-data/:enqId", serviceController.getScheduledClassData);
 serviceRoute.get("/get-class-student-data/:classId", serviceController.getClassStudentData);
+serviceRoute.get("/get-last-class-data-for-extra-class/:classId", serviceController.getLastClassData);
+
 
 
 
@@ -25,6 +27,8 @@ serviceRoute.post("/save-class-shedule/:id",serviceController.timeTableShedules)
 serviceRoute.post("/save-coach-availabledays",serviceController.saveCoachAvailableDays)
 serviceRoute.post("/save-class-data/:empId", serviceController.saveClassData);
 serviceRoute.post("/assign-whole-class", serviceController.assignWholeClass);
+serviceRoute.put("/add-extra-class-to-kid/:classId", serviceController.addExtraClassToKid);
+
 
 serviceRoute.post("/pause-class-temporary/:enqId/:classId", serviceController.pauseTheClassTemporary);
 serviceRoute.post("/resume-the-class/:enqId/:classId", serviceController.resumeTheClassBack);

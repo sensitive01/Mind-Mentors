@@ -444,7 +444,7 @@ const updateProspectData = async (req, res) => {
       parentData = new parentSchema({
         parentName: enquiryData.parentFirstName,
         parentEmail: enquiryData.email,
-        parentMobile: enquiryData.whatsappNumber,
+        parentMobile: enquiryData.whatsappNumber||enquiryData.contactNumber,
         kids: [],
         type: "new",
         status: "Active",

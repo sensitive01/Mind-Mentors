@@ -132,7 +132,7 @@ const NewEnquiryFormStep = () => {
       ...prevData,
       [field]: value,
     }));
-    if (field === "contactNumber" && isSameAsContact) {
+    if (field === "contactNumber" && !isSameAsContact) {
       setFormData((prevData) => ({
         ...prevData,
         whatsappNumber: value,
@@ -145,12 +145,12 @@ const NewEnquiryFormStep = () => {
     if (!isSameAsContact) {
       setFormData((prevData) => ({
         ...prevData,
-        whatsappNumber: formData.contactNumber,
+        whatsappNumber: "",
       }));
     } else {
       setFormData((prevData) => ({
         ...prevData,
-        whatsappNumber: "",
+        whatsappNumber: formData.contactNumber,
       }));
     }
   };
