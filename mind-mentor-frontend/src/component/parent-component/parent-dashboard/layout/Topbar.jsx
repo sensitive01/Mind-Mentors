@@ -63,11 +63,7 @@ const EmployeeTopBar = () => {
     <div className="bg-white shadow-lg">
       <div className="flex justify-between items-center px-5 py-2">
         <div className="flex items-center">
-          <img
-            src={mindmentors}
-            alt="MindMentorz Logo"
-            className="w-[200px] h-[50px] object-contain mr-5"
-          />
+          
         </div>
 
         <div className="relative" ref={dropdownRef}>

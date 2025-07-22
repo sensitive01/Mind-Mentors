@@ -15,6 +15,10 @@ import {
   Typography,
   Box,
   Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import VideocamIcon from "@mui/icons-material/Videocam";
@@ -101,6 +105,15 @@ const ClassScheduleForm = () => {
       maxKids: 0,
     },
   ]);
+
+  // Confirmation dialog state
+  const [confirmationDialog, setConfirmationDialog] = useState({
+    open: false,
+    scheduleIndex: null,
+    day: "",
+    todayDate: "",
+    nextDate: "",
+  });
 
   useEffect(() => {
     fetchInitialData();
@@ -201,6 +214,19 @@ const ClassScheduleForm = () => {
 
     // For online mode, no business hours to check
     return true;
+  };
+
+  // Handle confirmation dialog response
+  const handleConfirmationResponse = (useToday) => {
+    const { scheduleIndex, day, todayDate, nextDate } = confirmationDialog;
+    const newSchedules = [...schedules];
+    const schedule = { ...newSchedules[scheduleIndex] };
+
+    schedule.date = useToday ? todayDate : nextDate;
+    
+    newSchedules[scheduleIndex] = schedule;
+    setSchedules(newSchedules);
+    setConfirmationDialog({ ...confirmationDialog, open: false });
   };
 
   const getFilteredCoaches = (schedule) => {
@@ -581,6 +607,31 @@ const ClassScheduleForm = () => {
       case "day":
         schedule.day = value;
         if (value) {
+          // Check if selected day is today
+          const today = new Date();
+          const todayIndex = today.getDay();
+          const targetIndex = dayToIndex[value];
+          
+          if (todayIndex === targetIndex) {
+            // Today is the selected day - show confirmation
+            const todayDateStr = `${today.getDate().toString().padStart(2, "0")}-${(
+              today.getMonth() + 1
+            )
+              .toString()
+              .padStart(2, "0")}-${today.getFullYear()}`;
+            
+            const nextDateStr = getNextDayDate(value);
+            
+            setConfirmationDialog({
+              open: true,
+              scheduleIndex: index,
+              day: value,
+              todayDate: todayDateStr,
+              nextDate: nextDateStr,
+            });
+            break;
+          }
+          
           // For offline mode, check center business hours
           if (schedule.mode === "offline") {
             const businessHours = getCenterBusinessHoursForDay(
@@ -1257,6 +1308,43 @@ const ClassScheduleForm = () => {
           </Box>
         </form>
       </div>
+
+      {/* Confirmation Dialog */}
+      <Dialog
+        open={confirmationDialog.open}
+        onClose={() => setConfirmationDialog({ ...confirmationDialog, open: false })}
+      >
+        <DialogTitle>Schedule Confirmation</DialogTitle>
+        <DialogContent>
+          <Typography>
+            You've selected {confirmationDialog.day} which is today. Would you like to schedule the class for:
+          </Typography>
+          <Box mt={2}>
+            <Typography variant="body2">
+              <strong>Today:</strong> {confirmationDialog.todayDate}
+            </Typography>
+            <Typography variant="body2">
+              <strong>Next {confirmationDialog.day}:</strong> {confirmationDialog.nextDate}
+            </Typography>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => handleConfirmationResponse(true)}
+            color="primary"
+            variant="contained"
+          >
+            Today
+          </Button>
+          <Button
+            onClick={() => handleConfirmationResponse(false)}
+            color="secondary"
+            variant="outlined"
+          >
+            Next {confirmationDialog.day}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <ToastContainer
         position="top-right"

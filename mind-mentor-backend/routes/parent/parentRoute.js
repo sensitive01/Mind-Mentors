@@ -26,6 +26,10 @@ parentRoute.get("/get-all-ticket-of-parent/:parentId",parentController.getAllTic
 parentRoute.get("/get-my-referal-data/:referalId",parentController.getMyReferalData)
 parentRoute.get("/get-my-selected-package-data/:parentId/:kidId",parentController.getMyselectedPackageData)
 parentRoute.get("/get-kid-exist-program-data/:kidId",parentController.getKidExistProgramData)
+parentRoute.get("/get-conducted-class-details/:kidId",parentController.getConductedClassDetails)
+parentRoute.get("/get-my-name/:parentId",parentController.getMyName)
+
+
 
 
 
@@ -73,6 +77,8 @@ parentRoute.put("/end-selected-chat/:ticketId",parentController.endSelectedChat)
 parentRoute.put("/update-kid-availability/:availId",parentController.updateKidAvailability)
 parentRoute.put("/update-kid-availability-status/:availId",parentController.updateKidAvailabilityStatus)
 parentRoute.put("/parent-book-demo-class-in-profile/:kidId",parentController.parentBookDemoClassInProfile)
+parentRoute.put("/update-my-name/:parentId",parentController.updateMyName)
+
 
 
 

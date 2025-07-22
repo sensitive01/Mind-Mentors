@@ -25,18 +25,65 @@ import {
   ListItemIcon,
   ListItemText,
   Tooltip,
-  Typography
+  Typography,
+  Avatar
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { Video } from 'lucide-react';
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import mindmentors from "../../../images/mindmentorz.png";
+import { getEmployeeData } from '../../../api/service/employee/EmployeeService';
 
 const ModernSidebar = () => {
+  const navigate = useNavigate();
   const [openReports, setOpenReports] = useState(false);
   const [openTasks, setOpenTasks] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [openCRM, setOpenCRMS] = useState(false);
+  const [empData, setEmpData] = useState({});
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  const department = localStorage.getItem("department");
+
+  // Fetch employee data
+  useEffect(() => {
+    const fetchEmployee = async () => {
+      try {
+        const empId = localStorage.getItem("empId");
+        if (!empId) {
+          console.error("Employee ID not found in localStorage");
+          return;
+        }
+
+        const response = await getEmployeeData(empId);
+
+        if (response && response.status === 200) {
+          setEmpData(response.data);
+        } else {
+          console.error("Failed to fetch employee data:", response);
+        }
+      } catch (error) {
+        console.error("Error fetching employee data:", error);
+      }
+    };
+
+    fetchEmployee();
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Vibrant color palette for icons
   const iconColors = {
@@ -54,26 +101,18 @@ const ModernSidebar = () => {
     support: '#642b8f',
     logout: '#642b8f'
   };
-  // Function to lighten colors
-  const lightenColor = (color, amount = 0.5) => {
-    const hex = color.replace('#', '');
-    const num = parseInt(hex, 16);
-    const r = Math.min(255, Math.floor((num >> 16) + (255 - (num >> 16)) * amount));
-    const g = Math.min(255, Math.floor(((num >> 8) & 0x00FF) + (255 - ((num >> 8) & 0x00FF)) * amount));
-    const b = Math.min(255, Math.floor((num & 0x0000FF) + (255 - (num & 0x0000FF)) * amount));
-    return `#${(r << 16 | g << 8 | b).toString(16).padStart(6, '0')}`;
-  };
+
   // Styled components for enhanced interactivity
   const StyledListItem = styled(ListItem)(({ theme }) => ({
-    borderRadius: 8,
-    margin: '2px 0',
-    padding: '8px 16px',
+    borderRadius: 12,
+    margin: '4px 8px',
+    padding: '12px 16px',
     display: 'flex',
     alignItems: 'center',
-    transition: 'all 0.3s ease',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     position: 'relative',
     overflow: 'hidden',
-    gap: 8,
+    cursor: 'pointer',
     '&::before': {
       content: '""',
       position: 'absolute',
@@ -81,9 +120,10 @@ const ModernSidebar = () => {
       left: 0,
       width: 0,
       height: '100%',
-      backgroundColor: '#642b8f',
-      transition: 'width 0.3s ease',
-      zIndex: 0
+      background: 'linear-gradient(135deg, #642b8f 0%, #8e44ad 100%)',
+      transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+      zIndex: 0,
+      borderRadius: 12
     },
     '&:hover': {
       '&::before': {
@@ -93,10 +133,8 @@ const ModernSidebar = () => {
         color: 'white',
         zIndex: 1
       },
-      '& .MuiListItemIcon-root svg': {
-        filter: 'brightness(200%)' // Alternative way to lighten icons
-      },
-      boxShadow: theme.shadows[2]
+      transform: 'translateX(4px)',
+      boxShadow: '0 4px 20px rgba(100, 43, 143, 0.3)'
     },
     '& .MuiListItemIcon-root, & .MuiListItemText-primary': {
       position: 'relative',
@@ -104,133 +142,186 @@ const ModernSidebar = () => {
       transition: 'color 0.3s ease'
     },
     '& .MuiListItemIcon-root': {
-      marginRight: 8,
+      marginRight: 12,
       minWidth: 'auto'
     }
   }));
+
   const StyledDrawer = styled(Drawer)(() => ({
     width: isCollapsed ? 80 : 280,
     flexShrink: 0,
     '& .MuiDrawer-paper': {
       width: isCollapsed ? 80 : 280,
       boxSizing: 'border-box',
-      backgroundColor: 'white',
-      borderRight: 'none',
-      transition: 'width 0.3s ease',
-      overflow: 'hidden'
+      backgroundColor: '#fafafa',
+      borderRight: '1px solid #e0e0e0',
+      transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+      overflow: 'hidden',
+      boxShadow: '2px 0 10px rgba(0,0,0,0.1)'
     }
   }));
+
+  const LogoContainer = styled(Box)(({ theme }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: isCollapsed ? 'center' : 'space-between',
+    padding: theme.spacing(2),
+    backgroundColor: 'white',
+    borderBottom: '1px solid #e0e0e0',
+    minHeight: 70,
+    position: 'relative'
+  }));
+
+  const ProfileSection = styled(Box)(({ theme }) => ({
+    padding: theme.spacing(2),
+    backgroundColor: 'white',
+    borderBottom: '1px solid #e0e0e0',
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing(1),
+    cursor: 'pointer',
+    position: 'relative',
+    transition: 'all 0.2s ease',
+    '&:hover': {
+      backgroundColor: '#f5f5f5'
+    }
+  }));
+
   const handleReportsClick = () => setOpenReports(!openReports);
   const handleTasksClick = () => setOpenTasks(!openTasks);
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
   const handleCRMClick = () => setOpenCRMS(!openCRM);
 
+  const handleProfileClick = () => {
+    setIsDropdownOpen(false);
+    navigate(`/${department}/department/profile`);
+  };
+
+  const handleLogoutClick = () => {
+    setIsDropdownOpen(false);
+    localStorage.clear();
+    navigate("/");
+  };
+
   const menuItems = [
-    
     {
       icon: <DashboardIcon />,
-      text: 'Dashboard',
+      text: "Dashboard",
       color: iconColors.dashboard,
-      link: '/coach/department/dashboard',
+      link: "/coach/department/dashboard",
     },
-    // {
-    //   icon: <Video />,
-    //   text: 'Create Meetings',
-    //   color: iconColors.dashboard,
-    //   link: '/coach/start-class-room',
-    // },
-    
     {
       icon: <ClassScheduleIcon />,
-      text: 'Class Schedules',
+      text: "Class Schedules",
       color: iconColors.classSchedules,
-      link: '/coachScheduleClass',
+      link: "/coachScheduleClass",
     },
-    // {
-    //   icon: <TaskIcon />,
-    //   text: 'Tasks',
-    //   color: iconColors.tasks,
-    //   subItems: [
-    //     { icon: <TaskIcon />, text: 'My Tasks', link: '/coach/department/list-mytask' },
-    //     { icon: <TaskIcon />, text: 'Tasks Assigned By Me', link: '/coach/department/list-task-assigned-me' },
-    //   ],
-    //   open: openTasks,
-    //   onClick: handleTasksClick,
-    // },
-
-        {
-          icon: <TaskIcon />,
-          text: "Tasks",
-          color: iconColors.tasks,
-          link: "/coach/department/task-table",
-        },
-
-{
+    {
+      icon: <ClassScheduleIcon />,
+      text: "Past Class",
+      color: iconColors.classSchedules,
+      link: "/coach/department/past-class",
+    },
+    {
+      icon: <TaskIcon />,
+      text: "Tasks",
+      color: iconColors.tasks,
+      link: "/coach/department/task-table",
+    },
+    {
       icon: <AttendanceIcon />,
-      text: 'Attendance',
+      text: "Attendance",
       color: iconColors.attendance,
-      link: '/coach/department/attendance',
+      link: "/coach/department/attendance",
     },
     {
       icon: <LeavesIcon />,
-      text: 'Leaves',
+      text: "Leaves",
       color: iconColors.leaves,
-      link: '/coach/department/leaves',
+      link: "/coach/department/leaves",
     },
-    {
-      icon: <InvoicesIcon />,
-      text: 'Invoices',
-      color: iconColors.invoices,
-      link: '/coachInvoices',
-    },    
-
-    {
-      icon: <ReportsIcon />,
-      text: 'Reports',
-      color: iconColors.reports,
-      subItems: [
-        { icon: <ReportsIcon />, text: 'Students Feedback', link: '#' },
-        { icon: <ReportsIcon />, text: 'Student Attendance Report', link: '/coachAttendanceReport' },
-      ],
-      open: openReports,
-      onClick: handleReportsClick,
-    },    
-    
+    // {
+    //   icon: <ReportsIcon />,
+    //   text: "Reports",
+    //   color: iconColors.reports,
+    //   subItems: [
+    //     {
+    //       icon: <ReportsIcon />,
+    //       text: "Student Attendance Report",
+    //       link: "/coach/department/student-attendance-report",
+    //     },
+    //   ],
+    //   open: openReports,
+    //   onClick: handleReportsClick,
+    // },
     {
       icon: <SupportIcon />,
-      text: 'Support',
+      text: "Support",
       color: iconColors.support,
-      link: '/coachSupport',
-    },
-    {
-      icon: <LogoutIcon />,
-      text: 'Logout',
-      color: iconColors.logout,
-      link: '/',
+      link: "/coachSupport",
     },
   ];
-  
+
   return (
     <StyledDrawer variant="permanent">
-      <Box sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        py: 2,
-        px: 2,
-        marginTop:8
+      {/* Logo Section */}
+      <LogoContainer>
+        {!isCollapsed ? (
+          <>
+            <img
+              src={mindmentors}
+              alt="MindMentorz Logo"
+              style={{
+                width: '180px',
+                height: '45px',
+                objectFit: 'contain'
+              }}
+            />
+            <IconButton 
+              onClick={toggleSidebar}
+              sx={{
+                backgroundColor: '#642b8f',
+                color: 'white',
+                width: 32,
+                height: 32,
+                '&:hover': {
+                  backgroundColor: '#8e44ad'
+                }
+              }}
+            >
+              <ChevronLeft fontSize="small" />
+            </IconButton>
+          </>
+        ) : (
+          <IconButton 
+            onClick={toggleSidebar}
+            sx={{
+              backgroundColor: '#642b8f',
+              color: 'white',
+              width: 40,
+              height: 40,
+              '&:hover': {
+                backgroundColor: '#8e44ad'
+              }
+            }}
+          >
+            <ChevronRight />
+          </IconButton>
+        )}
+      </LogoContainer>
 
-      }}>
-       
-        <IconButton onClick={toggleSidebar}>
-          {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
-        </IconButton>
-      </Box>
-      <Box sx={{ overflow: 'auto' }}>
+ 
+
+      {/* Navigation Menu */}
+      <Box sx={{ overflow: 'auto', flex: 1, pt: 1 }}>
         <List disablePadding>
           {menuItems.map((item, index) => (
             <React.Fragment key={index}>
-              <Tooltip title={item.text} placement="right">
+              <Tooltip 
+                title={isCollapsed ? item.text : ""} 
+                placement="right"
+                arrow
+              >
                 {item.link ? (
                   <Link 
                     to={item.link} 
@@ -238,13 +329,12 @@ const ModernSidebar = () => {
                   >
                     <StyledListItem
                       button
-                      onClick={item.onClick || undefined}
                       sx={{
                         justifyContent: isCollapsed ? 'center' : 'flex-start',
-                        paddingLeft: isCollapsed ? 0 : undefined,
+                        px: isCollapsed ? 1 : 2,
                       }}
                     >
-                      <ListItemIcon>
+                      <ListItemIcon sx={{ minWidth: isCollapsed ? 'auto' : 40 }}>
                         {React.cloneElement(item.icon, {
                           style: { color: item.color },
                           fontSize: 'medium'
@@ -257,7 +347,8 @@ const ModernSidebar = () => {
                             primaryTypographyProps={{
                               sx: {
                                 fontSize: '0.95rem',
-                                fontWeight: 500
+                                fontWeight: 500,
+                                color: '#333'
                               }
                             }}
                           />
@@ -271,13 +362,13 @@ const ModernSidebar = () => {
                 ) : (
                   <StyledListItem
                     button
-                    onClick={item.onClick || undefined}
+                    onClick={item.onClick}
                     sx={{
                       justifyContent: isCollapsed ? 'center' : 'flex-start',
-                      paddingLeft: isCollapsed ? 0 : undefined,
+                      px: isCollapsed ? 1 : 2,
                     }}
                   >
-                    <ListItemIcon>
+                    <ListItemIcon sx={{ minWidth: isCollapsed ? 'auto' : 40 }}>
                       {React.cloneElement(item.icon, {
                         style: { color: item.color },
                         fontSize: 'medium'
@@ -290,7 +381,8 @@ const ModernSidebar = () => {
                           primaryTypographyProps={{
                             sx: {
                               fontSize: '0.95rem',
-                              fontWeight: 500
+                              fontWeight: 500,
+                              color: '#333'
                             }
                           }}
                         />
@@ -315,9 +407,11 @@ const ModernSidebar = () => {
                           button
                           sx={{
                             pl: 4,
+                            py: 1,
+                            mx: 2,
                           }}
                         >
-                          <ListItemIcon>
+                          <ListItemIcon sx={{ minWidth: 30 }}>
                             {React.cloneElement(subItem.icon, {
                               style: { color: item.color },
                               fontSize: 'small'
@@ -327,7 +421,8 @@ const ModernSidebar = () => {
                             primary={subItem.text}
                             primaryTypographyProps={{
                               sx: {
-                                fontSize: '0.9rem'
+                                fontSize: '0.85rem',
+                                color: '#555'
                               }
                             }}
                           />
@@ -344,4 +439,5 @@ const ModernSidebar = () => {
     </StyledDrawer>
   );
 };
+
 export default ModernSidebar;

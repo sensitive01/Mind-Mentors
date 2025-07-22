@@ -301,7 +301,7 @@ const Prospects = () => {
                 )}
                 paginationModel={paginationModel}
                 onPaginationModelChange={setPaginationModel}
-                pageSizeOptions={[5, 10, 25]}
+                pageSizeOptions={[15, 30, 50]}
                 disableRowSelectionOnClick
                 // editMode="row"
                 getRowId={(row) => row._id}

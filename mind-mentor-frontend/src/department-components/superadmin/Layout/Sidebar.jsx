@@ -130,7 +130,7 @@ const ModernSidebar = () => {
     ) {
       setOpenSubscriptions(true);
     } else if (
-      currentPath.includes("/tournaments") ||
+      currentPath.includes("/super-admin/department/tournaments") ||
       currentPath.includes("/participents")
     ) {
       setOpenTournaments(true);
@@ -354,11 +354,11 @@ const ModernSidebar = () => {
           text: "Parents",
           link: "/super-admin/department/parents-data",
         },
-        {
-          icon: <ActiveIcon />,
-          text: "Active Kids",
-          link: "/super-admin/department/active-kid-data",
-        },
+        // {
+        //   icon: <ActiveIcon />,
+        //   text: "Active Kids",
+        //   link: "/super-admin/department/active-kid-data",
+        // },
       ],
       open: openEnquiries,
       onClick: handleEnquiriesClick,
@@ -384,13 +384,13 @@ const ModernSidebar = () => {
         },
         {
           icon: <LeavesIcon />,
-          text: "Leaves",
-          link: "/super-admin/department/leaves",
+          text: "Employee Leaves",
+          link: "/super-admin/department/show-all-leaves",
         },
         {
           icon: <LeavesIcon />,
-          text: "All Leaves",
-          link: "/super-admin/department/show-all-leaves",
+          text: "MyLeaves",
+          link: "/super-admin/department/leaves",
         },
         {
           icon: <ProfileIcon />,
@@ -410,16 +410,7 @@ const ModernSidebar = () => {
           text: "Schedules",
           link: "/super-admin/department/class-timetable-list",
         },
-        {
-          icon: <ReportsIcon />,
-          text: "Vouchers / Discounts",
-          link: "/super-admin/department/discount-table",
-        },
-        {
-          icon: <ReportsIcon />,
-          text: "Packages",
-          link: "/super-admin/department/package-table",
-        },
+
         {
           icon: <ProgramsIcon />,
           text: "Programs & Levels",
@@ -471,15 +462,25 @@ const ModernSidebar = () => {
           text: "Pending Invoices",
           link: "/super-admin/department/invoice-table",
         },
+        {
+          icon: <ReportsIcon />,
+          text: "Vouchers / Discounts",
+          link: "/super-admin/department/discount-table",
+        },
+        {
+          icon: <ReportsIcon />,
+          text: "Packages",
+          link: "/super-admin/department/package-table",
+        },
       ],
       open: openSubscriptions,
       onClick: handleSubscriptionsClick,
     },
-    {
-      icon: <ChessKidIcon />,
-      text: "Chesskid",
-      link: "/chessKids",
-    },
+    // {
+    //   icon: <ChessKidIcon />,
+    //   text: "Chesskid",
+    //   link: "/chessKids",
+    // },
     {
       icon: <TasksIcon />,
       text: "Tasks",
@@ -508,11 +509,11 @@ const ModernSidebar = () => {
       open: openSupports,
       onClick: handleSupportsClick,
     },
-    {
-      icon: <DocumentsIcon />,
-      text: "Documents",
-      link: "/documents",
-    },
+    // {
+    //   icon: <DocumentsIcon />,
+    //   text: "Documents",
+    //   link: "/documents",
+    // },
     {
       icon: <TournamentsIcon />,
       text: "Tournaments",
@@ -520,7 +521,7 @@ const ModernSidebar = () => {
         {
           icon: <TournamentsIcon />,
           text: "Tournaments",
-          link: "/tournaments",
+          link: "/super-admin/department/tournaments",
         },
         {
           icon: <ParticipantsIcon />,
@@ -567,11 +568,11 @@ const ModernSidebar = () => {
       text: "Payroll",
       link: "/payroll",
     },
-    {
-      icon: <LogoutIcon />,
-      text: "Logout",
-      link: "/logout",
-    },
+    // {
+    //   icon: <LogoutIcon />,
+    //   text: "Logout",
+    //   link: "/logout",
+    // },
   ];
 
   return (

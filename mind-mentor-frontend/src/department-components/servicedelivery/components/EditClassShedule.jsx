@@ -174,7 +174,7 @@ const EditClassShedule = () => {
     try {
       const response = await editSheduledClassData(classId);
 
-      if (response.status === 200 && response.data && response.data.classData) {
+      if (response.status === 200) {
         const classData = response.data.classData;
 
         // Parse classTime "10:30 AM - 11:30 AM" to 24 hour format "HH:mm"

@@ -297,7 +297,7 @@ const getCoachAvailableDays = async (req, res) => {
     const availableDays = await CoachAvailability.find();
 
     if (availableDays.length === 0) {
-      return res.status(404).json({ message: "No availability records found" });
+      return res.status(201).json({ message: "No availability records found" });
     }
 
     // Create maps for quick lookups

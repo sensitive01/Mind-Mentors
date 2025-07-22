@@ -1866,8 +1866,6 @@ const parentSelectThePackage = async (req, res) => {
 
     const checkId = finalData.enqId || enqId;
 
- ;
-
     const newPackage = new packagePaymentData({
       paymentId,
       enqId: finalData.enqId || enqId,
@@ -1892,7 +1890,7 @@ const parentSelectThePackage = async (req, res) => {
       razorpayPaymentId: finalData.razorpayPaymentId,
       paymentStatus: "Success",
       isPackageActive: true,
-      isExtraPackage:doualPackage,
+      isExtraPackage: doualPackage,
     });
     const savedPackage = await newPackage.save();
     const newKidData = await kidModel.findOneAndUpdate(
@@ -2635,7 +2633,154 @@ const getKidExistProgramData = async (req, res) => {
   }
 };
 
+const getConductedClassDetails = async (req, res) => {
+  try {
+    const { kidId } = req.params;
+
+    // Find classes where the kid is present in the students array
+    const conductedClassData = await ConductedClass.find({
+      "students.studentId": kidId,
+    });
+
+    // Prepare the result array
+    const filteredData = await Promise.all(
+      conductedClassData.map(async (classItem) => {
+        const student = classItem.students.find((s) => s.studentId === kidId);
+
+        // Fetch class schedule details using classId
+        const classDetails = await ClassSchedule.findOne(
+          { _id: classItem.classId },
+          { coachName: 1, program: 1, level: 1, classTime: 1 }
+        );
+
+        return {
+          classId: classItem.classId,
+          classStartTime: classItem.classStartTime,
+          conductedDate: classItem.conductedDate,
+          status: classItem.status,
+          studentDetails: {
+            classType: student?.classType,
+            name: student?.name,
+            joinTime: student?.joinTime,
+            attendance: student?.attendance,
+            feedback: student?.feedback,
+            kidId: student?.studentId,
+          },
+          coachId: classItem.coachId,
+          kidCount: classItem.kidCount,
+          attendedKidCount: classItem.attendedKidCount,
+          coachAmount: classItem.coachAmount,
+          coachPaidDate: classItem.coachPaidDate,
+          auditScore: classItem.auditScore,
+          feedbackScore: classItem.feedbackScore,
+          averageRating: classItem.averageRating,
+          coachClassFeedBack: classItem.coachClassFeedBack,
+          classDetails: classDetails || null,
+        };
+      })
+    );
+
+    res.status(200).json({ filteredData });
+  } catch (err) {
+    console.error("Error in getting the conducted class", err);
+    res.status(500).json({ message: "Failed to retrieve class data" });
+  }
+};
+
+const getMyName = async (req, res) => {
+  try {
+    const { parentId } = req.params;
+    console.log(parentId);
+    let isDefaultName = false;
+
+    const parentData = await parentModel.findOne(
+      { _id: parentId },
+      { parentMobile: 1 }
+    );
+
+    const myName = await operationDeptModel.findOne(
+      {
+        $or: [
+          { contactNumber: parentData.parentMobile },
+          { whatsappNumber: parentData.parentMobile },
+        ],
+      },
+      { parentFirstName: 1 }
+    );
+
+    console.log("myName", myName);
+
+    if (myName.parentFirstName == "Parent_New Enquiry") {
+      isDefaultName = true;
+    }
+
+    res.status(200).json({
+      success: true,
+      parentName: myName.parentFirstName,
+      isDefaultName,
+    });
+  } catch (err) {
+    console.error("Error in getMyName:", err);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+const updateMyName = async (req, res) => {
+  try {
+    const { parentId } = req.params;
+    const { newFirstName } = req.body;
+
+    if (!newFirstName) {
+      return res.status(400).json({
+        success: false,
+        message: "New first name is required",
+      });
+    }
+    const parentData = await parentModel.findById(parentId, {
+      parentMobile: 1,
+    });
+    parentData.parentName = newFirstName;
+    await parentData.save();
+
+    const updatedParent = await operationDeptModel.findOneAndUpdate(
+      {
+        $or: [
+          { contactNumber: parentData.parentMobile },
+          { whatsappNumber: parentData.parentMobile },
+        ],
+      },
+      { parentFirstName: newFirstName },
+      { new: true }
+    );
+
+    if (!updatedParent) {
+      return res.status(404).json({
+        success: false,
+        message: "Parent not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Parent name updated successfully",
+      updatedName: updatedParent.parentFirstName,
+    });
+  } catch (err) {
+    console.error("Error in updateMyName:", err);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 module.exports = {
+  updateMyName,
+  getMyName,
+  getConductedClassDetails,
   getKidExistProgramData,
   endSelectedChat,
   saveProgramAndLevel,

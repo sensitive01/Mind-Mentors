@@ -1,4 +1,4 @@
-import TournamentsForm from "../../../department-components/superadmin/components/TournamentsForm";
+import TournamentsForm from "../../../department-components/common-components/tournamnets/TournamentForm";
 import Topbar from '../../../component/parent-component/parent-dashboard/layout/Topbar';
 import Sidebar from "../../../department-components/superadmin/Layout/Sidebar";
 

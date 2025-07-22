@@ -93,7 +93,7 @@ const KidsDemoClass = () => {
 
   if (!classData || classData.length === 0) {
     return (
-      <div className="h-screen bg-gradient-to-r from-primary to-blue-400 flex items-center justify-center p-4">
+      <div className="h-screen bg-gradient-to-b from-primary/90 to-primary/70 flex items-center justify-center p-4">
         <div className="bg-white p-8 rounded-3xl shadow-2xl text-center max-w-md w-full border-4 border-blue-200">
           <Star size={64} className="mx-auto mb-4 text-primary animate-spin" />
           <h2 className="text-2xl font-bold text-primary">
@@ -108,7 +108,7 @@ const KidsDemoClass = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-primary to-blue-400 p-4">
+    <div className="min-h-screen  bg-gradient-to-b from-primary/90 to-primary/70 p-4">
       <div className="max-w-6xl mx-auto">
         {/* Classes Grid */}
         <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">

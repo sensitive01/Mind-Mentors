@@ -1,8 +1,59 @@
 import React, { useEffect, useState } from "react";
 import boyAvatar from "../../../../assets/boyavatar.avif";
 import girlAvatar from "../../../../assets/girlavatar.jpg";
-import { getMyKidData } from "../../../../api/service/parent/ParentService";
-import { useNavigate } from "react-router-dom"; // Assuming you're using React Router
+import {
+  getMyKidData,
+  getParentName,
+  updateParentName,
+  // updateParentName
+} from "../../../../api/service/parent/ParentService";
+import { useNavigate } from "react-router-dom";
+const NameUpdateModal = ({
+  showNameModal,
+  setIsDefaultName,
+  newParentName,
+  setNewParentName,
+  handleNameSubmit,
+  nameUpdateLoading,
+}) => {
+  if (!showNameModal) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl p-6 max-w-md w-full">
+        <h2 className="text-2xl font-bold text-slate-800 mb-4">
+          Update Your Name
+        </h2>
+        <p className="text-slate-600 mb-4">
+          Please enter your name to personalize your experience.
+        </p>
+        <input
+          type="text"
+          value={newParentName}
+          onChange={(e) => setNewParentName(e.target.value)}
+          className="w-full px-4 py-2 border border-slate-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          placeholder="Enter your name"
+          autoFocus
+        />
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={() => setIsDefaultName(false)}
+            className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleNameSubmit}
+            className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors disabled:opacity-50"
+            disabled={nameUpdateLoading || !newParentName.trim()}
+          >
+            {nameUpdateLoading ? "Updating..." : "Submit"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const ParentDashboard = () => {
   const navigate = useNavigate();
@@ -10,6 +61,11 @@ const ParentDashboard = () => {
   const [selectedChild, setSelectedChild] = useState(0);
   const [childrenData, setChildrenData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [parentName, setParentName] = useState("");
+  const [showNameModal, setShowNameModal] = useState(false);
+  const [newParentName, setNewParentName] = useState("");
+  const [nameUpdateLoading, setNameUpdateLoading] = useState(false);
+  const [isDefaultName, setIsDefaultName] = useState(false);
 
   // Function to calculate the next occurrence of a given day
   const getNextDateForDay = (dayName) => {
@@ -59,6 +115,23 @@ const ParentDashboard = () => {
       displayText: `${demoClass.day}, ${demoClass.classTime}`,
     };
   };
+
+  useEffect(() => {
+    const fetchParentName = async () => {
+      try {
+        const response = await getParentName(parentId);
+        console.log(response);
+        if (response.status === 200) {
+          setParentName(response.data.parentName);
+          setIsDefaultName(response.data.isDefaultName);
+        }
+      } catch (error) {
+        console.error("Error fetching parent name:", error);
+      }
+    };
+
+    fetchParentName();
+  }, [parentId]);
 
   useEffect(() => {
     const fetchMyKid = async () => {
@@ -219,9 +292,63 @@ const ParentDashboard = () => {
     navigate(`/parent/kid/demo-class-shedule/${kidId}`);
   };
 
+  const handleNameSubmit = async () => {
+    if (!newParentName.trim()) return;
+
+    setNameUpdateLoading(true);
+    try {
+      const response = await updateParentName(parentId, newParentName);
+      if (response.status===200) {
+        setParentName(newParentName);
+        setIsDefaultName(false);
+        setShowNameModal(false);
+      }
+    } catch (error) {
+      console.error("Error updating parent name:", error);
+    } finally {
+      setNameUpdateLoading(false);
+    }
+  };
+
   const handleNavigateToProgram = (kidId) => {
     navigate(`/parent/kid/demo-class-shedule/${kidId}`);
   };
+
+  // const NameUpdateModal = () => (
+  //   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  //     <div className="bg-white rounded-xl p-6 max-w-md w-full">
+  //       <h2 className="text-2xl font-bold text-slate-800 mb-4">
+  //         Update Your Name
+  //       </h2>
+  //       <p className="text-slate-600 mb-4">
+  //         Please enter your name to personalize your experience.
+  //       </p>
+  //       <input
+  //         type="text"
+  //         value={newParentName}
+  //         onChange={(e) => setNewParentName(e.target.value)}
+  //         className="w-full px-4 py-2 border border-slate-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+  //         placeholder="Enter your name"
+  //       />
+  //       <div className="flex justify-end gap-3">
+  //         <button
+  //           onClick={() => setShowNameModal(false)}
+  //           className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+  //           disabled={nameUpdateLoading}
+  //         >
+  //           Cancel
+  //         </button>
+  //         <button
+  //           onClick={handleNameSubmit}
+  //           className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors disabled:opacity-50"
+  //           disabled={nameUpdateLoading || !newParentName.trim()}
+  //         >
+  //           {nameUpdateLoading ? "Updating..." : "Submit"}
+  //         </button>
+  //       </div>
+  //     </div>
+  //   </div>
+  // );
 
   if (loading) {
     return (
@@ -238,6 +365,14 @@ const ParentDashboard = () => {
   if (childrenData.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-4 md:p-6 flex items-center justify-center">
+        <NameUpdateModal
+          showNameModal={isDefaultName}
+          setIsDefaultName={setIsDefaultName}
+          newParentName={newParentName}
+          setNewParentName={setNewParentName}
+          handleNameSubmit={handleNameSubmit}
+          nameUpdateLoading={nameUpdateLoading}
+        />
         <div className="text-center max-w-md">
           <div className="text-5xl mb-4">👶</div>
           <h2 className="text-2xl font-bold text-slate-800 mb-2">
@@ -262,6 +397,14 @@ const ParentDashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-4 md:p-6">
       {/* Header Section */}
+      <NameUpdateModal
+        showNameModal={isDefaultName}
+        setIsDefaultName={setIsDefaultName}
+        newParentName={newParentName}
+        setNewParentName={setNewParentName}
+        handleNameSubmit={handleNameSubmit}
+        nameUpdateLoading={nameUpdateLoading}
+      />
       <div className="mb-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <h1 className="text-3xl font-bold text-slate-800">

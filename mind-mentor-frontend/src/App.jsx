@@ -332,6 +332,10 @@ import ParentAuthGuard from "./ParentAuthGuard";
 import HomePackageSelection from "./pages/parent/HomePackageSelection";
 import SuperAdminKidEnquiryProfile from "./pages/employee/superadmin/SuperAdminKidEnquiryProfile";
 import SuperAdminAddExtraClass from "./pages/employee/superadmin/SuperAdminAddExtraClass";
+import ParentKidAttandacePage from "./pages/parent/ParentKidAttandacePage";
+import KidCompletedClassPage from "./pages/kids/KidCompletedClassPage";
+import KidTournamnetPage from "./pages/parent/KidTournamnetPage";
+import CoachCompletedClass from "./pages/employee/coach/CoachCompletedClass";
 
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
@@ -383,6 +387,7 @@ function App() {
           />
 
           <Route path="/" element={<HomePage />} />
+
           <Route path="/parent/login" element={<ParentLogin />} />
           <Route path="/parent/enter-otp" element={<ParentOtpPage />} />
           <Route
@@ -433,6 +438,10 @@ function App() {
             <Route path="add-kid" element={<AddKid />} />
             <Route path="kid/attendance/:id" element={<AttendancePage />} />
             <Route
+              path="kid/show-kid-attandance/:kidId"
+              element={<ParentKidAttandacePage />}
+            />
+            <Route
               path="kid/demo-class/:id"
               element={<ParentDemoClassPage />}
             />
@@ -450,6 +459,8 @@ function App() {
             <Route path="new-referal" element={<ParentReferalPage />} />
             <Route path="support" element={<SupportPage />} />
             <Route path="walkthrough-video" element={<WalkThroughPage />} />
+            <Route path="list-all-tournament/:id" element={<KidTournamnetPage />} />
+
             <Route
               path="add-kid-availability/:kidId"
               element={<AddKidAvailabilityPage />}
@@ -465,6 +476,8 @@ function App() {
           <Route path="/kid/otp" element={<KidsPinPage />} />
           <Route path="/kids/dashboard" element={<KidsDashboard />} />
           <Route path="/kids/today-class" element={<KidsDemoClassPage />} />
+          <Route path="/kids/my-completed-class" element={<KidCompletedClassPage />} />
+
           <Route
             path="/kids/class-schedule"
             element={<KidsClassShedulePage />}
@@ -831,13 +844,15 @@ function App() {
           <Route path="/coachInvoices" element={<CoachInvoice />} />
           <Route path="/coachFeedback" element={<CoachFeedback />} />
           <Route
-            path="/coachAttendanceReport"
+            path="/coach/department/student-attendance-report"
             element={<CoachAttendanceReport />}
           />
           <Route path="/coachScheduleClass/" element={<CoachScheduleClass />} />
           <Route path="/coachSupport/add" element={<CoachSupport />} />
           <Route path="/coachSupport/" element={<CoachSupportRequest />} />
           <Route path="/coachFeedaback/add" element={<CoachFeedbackAdd />} />
+          <Route path="/coach/department/past-class" element={<CoachCompletedClass />} />
+
           <Route
             path="/coachAvailability"
             element={<CoachAvailabilityPage />}
@@ -1264,6 +1279,8 @@ function App() {
             path="/super-admin/department/kid-enquiry-profile"
             element={<SuperAdminKidEnquiryProfile />}
           />
+          <Route path="/super-admin/department/tournaments" element={<TournamnetsTable />} />
+          <Route path="/super-admin/department/tournaments/add" element={<TournamentsForm />} />
 
           {/* <Route path="/super-admin/department/show-complete-enquiry-logs/:id" element={<ShowAllEnquiryLogs />} /> */}
           {/* <Route path="/super-admin/department/list-task-assigned-me" element={<SuperadminMyAssignTasksTable />}/>         */}
@@ -1288,8 +1305,6 @@ function App() {
           <Route path="/documents/" element={<DocumentsTable />} />
           <Route path="/users/" element={<UsersTable />} />
           <Route path="/users/add" element={<UserForm />} />
-          <Route path="/tournaments/" element={<TournamnetsTable />} />
-          <Route path="/tournaments/add" element={<TournamentsForm />} />
           <Route path="/participents/" element={<Participents />} />
           <Route path="/holiday/" element={<HolidayTable />} />
           <Route path="/holiday/add" element={<HolidayForm />} />

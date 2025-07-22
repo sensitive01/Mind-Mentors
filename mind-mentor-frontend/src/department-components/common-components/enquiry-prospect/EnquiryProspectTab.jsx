@@ -3,16 +3,18 @@ import { Button } from "@mui/material";
 import { Link } from "react-router-dom";
 import Prospect from "../prospects/Prospects";
 import Enquiry from "../enquiries/Enquires";
+import ActiveKids from "../../../department-components/common-components/enrolled-kids-SD/ActiveEnquiry"; // Import your new component
 
 const EnquiryProspectTab = () => {
   const [activeTab, setActiveTab] = useState("enquiry");
   const department = localStorage.getItem("department");
 
   return (
-    <div className="w-full h-full bg-gray-100  rounded-lg shadow-sm">
+    <div className="w-full h-full bg-gray-100 rounded-lg shadow-sm">
       {/* Header Section */}
-      <div className="flex justify-between  items-center px-6 py-4 border-b">
-        <div className="flex space-x-4 ">
+      <div className="flex justify-between items-center px-6 py-4 border-b">
+        <div className="flex space-x-4">
+          {/* Leads */}
           <button
             className={`py-2 px-4 font-medium transition-colors relative ${
               activeTab === "enquiry"
@@ -26,6 +28,8 @@ const EnquiryProspectTab = () => {
               <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#642b8f]" />
             )}
           </button>
+
+          {/* Prospects */}
           <button
             className={`py-2 px-4 font-medium transition-colors relative ${
               activeTab === "prospects"
@@ -39,7 +43,24 @@ const EnquiryProspectTab = () => {
               <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#642b8f]" />
             )}
           </button>
+
+          {/* Active Kids */}
+          <button
+            className={`py-2 px-4 font-medium transition-colors relative ${
+              activeTab === "activeKids"
+                ? "text-[#642b8f]"
+                : "text-gray-600 hover:text-[#642b8f]"
+            }`}
+            onClick={() => setActiveTab("activeKids")}
+          >
+            Active Kids
+            {activeTab === "activeKids" && (
+              <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#642b8f]" />
+            )}
+          </button>
         </div>
+
+        {/* New Enquiry Button */}
         <Button
           variant="contained"
           sx={{
@@ -55,8 +76,15 @@ const EnquiryProspectTab = () => {
           + New Enquiry Form
         </Button>
       </div>
-      <div className="p-2">{activeTab === "enquiry" ? <Enquiry /> : <Prospect />}</div>
+
+      {/* Tab Content */}
+      <div className="p-2">
+        {activeTab === "enquiry" && <Enquiry />}
+        {activeTab === "prospects" && <Prospect />}
+        {activeTab === "activeKids" && <ActiveKids />}
+      </div>
     </div>
   );
 };
+
 export default EnquiryProspectTab;

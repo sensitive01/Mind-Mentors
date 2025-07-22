@@ -2,6 +2,7 @@ const ClassSchedule = require("../../model/classSheduleModel");
 const ConductedClass = require("../../model/conductedClassSchema");
 const DemoClass = require("../../model/demoClassModel");
 const kidModel = require("../../model/kidModel");
+const SelectedClass = require("../../model/wholeClassAssignedModel");
 
 const validateKidChessId = async (req, res) => {
   try {
@@ -59,7 +60,10 @@ const getDemoClass = async (req, res) => {
     console.log("Welcome to fetch the demo class", req.params);
 
     const { id } = req.params;
-    const demoClassData = await DemoClass.findOne({ kidId: id },{date:1,time:1,programs:1});
+    const demoClassData = await DemoClass.findOne(
+      { kidId: id },
+      { date: 1, time: 1, programs: 1 }
+    );
 
     if (!demoClassData) {
       return res.status(404).json({ message: "Demo class not found" });
@@ -80,8 +84,7 @@ const getDemoClass = async (req, res) => {
 const getKidClassData = async (req, res) => {
   try {
     const { kidId } = req.params;
-    console.log(kidId) 
-  
+    console.log(kidId);
 
     if (!kidId) {
       return res.status(400).json({ message: "Invalid kidId provided." });
@@ -116,23 +119,26 @@ const getKidClassData = async (req, res) => {
     // Retrieve the class details for conducted classes
     const conductedClassDetails = await Promise.all(
       conductedClasses.map(async (conductedClass) => {
-        const classData = await ClassSchedule.findById(conductedClass.classID).lean();
+        const classData = await ClassSchedule.findById(
+          conductedClass.classID
+        ).lean();
         return { ...conductedClass, classData };
       })
     );
 
-    console.log("conductedClassDetails",conductedClassDetails)
- 
+    console.log("conductedClassDetails", conductedClassDetails);
+
     // Fetch all scheduled classes
     const allClasses = await ClassSchedule.find({
       "selectedStudents.kidId": kidId,
       status: "Scheduled",
     }).lean();
-    console.log("All class shedules",allClasses)
+    console.log("All class shedules", allClasses);
 
- 
     const currentDate = new Date();
-    const currentDay = currentDate.toLocaleDateString("en-US", { weekday: "long" });
+    const currentDay = currentDate.toLocaleDateString("en-US", {
+      weekday: "long",
+    });
     const currentTime = currentDate.getTime();
 
     const liveClasses = [];
@@ -142,11 +148,13 @@ const getKidClassData = async (req, res) => {
     allClasses.forEach((classItem) => {
       const [startTime, endTime] = classItem.classTime
         .split(" - ")
-        .map((time) => new Date(`${currentDate.toDateString()} ${time}`).getTime());
+        .map((time) =>
+          new Date(`${currentDate.toDateString()} ${time}`).getTime()
+        );
 
-      if (classItem.day == currentDay) { 
+      if (classItem.day == currentDay) {
         if (currentTime >= startTime || currentTime <= endTime) {
-          liveClasses.push(classItem); 
+          liveClasses.push(classItem);
         } else if (currentTime < startTime) {
           upcomingClasses.push(classItem);
         }
@@ -161,7 +169,7 @@ const getKidClassData = async (req, res) => {
       upcoming: upcomingClasses,
     };
 
-    console.log(responseData) 
+    console.log(responseData);
 
     return res.status(200).json({
       message: "Kid's class data retrieved successfully.",
@@ -169,10 +177,11 @@ const getKidClassData = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "An error occurred while fetching the class details." });
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching the class details." });
   }
 };
-
 
 const getMyTodayClassData = async (req, res) => {
   try {
@@ -181,47 +190,128 @@ const getMyTodayClassData = async (req, res) => {
     const kidData = await kidModel.findOne({ _id: kidId }, { kidsName: 1 });
 
     const today = new Date();
-    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const days = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
     const todayDayName = days[today.getDay()];
 
     const classData = await ClassSchedule.find({
       day: todayDayName,
       $or: [
         { selectedStudents: { $elemMatch: { kidId: kidId } } },
-        { demoAssignedKid: { $elemMatch: { kidId: kidId } } }
-      ]
+        { demoAssignedKid: { $elemMatch: { kidId: kidId } } },
+      ],
     });
 
     res.status(200).json({
       success: true,
       data: classData,
-      kidName: kidData?.kidsName
+      kidName: kidData?.kidsName,
     });
-
   } catch (err) {
     console.log("Error in getting the my today class data", err);
     res.status(500).json({
       success: false,
-      message: "Internal Server Error"
+      message: "Internal Server Error",
     });
   }
 };
 
+const getMyCompletedClassData = async (req, res) => {
+  try {
+    const { kidId } = req.params;
 
+    // Find classes where the kid is present in the students array
+    const conductedClassData = await ConductedClass.find({
+      "students.studentId": kidId,
+    });
 
+    // Prepare the result array
+    const filteredData = await Promise.all(
+      conductedClassData.map(async (classItem) => {
+        const student = classItem.students.find((s) => s.studentId === kidId);
 
+        // Fetch class schedule details using classId
+        const classDetails = await ClassSchedule.findOne(
+          { _id: classItem.classId },
+          { coachName: 1, program: 1, level: 1, classTime: 1 }
+        );
 
+        return {
+          classId: classItem.classId,
+          classStartTime: classItem.classStartTime,
+          conductedDate: classItem.conductedDate,
+          status: classItem.status,
+          studentDetails: {
+            classType: student?.classType,
+            name: student?.name,
+            joinTime: student?.joinTime,
+            attendance: student?.attendance,
+            feedback: student?.feedback,
+            kidId: student?.studentId,
+          },
+          coachId: classItem.coachId,
+          kidCount: classItem.kidCount,
+          attendedKidCount: classItem.attendedKidCount,
+          coachAmount: classItem.coachAmount,
+          coachPaidDate: classItem.coachPaidDate,
+          auditScore: classItem.auditScore,
+          feedbackScore: classItem.feedbackScore,
+          averageRating: classItem.averageRating,
+          coachClassFeedBack: classItem.coachClassFeedBack,
+          classDetails: classDetails || null,
+        };
+      })
+    );
 
+    res.status(200).json({ filteredData });
+  } catch (err) {
+    console.error("Error in getting the conducted class", err);
+    res.status(500).json({ message: "Failed to retrieve class data" });
+  }
+};
 
+const getMyUpcomingClassData = async (req, res) => {
+  try {
+    const { kidId } = req.params;
 
+    const today = new Date();
 
+    // Step 1: Find the matching SelectedClass document where the kidId is either in selected or demo list
+    const selectedDoc = await SelectedClass.findOne(
+      {
+        kidId: kidId,
+        status: "Active",
+      },
+      { generatedSchedule: 1 }
+    );
 
+    if (!selectedDoc) {
+      return res.status(404).json({ message: "No matching class found" });
+    }
 
+    // Step 3: Send back the class and kid info
+    res.status(200).json({
+      upcomingClass: selectedDoc.generatedSchedule,
+    });
+  } catch (err) {
+    console.error("Error in getting the upcoming class", err);
+    res.status(500).json({ message: "Failed to retrieve class data" });
+  }
+};
 
 module.exports = {
+  getMyUpcomingClassData,
+  getMyCompletedClassData,
   getMyTodayClassData,
   validateKidChessId,
   validateKidPin,
   getDemoClass,
-  getKidClassData
+  getKidClassData,
 };

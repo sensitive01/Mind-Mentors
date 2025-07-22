@@ -503,3 +503,38 @@ export const getKidExistProgramData = async (kidId) => {
     return err;
   }
 };
+
+export const getConductedClassDetails = async (kidId) => {
+  try {
+    const response = await parentInstance.get(
+      `/parent/get-conducted-class-details/${kidId}`
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+
+export const getParentName = async (parentId) => {
+  try {
+    const response = await parentInstance.get(
+      `/parent/get-my-name/${parentId}`
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+
+export const updateParentName = async (parentId,newFirstName) => {
+  try {
+    const response = await parentInstance.put(
+      `/parent/update-my-name/${parentId}`,{newFirstName}
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};

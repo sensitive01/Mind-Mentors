@@ -661,7 +661,7 @@ export const fetchTournamentById = async (id) => {
 
 // Update Tournament
 export const updateTournament = async (id, updatedData) => {
-  const response = await userInstance.put(`/tournaments/${id}`, updatedData);
+  const response = await userInstance.put(`/update-tournaments-data/${id}`, {updatedData});
   return response.data;
 };
 
@@ -992,5 +992,19 @@ export const getKidProfileData = async (enqId) => {
   const response = await userInstance.get(
     `/get-enquiry-related-all-kid-data/${enqId}`
   );
+  return response;
+};
+
+
+export const addNewTournamentData = async (tournamentData) => {
+  const response = await userInstance.post(
+    `/add-new-tournament-data`,{tournamentData}
+  );
+  return response;
+};
+
+
+export const getSuperAdminDashboard = async () => {
+  const response = await userInstance.get(`/get-super-admin-dashboard-data`);
   return response;
 };

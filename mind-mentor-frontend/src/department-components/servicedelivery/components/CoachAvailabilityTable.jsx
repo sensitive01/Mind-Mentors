@@ -27,6 +27,7 @@ import { Link, useNavigate } from "react-router-dom";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -92,10 +93,67 @@ const generateTimeSlots = () => {
 
 const timeSlots = generateTimeSlots();
 
+// Custom No Data Component
+const CustomNoRowsOverlay = () => {
+  const department = localStorage.getItem("department");
+  
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100%",
+        gap: 2,
+        p: 3,
+      }}
+    >
+      <CalendarTodayIcon 
+        sx={{ 
+          fontSize: 64, 
+          color: "text.secondary",
+          opacity: 0.5 
+        }} 
+      />
+      <Typography 
+        variant="h6" 
+        sx={{ 
+          color: "text.secondary", 
+          fontWeight: 500,
+          textAlign: "center" 
+        }}
+      >
+        No Coach Availability Found
+      </Typography>
+      <Typography 
+        variant="body2" 
+        sx={{ 
+          color: "text.secondary", 
+          textAlign: "center",
+          mb: 2 
+        }}
+      >
+        There are no coach availability records to display. Click the button below to add the first availability.
+      </Typography>
+      <Button
+        variant="contained"
+        color="primary"
+        component={Link}
+        to={`/${department}/department/coachAvailabilityForm`}
+        sx={{ mt: 1 }}
+      >
+        + Add First Availability
+      </Button>
+    </Box>
+  );
+};
+
 const CoachAvailabilityTable = () => {
   const department = localStorage.getItem("department");
   const navigate = useNavigate();
   const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 5,
     page: 0,
@@ -108,26 +166,58 @@ const CoachAvailabilityTable = () => {
 
   const fetchCoachAvailabilityData = async () => {
     try {
+      setLoading(true);
       const response = await getCoachAvailabilityData();
       console.log("Coach Availability Data", response);
-
-      const formattedData = response.data.availableDays.map(
-        (availability, index) => ({
-          id: availability._id,
-          slNo: index + 1,
-          coachId: availability.coachId,
-          coachName: availability.coachName,
-          program: availability.program,
-          day: availability.day,
-          fromTime: availability.fromTime,
-          toTime: availability.toTime,
-          createdAt: formatDateOnly(availability.createdAt),
-        })
-      );
-      setRows(formattedData);
+      
+      if (response && response.status === 200) {
+        // Check if data exists and has the expected structure
+        if (response.data && response.data.availableDays && Array.isArray(response.data.availableDays)) {
+          const formattedData = response.data.availableDays.map(
+            (availability, index) => ({
+              id: availability._id || availability.id || index,
+              slNo: index + 1,
+              coachId: availability.coachId || '',
+              coachName: availability.coachName || 'N/A',
+              program: availability.program || 'N/A',
+              day: availability.day || 'N/A',
+              fromTime: availability.fromTime || 'N/A',
+              toTime: availability.toTime || 'N/A',
+              createdAt: availability.createdAt ? formatDateOnly(availability.createdAt) : 'N/A',
+            })
+          );
+          setRows(formattedData);
+        } else{
+          // Handle case where data structure is different or empty
+          console.log("No availability data found or unexpected data structure:", response.data);
+          setRows([]);
+        }
+      } 
+      else if(response.status===401) {
+        console.log("API response status not 200:", response?.status);
+        setRows([]);
+        
+      }
     } catch (error) {
       console.error("Error fetching coach availability data:", error);
-      toast.error("Failed to fetch availability data");
+      
+      // More specific error messages based on error type
+      if (error.response) {
+        // Server responded with error status
+        const statusCode = error.response.status;
+        const errorMessage = error.response.data?.message || `Server error (${statusCode})`;
+        toast.error(`Failed to fetch data: ${errorMessage}`);
+      } else if (error.request) {
+        // Request was made but no response received
+        toast.error("Network error: Unable to connect to server");
+      } else {
+        // Something else happened
+        toast.error("An unexpected error occurred while fetching data");
+      }
+      
+      setRows([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -294,11 +384,15 @@ const CoachAvailabilityTable = () => {
           <DataGrid
             rows={rows}
             columns={columns}
+            loading={loading}
             pagination
             pageSizeOptions={[5]}
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}
-            slots={{ toolbar: GridToolbar }}
+            slots={{ 
+              toolbar: GridToolbar,
+              noRowsOverlay: CustomNoRowsOverlay
+            }}
             slotProps={{
               toolbar: {
                 showQuickFilter: true,
@@ -345,6 +439,7 @@ const CoachAvailabilityTable = () => {
                   value={editedData.program || ""}
                   onChange={(e) => handleEditChange("program", e.target.value)}
                   label="Program"
+                  disabled
                 >
                   {programs.map((prog) => (
                     <MenuItem key={prog.name} value={prog.name}>

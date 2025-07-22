@@ -56,3 +56,16 @@ export const submitCoachFeedback = async (
   );
   return response;
 };
+
+
+export const getConductedClassITaught = async (empId) => {
+  const response = await coachInsatance.get(`/coach/get-itaught-class-data/${empId}`);
+  return response;
+};
+
+
+
+export const getMyDashboardData = async (empId) => {
+  const response = await coachInsatance.get(`/coach/get-my-dashboard-data/${empId}`);
+  return response;
+};

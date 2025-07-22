@@ -307,14 +307,42 @@ const getAllEmployees = async (req, res) => {
   }
 };
 
-// Create a new tournament
 const createTournament = async (req, res) => {
   try {
-    const tournament = new Tournament(req.body);
-    await tournament.save();
-    console.log(req.body);
-    res.status(201).json(tournament);
+    const { tournamentData } = req.body;
+
+    if (!tournamentData || !Array.isArray(tournamentData)) {
+      return res.status(400).json({ error: "Invalid tournament data." });
+    }
+
+    const formattedData = tournamentData.map((t) => ({
+      tournamentName: t.tournamentName,
+      mode: t.mode,
+      tournamentCentre: t.centreName,
+      centerId: t.centerId,
+      tournamentDate: new Date(t.date),
+      time: t.time,
+      hasRegistrationFee: t.hasRegistrationFee,
+      registrationFee: t.hasRegistrationFee
+        ? Number(t.registrationFeeAmount)
+        : 0,
+      instructions: t.instructions,
+      numberOfParticipants: Number(t.numberOfParticipants),
+      prizePool: t.prizePool.map((prize) => ({
+        position: prize.position,
+        amount: prize.amount,
+      })),
+      registeredKids: [],
+    }));
+
+    const savedTournaments = await Tournament.insertMany(formattedData);
+
+    res.status(201).json({
+      message: "Tournaments created successfully",
+      data: savedTournaments,
+    });
   } catch (error) {
+    console.error("Error saving tournaments:", error.message);
     res.status(400).json({ error: error.message });
   }
 };
@@ -341,18 +369,52 @@ const getTournamentById = async (req, res) => {
   }
 };
 
-// Update a tournament by ID
 const updateTournament = async (req, res) => {
   try {
-    const tournament = await Tournament.findByIdAndUpdate(
-      req.params.id,
-      req.body,
+    const { tournamentId } = req.params;
+    const { updatedData } = req.body;
+
+    console.log("updateData:", updatedData);
+    console.log("tournamentId:", tournamentId);
+
+    if (!updatedData) {
+      return res.status(400).json({ error: "No update data provided." });
+    }
+
+    // Transform and map fields from frontend to schema
+    const transformedData = {
+      tournamentName: updatedData.tournamentName,
+      mode: updatedData.mode,
+      tournamentCentre: updatedData.tournamentCentre,
+      centerId: updatedData.centerId,
+      tournamentDate: new Date(updatedData.tournamentDate), // this is fine if the format is correct
+      time: updatedData.time,
+      hasRegistrationFee: updatedData.hasRegistrationFee,
+      registrationFee: Number(updatedData.registrationFee) || 0,
+      instructions: updatedData.instructions,
+      numberOfParticipants: Number(updatedData.numberOfParticipants),
+      prizePool: updatedData.prizePool?.map((prize) => ({
+        position: prize.position,
+        amount: prize.amount,
+      })),
+    };
+
+    const updatedTournament = await Tournament.findByIdAndUpdate(
+      tournamentId,
+      transformedData,
       { new: true, runValidators: true }
     );
-    if (!tournament)
+
+    if (!updatedTournament) {
       return res.status(404).json({ error: "Tournament not found" });
-    res.status(200).json(tournament);
+    }
+
+    res.status(200).json({
+      message: "Tournament updated successfully",
+      updatedTournament,
+    });
   } catch (error) {
+    console.error("Error updating tournament:", error.message);
     res.status(400).json({ error: error.message });
   }
 };
@@ -3109,7 +3171,10 @@ const updatePaymentDetails = async (req, res) => {
       { contactNumber: 1, whatsappNumber: 1 }
     );
 
-    const oldPackage = await packagePaymentData.find({enqId:newData.enqId,isPackageActive:true})
+    const oldPackage = await packagePaymentData.find({
+      enqId: newData.enqId,
+      isPackageActive: true,
+    });
 
     // Step 3: Update payment data
     const updatedPackage = await packagePaymentData.findOneAndUpdate(
@@ -3120,8 +3185,8 @@ const updatePaymentDetails = async (req, res) => {
         paymentMode: data.paymentMode,
         remarks: data.remarks,
         documentUrl: data.documentUrl,
-        isPackageActive:true,
-        isExtraPackage:(oldPackage.length>1)?true:false
+        isPackageActive: true,
+        isExtraPackage: oldPackage.length > 1 ? true : false,
       },
       { new: true }
     );
@@ -3374,7 +3439,7 @@ const getEnquiryRelatedAllKidData = async (req, res) => {
     const classPaymentData = await packagePaymentData.find({ enqId: enqId });
 
     const selectedClassData = await wholeClassSchema.find({ enqId: enqId });
-    const logData = await logsSchema.findOne({enqId:enqId});
+    const logData = await logsSchema.findOne({ enqId: enqId });
 
     res.status(200).json({
       success: true,
@@ -3385,7 +3450,7 @@ const getEnquiryRelatedAllKidData = async (req, res) => {
         parent: parentData,
         classPayments: classPaymentData,
         selectedClasses: selectedClassData,
-        logData:logData
+        logData: logData,
       },
     });
   } catch (err) {
@@ -3394,7 +3459,35 @@ const getEnquiryRelatedAllKidData = async (req, res) => {
   }
 };
 
+const getSuperAdminDashboardData = async (req, res) => {
+  try {
+    const enqData = await enquiryData.find({ enquiryField: "enquiryList" });
+    const prospectData = await enquiryData.find({ enquiryField: "prospects" });
+    const activeKids = await enquiryData.find({ paymentStatus: "Success" });
+    const employeeData = await Employee.find();
+    const physicalCenter = await PhysicalCenter.find();
+
+    res.status(200).json({
+      success: true,
+      data: {
+        enquiryCount: enqData.length,
+        prospectCount: prospectData.length,
+        activeKidsCount: activeKids.length,
+        employeeCount: employeeData.length,
+        physicalCenterCount: physicalCenter.length,
+      },
+    });
+  } catch (err) {
+    console.error("Error fetching Super Admin Dashboard data:", err);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 module.exports = {
+  getSuperAdminDashboardData,
   getEnquiryRelatedAllKidData,
   updateTicketPriority,
   reponseToTicket,

@@ -29,10 +29,10 @@ userRoute.put('/change-the-employee-password/:empId',userController.changeThePas
 
 
 
-userRoute.post('/tournaments',  userController.createTournament);
+userRoute.post('/add-new-tournament-data',  userController.createTournament);
 userRoute.get('/tournaments',  userController.getTournaments);
 userRoute.get('/tournaments/:id',  userController.getTournamentById);
-userRoute.put('/tournaments/:id',  userController.updateTournament);
+userRoute.put('/update-tournaments-data/:tournamentId',  userController.updateTournament);
 userRoute.delete('/tournaments/:id',  userController.deleteTournament);
 
 
@@ -154,6 +154,12 @@ userRoute.post('/save-online-package-data', userController.saveOnlineClassPackag
 userRoute.post('/save-offline-package-data', userController.submitPhysicalCenterClassPrice);
 userRoute.post('/save-hybrid-package-data', userController.submitHybridClassPrice);
 userRoute.post('/save-kit-price-data', userController.submitKitPriceData);
+
+
+userRoute.get(
+  "/get-super-admin-dashboard-data",
+  userController.getSuperAdminDashboardData
+);
 
 
 

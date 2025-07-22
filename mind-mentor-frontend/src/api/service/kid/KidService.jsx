@@ -56,3 +56,25 @@ export const getMyTodayClassData = async (kidId) => {
     return err;
   }
 };
+
+export const getMyCompletedClasses = async (kidId) => {
+  try {
+    const response = await kidInstance.get(
+      `/kid/get-my-completed-class-data/${kidId}`
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+export const getMyUpcomingClassData = async (kidId) => {
+  try {
+    const response = await kidInstance.get(
+      `/kid/get-my-upcoming-class-data/${kidId}`
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};

@@ -123,6 +123,24 @@ const MenuGrid = () => {
           gradient: "from-blue-600 to-blue-700",
           route: `/parent-my-package-data/${id}`,
         },
+        {
+          id: id,
+          icon: <FileText className="w-6 h-6 text-white" />,
+          title: "Class Attandance",
+          subtitle: "(Detailed View)",
+          bgColor: "bg-blue-600",
+          gradient: "from-blue-600 to-blue-700",
+          route: `/parent/kid/show-kid-attandance/${id}`,
+        },
+        {
+          id: id,
+          icon: <FileText className="w-6 h-6 text-white" />,
+          title: "All Tournamnets",
+          subtitle: "(Detailed View)",
+          bgColor: "bg-blue-600",
+          gradient: "from-blue-600 to-blue-700",
+          route: `/parent/list-all-tournament/${id}`,
+        },
       ];
     }
     // Otherwise show all standard menu items
@@ -181,6 +199,24 @@ const MenuGrid = () => {
           bgColor: "bg-purple-600",
           gradient: "from-purple-600 to-purple-700",
           route: "/parent/certificate",
+        },
+        {
+          id: id,
+          icon: <FileText className="w-6 h-6 text-white" />,
+          title: "Class Attandance",
+          subtitle: "(Detailed View)",
+          bgColor: "bg-blue-600",
+          gradient: "from-blue-600 to-blue-700",
+          route: `/parent/kid/show-kid-attandance/${id}`,
+        },
+        {
+          id: id,
+          icon: <FileText className="w-6 h-6 text-white" />,
+          title: "All Tournamnets",
+          subtitle: "(Detailed View)",
+          bgColor: "bg-blue-600",
+          gradient: "from-blue-600 to-blue-700",
+          route: `/parent/list-all-tournament/${id}`,
         },
         // {
         //   id: id,

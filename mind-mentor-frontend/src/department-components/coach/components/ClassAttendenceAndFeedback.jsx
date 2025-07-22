@@ -6,6 +6,8 @@ import {
   BookOpen,
   GraduationCap,
   MessageCircle,
+  Users,
+  UserCheck,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -32,8 +34,10 @@ const ClassAttendanceAndFeedback = () => {
   }, []);
 
   const [attendance, setAttendance] = useState({});
-  const [feedback, setFeedback] = useState({});
-  const [showFeedbackInput, setShowFeedbackInput] = useState({});
+  const [individualFeedback, setIndividualFeedback] = useState({});
+  const [overallClassFeedback, setOverallClassFeedback] = useState("");
+  const [showIndividualFeedbackInput, setShowIndividualFeedbackInput] = useState({});
+  const [showOverallFeedback, setShowOverallFeedback] = useState(false);
 
   const toggleAttendance = (studentId) => {
     setAttendance((prev) => ({
@@ -43,17 +47,34 @@ const ClassAttendanceAndFeedback = () => {
   };
 
   const handleSubmit = async () => {
-    const submissionData = classDetails?.selectedStudents?.map((student) => ({
+    // Combine selected students and demo students
+    const allStudents = [
+      ...(classDetails?.selectedStudents || []),
+      ...(classDetails?.demoAssignedKid || [])
+    ];
+
+    const submissionData = allStudents.map((student) => ({
       studentId: student.kidId,
       studentName: student.kidName,
       present: attendance[student.kidId] || false,
-      feedback: feedback[student.kidId] || "",
+      feedback: individualFeedback[student.kidId] || "",
+      studentType: classDetails?.selectedStudents?.find(s => s.kidId === student.kidId) ? 'regular' : 'demo'
     }));
-    console.log("Submission data:", submissionData);
+
+    // Add overall class feedback to submission
+    const finalSubmissionData = {
+      students: submissionData,
+      overallClassFeedback: overallClassFeedback,
+      classId: classId,
+      coachId: empId
+    };
+
+    console.log("Submission data:", finalSubmissionData);
+    
     const response = await addFeedbackAndAttandance(
       empId,
       classId,
-      submissionData
+      finalSubmissionData
     );
     console.log(response);
     if (response.status === 201) {
@@ -64,13 +85,22 @@ const ClassAttendanceAndFeedback = () => {
     }
   };
 
+  // Get all students (regular + demo)
+  const allStudents = [
+    ...(classDetails?.selectedStudents || []),
+    ...(classDetails?.demoAssignedKid || [])
+  ];
+
+  const regularStudentsCount = classDetails?.selectedStudents?.length || 0;
+  const demoStudentsCount = classDetails?.demoAssignedKid?.length || 0;
+
   return (
     <div className="max-w-6xl mx-auto p-6">
       <div className="bg-white rounded-lg shadow-lg">
         {/* Header */}
         <div className="p-6 border-b">
           <h1 className="text-2xl font-bold text-center text-indigo-900 mb-2">
-            Class Attendance
+            Class Attendance & Feedback
           </h1>
           <div className="flex justify-center">
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
@@ -106,72 +136,198 @@ const ClassAttendanceAndFeedback = () => {
             </div>
           </div>
 
-          {/* Students List */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-700">
-              Students ({classDetails?.selectedStudents?.length})
-            </h3>
-
-            {classDetails?.selectedStudents?.map((student) => (
-              <div
-                key={student.kidId}
-                className="bg-white p-4 rounded-lg shadow border transition-shadow hover:shadow-md"
-              >
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                  <h4 className="text-lg font-semibold">{student.kidName}</h4>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => toggleAttendance(student.kidId)}
-                      className={`px-4 py-2 rounded-md text-white transition-colors ${
-                        attendance[student.kidId]
-                          ? "bg-green-600 hover:bg-green-700"
-                          : "bg-red-600 hover:bg-red-700"
-                      }`}
-                    >
-                      {attendance[student.kidId] ? "Present" : "Absent"}
-                    </button>
-                    <button
-                      onClick={() =>
-                        setShowFeedbackInput((prev) => ({
-                          ...prev,
-                          [student.kidId]: !prev[student.kidId],
-                        }))
-                      }
-                      className="px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-50 flex items-center gap-2"
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                      Feedback
-                    </button>
-                  </div>
-                </div>
-
-                {showFeedbackInput[student.kidId] && (
-                  <div className="mt-4">
-                    <textarea
-                      className="w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                      rows="3"
-                      placeholder="Enter your feedback here..."
-                      value={feedback[student.kidId] || ""}
-                      onChange={(e) =>
-                        setFeedback((prev) => ({
-                          ...prev,
-                          [student.kidId]: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-                )}
+          {/* Student Count Summary */}
+          <div className="bg-blue-50 p-4 rounded-lg mb-6">
+            <div className="flex flex-wrap justify-center items-center gap-6">
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-blue-600" />
+                <span className="text-sm font-medium">Regular Students: {regularStudentsCount}</span>
               </div>
-            ))}
+              <div className="flex items-center gap-2">
+                <UserCheck className="w-5 h-5 text-green-600" />
+                <span className="text-sm font-medium">Demo Students: {demoStudentsCount}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-indigo-600" />
+                <span className="text-sm font-medium">Total Students: {allStudents.length}</span>
+              </div>
+            </div>
           </div>
+
+          {/* Overall Class Feedback Section */}
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-lg font-semibold text-gray-700">Overall Class Feedback</h3>
+              <button
+                onClick={() => setShowOverallFeedback(!showOverallFeedback)}
+                className="px-4 py-2 rounded-md border border-indigo-300 text-indigo-600 hover:bg-indigo-50 flex items-center gap-2"
+              >
+                <MessageCircle className="w-4 h-4" />
+                {showOverallFeedback ? "Hide" : "Add"} Overall Feedback
+              </button>
+            </div>
+            
+            {showOverallFeedback && (
+              <div className="bg-indigo-50 p-4 rounded-lg">
+                <textarea
+                  className="w-full p-3 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  rows="4"
+                  placeholder="Enter overall feedback for the entire class (e.g., class performance, topics covered, general observations)..."
+                  value={overallClassFeedback}
+                  onChange={(e) => setOverallClassFeedback(e.target.value)}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Regular Students Section */}
+          {regularStudentsCount > 0 && (
+            <div className="space-y-4 mb-8">
+              <h3 className="text-lg font-semibold text-gray-700 flex items-center gap-2">
+                <Users className="w-5 h-5 text-blue-600" />
+                Regular Students ({regularStudentsCount})
+              </h3>
+
+              {classDetails?.selectedStudents?.map((student) => (
+                <div
+                  key={student.kidId}
+                  className="bg-white p-4 rounded-lg shadow border border-blue-200 transition-shadow hover:shadow-md"
+                >
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <h4 className="text-lg font-semibold">{student.kidName}</h4>
+                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Regular</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => toggleAttendance(student.kidId)}
+                        className={`px-4 py-2 rounded-md text-white transition-colors ${
+                          attendance[student.kidId]
+                            ? "bg-green-600 hover:bg-green-700"
+                            : "bg-red-600 hover:bg-red-700"
+                        }`}
+                      >
+                        {attendance[student.kidId] ? "Present" : "Absent"}
+                      </button>
+                      <button
+                        onClick={() =>
+                          setShowIndividualFeedbackInput((prev) => ({
+                            ...prev,
+                            [student.kidId]: !prev[student.kidId],
+                          }))
+                        }
+                        className="px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-50 flex items-center gap-2"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        Individual Feedback
+                      </button>
+                    </div>
+                  </div>
+
+                  {showIndividualFeedbackInput[student.kidId] && (
+                    <div className="mt-4">
+                      <textarea
+                        className="w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        rows="3"
+                        placeholder="Enter individual feedback for this student..."
+                        value={individualFeedback[student.kidId] || ""}
+                        onChange={(e) =>
+                          setIndividualFeedback((prev) => ({
+                            ...prev,
+                            [student.kidId]: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Demo Students Section */}
+          {demoStudentsCount > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-700 flex items-center gap-2">
+                <UserCheck className="w-5 h-5 text-green-600" />
+                Demo Students ({demoStudentsCount})
+              </h3>
+
+              {classDetails?.demoAssignedKid?.map((student) => (
+                <div
+                  key={student.kidId}
+                  className="bg-white p-4 rounded-lg shadow border border-green-200 transition-shadow hover:shadow-md"
+                >
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <h4 className="text-lg font-semibold">{student.kidName}</h4>
+                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Demo</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => toggleAttendance(student.kidId)}
+                        className={`px-4 py-2 rounded-md text-white transition-colors ${
+                          attendance[student.kidId]
+                            ? "bg-green-600 hover:bg-green-700"
+                            : "bg-red-600 hover:bg-red-700"
+                        }`}
+                      >
+                        {attendance[student.kidId] ? "Present" : "Absent"}
+                      </button>
+                      <button
+                        onClick={() =>
+                          setShowIndividualFeedbackInput((prev) => ({
+                            ...prev,
+                            [student.kidId]: !prev[student.kidId],
+                          }))
+                        }
+                        className="px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-50 flex items-center gap-2"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        Individual Feedback
+                      </button>
+                    </div>
+                  </div>
+
+                  {showIndividualFeedbackInput[student.kidId] && (
+                    <div className="mt-4">
+                      <textarea
+                        className="w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        rows="3"
+                        placeholder="Enter individual feedback for this demo student..."
+                        value={individualFeedback[student.kidId] || ""}
+                        onChange={(e) =>
+                          setIndividualFeedback((prev) => ({
+                            ...prev,
+                            [student.kidId]: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* No Students Message */}
+          {allStudents.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <p>No students assigned to this class yet.</p>
+            </div>
+          )}
         </div>
 
         <div className="p-6 border-t">
           <button
             onClick={handleSubmit}
-            className="w-full py-2 bg-primary hover:bg-primary text-white rounded-md transition-colors"
+            disabled={allStudents.length === 0}
+            className="w-full py-3 bg-primary hover:bg-primary disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-md transition-colors font-medium"
           >
-            Submit Attendance
+            Submit Attendance & Feedback
           </button>
         </div>
       </div>

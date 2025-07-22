@@ -383,7 +383,6 @@ const ShowAllLeaves = () => {
         setLoading(false);
       } catch (err) {
         console.error("Error fetching leaves data:", err.message);
-        setError("Failed to fetch leaves data.");
         setLoading(false);
       }
     };

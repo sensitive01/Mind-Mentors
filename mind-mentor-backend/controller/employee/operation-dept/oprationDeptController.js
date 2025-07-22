@@ -814,7 +814,7 @@ const getAllEnquiries = async (req, res) => {
 
 const getProspectsData = async (req, res) => {
   try {
-    const enquiries = await OperationDept.find({ enquiryField: "prospects" }).sort({createdAt:-1});
+    const enquiries = await OperationDept.find({ enquiryField: "prospects",paymentStatus:"Pending" }).sort({createdAt:-1});
     console.log("enquiries", enquiries);
 
     const customizedEnquiries = await Promise.all(
