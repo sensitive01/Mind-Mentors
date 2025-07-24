@@ -661,7 +661,9 @@ export const fetchTournamentById = async (id) => {
 
 // Update Tournament
 export const updateTournament = async (id, updatedData) => {
-  const response = await userInstance.put(`/update-tournaments-data/${id}`, {updatedData});
+  const response = await userInstance.put(`/update-tournaments-data/${id}`, {
+    updatedData,
+  });
   return response.data;
 };
 
@@ -995,16 +997,50 @@ export const getKidProfileData = async (enqId) => {
   return response;
 };
 
-
 export const addNewTournamentData = async (tournamentData) => {
+  const response = await userInstance.post(`/add-new-tournament-data`, {
+    tournamentData,
+  });
+  return response;
+};
+
+export const getSuperAdminDashboard = async () => {
+  const response = await userInstance.get(`/get-super-admin-dashboard-data`);
+  return response;
+};
+
+export const getDemoClassData = async (enqId, isSheduled) => {
+  const response = await userInstance.get(
+    `/get-is-demo-sheduled/${enqId}/${isSheduled}`
+  );
+  return response;
+};
+
+export const getKidSheduleDemoDetailsEmployee = async (kidId) => {
+  const response = await userInstance.get(
+    `/get-is-demo-sheduled-for-kid/${kidId}`
+  );
+  return response;
+};
+
+export const employeeBookDemoClassData = async (kidId,bookingDetails) => {
   const response = await userInstance.post(
-    `/add-new-tournament-data`,{tournamentData}
+    `/book-demo-class-data/${kidId}`,{bookingDetails}
+  );
+  return response;
+};
+
+export const employeeCancelDemoClass = async (classId,kidId) => {
+  const response = await userInstance.delete(
+    `/cancel-demo-sheduled-for-kid/${classId}/${kidId}`
   );
   return response;
 };
 
 
-export const getSuperAdminDashboard = async () => {
-  const response = await userInstance.get(`/get-super-admin-dashboard-data`);
+export const superAdminGetConductedClass = async () => {
+  const response = await userInstance.get(
+    `/get-conducted-class-details`
+  );
   return response;
 };

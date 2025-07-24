@@ -66,7 +66,7 @@ const KidSidebar = () => {
 
   return (
     <div
-      className="fixed top-0 left-0 bottom-0 w-[250px] bg-gradient-to-b from-primary/90 to-primary/70 flex flex-col shadow-2xl overflow-y-auto z-50"
+      className="fixed top-0 left-0 bottom-0 w-[250px] bg-gradient-to-b from-primary/90 to-primary/70 flex flex-col shadow-2xl  z-50"
       style={{
         height: "100vh",
         maxHeight: "100vh",
@@ -92,7 +92,7 @@ const KidSidebar = () => {
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex-1 flex flex-col space-y-2 px-3 py-4 overflow-y-auto">
+      <nav className="flex-1 flex flex-col space-y-2 px-3 py-4 ">
         {navLinks.map((link) => (
           <Link
             key={link.path}

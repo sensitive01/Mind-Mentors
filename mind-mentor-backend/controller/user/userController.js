@@ -35,6 +35,8 @@ const kidSchema = require("../../model/kidModel");
 const enquiryData = require("../../model/operationDeptModel");
 const logsSchema = require("../../model/enquiryLogs");
 const wholeClassSchema = require("../../model/wholeClassAssignedModel");
+const demoClassSchema = require("../../model/demoClassModel");
+const ConductedClass = require("../../model/conductedClassSchema");
 
 const createUser = async (req, res) => {
   try {
@@ -3486,7 +3488,327 @@ const getSuperAdminDashboardData = async (req, res) => {
   }
 };
 
+const getIsDemoSheduledForKid = async (req, res) => {
+  try {
+    const { enqId } = req.params;
+
+    // Find enquiry data
+    const enqData = await enquiryData.findOne(
+      { _id: enqId },
+      { kidId: 1, kidFirstName: 1, programs: 1 }
+    );
+
+    if (!enqData) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Enquiry not found" });
+    }
+
+    // Find if demo class is scheduled
+    const demoClassData = await demoClassSchema.findOne({
+      kidId: enqData.kidId,
+    });
+
+    if (demoClassData) {
+      return res.status(200).json({
+        success: true,
+        message: "Demo class is already scheduled for this kid",
+        kidData: enqData,
+        demoDetails: demoClassData,
+      });
+    } else {
+      return res.status(200).json({
+        success: true,
+        message: "No demo class scheduled for this kid yet",
+        kidData: enqData,
+      });
+    }
+  } catch (err) {
+    console.error("Error in getIsDemoSheduledForKid:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
+const getSheduleDemoDetails = async (req, res) => {
+  try {
+    const { kidId } = req.params;
+    console.log("welcome", kidId);
+
+    const demoClassData = await ClassSchedule.find({ isDemoAdded: true });
+    const kidData = await kidSchema.findById(kidId, { selectedProgram: 1 });
+
+    console.log("demoClassData", demoClassData);
+    console.log("kidData", kidData);
+
+    // Sending response
+    return res.status(200).json({
+      success: true,
+      message: "Demo class and kid details fetched successfully",
+      demoClassData,
+      kidData,
+    });
+  } catch (err) {
+    console.error("Error in getting the kid schedule demo details", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch demo schedule details",
+      error: err.message,
+    });
+  }
+};
+
+const cancelDemoClass = async (req, res) => {
+  try {
+    const { kidId, classId } = req.params;
+    console.log(kidId, classId);
+
+    // Step 1: Get kid details
+    const kidDetails = await kidSchema.findById(kidId);
+    if (!kidDetails) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Kid not found." });
+    }
+
+    const existingDemo = await demoClassSchema.findOne({
+      _id: classId,
+    });
+
+    // Step 3: Remove kid from scheduled class
+    await ClassSchedule.updateOne(
+      { _id: existingDemo.classId },
+      { $pull: { demoAssignedKid: { kidId } } }
+    );
+
+    // Step 4: Update operation model
+    await enquiryData.findOneAndUpdate(
+      { kidId },
+      {
+        $set: {
+          "scheduleDemo.status": "Pending",
+          enquiryField: "prospects",
+        },
+      }
+    );
+    await demoClassSchema.findOneAndDelete({
+      _id: classId,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Demo class cancelled successfully.",
+    });
+  } catch (err) {
+    console.error("Error cancelling demo class:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to cancel demo class",
+      error: err.message,
+    });
+  }
+};
+
+const employeeBookDemoClass = async (req, res) => {
+  try {
+    const { kidId } = req.params;
+    const { bookingDetails } = req.body;
+
+    const kidDetails = await kidSchema.findById(kidId);
+    if (!kidDetails) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Kid not found." });
+    }
+
+    const existingDemo = await demoClassSchema.findOne({ kidId });
+    let savedBooking;
+
+    const kidData = {
+      kidId,
+      chessKid: kidDetails.chessId || "",
+      kidName: kidDetails.kidsName || "",
+      status: "Scheduled",
+      sheduleId: bookingDetails.classId,
+      sheduledDate: bookingDetails.date,
+    };
+
+    if (existingDemo) {
+      const previousClassId = existingDemo.classId;
+
+      // Check if class has changed
+      if (previousClassId !== bookingDetails.classId) {
+        // Remove kid from old class schedule
+        await ClassSchedule.updateOne(
+          { _id: previousClassId },
+          { $pull: { demoAssignedKid: { kidId } } }
+        );
+
+        // Add to new class schedule
+        await ClassSchedule.updateOne(
+          { _id: bookingDetails.classId },
+          { $push: { demoAssignedKid: kidData } }
+        );
+      }
+
+      // Update existing demo class
+      existingDemo.classId = bookingDetails.classId;
+      existingDemo.program = bookingDetails.program;
+      existingDemo.level = bookingDetails.level;
+      existingDemo.date = bookingDetails.date;
+      existingDemo.time = bookingDetails.time;
+      existingDemo.coachName = bookingDetails.coachName;
+      existingDemo.type = bookingDetails.type;
+      existingDemo.centerName = bookingDetails.centerName || null;
+      existingDemo.centerId = bookingDetails.centerId || null;
+
+      savedBooking = await existingDemo.save();
+
+      // Update OperationDept program & demo status
+      await enquiryData.findOneAndUpdate(
+        { kidId },
+        {
+          $set: {
+            "scheduleDemo.status": "Scheduled",
+            "programs.0.program": bookingDetails.program,
+            "programs.0.level": bookingDetails.level,
+            enquiryField: "prospects",
+          },
+        }
+      );
+
+      // Update Kid model selectedProgram
+      await kidSchema.findByIdAndUpdate(kidId, {
+        $set: {
+          "selectedProgram.0.program": bookingDetails.program,
+          "selectedProgram.0.level": bookingDetails.level,
+        },
+      });
+    } else {
+      // No existing demo — create new
+      const newBooking = new demoClassSchema({
+        classId: bookingDetails.classId,
+        program: bookingDetails.program,
+        level: bookingDetails.level,
+        date: bookingDetails.date,
+        time: bookingDetails.time,
+        coachName: bookingDetails.coachName,
+        type: bookingDetails.type,
+        centerName: bookingDetails.centerName || null,
+        centerId: bookingDetails.centerId || null,
+        kidId,
+      });
+
+      savedBooking = await newBooking.save();
+
+      // Add kid to demoAssignedKid in class schedule
+      await ClassSchedule.updateOne(
+        { _id: bookingDetails.classId },
+        { $push: { demoAssignedKid: kidData } }
+      );
+
+      // Update OperationDept (replace first program)
+      await enquiryData.findOneAndUpdate(
+        { kidId },
+        {
+          $set: {
+            "scheduleDemo.status": "Scheduled",
+            "programs.0.program": bookingDetails.program,
+            "programs.0.level": bookingDetails.level,
+            enquiryField: "prospects",
+          },
+        },
+        { upsert: true }
+      );
+
+      // Update kid model
+      await kidSchema.findByIdAndUpdate(
+        kidId,
+        {
+          $set: {
+            "selectedProgram.0.program": bookingDetails.program,
+            "selectedProgram.0.level": bookingDetails.level,
+          },
+        },
+        { new: true }
+      );
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: existingDemo
+        ? "Demo class updated successfully!"
+        : "Demo class booked successfully!",
+      data: savedBooking,
+    });
+  } catch (err) {
+    console.error("Error in saving the demo bookings", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to save demo class booking",
+      error: err.message,
+    });
+  }
+};
+
+const superAdminGetConductedClassDetails = async (req, res) => {
+  try {
+    const conductedClasses = await ConductedClass.find();
+    console.log("conductedClasses", conductedClasses);
+
+    // Fetch all class schedules in one query for efficient mapping
+    const classScheduleMap = {};
+    const classSchedules = await ClassSchedule.find(
+      {},
+      { _id: 1, coachName: 1, program: 1, level: 1 }
+    );
+    console.log("classSchedules", classSchedules);
+
+    // Create a map of classId to schedule data
+    classSchedules.forEach((schedule) => {
+      classScheduleMap[schedule._id.toString()] = {
+        coachName: schedule.coachName,
+        program: schedule.program,
+        level: schedule.level,
+      };
+    });
+
+    // Merge class schedule data into each conducted class
+    const enrichedClasses = conductedClasses.map((classItem) => {
+      const classIdStr = classItem.classId?.toString();
+      const scheduleInfo = classScheduleMap[classIdStr] || {};
+
+      return {
+        ...classItem._doc,
+        coachName: scheduleInfo.coachName || "N/A",
+        program: scheduleInfo.program || "N/A",
+        level: scheduleInfo.level || "N/A",
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: enrichedClasses,
+    });
+  } catch (err) {
+    console.error("Error in superAdminGetConductedClassDetails:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch conducted classes",
+      error: err.message,
+    });
+  }
+};
+
 module.exports = {
+  superAdminGetConductedClassDetails,
+  employeeBookDemoClass,
+  cancelDemoClass,
+  getSheduleDemoDetails,
+  getIsDemoSheduledForKid,
   getSuperAdminDashboardData,
   getEnquiryRelatedAllKidData,
   updateTicketPriority,

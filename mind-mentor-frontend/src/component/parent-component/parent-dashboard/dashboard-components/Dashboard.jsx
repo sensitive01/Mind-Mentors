@@ -298,7 +298,7 @@ const ParentDashboard = () => {
     setNameUpdateLoading(true);
     try {
       const response = await updateParentName(parentId, newParentName);
-      if (response.status===200) {
+      if (response.status === 200) {
         setParentName(newParentName);
         setIsDefaultName(false);
         setShowNameModal(false);
@@ -313,42 +313,6 @@ const ParentDashboard = () => {
   const handleNavigateToProgram = (kidId) => {
     navigate(`/parent/kid/demo-class-shedule/${kidId}`);
   };
-
-  // const NameUpdateModal = () => (
-  //   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-  //     <div className="bg-white rounded-xl p-6 max-w-md w-full">
-  //       <h2 className="text-2xl font-bold text-slate-800 mb-4">
-  //         Update Your Name
-  //       </h2>
-  //       <p className="text-slate-600 mb-4">
-  //         Please enter your name to personalize your experience.
-  //       </p>
-  //       <input
-  //         type="text"
-  //         value={newParentName}
-  //         onChange={(e) => setNewParentName(e.target.value)}
-  //         className="w-full px-4 py-2 border border-slate-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-  //         placeholder="Enter your name"
-  //       />
-  //       <div className="flex justify-end gap-3">
-  //         <button
-  //           onClick={() => setShowNameModal(false)}
-  //           className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-  //           disabled={nameUpdateLoading}
-  //         >
-  //           Cancel
-  //         </button>
-  //         <button
-  //           onClick={handleNameSubmit}
-  //           className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors disabled:opacity-50"
-  //           disabled={nameUpdateLoading || !newParentName.trim()}
-  //         >
-  //           {nameUpdateLoading ? "Updating..." : "Submit"}
-  //         </button>
-  //       </div>
-  //     </div>
-  //   </div>
-  // );
 
   if (loading) {
     return (
@@ -583,22 +547,62 @@ const ParentDashboard = () => {
 
 // View for when demo is pending
 const DemoPendingView = ({ childData, navigate }) => (
-  <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 text-center py-12">
-    <div className="max-w-md mx-auto">
-      <div className="text-5xl mb-6">📅</div>
-      <h2 className="text-2xl font-bold text-slate-800 mb-3">
-        Demo Class Not Scheduled
-      </h2>
-      <p className="text-slate-600 mb-6">
-        The demo class for {childData.name} hasn't been scheduled yet. Once
-        scheduled, you'll be able to see more details here.
-      </p>
-      <button
-        className="px-6 py-3 bg-indigo-500 text-white rounded-lg font-medium hover:bg-indigo-600 transition-colors"
-        onClick={() => navigate(`/parent/kid/demo-class/${childData.id}`)}
-      >
-        Schedule Demo Class
-      </button>
+  <div className="space-y-6">
+    {/* Side by Side Cards */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Schedule Demo Class Card */}
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 text-center">
+        <div className="mb-4">
+          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-3xl">📅</span>
+          </div>
+          <h3 className="text-xl font-semibold text-slate-800 mb-3">
+            Schedule Demo Class
+          </h3>
+          <p className="text-slate-600 mb-6">
+            Book a free demo class for {childData.name} to experience our
+            interactive chess learning platform.
+          </p>
+          <div className="space-y-3">
+            <button
+              className="w-full px-6 py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors"
+              onClick={() => navigate(`/parent/kid/demo-class-shedule/${childData.id}`)}
+            >
+              Schedule Demo Class
+            </button>
+            <div className="text-sm text-slate-500">
+              Free • 30 minutes • Interactive
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Choose Package Card */}
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 text-center">
+        <div className="mb-4">
+          <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-3xl">📦</span>
+          </div>
+          <h3 className="text-xl font-semibold text-slate-800 mb-3">
+            Choose Package
+          </h3>
+          <p className="text-slate-600 mb-6">
+            Select the perfect chess learning package tailored to{" "}
+            {childData.name}'s skill level and goals.
+          </p>
+          <div className="space-y-3">
+            <button
+              className="w-full px-6 py-3 bg-purple-500 text-white rounded-lg font-medium hover:bg-purple-600 transition-colors"
+              onClick={() => navigate(`/parent-kid-package-selection`)}
+            >
+              Choose Package
+            </button>
+            <div className="text-sm text-slate-500">
+              Multiple options • Flexible pricing
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 );

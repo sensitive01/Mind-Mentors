@@ -102,7 +102,7 @@ const ParentKidsRegistration = () => {
     if (isCooldown) return;
 
     const { kidsName, age, gender, pincode, city, state } = formData;
-    console.log(formData)
+    console.log(formData);
     if (!kidsName || !age || !gender || !pincode || !city || !state) {
       toast.error("Please fill out all fields before submitting.");
       setIsCooldown(true);
@@ -118,10 +118,14 @@ const ParentKidsRegistration = () => {
       const result = await parentKidsRegistration(formData, state);
       if (result.status === 201) {
         toast.success(result?.data?.message);
-        nextStep();
+        localStorage.setItem("parentId", formData.parentId);
+
+        // nextStep();
 
         setTimeout(() => {
-          navigate("/parent/kids/demo", { state: result?.data?.data });
+          // navigate("/parent/kids/demo", { state: result?.data?.data });
+
+          navigate("/parent/dashboard");
         }, 2000);
       }
     } catch (err) {
@@ -314,7 +318,7 @@ const ParentKidsRegistration = () => {
                   }`}
                   disabled={isCooldown}
                 >
-                  Next →
+                  Submit →
                 </button>
               </div>
             </form>

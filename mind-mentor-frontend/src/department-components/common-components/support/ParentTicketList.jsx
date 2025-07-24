@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Filter, Search, Send, ChevronDown } from "lucide-react";
+import { Filter, Search, Send, ChevronDown, Star, MessageCircle, User, Clock, AlertCircle } from "lucide-react";
 import {
   fetchParentTikets,
   reponseToTickets,
@@ -38,7 +38,7 @@ const ParentTicketList = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [selectedTicket?.messages]);
+  }, [selectedTicket?.messages, selectedTicket?.chatRating]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -130,17 +130,37 @@ const ParentTicketList = () => {
       }
     };
 
+    const handleRatingUpdate = ({ ticketId, rating, remarks }) => {
+      setTickets((prevTickets) =>
+        prevTickets.map((ticket) =>
+          ticket._id === ticketId
+            ? { ...ticket, chatRating: rating, chatRemarks: remarks }
+            : ticket
+        )
+      );
+
+      if (selectedTicket && selectedTicket._id === ticketId) {
+        setSelectedTicket((prev) => ({
+          ...prev,
+          chatRating: rating,
+          chatRemarks: remarks,
+        }));
+      }
+    };
+
     socket.emit("joinRoom", { userId: empId });
     socket.on("receiveMessage", handleReceiveMessage);
     socket.on("typingStatus", handleTypingStatus);
     socket.on("seenStatus", handleSeenStatus);
     socket.on("priorityUpdated", handlePriorityUpdate);
+    socket.on("ratingUpdated", handleRatingUpdate);
 
     return () => {
       socket.off("receiveMessage", handleReceiveMessage);
       socket.off("typingStatus", handleTypingStatus);
       socket.off("seenStatus", handleSeenStatus);
       socket.off("priorityUpdated", handlePriorityUpdate);
+      socket.off("ratingUpdated", handleRatingUpdate);
     };
   }, [empId, selectedTicket]);
 
@@ -231,7 +251,7 @@ const ParentTicketList = () => {
     socket.emit("typing", {
       ticketId: selectedTicket._id,
       isTyping: true,
-      userName: "Employeee",
+      userName: "Employee",
       userId: empId,
     });
 
@@ -243,7 +263,7 @@ const ParentTicketList = () => {
       socket.emit("typing", {
         ticketId: selectedTicket._id,
         isTyping: false,
-        userName: "Emploeee",
+        userName: "Employee",
         userId: empId,
       });
     }, 1500);
@@ -304,11 +324,6 @@ const ParentTicketList = () => {
       isLocal: true,
       createdAt: new Date().toISOString(),
     };
-
-    // setSelectedTicket((prev) => ({
-    //   ...prev,
-    //   messages: [...prev.messages, tempMessage],
-    // }));
 
     try {
       const response = await reponseToTickets(
@@ -430,64 +445,91 @@ const ParentTicketList = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      <div className="max-w-7xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div className="flex h-[calc(100vh-2rem)]">
-          <div className="w-80 border-r border-gray-200 flex flex-col bg-white">
-            <div className="p-4 border-b border-gray-200">
-              <h1 className="text-xl font-bold text-gray-900 mb-4">
-                Parent Support Tickets
-              </h1>
+  const renderRatingStars = (rating) => {
+    return (
+      <div className="flex items-center">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            size={16}
+            className={`${
+              star <= rating ? "text-yellow-500 fill-yellow-500" : "text-gray-300"
+            }`}
+          />
+        ))}
+      </div>
+    );
+  };
 
-              <div className="space-y-3">
+  return (
+   <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+      <div className="max-w-7xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
+        <div className="flex h-[calc(100vh-3rem)]">
+          {/* Sidebar */}
+          <div className="w-96 border-r border-slate-200 flex flex-col bg-gradient-to-b from-white to-slate-50">
+            {/* Header */}
+            <div className="p-6 border-b border-slate-200 bg-white">
+              <div className="flex items-center justify-between mb-6">
+                <h1 className="text-2xl font-bold text-slate-900">
+                  Support Tickets
+                </h1>
+                <div className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
+                  {filteredTickets.length} tickets
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {/* Search */}
                 <div className="relative">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                  <Search className="absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
                   <input
                     type="text"
                     placeholder="Search tickets..."
-                    className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
+                    className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all text-sm font-medium"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowFilterOptions(!showFilterOptions)}
-                      className="flex items-center space-x-2 px-3 py-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                    >
-                      <Filter size={14} />
-                      <span className="text-sm">Filter</span>
-                    </button>
-                    {showFilterOptions && (
-                      <div className="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-10 border border-gray-200">
-                        {[
-                          "all",
-                          "open",
-                          "in-progress",
-                          "resolved",
-                          "pending",
-                        ].map((filter) => (
-                          <button
-                            key={filter}
-                            onClick={() => {
-                              setActiveFilter(filter);
-                              setShowFilterOptions(false);
-                            }}
-                            className="w-full px-4 py-2 text-left hover:bg-gray-50 capitalize text-sm transition-colors"
-                          >
-                            {filter}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                {/* Filter */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowFilterOptions(!showFilterOptions)}
+                    className="flex items-center space-x-2 px-4 py-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-all border border-slate-200 font-medium text-slate-700"
+                  >
+                    <Filter size={16} />
+                    <span className="text-sm">Filter by status</span>
+                    <ChevronDown size={14} className="ml-auto" />
+                  </button>
+                  {showFilterOptions && (
+                    <div className="absolute left-0 mt-2 w-full bg-white rounded-xl shadow-lg py-2 z-10 border border-slate-200">
+                      {[
+                        { value: "all", label: "All Tickets" },
+                        { value: "open", label: "Open" },
+                        { value: "in-progress", label: "In Progress" },
+                        { value: "resolved", label: "Resolved" },
+                        { value: "pending", label: "Pending" },
+                      ].map((filter) => (
+                        <button
+                          key={filter.value}
+                          onClick={() => {
+                            setActiveFilter(filter.value);
+                            setShowFilterOptions(false);
+                          }}
+                          className={`w-full px-4 py-2.5 text-left hover:bg-slate-50 text-sm font-medium transition-colors ${
+                            activeFilter === filter.value ? "bg-blue-50 text-blue-700" : "text-slate-700"
+                          }`}
+                        >
+                          {filter.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
+            {/* Ticket List */}
             <div className="flex-1 overflow-y-auto">
               {isLoading ? (
                 <div className="flex items-center justify-center h-full">
@@ -498,55 +540,59 @@ const ParentTicketList = () => {
                   <div
                     key={ticket._id}
                     onClick={() => handleTicketClick(ticket)}
-                    className={`px-3 py-2 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-all
-                  ${
-                    selectedTicket?._id === ticket._id
-                      ? "bg-blue-50 border-l-4 border-l-blue-600"
-                      : ""
-                  }`}
+                    className={`mx-4 my-2 p-4 rounded-xl cursor-pointer transition-all border hover:shadow-md ${
+                      selectedTicket?._id === ticket._id
+                        ? "bg-blue-50 border-blue-200 shadow-md"
+                        : "bg-white border-slate-200 hover:border-slate-300"
+                    }`}
                   >
-                    <div className="flex justify-between items-start mb-1">
+                    {/* Ticket Header */}
+                    <div className="flex justify-between items-start mb-3">
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-gray-900 text-xs mb-0.5">
-                          {ticket.ticketId}
-                        </h3>
-                        <p className="text-xs text-gray-800 mb-0.5 truncate font-medium">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <span className="text-xs font-mono text-slate-500 bg-slate-100 px-2 py-1 rounded">
+                            {ticket.ticketId}
+                          </span>
+                          <span
+                            className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(ticket.status)}`}
+                          >
+                            {ticket.status}
+                          </span>
+                        </div>
+                        <h3 className="font-semibold text-slate-900 text-sm mb-1 line-clamp-1">
                           {ticket.topic}
-                        </p>
-                        <p className="text-xs text-gray-600 line-clamp-1">
+                        </h3>
+                        <p className="text-sm text-slate-600 line-clamp-2 leading-relaxed">
                           {ticket.description}
                         </p>
                       </div>
-                      <div className="flex flex-col items-end space-y-0.5 ml-2">
+                      <div className="flex flex-col items-end space-y-1 ml-3">
                         <span
-                          className={`text-xs px-1.5 py-0.5 rounded text-xs ${getStatusColor(
-                            ticket.status
-                          )}`}
-                        >
-                          {ticket.status}
-                        </span>
-                        <span
-                          className={`text-xs px-1.5 py-0.5 rounded text-xs ${getBadgeColor(
-                            ticket.priority
-                          )}`}
+                          className={`text-xs px-2 py-1 rounded-full font-medium ${getBadgeColor(ticket.priority)}`}
                         >
                           {ticket.priority}
                         </span>
+                        {ticket.chatRating && (
+                          <div className="flex items-center">
+                            {renderRatingStars(ticket.chatRating)}
+                          </div>
+                        )}
                       </div>
                     </div>
 
+                    {/* Last Message Preview */}
                     {ticket.messages.length > 0 && (
-                      <div className="mt-1 pt-1 border-t border-gray-100">
-                        <p className="text-xs text-gray-600 line-clamp-1 mb-0.5">
+                      <div className="mt-3 pt-3 border-t border-slate-100">
+                        <p className="text-sm text-slate-600 line-clamp-2 mb-2 leading-relaxed">
                           {ticket.messages[ticket.messages.length - 1].message}
                         </p>
-                        <div className="flex items-center justify-between text-xs text-gray-400">
-                          <span>{formatDate(ticket.createdAt)}</span>
+                        <div className="flex items-center justify-between text-xs text-slate-400">
+                          <div className="flex items-center space-x-1">
+                            <Clock size={12} />
+                            <span>{formatDate(ticket.createdAt)}</span>
+                          </div>
                           <span>
-                            {formatTime(
-                              ticket.messages[ticket.messages.length - 1]
-                                .createdAt
-                            )}
+                            {formatTime(ticket.messages[ticket.messages.length - 1].createdAt)}
                           </span>
                         </div>
                       </div>
@@ -557,181 +603,196 @@ const ParentTicketList = () => {
             </div>
           </div>
 
-          <div className="flex-1 flex flex-col bg-gray-50">
+          {/* Main Content */}
+          <div className="flex-1 flex flex-col bg-slate-50">
             {selectedTicket ? (
               <>
-                <div className="p-6 bg-white border-b border-gray-200">
+                {/* Ticket Header */}
+                <div className="p-6 bg-white border-b border-slate-200 shadow-sm">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
-                      <h2 className="text-xl font-bold text-gray-900 mb-2">
-                        {selectedTicket.topic}
-                      </h2>
-                      <p className="text-sm text-gray-600 mb-4">
-                        {selectedTicket.description}
-                      </p>
-                      <div className="flex items-center space-x-4">
-                        <span className="text-sm text-gray-500 font-medium">
+                      <div className="flex items-center space-x-3 mb-3">
+                        <span className="text-sm font-mono text-slate-500 bg-slate-100 px-3 py-1 rounded-lg">
                           #{selectedTicket.ticketId}
                         </span>
                         <span
-                          className={`text-xs px-3 py-1 rounded-full ${getStatusColor(
-                            selectedTicket.status
-                          )}`}
+                          className={`text-sm px-3 py-1 rounded-full font-medium ${getStatusColor(selectedTicket.status)}`}
                         >
                           {selectedTicket.status}
                         </span>
                         <div className="relative" ref={priorityDropdownRef}>
                           <button
                             onClick={() => {
-                              if (
-                                !isTicketResolved(selectedTicket) &&
-                                !isUpdatingPriority
-                              ) {
+                              if (!isTicketResolved(selectedTicket) && !isUpdatingPriority) {
                                 setShowPriorityDropdown(!showPriorityDropdown);
                               }
                             }}
-                            disabled={
-                              isTicketResolved(selectedTicket) ||
-                              isUpdatingPriority
-                            }
-                            className={`text-xs px-3 py-1 rounded-full flex items-center transition-all ${getBadgeColor(
-                              selectedTicket.priority
-                            )} ${
+                            disabled={isTicketResolved(selectedTicket) || isUpdatingPriority}
+                            className={`text-sm px-3 py-1 rounded-full flex items-center transition-all font-medium ${getBadgeColor(selectedTicket.priority)} ${
                               isTicketResolved(selectedTicket)
                                 ? "opacity-50 cursor-not-allowed"
                                 : "cursor-pointer hover:shadow-md"
                             } ${isUpdatingPriority ? "opacity-70" : ""}`}
                           >
-                            {isUpdatingPriority ? (
-                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current mr-1"></div>
-                            ) : null}
-                            {selectedTicket.priority}
-                            {!isTicketResolved(selectedTicket) &&
-                              !isUpdatingPriority && (
-                                <ChevronDown className="ml-1 w-3 h-3" />
-                              )}
-                          </button>
-                          {showPriorityDropdown &&
-                            !isTicketResolved(selectedTicket) && (
-                              <div className="absolute z-10 mt-1 w-32 bg-white rounded-md shadow-lg py-1 border border-gray-200">
-                                {["High", "Medium", "Low"].map((priority) => (
-                                  <button
-                                    key={priority}
-                                    onClick={() => updatePriority(priority)}
-                                    disabled={isUpdatingPriority}
-                                    className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 flex items-center transition-colors ${
-                                      selectedTicket.priority === priority
-                                        ? "bg-blue-50 text-blue-600"
-                                        : ""
-                                    } ${
-                                      isUpdatingPriority
-                                        ? "opacity-50 cursor-not-allowed"
-                                        : "cursor-pointer"
-                                    }`}
-                                  >
-                                    <span
-                                      className={`w-2 h-2 rounded-full mr-2 ${
-                                        priority === "High"
-                                          ? "bg-red-500"
-                                          : priority === "Medium"
-                                          ? "bg-yellow-500"
-                                          : "bg-green-500"
-                                      }`}
-                                    ></span>
-                                    {priority}
-                                  </button>
-                                ))}
-                              </div>
+                            {isUpdatingPriority && (
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current mr-2"></div>
                             )}
+                            {selectedTicket.priority}
+                            {!isTicketResolved(selectedTicket) && !isUpdatingPriority && (
+                              <ChevronDown className="ml-1 w-3 h-3" />
+                            )}
+                          </button>
+                          {showPriorityDropdown && !isTicketResolved(selectedTicket) && (
+                            <div className="absolute z-10 mt-2 w-36 bg-white rounded-xl shadow-lg py-2 border border-slate-200">
+                              {["High", "Medium", "Low"].map((priority) => (
+                                <button
+                                  key={priority}
+                                  onClick={() => updatePriority(priority)}
+                                  disabled={isUpdatingPriority}
+                                  className={`w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 flex items-center transition-colors font-medium ${
+                                    selectedTicket.priority === priority
+                                      ? "bg-blue-50 text-blue-700"
+                                      : "text-slate-700"
+                                  } ${isUpdatingPriority ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                                >
+                                  <span
+                                    className={`w-2.5 h-2.5 rounded-full mr-3 ${
+                                      priority === "High"
+                                        ? "bg-red-500"
+                                        : priority === "Medium"
+                                        ? "bg-yellow-500"
+                                        : "bg-green-500"
+                                    }`}
+                                  ></span>
+                                  {priority}
+                                </button>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                        {isTicketResolved(selectedTicket) && (
-                          <span className="text-xs text-gray-500 italic">
-                            (Resolved - No changes allowed)
-                          </span>
-                        )}
                         {lastSeen && (
-                          <span className="text-xs text-gray-500">
+                          <span className="text-sm text-slate-500 flex items-center">
+                            <Clock size={14} className="mr-1" />
                             Seen: {formatTime(lastSeen)}
                           </span>
                         )}
                       </div>
+                      <h2 className="text-2xl font-bold text-slate-900 mb-2">
+                        {selectedTicket.topic}
+                      </h2>
+                      <p className="text-slate-600 leading-relaxed">
+                        {selectedTicket.description}
+                      </p>
+                      {isTicketResolved(selectedTicket) && (
+                        <div className="mt-3 flex items-center text-sm text-amber-600 bg-amber-50 px-3 py-2 rounded-lg border border-amber-200">
+                          <AlertCircle size={16} className="mr-2" />
+                          <span className="font-medium">This ticket is resolved - No changes allowed</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4">
-                  <div className="space-y-3">
+                {/* Messages */}
+                <div className="flex-1 overflow-y-auto p-6">
+                  <div className="space-y-4">
+                    {/* Initial Ticket Message */}
                     <div className="flex justify-start">
-                      <div className="max-w-[75%] rounded-lg p-3 bg-white shadow-sm border border-gray-200">
-                        <div className="flex flex-col">
-                          <span className="text-xs text-gray-500 mb-1 font-medium">
-                            Parent
-                          </span>
-                          <p className="text-sm text-gray-800 whitespace-pre-wrap">
-                            {selectedTicket.description}
-                          </p>
-                          <span className="text-xs text-gray-400 mt-2">
+                      <div className="max-w-[80%] rounded-2xl p-4 bg-white shadow-sm border border-slate-200">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <User size={16} className="text-slate-500" />
+                          <span className="text-sm font-semibold text-slate-700">Parent</span>
+                          <span className="text-xs text-slate-400">
                             {formatTime(selectedTicket.createdAt)}
                           </span>
                         </div>
+                        <p className="text-slate-800 whitespace-pre-wrap leading-relaxed">
+                          {selectedTicket.description}
+                        </p>
                       </div>
                     </div>
 
+                    {/* Message Thread */}
                     {selectedTicket.messages.map((message, idx) => (
                       <div
                         key={message._id || idx}
                         className={`flex ${
-                          isCurrentUser(message.senderId)
-                            ? "justify-end"
-                            : "justify-start"
+                          isCurrentUser(message.senderId) ? "justify-end" : "justify-start"
                         }`}
                       >
                         <div
-                          className={`max-w-[75%] rounded-lg p-3 ${
+                          className={`max-w-[80%] rounded-2xl p-4 ${
                             isCurrentUser(message.senderId)
-                              ? "bg-blue-600 text-white"
-                              : "bg-white shadow-sm border border-gray-200"
+                              ? "bg-blue-600 text-white shadow-lg"
+                              : "bg-white shadow-sm border border-slate-200"
                           } ${message.isLocal ? "opacity-70" : ""}`}
                         >
-                          <div className="flex flex-col">
+                          <div className="flex items-center space-x-2 mb-2">
+                            {isCurrentUser(message.senderId) ? (
+                              <MessageCircle size={16} className="text-blue-200" />
+                            ) : (
+                              <User size={16} className="text-slate-500" />
+                            )}
                             <span
-                              className={`text-xs ${
-                                isCurrentUser(message.senderId)
-                                  ? "text-blue-200"
-                                  : "text-gray-500"
-                              } mb-1 font-medium`}
-                            >
-                              {isCurrentUser(message.senderId)
-                                ? "You"
-                                : "Parent"}
-                            </span>
-                            <p
-                              className={`text-sm whitespace-pre-wrap ${
-                                isCurrentUser(message.senderId)
-                                  ? "text-white"
-                                  : "text-gray-800"
+                              className={`text-sm font-semibold ${
+                                isCurrentUser(message.senderId) ? "text-blue-200" : "text-slate-700"
                               }`}
                             >
-                              {message.message}
-                            </p>
+                              {isCurrentUser(message.senderId) ? "You" : "Parent"}
+                            </span>
                             <span
                               className={`text-xs ${
-                                isCurrentUser(message.senderId)
-                                  ? "text-blue-200"
-                                  : "text-gray-400"
-                              } mt-2 flex items-center justify-end`}
+                                isCurrentUser(message.senderId) ? "text-blue-200" : "text-slate-400"
+                              }`}
                             >
                               {message.time || formatTime(message.createdAt)}
                             </span>
                           </div>
+                          <p
+                            className={`whitespace-pre-wrap leading-relaxed ${
+                              isCurrentUser(message.senderId) ? "text-white" : "text-slate-800"
+                            }`}
+                          >
+                            {message.message}
+                          </p>
                         </div>
                       </div>
                     ))}
 
+                    {/* Rating and Feedback */}
+                    {isTicketResolved(selectedTicket) && selectedTicket.chatRating && (
+                      <div className="flex justify-start">
+                        <div className="max-w-[80%] rounded-2xl p-4 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200">
+                          <div className="flex items-center space-x-2 mb-3">
+                            <Star size={16} className="text-green-600" />
+                            <span className="text-sm font-semibold text-green-700">Parent Feedback</span>
+                          </div>
+                          <div className="flex items-center mb-3">
+                            <span className="text-sm text-slate-700 mr-3 font-medium">Rating:</span>
+                            {renderRatingStars(selectedTicket.chatRating)}
+                          </div>
+                          {selectedTicket.chatRemarks && (
+                            <>
+                              <span className="text-sm text-slate-700 font-medium block mb-2">Comments:</span>
+                              <p className="text-slate-800 whitespace-pre-wrap leading-relaxed">
+                                {selectedTicket.chatRemarks}
+                              </p>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Typing Indicator */}
                     {typingStatus && (
                       <div className="flex justify-start">
-                        <div className="max-w-[75%] rounded-lg p-3 bg-white shadow-sm border border-gray-200">
-                          <p className="text-xs italic text-gray-500">
+                        <div className="max-w-[80%] rounded-2xl p-4 bg-slate-100 border border-slate-200">
+                          <p className="text-sm italic text-slate-500 flex items-center">
+                            <div className="flex space-x-1 mr-2">
+                              <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
+                              <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                              <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                            </div>
                             {typingStatus}
                           </p>
                         </div>
@@ -742,12 +803,13 @@ const ParentTicketList = () => {
                   </div>
                 </div>
 
-                <div className="p-4 bg-white border-t border-gray-200">
-                  <div className="flex items-end space-x-3">
+                {/* Message Input */}
+                <div className="p-6 bg-white border-t border-slate-200">
+                  <div className="flex items-end space-x-4">
                     <div className="flex-1">
                       <textarea
-                        className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
-                        rows="2"
+                        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all font-medium"
+                        rows="3"
                         placeholder={
                           isTicketResolved(selectedTicket)
                             ? "This ticket is resolved. No messages can be sent."
@@ -763,7 +825,7 @@ const ParentTicketList = () => {
                         }}
                         disabled={isSending || isTicketResolved(selectedTicket)}
                       />
-                      <div className="text-xs text-gray-500 mt-1">
+                      <div className="text-xs text-slate-500 mt-2 px-1">
                         {isTicketResolved(selectedTicket)
                           ? "Ticket is resolved - messaging disabled"
                           : "Press Enter to send, Shift + Enter for new line"}
@@ -771,32 +833,29 @@ const ParentTicketList = () => {
                     </div>
                     <button
                       onClick={sendMessage}
-                      disabled={
-                        !newMessage.trim() ||
-                        isSending ||
-                        isTicketResolved(selectedTicket)
-                      }
-                      className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                      disabled={!newMessage.trim() || isSending || isTicketResolved(selectedTicket)}
+                      className="px-6 py-4 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center shadow-lg hover:shadow-xl font-medium"
                     >
                       {isSending ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                       ) : (
-                        <Send size={16} />
+                        <Send size={18} />
                       )}
                     </button>
                   </div>
                 </div>
               </>
             ) : (
-              <div className="flex flex-col items-center justify-center h-full text-center p-6">
-                <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-6">
-                  <Send size={28} className="text-blue-600" />
+              /* Empty State */
+              <div className="flex flex-col items-center justify-center h-full text-center p-8">
+                <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-blue-200 rounded-3xl flex items-center justify-center mb-6 shadow-lg">
+                  <MessageCircle size={32} className="text-blue-600" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                <h3 className="text-2xl font-bold text-slate-900 mb-3">
                   No Ticket Selected
                 </h3>
-                <p className="text-gray-500 text-lg">
-                  Choose a ticket from the sidebar to start messaging
+                <p className="text-slate-500 text-lg leading-relaxed max-w-md">
+                  Choose a ticket from the sidebar to start viewing and responding to parent messages
                 </p>
               </div>
             )}

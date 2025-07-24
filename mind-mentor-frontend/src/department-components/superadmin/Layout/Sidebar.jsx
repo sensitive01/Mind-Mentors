@@ -418,8 +418,8 @@ const ModernSidebar = () => {
         },
         {
           icon: <ReportsIcon />,
-          text: "Coach Feedback",
-          link: "/superadminFeedback",
+          text: "Conducted Classes",
+          link: "/super-admin/department/all-counducted-class-Data",
         },
         {
           icon: <ReportsIcon />,

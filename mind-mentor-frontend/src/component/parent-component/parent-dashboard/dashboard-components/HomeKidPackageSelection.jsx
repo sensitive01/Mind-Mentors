@@ -63,6 +63,7 @@ const HomeKidPackageSelection = () => {
   const [selectedLevel, setSelectedLevel] = useState("");
   const [availableLevels, setAvailableLevels] = useState([]);
   const [allPrograms, setAllPrograms] = useState([]);
+  const [viewOnlyMode, setViewOnlyMode] = useState(false);
 
   // Helper function to format time display
   const getTimeSlotDisplay = (timeSlot) => {
@@ -140,6 +141,9 @@ const HomeKidPackageSelection = () => {
         if (kidsResponse.status === 200) {
           const kidsData = kidsResponse.data.kidData;
           setKidsList(kidsData);
+          if (kidsData.length === 0) {
+            setViewOnlyMode(kidsData.length === 0);
+          }
 
           // Auto-select if only one kid - FIXED VERSION
           if (kidsData.length === 1) {
@@ -150,8 +154,8 @@ const HomeKidPackageSelection = () => {
 
         // Fetch package details
         const packageResponse = await fetchParentPackageDetails();
-        if (packageResponse.status === 200) { 
-          const packageData = packageResponse?.data?.data; 
+        if (packageResponse.status === 200) {
+          const packageData = packageResponse?.data?.data;
           setPackages({
             online: packageData.onlinePackageData || [],
             offline: packageData.offlineClassPackageData || [],
@@ -190,7 +194,7 @@ const HomeKidPackageSelection = () => {
     if (program) {
       setAvailableLevels(program.programLevel || []);
     }
-    setSelectedLevel(""); // Reset level when program changes     
+    setSelectedLevel(""); // Reset level when program changes
   };
 
   // Handle level selection change
@@ -655,6 +659,31 @@ const HomeKidPackageSelection = () => {
 
       <div className="max-w-4xl mx-auto p-4">
         {/* Kid Selection Dropdown - Only show if multiple kids */}
+        {viewOnlyMode && (
+          <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-6">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg
+                  className="h-5 w-5 text-yellow-500"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-yellow-700">
+                  You're in view-only mode. To select packages, please add a
+                  child first.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
         {kidsList.length > 1 && (
           <div className="bg-white rounded-lg shadow p-6 mb-6">
             <h2 className="text-lg font-semibold mb-4">Select Child</h2>
@@ -757,316 +786,319 @@ const HomeKidPackageSelection = () => {
         )}
 
         {/* Only show package selection if a kid is selected and has programs (not showing program selection) */}
-        {selectedKid && !showProgramSelection && data.programs.length > 0 ? (
-          <>
-            {/* Step 1: Choose Package Type */}
+
+        <>
+          {/* Step 1: Choose Package Type */}
+          <div className="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 className="text-lg font-semibold mb-4">
+              1. Choose How You Want to Learn
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { value: "online", label: "Online Class", icon: "💻" },
+                { value: "offline", label: "Center Class", icon: "🏢" },
+                { value: "hybrid", label: "Hybrid Class", icon: "🔄" },
+                { value: "kit", label: "Kit Only", icon: "📦" },
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => handlePackageTypeChange(option.value)}
+                  className={`p-4 rounded-lg border-2 text-center ${
+                    packageType === option.value
+                      ? "border-blue-500 bg-blue-50 text-blue-700"
+                      : "border-gray-200 hover:border-blue-300"
+                  }`}
+                >
+                  <div className="text-2xl mb-2">{option.icon}</div>
+                  <div className="font-medium">{option.label}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Step 2: Configure Package */}
+          {packageType && (
             <div className="bg-white rounded-lg shadow p-6 mb-6">
               <h2 className="text-lg font-semibold mb-4">
-                1. Choose How You Want to Learn
+                2. Set Up Your Classes
               </h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[
-                  { value: "online", label: "Online Class", icon: "💻" },
-                  { value: "offline", label: "Center Class", icon: "🏢" },
-                  { value: "hybrid", label: "Hybrid Class", icon: "🔄" },
-                  { value: "kit", label: "Kit Only", icon: "📦" },
-                ].map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => handlePackageTypeChange(option.value)}
-                    className={`p-4 rounded-lg border-2 text-center ${
-                      packageType === option.value
-                        ? "border-blue-500 bg-blue-50 text-blue-700"
-                        : "border-gray-200 hover:border-blue-300"
-                    }`}
-                  >
-                    <div className="text-2xl mb-2">{option.icon}</div>
-                    <div className="font-medium">{option.label}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
 
-            {/* Step 2: Configure Package */}
-            {packageType && (
-              <div className="bg-white rounded-lg shadow p-6 mb-6">
-                <h2 className="text-lg font-semibold mb-4">
-                  2. Set Up Your Classes
-                </h2>
+              {/* Online/Offline Config */}
+              {(packageType === "online" || packageType === "offline") && (
+                <div className="space-y-6">
+                  {/* Time Slot */}
+                  <div>
+                    <label className="block font-medium mb-3">
+                      When do you prefer classes?
+                    </label>
+                    <div className="grid grid-cols-1 gap-4 max-w-md">
+                      {["day", "night"].map((slot) => (
+                        <label
+                          key={slot}
+                          className="flex items-center cursor-pointer p-3 border rounded-lg hover:bg-gray-50"
+                        >
+                          <input
+                            type="radio"
+                            name="timeSlot"
+                            value={slot}
+                            checked={selectedTimeSlot === slot}
+                            onChange={(e) =>
+                              handleTimeSlotChange(e.target.value)
+                            }
+                            className="mr-3"
+                          />
+                          <span>{getTimeSlotDisplay(slot)}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
 
-                {/* Online/Offline Config */}
-                {(packageType === "online" || packageType === "offline") && (
-                  <div className="space-y-6">
-                    {/* Time Slot */}
+                  {/* Center Selection */}
+                  {selectedTimeSlot && (
                     <div>
                       <label className="block font-medium mb-3">
-                        When do you prefer classes?
-                      </label>
-                      <div className="grid grid-cols-1 gap-4 max-w-md">
-                        {["day", "night"].map((slot) => (
-                          <label
-                            key={slot}
-                            className="flex items-center cursor-pointer p-3 border rounded-lg hover:bg-gray-50"
-                          >
-                            <input
-                              type="radio"
-                              name="timeSlot"
-                              value={slot}
-                              checked={selectedTimeSlot === slot}
-                              onChange={(e) =>
-                                handleTimeSlotChange(e.target.value)
-                              }
-                              className="mr-3"
-                            />
-                            <span>{getTimeSlotDisplay(slot)}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Center Selection */}
-                    {selectedTimeSlot && (
-                      <div>
-                        <label className="block font-medium mb-3">
-                          {packageType === "online" &&
-                          availableCenters.length === 1
-                            ? "Center"
-                            : "Choose Center"}
-                        </label>
                         {packageType === "online" &&
-                        availableCenters.length === 1 ? (
-                          <div className="p-3 bg-gray-50 border rounded-lg">
-                            <span className="font-medium">
-                              {availableCenters[0].centerName}
-                            </span>
-                            <span className="ml-2 text-gray-600">
-                              - ₹{availableCenters[0].oneClassPrice}/class
-                            </span>
-                          </div>
-                        ) : (
-                          <select
-                            value={selectedCenter}
-                            onChange={(e) =>
-                              handleCenterSelectionForTimeSlot(e.target.value)
-                            }
-                            className="w-full max-w-md p-3 border rounded-lg"
-                          >
-                            <option value="">Select a center</option>
-                            {availableCenters.map((center) => (
-                              <option
-                                key={center.centerId}
-                                value={center.centerId}
-                              >
-                                {center.centerName} - ₹{center.oneClassPrice}
-                                /class
-                              </option>
-                            ))}
-                          </select>
-                        )}
+                        availableCenters.length === 1
+                          ? "Center"
+                          : "Choose Center"}
+                      </label>
+                      {packageType === "online" &&
+                      availableCenters.length === 1 ? (
+                        <div className="p-3 bg-gray-50 border rounded-lg">
+                          <span className="font-medium">
+                            {availableCenters[0].centerName}
+                          </span>
+                          <span className="ml-2 text-gray-600">
+                            - ₹{availableCenters[0].oneClassPrice}/class
+                          </span>
+                        </div>
+                      ) : (
+                        <select
+                          value={selectedCenter}
+                          onChange={(e) =>
+                            handleCenterSelectionForTimeSlot(e.target.value)
+                          }
+                          className="w-full max-w-md p-3 border rounded-lg"
+                        >
+                          <option value="">Select a center</option>
+                          {availableCenters.map((center) => (
+                            <option
+                              key={center.centerId}
+                              value={center.centerId}
+                            >
+                              {center.centerName} - ₹{center.oneClassPrice}
+                              /class
+                            </option>
+                          ))}
+                        </select>
+                      )}
 
-                        {/* Display address for offline centers */}
-                        {packageType === "offline" && selectedCenterAddress && (
-                          <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                            <p className="text-sm text-blue-800">
-                              <strong>Address:</strong> {selectedCenterAddress}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                      {/* Display address for offline centers */}
+                      {packageType === "offline" && selectedCenterAddress && (
+                        <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                          <p className="text-sm text-blue-800">
+                            <strong>Address:</strong> {selectedCenterAddress}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
-                    {/* Number of Classes */}
-                    {selectedCenter && classRate > 0 && (
+                  {/* Number of Classes */}
+                  {selectedCenter && classRate > 0 && (
+                    <div>
+                      <label className="block font-medium mb-3">
+                        How many classes? (Minimum 4)
+                      </label>
+                      <input
+                        type="number"
+                        value={numberOfClasses}
+                        onChange={(e) => setNumberOfClasses(e.target.value)}
+                        className="w-32 p-3 border rounded-lg text-center"
+                        min="4"
+                      />
+                      <span className="ml-3 text-gray-600">
+                        ₹{classRate} per class
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Hybrid Config */}
+              {packageType === "hybrid" && (
+                <div className="space-y-6">
+                  <div>
+                    <label className="block font-medium mb-3">
+                      Choose Center
+                    </label>
+                    <select
+                      value={selectedCenter}
+                      onChange={handleCenterChange}
+                      className="w-full max-w-md p-3 border rounded-lg"
+                    >
+                      <option value="">Select a center</option>
+                      {centersList.map((center) => (
+                        <option key={center.centerId} value={center.centerId}>
+                          {center.centerName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {selectedCenter && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
                         <label className="block font-medium mb-3">
-                          How many classes? (Minimum 4)
+                          Online Classes (Minimum 4)
                         </label>
                         <input
                           type="number"
-                          value={numberOfClasses}
-                          onChange={(e) => setNumberOfClasses(e.target.value)}
-                          className="w-32 p-3 border rounded-lg text-center"
+                          value={onlineClasses}
+                          onChange={(e) => setOnlineClasses(e.target.value)}
+                          className="w-full p-3 border rounded-lg"
                           min="4"
                         />
-                        <span className="ml-3 text-gray-600">
-                          ₹{classRate} per class
-                        </span>
+                        <p className="text-sm text-gray-600 mt-1">
+                          ₹{onlineRate} per class
+                        </p>
                       </div>
-                    )}
-                  </div>
-                )}
 
-                {/* Hybrid Config */}
-                {packageType === "hybrid" && (
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block font-medium mb-3">
-                        Choose Center
-                      </label>
-                      <select
-                        value={selectedCenter}
-                        onChange={handleCenterChange}
-                        className="w-full max-w-md p-3 border rounded-lg"
-                      >
-                        <option value="">Select a center</option>
-                        {centersList.map((center) => (
-                          <option key={center.centerId} value={center.centerId}>
-                            {center.centerName}
-                          </option>
-                        ))}
-                      </select>
+                      <div>
+                        <label className="block font-medium mb-3">
+                          Center Classes (Minimum 4)
+                        </label>
+                        <input
+                          type="number"
+                          value={offlineClasses}
+                          onChange={(e) => setOfflineClasses(e.target.value)}
+                          className="w-full p-3 border rounded-lg"
+                          min="4"
+                        />
+                        <p className="text-sm text-gray-600 mt-1">
+                          ₹{offlineRate} per class
+                        </p>
+                      </div>
                     </div>
+                  )}
+                </div>
+              )}
 
-                    {selectedCenter && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <label className="block font-medium mb-3">
-                            Online Classes (Minimum 4)
+              {/* Kit Config */}
+              {packageType === "kit" && (
+                <div className="space-y-4">
+                  {kitItems.map((item, index) => (
+                    <div key={index} className="border rounded-lg p-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="md:col-span-2">
+                          <label className="block font-medium mb-2">
+                            Choose Kit
                           </label>
-                          <input
-                            type="number"
-                            value={onlineClasses}
-                            onChange={(e) => setOnlineClasses(e.target.value)}
+                          <select
+                            value={item.name}
+                            onChange={(e) =>
+                              updateKitItem(index, "name", e.target.value)
+                            }
                             className="w-full p-3 border rounded-lg"
-                            min="4"
-                          />
-                          <p className="text-sm text-gray-600 mt-1">
-                            ₹{onlineRate} per class
-                          </p>
+                          >
+                            <option value="">Select kit</option>
+                            {kitItemsList.map((kit) => (
+                              <option key={kit._id} value={kit._id}>
+                                {kit.packageName} - ₹{kit.amount}
+                              </option>
+                            ))}
+                          </select>
                         </div>
-
                         <div>
-                          <label className="block font-medium mb-3">
-                            Center Classes (Minimum 4)
+                          <label className="block font-medium mb-2">
+                            Quantity
                           </label>
-                          <input
-                            type="number"
-                            value={offlineClasses}
-                            onChange={(e) => setOfflineClasses(e.target.value)}
-                            className="w-full p-3 border rounded-lg"
-                            min="4"
-                          />
-                          <p className="text-sm text-gray-600 mt-1">
-                            ₹{offlineRate} per class
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Kit Config */}
-                {packageType === "kit" && (
-                  <div className="space-y-4">
-                    {kitItems.map((item, index) => (
-                      <div key={index} className="border rounded-lg p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div className="md:col-span-2">
-                            <label className="block font-medium mb-2">
-                              Choose Kit
-                            </label>
-                            <select
-                              value={item.name}
+                          <div className="flex items-center">
+                            <input
+                              type="number"
+                              value={item.quantity}
                               onChange={(e) =>
-                                updateKitItem(index, "name", e.target.value)
+                                updateKitItem(
+                                  index,
+                                  "quantity",
+                                  Math.max(0, parseInt(e.target.value) || 0)
+                                )
                               }
-                              className="w-full p-3 border rounded-lg"
-                            >
-                              <option value="">Select kit</option>
-                              {kitItemsList.map((kit) => (
-                                <option key={kit._id} value={kit._id}>
-                                  {kit.packageName} - ₹{kit.amount}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <div>
-                            <label className="block font-medium mb-2">
-                              Quantity
-                            </label>
-                            <div className="flex items-center">
-                              <input
-                                type="number"
-                                value={item.quantity}
-                                onChange={(e) =>
-                                  updateKitItem(
-                                    index,
-                                    "quantity",
-                                    Math.max(0, parseInt(e.target.value) || 0)
-                                  )
-                                }
-                                className="flex-1 p-3 border rounded-lg text-center"
-                                min="1"
-                              />
-                              {kitItems.length > 1 && (
-                                <button
-                                  onClick={() => removeKitItem(index)}
-                                  className="ml-2 text-red-500 hover:text-red-700"
-                                >
-                                  <X className="w-5 h-5" />
-                                </button>
-                              )}
-                            </div>
+                              className="flex-1 p-3 border rounded-lg text-center"
+                              min="1"
+                            />
+                            {kitItems.length > 1 && (
+                              <button
+                                onClick={() => removeKitItem(index)}
+                                className="ml-2 text-red-500 hover:text-red-700"
+                              >
+                                <X className="w-5 h-5" />
+                              </button>
+                            )}
                           </div>
                         </div>
-                      </div>
-                    ))}
-                    <button
-                      onClick={addKitItem}
-                      className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-400"
-                    >
-                      + Add Kit
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Step 3: Payment */}
-            {packageType && totalAmount > 0 && (
-              <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-lg font-semibold mb-4">
-                  3. Complete Payment
-                </h2>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h3 className="font-medium mb-3">Summary</h3>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span>Package:</span>
-                        <span className="capitalize">{packageType}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Program:</span>
-                        <span>{data.programs[0]?.program || "N/A"}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Level:</span>
-                        <span>{data.programs[0]?.level || "N/A"}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Amount (Includes GST):</span>
-                        <span>₹{baseAmount.toFixed(2)}</span>
-                      </div>
-                      {discount > 0 && (
-                        <div className="flex justify-between text-green-600">
-                          <span>Discount:</span>
-                          <span>-₹{discount.toFixed(2)}</span>
-                        </div>
-                      )}
-                      <div className="flex justify-between font-semibold text-lg border-t pt-2">
-                        <span>Total (Includes GST):</span>
-                        <span>₹{totalAmount.toFixed(2)}</span>
                       </div>
                     </div>
-                  </div>
+                  ))}
+                  <button
+                    onClick={addKitItem}
+                    className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-400"
+                  >
+                    + Add Kit
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
+          {/* Step 3: Payment */}
+          {packageType && totalAmount > 0 && (
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-lg font-semibold mb-4">
+                3. Complete Payment
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="font-medium mb-3">Summary</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Package:</span>
+                      <span className="capitalize">{packageType}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Program:</span>
+                      <span>{data.programs[0]?.program || "N/A"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Level:</span>
+                      <span>{data.programs[0]?.level || "N/A"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Amount (Includes GST):</span>
+                      <span>₹{baseAmount.toFixed(2)}</span>
+                    </div>
+                    {discount > 0 && (
+                      <div className="flex justify-between text-green-600">
+                        <span>Discount:</span>
+                        <span>-₹{discount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between font-semibold text-lg border-t pt-2">
+                      <span>Total (Includes GST):</span>
+                      <span>₹{totalAmount.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+                {!viewOnlyMode ? (
                   <div className="flex items-end">
                     <button
                       onClick={handleRazorpayPayment}
                       disabled={
-                        !packageType || totalAmount <= 0 || isProcessingPayment
+                        !packageType ||
+                        totalAmount <= 0 ||
+                        isProcessingPayment ||
+                        viewOnlyMode||!selectedKid||!selectedProgram
                       }
                       className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium"
                     >
@@ -1075,27 +1107,33 @@ const HomeKidPackageSelection = () => {
                         : `Pay ₹${totalAmount.toFixed(2)}`}
                     </button>
                   </div>
-                </div>
+                ) : (
+                  <div className="flex items-end">
+                    <button
+                      onClick={()=>navigate("/parent/add-kid")} // make sure this function exists
+                      className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 font-medium"
+                    >
+                      Add Kid
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
+          )}
 
-
-            {/* Payment Success */}
-            {paymentId && (
-              <div className="bg-white rounded-lg shadow p-6 text-center">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle className="w-8 h-8 text-green-600" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">
-                  Payment Successful!
-                </h3>
-                <p className="text-gray-600 mb-4">Payment ID: {paymentId}</p>
+          {/* Payment Success */}
+          {paymentId && (
+            <div className="bg-white rounded-lg shadow p-6 text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
-            )}
-          </>
-        ) : (
-         <></>
-        )}
+              <h3 className="text-lg font-semibold mb-2">
+                Payment Successful!
+              </h3>
+              <p className="text-gray-600 mb-4">Payment ID: {paymentId}</p>
+            </div>
+          )}
+        </>
       </div>
 
       <ToastContainer

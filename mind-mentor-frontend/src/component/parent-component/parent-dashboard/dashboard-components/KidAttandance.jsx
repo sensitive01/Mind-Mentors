@@ -239,26 +239,7 @@ const KidAttendance = () => {
                     </div>
                   </div>
 
-                  {/* Feedback Section */}
-                  <div className="lg:col-span-2">
-                    <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
-                      <MessageSquare className="w-5 h-5 mr-2 text-blue-600" />
-                      Feedback & Progress
-                    </h3>
-
-                    {/* Student Specific Feedback */}
-                    <div className="mb-4">
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">
-                        Individual Feedback
-                      </h4>
-                      <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-md">
-                        <p className="text-sm text-gray-700">
-                          {classItem.studentDetails.feedback ||
-                            "No specific feedback provided for this session."}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+        
                 </div>
               </div>
             </div>

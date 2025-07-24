@@ -72,7 +72,7 @@ const columns = (
 
     renderHeader: () => <strong>Contact</strong>,
 
-    width: 100,
+    width: 150,
     renderCell: (params) => (
       <Box sx={{ display: "flex", gap: 2, marginTop: "7px" }}>
         {params.row.whatsappNumber && (
@@ -322,7 +322,7 @@ const columns = (
   {
     field: "disposition",
     headerName: "Last Log",
-    width: 150,
+    width: 250,
     renderCell: (params) => {
       // Get the latest status or default value
       return (
@@ -446,7 +446,7 @@ const columns = (
   {
     field: "createdAt",
     headerName: "Created At",
-    width: 200,
+    width: 400,
     valueFormatter: (params) => params.value,
   },
 ];

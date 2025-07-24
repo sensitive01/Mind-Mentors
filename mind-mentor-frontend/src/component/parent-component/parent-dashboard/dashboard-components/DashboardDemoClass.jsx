@@ -9,6 +9,7 @@ import {
   RefreshCw,
   Check,
   Clock,
+  MapPin,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getDemoClass } from "../../../../api/service/parent/ParentService";
@@ -18,68 +19,182 @@ const DashboardDemoClass = () => {
   const navigate = useNavigate();
   const [demoClass, setDemoClass] = useState(null);
   const [error, setError] = useState(null);
-  const [isJoining, setIsJoining] = useState(false);
-
-  // Function to calculate the next date for a given day
-  const getNextDateForDay = (dayName) => {
-    const days = [
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-    ];
-    const today = new Date();
-    const todayIndex = today.getDay();
-    const targetIndex = days.indexOf(dayName);
-
-    if (targetIndex === -1) return null;
-
-    let daysUntilTarget = targetIndex - todayIndex;
-    if (daysUntilTarget <= 0) {
-      daysUntilTarget += 7; // Next week
-    }
-
-    const targetDate = new Date(today);
-    targetDate.setDate(today.getDate() + daysUntilTarget);
-
-    return targetDate.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDemoClass = async () => {
       try {
+        setLoading(true);
         const response = await getDemoClass(id);
-        if (
-          response.data.combinedData &&
-          response.data.combinedData.status === "Conducted"
-        ) {
-          setDemoClass(response.data.combinedData);
-        } else {
-          setDemoClass(response.data.classDetails);
-        }
+        if (response.status === 200) {
+          setDemoClass(response.data.data);
+        } 
+ 
       } catch (err) {
         console.log("Error in getting demo class", err);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchDemoClass();
   }, [id]);
 
-  const handleRequestDemo = () => {
+  const handleReschedule = () => {
     navigate(`/parent/kid/demo-class-shedule/${id}`);
   };
 
-  const renderConductedClass = () => {
-    const { classDetails, student } = demoClass;
-    const nextDate = getNextDateForDay(classDetails.day);
+  const renderScheduledClass = () => {
+    return (
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Main Info Card */}
+        <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-gray-100">
+            <h3 className="text-xl font-semibold text-gray-800">
+              Demo Class Details
+            </h3>
+          </div>
+          <div className="p-6">
+            <div className="grid sm:grid-cols-2 gap-6 mb-6">
+              <div className="flex items-start space-x-4">
+                <div className="bg-blue-50 p-3 rounded-xl">
+                  <Calendar className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Schedule</p>
+                  <p className="text-gray-800 font-medium mt-1">
+                    {demoClass.date}
+                  </p>
+                  <p className="text-gray-600 text-sm">{demoClass.time}</p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-4">
+                <div className="bg-purple-50 p-3 rounded-xl">
+                  <BookOpenText className="w-6 h-6 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Program</p>
+                  <p className="text-gray-800 font-medium mt-1">
+                    {demoClass.program}
+                  </p>
+                  <p className="text-gray-600 text-sm">
+                    Level: {demoClass.level}
+                  </p>
+                </div>
+              </div>
+            </div>
 
+            <div className="grid sm:grid-cols-2 gap-6 mb-6">
+              <div className="flex items-start space-x-4">
+                <div className="bg-green-50 p-3 rounded-xl">
+                  <Users className="w-6 h-6 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Coach</p>
+                  <p className="text-gray-800 font-medium mt-1">
+                    {demoClass.coachName}
+                  </p>
+                  <p className="text-gray-600 text-sm">Expert Instructor</p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-4">
+                <div className="bg-orange-50 p-3 rounded-xl">
+                  {demoClass.type === "offline" ? (
+                    <MapPin className="w-6 h-6 text-orange-600" />
+                  ) : (
+                    <Video className="w-6 h-6 text-orange-600" />
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">
+                    Class Type
+                  </p>
+                  <p className="text-gray-800 font-medium mt-1 capitalize">
+                    {demoClass.type}
+                  </p>
+                  {demoClass.type === "offline" && demoClass.centerName && (
+                    <p className="text-gray-600 text-sm">
+                      {demoClass.centerName}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Status & Action Card */}
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-gray-100">
+            <h3 className="text-xl font-semibold text-gray-800">
+              Class Status
+            </h3>
+          </div>
+          <div className="p-6 space-y-6">
+            <div className="bg-blue-50 p-4 rounded-xl">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-gray-600">Status</p>
+                <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                  {demoClass.status}
+                </span>
+              </div>
+            </div>
+
+            {/* Reschedule Button */}
+            <button
+              className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 px-4 rounded-xl font-medium hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center justify-center space-x-2 shadow-sm"
+              onClick={handleReschedule}
+            >
+              <RefreshCw className="w-5 h-5" />
+              <span>Reschedule Class</span>
+            </button>
+
+            {/* Schedule Information */}
+            <div className="mt-6 p-4 bg-blue-50 rounded-xl">
+              <h4 className="font-medium text-gray-800 mb-3">
+                Schedule Information
+              </h4>
+              <p className="text-gray-600 text-sm leading-relaxed">
+                Every class happens at a minimum schedule of 1 hour and your
+                final schedule will be assigned by the service delivery team as
+                per your child's convenient timings.
+              </p>
+            </div>
+
+            {/* Guidelines */}
+            <div className="mt-6 p-4 bg-gray-50 rounded-xl">
+              <h4 className="font-medium text-gray-800 mb-3">Guidelines</h4>
+              <ul className="space-y-2">
+                <li className="flex items-center space-x-2 text-gray-600 text-sm">
+                  <Check className="w-4 h-4 text-green-500" />
+                  <span>
+                    {demoClass.type === "offline"
+                      ? "Arrive 10 minutes early"
+                      : "Join 5 minutes early"}
+                  </span>
+                </li>
+                <li className="flex items-center space-x-2 text-gray-600 text-sm">
+                  <Check className="w-4 h-4 text-green-500" />
+                  <span>
+                    {demoClass.type === "offline"
+                      ? "Bring required materials"
+                      : "Check internet connection"}
+                  </span>
+                </li>
+                <li className="flex items-center space-x-2 text-gray-600 text-sm">
+                  <Check className="w-4 h-4 text-green-500" />
+                  <span>Keep materials ready</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderConductedClass = () => {
     return (
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Main Info Card */}
@@ -98,123 +213,9 @@ const DashboardDemoClass = () => {
                 <div>
                   <p className="text-sm font-medium text-gray-500">Schedule</p>
                   <p className="text-gray-800 font-medium mt-1">
-                    {classDetails.day}
+                    {demoClass.date}
                   </p>
-                  {nextDate && (
-                    <p className="text-blue-600 text-sm font-medium">
-                      {nextDate}
-                    </p>
-                  )}
-                  <p className="text-gray-600 text-sm">
-                    {classDetails.classTime}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start space-x-4">
-                <div className="bg-purple-50 p-3 rounded-xl">
-                  <BookOpenText className="w-6 h-6 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Program</p>
-                  <p className="text-gray-800 font-medium mt-1">
-                    {classDetails.program}
-                  </p>
-                  <p className="text-gray-600 text-sm">
-                    Level: {classDetails.level}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-start space-x-4">
-              <div className="bg-green-50 p-3 rounded-xl">
-                <Users className="w-6 h-6 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Coach</p>
-                <p className="text-gray-800 font-medium mt-1">
-                  {classDetails.coachName}
-                </p>
-                <p className="text-gray-600 text-sm">Expert Instructor</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Status Card */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-gray-100">
-            <h3 className="text-xl font-semibold text-gray-800">
-              Class Status
-            </h3>
-          </div>
-          <div className="p-6 space-y-6">
-            <div className="bg-green-50 p-4 rounded-xl">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-gray-600">Status</p>
-                <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
-                  {demoClass.status}
-                </span>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm font-medium text-gray-500 mb-2">
-                  Attendance
-                </p>
-                <div className="flex items-center space-x-2">
-                  <Check className="w-5 h-5 text-green-500" />
-                  <span className="text-gray-800 font-medium">
-                    {student.attendance}
-                  </span>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-sm font-medium text-gray-500 mb-2">
-                  Feedback
-                </p>
-                <div className="bg-gray-50 p-4 rounded-xl">
-                  <p className="text-gray-700">{student.feedback}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderUpcomingClass = () => {
-    const nextDate = getNextDateForDay(demoClass.day);
-
-    return (
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Main Info Card */}
-        <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-gray-100">
-            <h3 className="text-xl font-semibold text-gray-800">
-              Upcoming Class Details
-            </h3>
-          </div>
-          <div className="p-6">
-            <div className="grid sm:grid-cols-2 gap-6 mb-6">
-              <div className="flex items-start space-x-4">
-                <div className="bg-blue-50 p-3 rounded-xl">
-                  <Calendar className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Schedule</p>
-                  <p className="text-gray-800 font-medium mt-1">
-                    {demoClass.day}
-                  </p>
-                  {nextDate && (
-                    <p className="text-blue-600 text-sm font-medium">
-                      {nextDate}
-                    </p>
-                  )}
-                  <p className="text-gray-600 text-sm">{demoClass.classTime}</p>
+                  <p className="text-gray-600 text-sm">{demoClass.time}</p>
                 </div>
               </div>
               <div className="flex items-start space-x-4">
@@ -248,50 +249,35 @@ const DashboardDemoClass = () => {
           </div>
         </div>
 
-        {/* Action Card */}
+        {/* Status Card */}
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
           <div className="p-6 border-b border-gray-100">
             <h3 className="text-xl font-semibold text-gray-800">
-              Quick Actions
+              Class Status
             </h3>
           </div>
-          <div className="p-6 space-y-4">
-            <button
-              className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 px-4 rounded-xl font-medium hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center justify-center space-x-2 shadow-sm"
-              onClick={handleRequestDemo}
-            >
-              <RefreshCw className="w-5 h-5" />
-              <span>Reschedule Class</span>
-            </button>
-
-            {/* Schedule Information */}
-            <div className="mt-6 p-4 bg-blue-50 rounded-xl">
-              <h4 className="font-medium text-gray-800 mb-3">
-                Schedule Information
-              </h4>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                Every class happens at a minimum schedule of 1 hour and your
-                final schedule will be assigned by the service delivery team as
-                per your child's convenient timings.
-              </p>
+          <div className="p-6 space-y-6">
+            <div className="bg-green-50 p-4 rounded-xl">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-gray-600">Status</p>
+                <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                  Completed
+                </span>
+              </div>
             </div>
 
-            <div className="mt-6 p-4 bg-gray-50 rounded-xl">
-              <h4 className="font-medium text-gray-800 mb-3">Guidelines</h4>
-              <ul className="space-y-2">
-                <li className="flex items-center space-x-2 text-gray-600 text-sm">
-                  <Check className="w-4 h-4 text-green-500" />
-                  <span>Join 5 minutes early</span>
-                </li>
-                <li className="flex items-center space-x-2 text-gray-600 text-sm">
-                  <Check className="w-4 h-4 text-green-500" />
-                  <span>Check internet connection</span>
-                </li>
-                <li className="flex items-center space-x-2 text-gray-600 text-sm">
-                  <Check className="w-4 h-4 text-green-500" />
-                  <span>Keep materials ready</span>
-                </li>
-              </ul>
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-medium text-gray-500 mb-2">
+                  Class Completion
+                </p>
+                <div className="flex items-center space-x-2">
+                  <Check className="w-5 h-5 text-green-500" />
+                  <span className="text-gray-800 font-medium">
+                    Successfully Completed
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -315,7 +301,7 @@ const DashboardDemoClass = () => {
           experienced coaches at your preferred time.
         </p>
         <button
-          onClick={handleRequestDemo}
+          onClick={handleReschedule}
           className="bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 px-6 rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 inline-flex items-center space-x-2"
         >
           <Calendar className="w-5 h-5" />
@@ -334,6 +320,17 @@ const DashboardDemoClass = () => {
     </div>
   );
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading demo class details...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Main Content */}
@@ -351,7 +348,7 @@ const DashboardDemoClass = () => {
           ? renderNoClass()
           : demoClass.status === "Conducted"
           ? renderConductedClass()
-          : renderUpcomingClass()}
+          : renderScheduledClass()}
       </div>
     </div>
   );

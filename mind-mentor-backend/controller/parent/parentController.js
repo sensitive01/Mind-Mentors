@@ -854,88 +854,24 @@ const getKidDemoClassDetails = async (req, res) => {
   try {
     const { kidId } = req.params;
 
-    const demoClassDetails = await ClassSchedule.findOne({
-      "demoAssignedKid.kidId": kidId,
-      status: "Scheduled",
-    });
-    console.log("demoClassDetails", demoClassDetails);
+    const demoClassDetails = await demoClassModel.findOne({ kidId });
 
     if (!demoClassDetails) {
-      const conductedDemoClass = await ConductedClass.findOne({
-        "students.studentID": kidId,
-        status: "Conducted",
-      });
-
-      if (!conductedDemoClass) {
-        return res
-          .status(404)
-          .json({ message: "No demo class found for the given kid." });
-      }
-
-      const classScheduleDetails = await ClassSchedule.findById(
-        conductedDemoClass.classID
-      );
-
-      if (classScheduleDetails && classScheduleDetails.classType === "Demo") {
-        const studentData = conductedDemoClass.students.find(
-          (student) => student.studentID.toString() === kidId
-        );
-
-        const combinedData = {
-          classDetails: {
-            classID: classScheduleDetails._id,
-            classType: classScheduleDetails.classType,
-            day: classScheduleDetails.day,
-            classTime: classScheduleDetails.classTime,
-            coachName: classScheduleDetails.coachName,
-            coachId: classScheduleDetails.coachId,
-            program: classScheduleDetails.program,
-            level: classScheduleDetails.level,
-            meetingLink: classScheduleDetails.meetingLink,
-            status: classScheduleDetails.status,
-            conductedDate: conductedDemoClass.conductedDate,
-          },
-          student: {
-            studentID: studentData.studentID,
-            name: studentData.name,
-            attendance: studentData.attendance,
-            feedback: studentData.feedback,
-          },
-          status: conductedDemoClass.status,
-        };
-
-        return res.status(200).json({
-          message: "Kid's conducted  class details retrieved successfully.",
-          combinedData,
-        });
-      } else {
-        return res
-          .status(404)
-          .json({ message: "The class type is not a Demo class." });
-      }
-    }
-
-    const filteredStudents = demoClassDetails.demoAssignedKid.filter(
-      (student) => student.kidId === kidId
-    );
-
-    if (filteredStudents.length === 0) {
       return res
         .status(404)
-        .json({ message: "Student not found in the demo class." });
+        .json({ message: "No demo class found for this kid." });
     }
 
-    const updatedDemoClassDetails = {
-      ...demoClassDetails._doc,
-      selectedStudents: filteredStudents,
-    };
+    console.log("demoClassDetails", demoClassDetails);
 
-    res.status(200).json({
-      message: "Kid's demo class details retrieved successfully.",
-      classDetails: updatedDemoClassDetails,
+    return res.status(200).json({
+      success: true,
+      data: demoClassDetails,
     });
   } catch (err) {
+    console.error("Error fetching demo class details:", err);
     res.status(500).json({
+      success: false,
       error: "An error occurred while fetching the demo class details.",
     });
   }
@@ -2777,7 +2713,179 @@ const updateMyName = async (req, res) => {
   }
 };
 
+const getParentSheduleDemoDetails = async (req, res) => {
+  try {
+    const { kidId } = req.params;
+    console.log("welcome", kidId);
+
+    const demoClassData = await ClassSchedule.find({ isDemoAdded: true });
+    const kidData = await kidModel.findById(kidId, { selectedProgram: 1 });
+
+    console.log("demoClassData", demoClassData);
+    console.log("kidData", kidData);
+
+    // Sending response
+    return res.status(200).json({
+      success: true,
+      message: "Demo class and kid details fetched successfully",
+      demoClassData,
+      kidData,
+    });
+  } catch (err) {
+    console.error("Error in getting the kid schedule demo details", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch demo schedule details",
+      error: err.message,
+    });
+  }
+};
+
+const parentBookDemoClassData = async (req, res) => {
+  try {
+    const { kidId } = req.params;
+    const { bookingDetails } = req.body;
+
+    const kidDetails = await kidModel.findById(kidId);
+    if (!kidDetails) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Kid not found." });
+    }
+
+    const existingDemo = await demoClassModel.findOne({ kidId });
+    let savedBooking;
+
+    const kidData = {
+      kidId,
+      chessKid: kidDetails.chessId || "",
+      kidName: kidDetails.kidsName || "",
+      status: "Scheduled",
+      sheduleId: bookingDetails.classId,
+      sheduledDate: bookingDetails.date,
+    };
+
+    if (existingDemo) {
+      const previousClassId = existingDemo.classId;
+
+      // Check if class has changed
+      if (previousClassId !== bookingDetails.classId) {
+        // Remove kid from old class schedule
+        await ClassSchedule.updateOne(
+          { _id: previousClassId },
+          { $pull: { demoAssignedKid: { kidId } } }
+        );
+
+        // Add to new class schedule
+        await ClassSchedule.updateOne(
+          { _id: bookingDetails.classId },
+          { $push: { demoAssignedKid: kidData } }
+        );
+      }
+
+      // Update existing demo class
+      existingDemo.classId = bookingDetails.classId;
+      existingDemo.program = bookingDetails.program;
+      existingDemo.level = bookingDetails.level;
+      existingDemo.date = bookingDetails.date;
+      existingDemo.time = bookingDetails.time;
+      existingDemo.coachName = bookingDetails.coachName;
+      existingDemo.type = bookingDetails.type;
+      existingDemo.centerName = bookingDetails.centerName || null;
+      existingDemo.centerId = bookingDetails.centerId || null;
+
+      savedBooking = await existingDemo.save();
+
+      // Update OperationDept program & demo status
+      await operationDeptModel.findOneAndUpdate(
+        { kidId },
+        {
+          $set: {
+            "scheduleDemo.status": "Scheduled",
+            "programs.0.program": bookingDetails.program,
+            "programs.0.level": bookingDetails.level,
+            enquiryField: "prospects",
+          },
+        }
+      );
+
+      // Update Kid model selectedProgram
+      await kidModel.findByIdAndUpdate(kidId, {
+        $set: {
+          "selectedProgram.0.program": bookingDetails.program,
+          "selectedProgram.0.level": bookingDetails.level,
+        },
+      });
+    } else {
+      // No existing demo — create new
+      const newBooking = new demoClassModel({
+        classId: bookingDetails.classId,
+        program: bookingDetails.program,
+        level: bookingDetails.level,
+        date: bookingDetails.date,
+        time: bookingDetails.time,
+        coachName: bookingDetails.coachName,
+        type: bookingDetails.type,
+        centerName: bookingDetails.centerName || null,
+        centerId: bookingDetails.centerId || null,
+        kidId,
+      });
+
+      savedBooking = await newBooking.save();
+
+      // Add kid to demoAssignedKid in class schedule
+      await ClassSchedule.updateOne(
+        { _id: bookingDetails.classId },
+        { $push: { demoAssignedKid: kidData } }
+      );
+
+      // Update OperationDept (replace first program)
+      await operationDeptModel.findOneAndUpdate(
+        { kidId },
+        {
+          $set: {
+            "scheduleDemo.status": "Scheduled",
+            "programs.0.program": bookingDetails.program,
+            "programs.0.level": bookingDetails.level,
+            enquiryField: "prospects",
+          },
+        },
+        { upsert: true }
+      );
+
+      // Update kid model
+      await kidModel.findByIdAndUpdate(
+        kidId,
+        {
+          $set: {
+            "selectedProgram.0.program": bookingDetails.program,
+            "selectedProgram.0.level": bookingDetails.level,
+          },
+        },
+        { new: true }
+      );
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: existingDemo
+        ? "Demo class updated successfully!"
+        : "Demo class booked successfully!",
+      data: savedBooking,
+    });
+  } catch (err) {
+    console.error("Error in saving the demo bookings", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to save demo class booking",
+      error: err.message,
+    });
+  }
+};
+
 module.exports = {
+  parentBookDemoClassData,
+  getParentSheduleDemoDetails,
   updateMyName,
   getMyName,
   getConductedClassDetails,

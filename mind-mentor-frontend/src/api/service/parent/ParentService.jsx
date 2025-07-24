@@ -515,7 +515,6 @@ export const getConductedClassDetails = async (kidId) => {
   }
 };
 
-
 export const getParentName = async (parentId) => {
   try {
     const response = await parentInstance.get(
@@ -527,11 +526,34 @@ export const getParentName = async (parentId) => {
   }
 };
 
-
-export const updateParentName = async (parentId,newFirstName) => {
+export const updateParentName = async (parentId, newFirstName) => {
   try {
     const response = await parentInstance.put(
-      `/parent/update-my-name/${parentId}`,{newFirstName}
+      `/parent/update-my-name/${parentId}`,
+      { newFirstName }
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+export const getKidSheduleDemoDetails = async (kidId) => {
+  try {
+    const response = await parentInstance.get(
+      `/parent/get-kid-shedule-demo-details/${kidId}`
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+
+export const parentBookDemoClassData = async (kidId,bookingDetails) => {
+  try {
+    const response = await parentInstance.post(
+      `/parent/book-demo-class-data/${kidId}`,{bookingDetails}
     );
     return response;
   } catch (err) {

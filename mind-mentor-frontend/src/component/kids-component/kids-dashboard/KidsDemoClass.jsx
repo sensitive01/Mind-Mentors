@@ -210,11 +210,7 @@ const KidsDemoClass = () => {
                         <Target size={20} className="mr-2 text-primary" />
                         Level: {classItem.level}
                       </p>
-                      <p className="text-sm text-primary flex items-center">
-                        <Users size={20} className="mr-2 text-primary" />
-                        Students: {classItem.enrolledKidCount}/
-                        {classItem.maximumKidCount}
-                      </p>
+                      
                     </div>
                   </div>
 

@@ -238,46 +238,6 @@ const KidCompletedClass = () => {
                   )}
                 </div>
 
-                {/* Coach Feedback */}
-                <div className="bg-gradient-to-r from-pink-100 to-purple-100 rounded-xl p-4 mb-4">
-                  <div className="flex items-start gap-3">
-                    <MessageCircle className="w-5 h-5 text-pink-600 mt-1" />
-                    <div>
-                      <p className="text-sm font-bold text-pink-600 mb-2">
-                        🌟 Coach Says:
-                      </p>
-                      <p className="text-pink-800 font-medium text-sm leading-relaxed">
-                        "{classItem.coachClassFeedBack}"
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Additional Notes */}
-                {classItem.studentDetails.feedback &&
-                  classItem.studentDetails.feedback !== "ok" && (
-                    <div className="bg-gradient-to-r from-indigo-100 to-blue-100 rounded-xl p-4 mb-4">
-                      <div className="flex items-start gap-3">
-                        <Star className="w-5 h-5 text-indigo-600 mt-1" />
-                        <div>
-                          <p className="text-sm font-bold text-indigo-600 mb-2">
-                            ✨ Special Notes:
-                          </p>
-                          <p className="text-indigo-800 font-medium text-sm leading-relaxed">
-                            {classItem.studentDetails.feedback}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                {/* Action Button */}
-                {/* <div className="text-center">
-                  <button className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-3 px-8 rounded-full hover:from-purple-600 hover:to-pink-600 transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-xl">
-                    View Details 🔍
-                  </button>
-                </div> */}
-
                 {/* Floating Achievement Stars */}
                 <div className="absolute -top-1 -left-1 w-6 h-6 text-yellow-400 animate-spin">
                   ⭐

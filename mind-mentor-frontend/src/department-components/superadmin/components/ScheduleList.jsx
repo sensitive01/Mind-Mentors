@@ -317,20 +317,7 @@ const TodayClassCard = ({
 
       {/* Right side - Action buttons */}
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, ml: 2 }}>
-        {(classItem.classType === "Class" || !classItem.isDemoAdded) && (
-          <IconButton
-            onClick={(e) => onAddKids(e, classItem)}
-            sx={{
-              color: customColors.primary,
-              "&:hover": {
-                backgroundColor: `${customColors.primary}20`,
-              },
-            }}
-            title="Add Students"
-          >
-            <AddStudentIcon />
-          </IconButton>
-        )}
+        
 
         <Button
           variant="contained"
@@ -896,22 +883,7 @@ const ScheduleKanban = () => {
                                 </IconText>
 
                                 <Box>
-                                  {(classItem.classType === "Class" ||
-                                    !classItem.isDemoAdded) && (
-                                    <IconButton
-                                      onClick={(e) =>
-                                        handleAddKids(e, classItem)
-                                      }
-                                      sx={{
-                                        color: customColors.primary,
-                                        "&:hover": {
-                                          backgroundColor: `${customColors.primary}20`,
-                                        },
-                                      }}
-                                    >
-                                      <AddStudentIcon />
-                                    </IconButton>
-                                  )}
+                                  
                                   <IconButton
                                     onClick={(e) =>
                                       handleCreateMeetingClick(e, classItem)
@@ -1350,115 +1322,118 @@ const ScheduleKanban = () => {
         </Dialog>
 
         {/* Meeting Link Creation Dialog */}
-       {/* Meeting Link Creation Dialog */}
-<Dialog
-  open={meetingDialogOpen}
-  onClose={handleMeetingDialogClose}
-  aria-labelledby="meeting-dialog-title"
-  maxWidth="sm"
-  fullWidth
-  PaperProps={{
-    sx: {
-      borderRadius: 2,
-    }
-  }}
->
-  <DialogTitle 
-    id="meeting-dialog-title"
-    sx={{
-      textAlign: 'center',
-      pb: 2,
-      fontSize: '1.25rem',
-      fontWeight: 600,
-    }}
-  >
-    Create Meeting Link
-  </DialogTitle>
-  
-  <DialogContent sx={{ px: 3, pb: 2 }}>
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-      <Typography 
-        variant="body2" 
-        color="text.secondary"
-        sx={{ textAlign: 'center', mb: 1 }}
-      >
-        Please provide the following details to generate your meeting link
-      </Typography>
-
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-        <TextField
-          autoFocus
-          label="Class Name"
-          type="text"
+        {/* Meeting Link Creation Dialog */}
+        <Dialog
+          open={meetingDialogOpen}
+          onClose={handleMeetingDialogClose}
+          aria-labelledby="meeting-dialog-title"
+          maxWidth="sm"
           fullWidth
-          variant="outlined"
-          value={meetingFormData.className}
-          onChange={(e) =>
-            handleMeetingFormChange("className", e.target.value)
-          }
-          placeholder="Enter class name"
-          sx={{
-            '& .MuiOutlinedInput-root': {
-              '&:hover fieldset': {
-                borderColor: 'primary.main',
-              },
+          PaperProps={{
+            sx: {
+              borderRadius: 2,
             },
           }}
-        />
-        
-        <TextField
-          label="Coach Name"
-          type="text"
-          fullWidth
-          variant="outlined"
-          value={meetingFormData.coachName}
-          onChange={(e) =>
-            handleMeetingFormChange("coachName", e.target.value)
-          }
-          placeholder="Enter coach name"
-          sx={{
-            '& .MuiOutlinedInput-root': {
-              '&:hover fieldset': {
-                borderColor: 'primary.main',
-              },
-            },
-          }}
-        />
-      </Box>
-    </Box>
-  </DialogContent>
+        >
+          <DialogTitle
+            id="meeting-dialog-title"
+            sx={{
+              textAlign: "center",
+              pb: 2,
+              fontSize: "1.25rem",
+              fontWeight: 600,
+            }}
+          >
+            Create Meeting Link
+          </DialogTitle>
 
-  <DialogActions sx={{ px: 3, py: 2.5, gap: 2, justifyContent: 'flex-end' }}>
-    <Button 
-      onClick={handleMeetingDialogClose} 
-      color="inherit"
-      variant="outlined"
-      sx={{ 
-        minWidth: 100,
-        textTransform: 'none',
-      }}
-    >
-      Cancel
-    </Button>
-    
-    <Button
-      onClick={handleMeetingSubmit}
-      color="primary"
-      variant="contained"
-      disabled={
-        !meetingFormData.className.trim() ||
-        !meetingFormData.coachName.trim()
-      }
-      sx={{ 
-        minWidth: 140,
-        textTransform: 'none',
-        fontWeight: 600,
-      }}
-    >
-      Create Meeting Link
-    </Button>
-  </DialogActions>
-</Dialog>
+          <DialogContent sx={{ px: 3, pb: 2 }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ textAlign: "center", mb: 1 }}
+              >
+                Are you sure you want to create a meeting link with the
+                following details?
+              </Typography>
+
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2,
+                  backgroundColor: "grey.50",
+                  borderRadius: 1,
+                  p: 2.5,
+                  border: "1px solid",
+                  borderColor: "grey.200",
+                }}
+              >
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ fontWeight: 500 }}
+                  >
+                    Class Name:
+                  </Typography>
+                  <Typography
+                    variant="body1"
+                    sx={{ fontWeight: 600, color: "text.primary" }}
+                  >
+                    MindMentorz Online
+                  </Typography>
+                </Box>
+
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ fontWeight: 500 }}
+                  >
+                    Coach Name:
+                  </Typography>
+                  <Typography
+                    variant="body1"
+                    sx={{ fontWeight: 600, color: "text.primary" }}
+                  >
+                    {meetingFormData.coachName}
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+          </DialogContent>
+
+          <DialogActions
+            sx={{ px: 3, py: 2.5, gap: 2, justifyContent: "flex-end" }}
+          >
+            <Button
+              onClick={handleMeetingDialogClose}
+              color="inherit"
+              variant="outlined"
+              sx={{
+                minWidth: 100,
+                textTransform: "none",
+              }}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              onClick={handleMeetingSubmit}
+              color="primary"
+              variant="contained"
+              sx={{
+                minWidth: 140,
+                textTransform: "none",
+                fontWeight: 600,
+              }}
+            >
+              Create Meeting Link
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </ThemeProvider>
   );

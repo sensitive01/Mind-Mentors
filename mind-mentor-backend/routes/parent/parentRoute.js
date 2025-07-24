@@ -28,6 +28,8 @@ parentRoute.get("/get-my-selected-package-data/:parentId/:kidId",parentControlle
 parentRoute.get("/get-kid-exist-program-data/:kidId",parentController.getKidExistProgramData)
 parentRoute.get("/get-conducted-class-details/:kidId",parentController.getConductedClassDetails)
 parentRoute.get("/get-my-name/:parentId",parentController.getMyName)
+parentRoute.get("/get-kid-shedule-demo-details/:kidId",parentController.getParentSheduleDemoDetails)
+
 
 
 
@@ -41,8 +43,6 @@ parentRoute.get("/get-my-name/:parentId",parentController.getMyName)
 
 
 parentRoute.post("/parent-submit-enquiry-form",parentController.parentSubmitEnquiryForm)
-
-
 parentRoute.post("/login",parentController.parentLogin)
 parentRoute.post("/verify-otp",parentController.parentVerifyOtp)
 parentRoute.post("/parent-kids-registration",parentController.parentStudentRegistration)
@@ -54,16 +54,13 @@ parentRoute.post("/save-kid-availability/:kidId",parentController.saveKidAvailab
 parentRoute.post("/save-payment-information-data/:parentId",parentController.savePaymentData)
 parentRoute.post("/send-selected-package/:parentId",parentController.parentSelectThePackage)
 parentRoute.post("/parent-add-new-kid-data/:parentId",parentController.parentAddNewKidData)
-
-
-
 parentRoute.post("/parent-save-kid-name",parentController.parentSaveKidData)
-
 parentRoute.post("/create-ticket-for-parent",parentController.createTicketForParent)
 parentRoute.put("/update-ticket-chats/:ticketId",parentController.updateSupportChats)
 parentRoute.post("/send-referal-data/:parentId",parentController.sendReferalData)
-
 parentRoute.post("/save-program-level/:kidId",parentController.saveProgramAndLevel)
+parentRoute.post("/book-demo-class-data/:kidId",parentController.parentBookDemoClassData)
+
 
 
 

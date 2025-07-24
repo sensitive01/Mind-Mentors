@@ -170,6 +170,31 @@ userRoute.get(
   userController.getEnquiryRelatedAllKidData
 );
 
+userRoute.get(
+  "/get-is-demo-sheduled/:enqId/:isDemoSheduled",
+  userController.getIsDemoSheduledForKid
+);
+
+userRoute.get(
+  "/get-is-demo-sheduled-for-kid/:kidId",
+  userController.getSheduleDemoDetails
+);
+
+userRoute.delete(
+  "/cancel-demo-sheduled-for-kid/:classId/:kidId",
+  userController.cancelDemoClass
+);
+
+userRoute.post(
+  "/book-demo-class-data/:kidId",
+  userController.employeeBookDemoClass
+);
+
+userRoute.get(
+  "/get-conducted-class-details",
+  userController.superAdminGetConductedClassDetails
+);
+
 
 
 

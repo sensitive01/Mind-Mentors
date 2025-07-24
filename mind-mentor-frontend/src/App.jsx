@@ -336,6 +336,7 @@ import ParentKidAttandacePage from "./pages/parent/ParentKidAttandacePage";
 import KidCompletedClassPage from "./pages/kids/KidCompletedClassPage";
 import KidTournamnetPage from "./pages/parent/KidTournamnetPage";
 import CoachCompletedClass from "./pages/employee/coach/CoachCompletedClass";
+import SuperAdminConductedClass from "./pages/employee/superadmin/SuperAdminConductedClass";
 
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
@@ -459,7 +460,10 @@ function App() {
             <Route path="new-referal" element={<ParentReferalPage />} />
             <Route path="support" element={<SupportPage />} />
             <Route path="walkthrough-video" element={<WalkThroughPage />} />
-            <Route path="list-all-tournament/:id" element={<KidTournamnetPage />} />
+            <Route
+              path="list-all-tournament/:id"
+              element={<KidTournamnetPage />}
+            />
 
             <Route
               path="add-kid-availability/:kidId"
@@ -476,7 +480,10 @@ function App() {
           <Route path="/kid/otp" element={<KidsPinPage />} />
           <Route path="/kids/dashboard" element={<KidsDashboard />} />
           <Route path="/kids/today-class" element={<KidsDemoClassPage />} />
-          <Route path="/kids/my-completed-class" element={<KidCompletedClassPage />} />
+          <Route
+            path="/kids/my-completed-class"
+            element={<KidCompletedClassPage />}
+          />
 
           <Route
             path="/kids/class-schedule"
@@ -851,7 +858,10 @@ function App() {
           <Route path="/coachSupport/add" element={<CoachSupport />} />
           <Route path="/coachSupport/" element={<CoachSupportRequest />} />
           <Route path="/coachFeedaback/add" element={<CoachFeedbackAdd />} />
-          <Route path="/coach/department/past-class" element={<CoachCompletedClass />} />
+          <Route
+            path="/coach/department/past-class"
+            element={<CoachCompletedClass />}
+          />
 
           <Route
             path="/coachAvailability"
@@ -1203,6 +1213,10 @@ function App() {
             element={<SuperadminDashboard />}
           />
           <Route
+            path="/super-admin/department/all-counducted-class-Data"
+            element={<SuperAdminConductedClass />}
+          />
+          <Route
             path="/super-admin/department/enquiry-form"
             element={<SuperAdminAddNewEnquiryForm />}
           />
@@ -1279,8 +1293,14 @@ function App() {
             path="/super-admin/department/kid-enquiry-profile"
             element={<SuperAdminKidEnquiryProfile />}
           />
-          <Route path="/super-admin/department/tournaments" element={<TournamnetsTable />} />
-          <Route path="/super-admin/department/tournaments/add" element={<TournamentsForm />} />
+          <Route
+            path="/super-admin/department/tournaments"
+            element={<TournamnetsTable />}
+          />
+          <Route
+            path="/super-admin/department/tournaments/add"
+            element={<TournamentsForm />}
+          />
 
           {/* <Route path="/super-admin/department/show-complete-enquiry-logs/:id" element={<ShowAllEnquiryLogs />} /> */}
           {/* <Route path="/super-admin/department/list-task-assigned-me" element={<SuperadminMyAssignTasksTable />}/>         */}

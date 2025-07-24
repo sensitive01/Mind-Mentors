@@ -1,57 +1,46 @@
 const mongoose = require("mongoose");
 
-const demoClassSchema = new mongoose.Schema(
+const demoBookingSchema = new mongoose.Schema(
   {
+    classId: {
+      type: String,
+    },
+    program: {
+      type: String,
+    },
+    level: {
+      type: String,
+    },
     date: {
-      type: Date,
+      type: String,
     },
     time: {
       type: String,
     },
-    programs: [
-      {
-        program: {
-          type: String,
-        },
-        programLevel: {
-          type: String,
-        },
-      },
-    ],
-    parentId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Parent",
-    },
-    kidId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Kid",
- 
-    },
     coachName: {
       type: String,
-    
     },
-    coachId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Coach",
-
+    type: {
+      type: String,
+      enum: ["online", "offline"],
     },
-    scheduledByName: {
-      type: String, 
-    
+    centerName: {
+      type: String,
     },
-    scheduledById: {
-      type: String
-    
-     
+    centerId: {
+      type: String,
     },
-    enqId:{
-      type:String
-    }
+    parentId: {
+      type: String,
+    },
+    kidId: {
+      type: String,
+    },
+    status: { type: String, default: "Sheduled" },
   },
   { timestamps: true }
 );
 
-const DemoClass = mongoose.model("DemoClass", demoClassSchema);
+const DemoClass = mongoose.model("DemoClass", demoBookingSchema);
 
 module.exports = DemoClass;

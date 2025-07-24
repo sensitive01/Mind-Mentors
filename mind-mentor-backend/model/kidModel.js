@@ -24,7 +24,7 @@ const kidSchema = new mongoose.Schema(
         program: { type: String },
         level: { type: String },
         chessKidId:{type:String},
-        pgmStatus:{type:String,default:"Active"}
+        pgmStatus:{type:String,default:"Pending"}
       },
     ],
 
