@@ -91,6 +91,9 @@ userRoute.get('/get-parent-tickets-data/:empId', userController.getParentTickets
 userRoute.put("/response-to-ticket/:ticketId", userController.reponseToTicket);
 userRoute.put("/update-ticket-priority/:ticketId", userController.updateTicketPriority);
 
+userRoute.get("/get-my-detailed-attandance/:empId", userController.getMyDetailedAttendance);
+
+
 
 
 
@@ -181,7 +184,7 @@ userRoute.get(
 );
 
 userRoute.delete(
-  "/cancel-demo-sheduled-for-kid/:classId/:kidId",
+  "/cancel-demo-sheduled-for-kid/:classId/:kidId/:empId",
   userController.cancelDemoClass
 );
 

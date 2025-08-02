@@ -19,8 +19,8 @@ const packageSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.Mixed,
       },
     ],
-    selectedProgram:{type:String},
-    selectedLevel:{type:String},
+    selectedProgram: { type: String },
+    selectedLevel: { type: String },
     classMode: {
       type: String,
       enum: ["online", "offline", "hybrid"],
@@ -66,9 +66,10 @@ const packageSchema = new mongoose.Schema(
     remarks: { type: String },
     documentUrl: { type: String },
 
-    isExtraPackage:{type:Boolean,default:false},
-    isPackageActive:{type:Boolean,default:false},
-    isClassAdded:{type:Boolean,default:false}
+    isExtraPackage: { type: Boolean, default: false },
+    isPackageActive: { type: Boolean, default: false },
+    isClassAdded: { type: Boolean, default: false },
+    employeeAssisted: { type: String },
   },
   { timestamps: true }
 );

@@ -459,7 +459,7 @@ const ModernSidebar = () => {
         },
         {
           icon: <InvoicesIcon />,
-          text: "Pending Invoices",
+          text: "Invoices",
           link: "/super-admin/department/invoice-table",
         },
         {

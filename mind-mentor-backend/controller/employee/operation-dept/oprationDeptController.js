@@ -444,7 +444,7 @@ const updateProspectData = async (req, res) => {
       parentData = new parentSchema({
         parentName: enquiryData.parentFirstName,
         parentEmail: enquiryData.email,
-        parentMobile: enquiryData.whatsappNumber||enquiryData.contactNumber,
+        parentMobile: enquiryData.whatsappNumber || enquiryData.contactNumber,
         kids: [],
         type: "new",
         status: "Active",
@@ -743,7 +743,9 @@ const moveBackToEnquiry = async (req, res) => {
 
 const getAllEnquiries = async (req, res) => {
   try {
-    const enquiries = await OperationDept.find({ enquiryField: "enquiryList" }).sort({createdAt:-1});
+    const enquiries = await OperationDept.find({
+      enquiryField: "enquiryList",
+    }).sort({ createdAt: -1 });
 
     const customizedEnquiries = await Promise.all(
       enquiries.map(async (enquiry) => {
@@ -814,7 +816,10 @@ const getAllEnquiries = async (req, res) => {
 
 const getProspectsData = async (req, res) => {
   try {
-    const enquiries = await OperationDept.find({ enquiryField: "prospects",paymentStatus:"Pending" }).sort({createdAt:-1});
+    const enquiries = await OperationDept.find({
+      enquiryField: "prospects",
+      paymentStatus: "Pending",
+    }).sort({ createdAt: -1 });
     console.log("enquiries", enquiries);
 
     const customizedEnquiries = await Promise.all(
@@ -2591,7 +2596,7 @@ const scheduleDemoClass = async (req, res) => {
 
     const empData = await Employee.findOne(
       { _id: id },
-      { department: 1, name: 1 }
+      { department: 1, name: 1, firstName: 1 }
     );
     if (!empData) {
       return res.status(404).json({ message: "Employee not found." });
@@ -2646,8 +2651,9 @@ const scheduleDemoClass = async (req, res) => {
       {
         employeeId: id,
         employeeName: empData.firstName,
+        department: empData.department,
 
-        action: `Demo class is sheduled for ${kidFirstName} with ${selectedProgram.program} Level: ${selectedProgram.level}`,
+        comment: `Demo class is sheduled for ${kidFirstName} with ${selectedProgram.program} Level: ${selectedProgram.level}`,
         createdAt: new Date(),
       },
     ];
@@ -3675,7 +3681,7 @@ const updatePaymentData = async (req, res) => {
     // Update statuses
     await Promise.all([
       parentSchema.findByIdAndUpdate(parentData.parentId, {
-        $set: { status: "Active",isParentNew:false },
+        $set: { status: "Active", isParentNew: false },
       }),
       kidSchema.findByIdAndUpdate(kidId, { $set: { status: "Active" } }),
       OperationDept.findByIdAndUpdate(enqId, {

@@ -38,6 +38,7 @@ import { styled } from "@mui/material/styles";
 import { Link, useNavigate } from "react-router-dom";
 import { TentTree } from "lucide-react";
 import { getEmployeeData } from "../../../api/service/employee/EmployeeService";
+import mmLogo from "../../../assets/mindmentorz.png";
 
 const ModernSidebar = () => {
   const empId = localStorage.getItem("empId");
@@ -162,7 +163,7 @@ const ModernSidebar = () => {
       color: iconColors.enquiries,
       path: "/centeradmin/department/enrollment-data",
     },
-        {
+    {
       icon: <KidsIcon />,
       text: "Active Kids",
       color: iconColors.kids,
@@ -266,16 +267,34 @@ const ModernSidebar = () => {
         sx={{
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between",
+          justifyContent: isCollapsed ? "center" : "space-between",
           py: 2,
           px: 2,
-          marginTop:8
         }}
       >
-     
+        {/* Logo - only show when not collapsed */}
+        {!isCollapsed && (
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <img
+              src={mmLogo}
+              alt="MindMentorz Logo"
+              style={{
+                height: "40px",
+                width: "auto",
+                objectFit: "contain",
+              }}
+            />
+          </Box>
+        )}
+
+        {/* Collapse/Expand Button */}
         <IconButton
           onClick={toggleSidebar}
-          sx={{ mr: isCollapsed ? "auto" : 0 }}
+          sx={{
+            bgcolor: "#642b8f",
+            color: "white",
+            "&:hover": { bgcolor: "#4a1d6e" },
+          }}
         >
           {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
         </IconButton>

@@ -1023,16 +1023,16 @@ export const getKidSheduleDemoDetailsEmployee = async (kidId) => {
   return response;
 };
 
-export const employeeBookDemoClassData = async (kidId,bookingDetails) => {
+export const employeeBookDemoClassData = async (kidId,bookingDetails,empId) => {
   const response = await userInstance.post(
-    `/book-demo-class-data/${kidId}`,{bookingDetails}
+    `/book-demo-class-data/${kidId}`,{bookingDetails,empId}
   );
   return response;
 };
 
-export const employeeCancelDemoClass = async (classId,kidId) => {
+export const employeeCancelDemoClass = async (classId,kidId,empId) => {
   const response = await userInstance.delete(
-    `/cancel-demo-sheduled-for-kid/${classId}/${kidId}`
+    `/cancel-demo-sheduled-for-kid/${classId}/${kidId}/${empId}`
   );
   return response;
 };
@@ -1041,6 +1041,13 @@ export const employeeCancelDemoClass = async (classId,kidId) => {
 export const superAdminGetConductedClass = async () => {
   const response = await userInstance.get(
     `/get-conducted-class-details`
+  );
+  return response;
+};
+
+export const getMyDetailedAttandance = async (empId) => {
+  const response = await userInstance.get(
+    `/get-my-detailed-attandance/${empId}`
   );
   return response;
 };

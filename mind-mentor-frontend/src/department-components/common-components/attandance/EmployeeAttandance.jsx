@@ -10,6 +10,9 @@ import {
   LogOut,
   LogIn,
   Sigma,
+  Eye,
+  Download,
+  Filter,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import {
@@ -18,14 +21,19 @@ import {
   markEmployeeAttandance,
 } from "../../../api/service/employee/EmployeeService";
 import { toast, ToastContainer } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 const EmployeeAttendance = () => {
   const empId = localStorage.getItem("empId");
+  const navigate = useNavigate();
+  const department = localStorage.getItem("department");
 
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [attendanceData, setAttendanceData] = useState({});
+  const [detailedAttendance, setDetailedAttendance] = useState([]);
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
+  const [showDetailedModal, setShowDetailedModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [attendanceCounts, setAttendanceCounts] = useState({
     present: 0,
@@ -34,6 +42,7 @@ const EmployeeAttendance = () => {
     totalWorkingDays: 0,
   });
   const [attendanceStatus, setAttendanceStatus] = useState("login");
+  const [detailFilter, setDetailFilter] = useState("all"); // all, present, absent, late
 
   const today = new Date();
   const todayString = `${today.getFullYear()}-${(today.getMonth() + 1)
@@ -66,29 +75,31 @@ const EmployeeAttendance = () => {
         setIsLoading(true);
         const response = await getMyAttandanceData(empId);
         console.log("Attendance data response:", response);
-        
+
         if (response.status === 200) {
           // Process attendance summary to create a map for the calendar
           const attendanceMap = {};
-          
-            response.data.attendanceSummary.forEach(record => {
-              if (record.date && record.status) {
-                attendanceMap[record.date] = record.status.toLowerCase();
-              }
-            });
-            setAttendanceData(attendanceMap);
-        
-          
+
+          response.data.attendanceSummary.forEach((record) => {
+            if (record.date && record.status) {
+              attendanceMap[record.date] = record.status.toLowerCase();
+            }
+          });
+          setAttendanceData(attendanceMap);
+
+          // Store detailed attendance data
+          setDetailedAttendance(response.data.attendanceSummary || []);
+
           // Update attendance counts
-            const { counts } = response.data;
-            console.log("Attendance counts:", counts);
-            
-            setAttendanceCounts({
-              present: counts.present || 0,
-              absent: counts.absent || 0,
-              late: counts.late || 0,
-              totalWorkingDays: counts.totalWorkingDays || 0,
-            });
+          const { counts } = response.data;
+          console.log("Attendance counts:", counts);
+
+          setAttendanceCounts({
+            present: counts.present || 0,
+            absent: counts.absent || 0,
+            late: counts.late || 0,
+            totalWorkingDays: counts.totalWorkingDays || 0,
+          });
         }
       } catch (error) {
         console.error("Error fetching attendance data:", error);
@@ -97,7 +108,7 @@ const EmployeeAttendance = () => {
         setIsLoading(false);
       }
     };
-    
+
     fetchData();
   }, [empId]);
 
@@ -191,7 +202,7 @@ const EmployeeAttendance = () => {
 
       // Get status from attendance data (case insensitive matching)
       let status = attendanceData[dateString];
-      
+
       // Convert the status to lowercase for consistency if it exists
       if (status) {
         status = status.toLowerCase();
@@ -234,9 +245,196 @@ const EmployeeAttendance = () => {
   const attendanceRate =
     attendanceCounts.totalWorkingDays > 0
       ? Math.round(
-          ((attendanceCounts.present+ attendanceCounts.late)/ attendanceCounts.totalWorkingDays) * 100
+          ((attendanceCounts.present + attendanceCounts.late) /
+            attendanceCounts.totalWorkingDays) *
+            100
         )
       : 0;
+
+  // Filter detailed attendance based on selected filter
+  const getFilteredAttendance = () => {
+    if (detailFilter === "all") return detailedAttendance;
+    return detailedAttendance.filter(
+      (record) => record.status?.toLowerCase() === detailFilter
+    );
+  };
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  // Get status badge styling
+  const getStatusBadge = (status) => {
+    const statusLower = status?.toLowerCase();
+    switch (statusLower) {
+      case "present":
+        return "bg-green-100 text-green-800";
+      case "absent":
+        return "bg-red-100 text-red-800";
+      case "late":
+        return "bg-yellow-100 text-yellow-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  // Detailed Attendance Modal
+  const DetailedAttendanceModal = () => {
+    const filteredData = getFilteredAttendance();
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden">
+          <div className="flex justify-between items-center p-6 border-b">
+            <h3 className="text-xl font-semibold flex items-center">
+              <Eye className="w-5 h-5 mr-2 text-purple-600" />
+              Detailed Attendance Report
+            </h3>
+            <button
+              onClick={() => setShowDetailedModal(false)}
+              className="p-1 rounded-full hover:bg-gray-100"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          <div className="p-6">
+            {/* Filter and Export Section */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+              <div className="flex items-center space-x-4">
+                <Filter className="w-4 h-4 text-gray-500" />
+                <select
+                  value={detailFilter}
+                  onChange={(e) => setDetailFilter(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="all">
+                    All Records ({detailedAttendance.length})
+                  </option>
+                  <option value="present">
+                    Present ({attendanceCounts.present})
+                  </option>
+                  <option value="absent">
+                    Absent ({attendanceCounts.absent})
+                  </option>
+                  <option value="late">Late ({attendanceCounts.late})</option>
+                </select>
+              </div>
+
+              <button className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                <Download className="w-4 h-4 mr-2" />
+                Export CSV
+              </button>
+            </div>
+
+            {/* Summary Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="bg-green-50 p-4 rounded-lg">
+                <div className="text-2xl font-bold text-green-600">
+                  {attendanceCounts.present}
+                </div>
+                <div className="text-sm text-green-600">Present Days</div>
+              </div>
+              <div className="bg-red-50 p-4 rounded-lg">
+                <div className="text-2xl font-bold text-red-600">
+                  {attendanceCounts.absent}
+                </div>
+                <div className="text-sm text-red-600">Absent Days</div>
+              </div>
+              <div className="bg-yellow-50 p-4 rounded-lg">
+                <div className="text-2xl font-bold text-yellow-600">
+                  {attendanceCounts.late}
+                </div>
+                <div className="text-sm text-yellow-600">Late Days</div>
+              </div>
+              <div className="bg-purple-50 p-4 rounded-lg">
+                <div className="text-2xl font-bold text-purple-600">
+                  {attendanceRate}%
+                </div>
+                <div className="text-sm text-purple-600">Attendance Rate</div>
+              </div>
+            </div>
+
+            {/* Attendance Table */}
+            <div className="overflow-auto max-h-96">
+              {filteredData.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  No attendance records found for the selected filter.
+                </div>
+              ) : (
+                <table className="w-full border-collapse">
+                  <thead className="bg-gray-50 sticky top-0">
+                    <tr>
+                      <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-700">
+                        Date
+                      </th>
+                      <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-700">
+                        Day
+                      </th>
+                      <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-700">
+                        Status
+                      </th>
+                      <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-700">
+                        Login Time
+                      </th>
+                      <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-700">
+                        Logout Time
+                      </th>
+                      <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-700">
+                        Total Hours
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredData.map((record, index) => {
+                      const date = new Date(record.date);
+                      const dayName = date.toLocaleDateString("en-US", {
+                        weekday: "short",
+                      });
+
+                      return (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="border border-gray-200 px-4 py-3 text-sm">
+                            {formatDate(record.date)}
+                          </td>
+                          <td className="border border-gray-200 px-4 py-3 text-sm">
+                            {dayName}
+                          </td>
+                          <td className="border border-gray-200 px-4 py-3">
+                            <span
+                              className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusBadge(
+                                record.status
+                              )}`}
+                            >
+                              {record.status || "N/A"}
+                            </span>
+                          </td>
+                          <td className="border border-gray-200 px-4 py-3 text-sm">
+                            {record.loginTime || "-"}
+                          </td>
+                          <td className="border border-gray-200 px-4 py-3 text-sm">
+                            {record.logoutTime || "-"}
+                          </td>
+                          <td className="border border-gray-200 px-4 py-3 text-sm">
+                            {record.totalHours || "-"}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   // Improved attendance modal for login
   const AttendanceModal = () => {
@@ -387,6 +585,8 @@ const EmployeeAttendance = () => {
         <AttendanceModal />
       )}
 
+      {showDetailedModal && <DetailedAttendanceModal />}
+
       {/* Status Summary Card */}
       <div className="bg-white rounded-lg shadow-md mb-6 p-4">
         <div className="flex justify-between items-center mb-4">
@@ -395,7 +595,18 @@ const EmployeeAttendance = () => {
             Attendance Summary
           </h2>
 
-          {renderAttendanceButton()}
+          <div className="flex gap-2">
+            <button
+              onClick={() =>
+                navigate(`/${department}/department/get-detailed-attandance`)
+              }
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center"
+            >
+              <Eye className="w-5 h-5 mr-2" />
+              View Details
+            </button>
+            {renderAttendanceButton()}
+          </div>
         </div>
 
         {isLoading ? (
@@ -403,8 +614,7 @@ const EmployeeAttendance = () => {
         ) : (
           <>
             <div className="grid grid-cols-5 gap-2 mb-4">
-            <StatBox
-            
+              <StatBox
                 value={attendanceCounts.totalWorkingDays}
                 label="Total Days"
                 icon={Sigma}
@@ -513,7 +723,7 @@ const EmployeeAttendance = () => {
 
             // Case-insensitive status comparison
             const statusLower = status ? status.toLowerCase() : null;
-            
+
             if (statusLower === "present") {
               dayClass += " bg-green-100";
             } else if (statusLower === "absent") {

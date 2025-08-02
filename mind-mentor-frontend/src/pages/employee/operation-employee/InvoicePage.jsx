@@ -1,4 +1,4 @@
-import Invoices from "../../../department-components/common-components/payment-invoice/Invoices";
+import Invoices from "../../../department-components/centeradmin-components/dashboard/Invoices";
 import Sidebar from "../../../department-components/operation-new/layout/Sidebar";
 import Topbar from './../../../component/parent-component/parent-dashboard/layout/Topbar';
 

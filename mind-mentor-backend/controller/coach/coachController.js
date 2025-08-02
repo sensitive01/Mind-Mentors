@@ -302,7 +302,7 @@ const getClassITaught = async (req, res) => {
 
     if (myTaughtClassData.length === 0) {
       return res
-        .status(404)
+        .status(201)
         .json({ message: "No classes found for this coach" });
     }
 
@@ -318,16 +318,27 @@ const getMyDashboardData = async (req, res) => {
     const { empId } = req.params;
     console.log("empId:", empId);
 
-    // Get upcoming class schedule
+    // Get upcoming class schedules for the coach
     const upcomingClass = await ClassSchedule.find({ coachId: empId });
 
-    // Get classes already conducted by the coach
+    // Get conducted classes by the coach
     const myTaughtClassData = await ConductedClass.find({ coachId: empId });
+
+    // Count selected and demo kids from upcoming classes
+    let totalSelectedKids = 0;
+    let totalDemoKids = 0;
+
+    upcomingClass.forEach((cls) => {
+      totalSelectedKids += cls.selectedStudents?.length || 0;
+      totalDemoKids += cls.demoAssignedKid?.length || 0;
+    });
 
     res.status(200).json({
       success: true,
       upcomingClasses: upcomingClass.length,
       taughtClasses: myTaughtClassData.length,
+      totalSelectedKids,
+      totalDemoKids,
     });
   } catch (err) {
     console.error("Error fetching dashboard data:", err);

@@ -19,7 +19,7 @@ import {
   getKidSheduleDemoDetails,
   parentBookDemoClassData,
 } from "../../../../api/service/parent/ParentService";
-import toast from "react-hot-toast";
+import { ToastContainer,toast } from "react-toastify";
 
 const SheduleDemoClass = () => {
   const navigate = useNavigate();
@@ -48,7 +48,7 @@ const SheduleDemoClass = () => {
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [classType, setClassType] = useState("online"); // 'online' or 'offline'
   const [currentStep, setCurrentStep] = useState(0);
-  const [currentMonth, setCurrentMonth] = useState(new Date(2025, 6)); // July 2025
+  const [currentMonth, setCurrentMonth] = useState(new Date(2025, 7)); // July 2025
   const [isEditing, setIsEditing] = useState(false);
 
   // Check if kid has selected programs
@@ -98,26 +98,30 @@ const SheduleDemoClass = () => {
       .map((slot) => slot.day); // Use 'day' instead of parsing classDate
 
     const uniqueDays = [...new Set(availableDays)];
-    
+
     // Generate dates for the current month and next few months based on available days
     const dates = new Set();
     const today = new Date();
     const endDate = new Date(today.getFullYear(), today.getMonth() + 3, 0); // 3 months ahead
-    
+
     // Map day names to numbers (Sunday = 0, Monday = 1, etc.)
     const dayNameToNumber = {
-      'Sunday': 0,
-      'Monday': 1,
-      'Tuesday': 2,
-      'Wednesday': 3,
-      'Thursday': 4,
-      'Friday': 5,
-      'Saturday': 6
+      Sunday: 0,
+      Monday: 1,
+      Tuesday: 2,
+      Wednesday: 3,
+      Thursday: 4,
+      Friday: 5,
+      Saturday: 6,
     };
 
-    for (let date = new Date(today); date <= endDate; date.setDate(date.getDate() + 1)) {
-      const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
-      
+    for (
+      let date = new Date(today);
+      date <= endDate;
+      date.setDate(date.getDate() + 1)
+    ) {
+      const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
+
       // Check if this day is available and the date is not in the past
       if (uniqueDays.includes(dayName) && date >= today.setHours(0, 0, 0, 0)) {
         dates.add(new Date(date).toDateString());
@@ -138,7 +142,9 @@ const SheduleDemoClass = () => {
       return [];
 
     // Get the day name from selected date
-    const selectedDayName = selectedDate.toLocaleDateString('en-US', { weekday: 'long' });
+    const selectedDayName = selectedDate.toLocaleDateString("en-US", {
+      weekday: "long",
+    });
 
     return apiData.demoClassData
       .filter(
@@ -283,14 +289,15 @@ const SheduleDemoClass = () => {
       const isPast = date < new Date().setHours(0, 0, 0, 0);
 
       // Get day name and count available slots for this day
-      const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
-      const slotsCount = apiData?.demoClassData?.filter(
-        (slot) =>
-          slot.day === dayName &&
-          slot.program === selectedProgram &&
-          slot.level === selectedLevel &&
-          slot.enrolledKidCount < slot.maximumKidCount
-      ).length || 0;
+      const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
+      const slotsCount =
+        apiData?.demoClassData?.filter(
+          (slot) =>
+            slot.day === dayName &&
+            slot.program === selectedProgram &&
+            slot.level === selectedLevel &&
+            slot.enrolledKidCount < slot.maximumKidCount
+        ).length || 0;
 
       days.push(
         <button
@@ -309,9 +316,7 @@ const SheduleDemoClass = () => {
         >
           <div className="font-medium">{day}</div>
           {isAvailable && !isPast && slotsCount > 0 && (
-            <div className="text-xs mt-1">
-              {slotsCount} slots
-            </div>
+            <div className="text-xs mt-1">{slotsCount} slots</div>
           )}
         </button>
       );
@@ -828,6 +833,18 @@ const SheduleDemoClass = () => {
           </div>
         )}
       </div>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
     </div>
   );
 };

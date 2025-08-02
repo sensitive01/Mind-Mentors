@@ -46,6 +46,7 @@ import logo from "../../../../assets/mindmentorz.png";
 import { jsPDF } from "jspdf";
 
 const PaymentDecode = () => {
+  const empId = localStorage.getItem("empId")
   const { encodedData } = useParams();
   const [paymentData, setPaymentData] = useState(null);
   const [error, setError] = useState(null);
@@ -181,6 +182,7 @@ const PaymentDecode = () => {
         status: "Success",
         amount: paymentData.totalAmount,
         transactionId: razorpayPaymentId,
+        empId
       });
 
       if (response?.status === 200) {
@@ -301,7 +303,8 @@ const PaymentDecode = () => {
         transactionId: transactionDetails.transactionId,
         paymentMode: transactionDetails.paymentMode,
         remarks: transactionDetails.remarks,
-        paymentId:encodedData
+        paymentId:encodedData,
+        empId
       };
 
       // Add file URL to the request if it exists

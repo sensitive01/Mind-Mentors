@@ -143,12 +143,14 @@ const Dashboard = () => {
     const fetchDashboard = async () => {
       try {
         const response = await getMyDashboardData(empId);
-        if (response.status===200) {
+        if (response.status === 200) {
           setDashboardData({
             upcomingClasses: response.data.upcomingClasses || 0,
             taughtClasses: response.data.taughtClasses || 0,
             // Mock additional data - replace with actual API response fields
-            totalStudents: response.data.totalStudents || 45,
+            totalStudents:
+              response.data.totalSelectedKids + response.data.totalDemoKids ||
+              0,
             averageRating: response.data.averageRating || 4.7,
             completionRate: response.data.completionRate || 85,
             monthlyEarnings: response.data.monthlyEarnings || 5200,

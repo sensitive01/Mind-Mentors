@@ -24,8 +24,8 @@ const operationDeptSchema = new mongoose.Schema(
     // otherRelationship: { type: String },
 
     source: { type: String },
-    message: { type: String }, 
-    notes: { type: String ,default:"Empty"},
+    message: { type: String },
+    notes: { type: String, default: "Empty" },
 
     kidFirstName: { type: String },
     kidLastName: { type: String },
@@ -38,7 +38,7 @@ const operationDeptSchema = new mongoose.Schema(
     programs: {
       type: [ProgramSchema],
     },
-    isEnquiryNew:{type:Boolean,default:true},
+    isEnquiryNew: { type: Boolean, default: true },
 
     schoolName: { type: String },
     address: { type: String },
@@ -46,7 +46,7 @@ const operationDeptSchema = new mongoose.Schema(
     intentionOfParents: { type: String },
 
     enquiryType: { type: String, enum: ["warm", "cold"], default: "warm" },
-    enquiryStage: { type: String ,},
+    enquiryStage: { type: String },
 
     enquiryStatus: {
       type: String,
@@ -106,7 +106,8 @@ const operationDeptSchema = new mongoose.Schema(
       default: "Pending",
     },
     paymentRenewal: { type: String },
-    classAssigned:{type:Boolean,default:false}
+    classAssigned: { type: Boolean, default: false },
+    employeeAssisted: { type: String },
   },
   { timestamps: true }
 );

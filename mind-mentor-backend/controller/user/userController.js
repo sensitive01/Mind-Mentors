@@ -3076,6 +3076,7 @@ const sendSelectedPackageData = async (req, res) => {
       offlineClasses: packageData.offlineClasses,
       centerId: packageData.centerId || null,
       centerName: packageData.centerName,
+      employeeAssisted: empId,
     });
 
     const savedPackage = await newPackage.save();
@@ -3189,6 +3190,7 @@ const updatePaymentDetails = async (req, res) => {
         documentUrl: data.documentUrl,
         isPackageActive: true,
         isExtraPackage: oldPackage.length > 1 ? true : false,
+        employeeAssisted: data.empId,
       },
       { new: true }
     );
@@ -3563,8 +3565,12 @@ const getSheduleDemoDetails = async (req, res) => {
 
 const cancelDemoClass = async (req, res) => {
   try {
-    const { kidId, classId } = req.params;
+    const { kidId, classId, empId } = req.params;
     console.log(kidId, classId);
+    const empData = await Employee.findOne(
+      { _id: empId },
+      { firstName: 1, department: 1 }
+    );
 
     // Step 1: Get kid details
     const kidDetails = await kidSchema.findById(kidId);
@@ -3579,13 +3585,15 @@ const cancelDemoClass = async (req, res) => {
     });
 
     // Step 3: Remove kid from scheduled class
-    await ClassSchedule.updateOne(
+    const classData = await ClassSchedule.updateOne(
       { _id: existingDemo.classId },
       { $pull: { demoAssignedKid: { kidId } } }
     );
 
+    console.log("ClassData", classData);
+
     // Step 4: Update operation model
-    await enquiryData.findOneAndUpdate(
+    const enqData = await enquiryData.findOneAndUpdate(
       { kidId },
       {
         $set: {
@@ -3593,6 +3601,21 @@ const cancelDemoClass = async (req, res) => {
           enquiryField: "prospects",
         },
       }
+    );
+    await logsSchema.findByIdAndUpdate(
+      enqData.logs,
+      {
+        $push: {
+          logs: {
+            employeeId: empId,
+            employeeName: empData.firstName,
+            department: empData.department,
+            comment: `  Cancelled  demo class for the ${classData.program} program at the ${classData.level} level with coach ${classData.coachName}.`,
+            createdAt: new Date(),
+          },
+        },
+      },
+      { new: true }
     );
     await demoClassSchema.findOneAndDelete({
       _id: classId,
@@ -3615,7 +3638,11 @@ const cancelDemoClass = async (req, res) => {
 const employeeBookDemoClass = async (req, res) => {
   try {
     const { kidId } = req.params;
-    const { bookingDetails } = req.body;
+    const { bookingDetails, empId } = req.body;
+    const empData = await Employee.findOne(
+      { _id: empId },
+      { firstName: 1, department: 1 }
+    );
 
     const kidDetails = await kidSchema.findById(kidId);
     if (!kidDetails) {
@@ -3668,7 +3695,7 @@ const employeeBookDemoClass = async (req, res) => {
       savedBooking = await existingDemo.save();
 
       // Update OperationDept program & demo status
-      await enquiryData.findOneAndUpdate(
+      const enqData = await enquiryData.findOneAndUpdate(
         { kidId },
         {
           $set: {
@@ -3678,6 +3705,22 @@ const employeeBookDemoClass = async (req, res) => {
             enquiryField: "prospects",
           },
         }
+      );
+
+      await logsSchema.findByIdAndUpdate(
+        enqData.logs,
+        {
+          $push: {
+            logs: {
+              employeeId: empId,
+              employeeName: empData.firstName,
+              department: empData.department,
+              comment: `  Updated  demo class for the ${bookingDetails.program} program at the ${bookingDetails.level} level with coach ${bookingDetails.coachName}.`,
+              createdAt: new Date(),
+            },
+          },
+        },
+        { new: true }
       );
 
       // Update Kid model selectedProgram
@@ -3711,7 +3754,7 @@ const employeeBookDemoClass = async (req, res) => {
       );
 
       // Update OperationDept (replace first program)
-      await enquiryData.findOneAndUpdate(
+      const enqData = await enquiryData.findOneAndUpdate(
         { kidId },
         {
           $set: {
@@ -3722,6 +3765,22 @@ const employeeBookDemoClass = async (req, res) => {
           },
         },
         { upsert: true }
+      );
+
+      await logsSchema.findByIdAndUpdate(
+        enqData.logs,
+        {
+          $push: {
+            logs: {
+              employeeId: empId,
+              employeeName: empData.firstName,
+              department: empData.department,
+              comment: `  Sheduled  demo class for the ${bookingDetails.program} program at the ${bookingDetails.level} level with coach ${bookingDetails.coachName}.`,
+              createdAt: new Date(),
+            },
+          },
+        },
+        { new: true }
       );
 
       // Update kid model
@@ -3803,7 +3862,32 @@ const superAdminGetConductedClassDetails = async (req, res) => {
   }
 };
 
+const getMyDetailedAttendance = async (req, res) => {
+  try {
+    const { empId } = req.params;
+    const myAttendance = await attendanceModel.find({ empId });
+
+    if (!myAttendance || myAttendance.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No attendance records found for this employee.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: myAttendance,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 module.exports = {
+  getMyDetailedAttendance,
   superAdminGetConductedClassDetails,
   employeeBookDemoClass,
   cancelDemoClass,

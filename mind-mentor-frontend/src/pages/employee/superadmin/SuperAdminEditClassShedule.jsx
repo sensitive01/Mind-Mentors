@@ -1,6 +1,6 @@
-import Topbar from '../../../component/parent-component/parent-dashboard/layout/EmployeeTopBar';
+import Topbar from "../../../component/parent-component/parent-dashboard/layout/EmployeeTopBar";
 import Sidebar from "../../../department-components/superadmin/Layout/Sidebar";
-import EditClassShedule from "../../../department-components/servicedelivery/components/EditClassShedule";
+import EditClassTimeTable from "../../../department-components/common-components/class/EditClassTimeTable";
 
 const SuperAdminEditClassShedule = () => {
   return (
@@ -15,7 +15,7 @@ const SuperAdminEditClassShedule = () => {
         <div className="flex-1 overflow-hidden relative z-10">
           <div className="h-full w-full overflow-auto scrollbar-hide">
             <div className="min-w-full p-4 bg-gray-50">
-              <EditClassShedule />
+              <EditClassTimeTable />
             </div>
           </div>
         </div>

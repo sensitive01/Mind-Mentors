@@ -1,4 +1,4 @@
-import Profile from "../../../department-components/centeradmin-components/dashboard/Profile";
+import Profile from "../../../department-components/common-components/employee-profile/EmployeeProfile";
 import Sidebar from "../../../department-components/centeradmin-components/layout/Sidebar";
 import Topbar from "./../../../component/parent-component/parent-dashboard/layout/Topbar";
 

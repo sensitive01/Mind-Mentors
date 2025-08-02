@@ -1,4 +1,4 @@
-import ServiceTable from "../../../department-components/servicedelivery/components/ServiceTable.jsx";
+import ServiceTable from "../../../department-components/superadmin/components/programs/RenewalTable";
 import Sidebar from "../../../department-components/servicedelivery/Layout/Sidebar";
 import Topbar from './../../../component/parent-component/parent-dashboard/layout/Topbar';
 

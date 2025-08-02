@@ -32,6 +32,7 @@ import { styled } from "@mui/material/styles";
 import { TentTree } from "lucide-react";
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import mmLogo from "../../../assets/mindmentorz.png";
 
 const ModernSidebar = () => {
   const navigate = useNavigate();
@@ -102,6 +103,7 @@ const ModernSidebar = () => {
       minWidth: "auto",
     },
   }));
+
   const StyledDrawer = styled(Drawer)(() => ({
     width: isCollapsed ? 80 : 280,
     flexShrink: 0,
@@ -114,37 +116,19 @@ const ModernSidebar = () => {
       overflow: "hidden",
     },
   }));
+
   const handleReportsClick = () => setOpenReports(!openReports);
   const handleTasksClick = () => setOpenTasks(!openTasks);
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
   const handleCRMClick = () => setOpenCRMS(!openCRM);
 
   const menuItems = [
-    // {
-    //   icon: <ProfileIcon />,
-    //   text: "Profile",
-    //   color: iconColors.profile,
-    //   subItems: [
-    //     { icon: <ProfileIcon />, text: "View Profile", link: "/viewProfile" },
-    //   ],
-    // },
     {
       icon: <DashboardIcon />,
       text: "Dashboard",
       color: iconColors.dashboard,
       link: "/renewal/department/dashboard",
     },
-    // {
-    //   icon: <ReportsIcon />,
-    //   text: "CRM",
-    //   color: iconColors.attendance,
-    //   subItems: [
-    //     { icon: <ReportsIcon />, text: "Referrals", link: "/renewalReferrals" },
-    //     { icon: <ReportsIcon />, text: "Others", link: "#" },
-    //   ],
-    //   open: openCRM,
-    //   onClick: handleCRMClick,
-    // },
     {
       icon: <KidsIcon />,
       text: "Kids",
@@ -187,57 +171,18 @@ const ModernSidebar = () => {
       color: iconColors.attendance,
       link: "/renewal-associate/holidays",
     },
-        {
+    {
       icon: <TaskIcon />,
       text: "Tasks",
       color: iconColors.tasks,
       link: "/renewal/department/task-table",
     },
-    // {
-    //   icon: <ReportsIcon />,
-    //   text: "Reports",
-    //   color: iconColors.reports,
-    //   subItems: [
-    //     {
-    //       icon: <ReportsIcon />,
-    //       text: "Students Feedback",
-    //       link: "/renewalFeedback",
-    //     },
-    //     {
-    //       icon: <ReportsIcon />,
-    //       text: "Student Attendance Report",
-    //       link: "/renewalAttendanceReport",
-    //     },
-    //   ],
-    //   open: openReports,
-    //   onClick: handleReportsClick,
-    // },
-
-    // {
-    //   icon: <TaskIcon />,
-    //   text: 'Tasks',
-    //   color: iconColors.tasks,
-    //   subItems: [
-    //     { icon: <TaskIcon />, text: 'My Tasks', link: '/renewal/department/list-mytask' },
-    //     { icon: <TaskIcon />, text: 'Tasks Assigned By Me', link: '/renewal/department/list-task-assigned-me' },
-    //   ],
-    //   open: openTasks,
-    //   onClick: handleTasksClick,
-    // },
-
-    // {
-    //   icon: <ClassScheduleIcon />,
-    //   text: "Class Schedules",
-    //   color: iconColors.classSchedules,
-    //   link: "/renewal/department/schedule-class-list",
-    // },
     {
       icon: <SupportIcon />,
       text: "Support",
       color: iconColors.support,
       link: "/renewalSupport",
     },
-
   ];
 
   return (
@@ -246,26 +191,39 @@ const ModernSidebar = () => {
         sx={{
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between",
+          justifyContent: isCollapsed ? "center" : "space-between",
           py: 2,
           px: 2,
-          marginTop:8
         }}
       >
-       
+        {/* Logo - only show when not collapsed */}
+        {!isCollapsed && (
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <img
+              src={mmLogo}
+              alt="MindMentorz Logo"
+              style={{
+                height: "40px",
+                width: "auto",
+                objectFit: "contain",
+              }}
+            />
+          </Box>
+        )}
+
+        {/* Collapse/Expand Button */}
         <IconButton
           onClick={() => setIsCollapsed(!isCollapsed)}
           sx={{
             bgcolor: "#642b8f",
             color: "white",
             "&:hover": { bgcolor: "#4a1d6e" },
-            position: isCollapsed ? "static" : "absolute",
-            right: 10,
           }}
         >
           {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
         </IconButton>
       </Box>
+
       <Box sx={{ overflow: "auto" }}>
         <List disablePadding>
           {menuItems.map((item, index) => (

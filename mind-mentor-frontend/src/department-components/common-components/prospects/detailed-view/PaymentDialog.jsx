@@ -12,8 +12,8 @@ import { useNavigate } from "react-router-dom";
 
 const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
   const navigate = useNavigate();
-  const department = localStorage.getItem("department")
-  const empId = localStorage.getItem("empId")
+  const department = localStorage.getItem("department");
+  const empId = localStorage.getItem("empId");
   const [packageType, setPackageType] = useState("");
   const [packages, setPackages] = useState({
     online: [],
@@ -370,7 +370,7 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
         };
       }
 
-      const response = await sendPackageSelection(packageData, data._id,empId);
+      const response = await sendPackageSelection(packageData, data._id, empId);
 
       if (response.status === 201) {
         const receivedPaymentId = response.data.paymentId;
@@ -454,7 +454,9 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
                   Mobile
                 </label>
                 <p className="font-medium text-gray-900">
-                  {formatWhatsAppNumber(data?.whatsappNumber||data?.contactNumber) || "N/A"}
+                  {formatWhatsAppNumber(
+                    data?.whatsappNumber || data?.contactNumber
+                  ) || "N/A"}
                 </p>
               </div>
             </div>
@@ -508,13 +510,13 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
             </div>
 
             {(packageType === "online" || packageType === "offline") && (
-              <div className="bg-white p-4 rounded-lg shadow-sm space-y-4">
-                {/* Day/Night Selection */}
+              <div className="bg-white p-3 rounded-lg shadow-sm space-y-4">
+                {/* Day/Night Selection - Same Line */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-3">
                     Select Time Slot
                   </label>
-                  <div className="flex gap-4">
+                  <div className="flex flex-wrap gap-6">
                     <label className="flex items-center">
                       <input
                         type="radio"
@@ -524,8 +526,8 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
                         onChange={(e) => handleTimeSlotChange(e.target.value)}
                         className="mr-2 text-purple-600 focus:ring-purple-500"
                       />
-                      <span className="text-sm font-medium text-gray-700">
-                        Day
+                      <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                        10.30 am - 7.30 pm (Day)
                       </span>
                     </label>
                     <label className="flex items-center">
@@ -537,8 +539,8 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
                         onChange={(e) => handleTimeSlotChange(e.target.value)}
                         className="mr-2 text-purple-600 focus:ring-purple-500"
                       />
-                      <span className="text-sm font-medium text-gray-700">
-                        Night
+                      <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                        7.30 pm - 10.30 am (Night)
                       </span>
                     </label>
                   </div>

@@ -1,4 +1,4 @@
-import Profiles from "../../../department-components/common-components/profile/EnrollementProfile";
+import Profiles from "../../../department-components/common-components/employee-profile/EmployeeProfile";
 import Sidebar from "../../../department-components/operation-new/layout/Sidebar";
 import Topbar from './../../../component/parent-component/parent-dashboard/layout/Topbar';
 

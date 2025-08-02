@@ -223,7 +223,7 @@ const ClassScheduleForm = () => {
     const schedule = { ...newSchedules[scheduleIndex] };
 
     schedule.date = useToday ? todayDate : nextDate;
-    
+
     newSchedules[scheduleIndex] = schedule;
     setSchedules(newSchedules);
     setConfirmationDialog({ ...confirmationDialog, open: false });
@@ -611,17 +611,18 @@ const ClassScheduleForm = () => {
           const today = new Date();
           const todayIndex = today.getDay();
           const targetIndex = dayToIndex[value];
-          
+
           if (todayIndex === targetIndex) {
             // Today is the selected day - show confirmation
-            const todayDateStr = `${today.getDate().toString().padStart(2, "0")}-${(
-              today.getMonth() + 1
-            )
+            const todayDateStr = `${today
+              .getDate()
+              .toString()
+              .padStart(2, "0")}-${(today.getMonth() + 1)
               .toString()
               .padStart(2, "0")}-${today.getFullYear()}`;
-            
+
             const nextDateStr = getNextDayDate(value);
-            
+
             setConfirmationDialog({
               open: true,
               scheduleIndex: index,
@@ -631,7 +632,7 @@ const ClassScheduleForm = () => {
             });
             break;
           }
-          
+
           // For offline mode, check center business hours
           if (schedule.mode === "offline") {
             const businessHours = getCenterBusinessHoursForDay(
@@ -841,11 +842,11 @@ const ClassScheduleForm = () => {
           </div>
           <button
             onClick={() =>
-              navigate("/super-admin/department/class-timetable-list")
+              navigate(`/${department}/department/class-timetable-list`)
             }
             className="bg-white text-[#642b8f] px-4 py-2 rounded font-medium hover:bg-gray-100 transition"
           >
-            View Schedule
+            View Schedules
           </button>
         </div>
 
@@ -1312,19 +1313,23 @@ const ClassScheduleForm = () => {
       {/* Confirmation Dialog */}
       <Dialog
         open={confirmationDialog.open}
-        onClose={() => setConfirmationDialog({ ...confirmationDialog, open: false })}
+        onClose={() =>
+          setConfirmationDialog({ ...confirmationDialog, open: false })
+        }
       >
         <DialogTitle>Schedule Confirmation</DialogTitle>
         <DialogContent>
           <Typography>
-            You've selected {confirmationDialog.day} which is today. Would you like to schedule the class for:
+            You've selected {confirmationDialog.day} which is today. Would you
+            like to schedule the class for:
           </Typography>
           <Box mt={2}>
             <Typography variant="body2">
               <strong>Today:</strong> {confirmationDialog.todayDate}
             </Typography>
             <Typography variant="body2">
-              <strong>Next {confirmationDialog.day}:</strong> {confirmationDialog.nextDate}
+              <strong>Next {confirmationDialog.day}:</strong>{" "}
+              {confirmationDialog.nextDate}
             </Typography>
           </Box>
         </DialogContent>

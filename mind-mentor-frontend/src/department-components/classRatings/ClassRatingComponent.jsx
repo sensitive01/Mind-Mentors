@@ -26,7 +26,7 @@ const ClassFeedbackSystem = ({ sessionEnded = true, logoUrl = null }) => {
   const [kidResponses, setKidResponses] = useState({});
   const [kidFeedbackSubmitted, setKidFeedbackSubmitted] = useState(false);
 
-  const isCoach = userType === "coach";
+  const isCoach = userType === "kid";
 
   const kidQuestions = [
     {

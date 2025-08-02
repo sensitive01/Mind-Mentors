@@ -1,4 +1,4 @@
-import Profile from "../../../department-components/superadmin/components/Profile";
+import EmployeeProfile from "../../../department-components/common-components/employee-profile/EmployeeProfile";
 import Topbar from '../../../component/parent-component/parent-dashboard/layout/Topbar';
 import Sidebar from "../../../department-components/superadmin/Layout/Sidebar";
 
@@ -10,7 +10,7 @@ const ListingEnquiries = () => {
       </div>
       <div className="ml-64 flex-1"> {/* Adjusted margin-left to match sidebar width */}
         <Topbar/>
-\        <Profile />
+\        <EmployeeProfile />
       </div>
     </div>
   );

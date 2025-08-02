@@ -1,4 +1,4 @@
-import StudentAttendance from "../../../department-components/servicedelivery/components/StudentAttendance";
+import StudentAttendance from "../../../department-components/common-components/classtimetable/ConductedClassData";
 
 
 import Sidebar from "../../../department-components/servicedelivery/Layout/Sidebar";

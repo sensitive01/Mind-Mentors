@@ -35,6 +35,7 @@ import { styled } from "@mui/material/styles";
 import { TentTree } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import mmLogo from "../../../assets/mindmentorz.png";
 
 const ModernSidebar = () => {
   const navigate = useNavigate();
@@ -44,11 +45,9 @@ const ModernSidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activePath, setActivePath] = useState("");
 
-  // Set the active path whenever location changes
   useEffect(() => {
     setActivePath(location.pathname);
 
-    // Open Reports submenu if current path is in the reports section
     if (
       location.pathname.includes("Feedback") ||
       location.pathname.includes("AttendanceReport")
@@ -57,7 +56,6 @@ const ModernSidebar = () => {
     }
   }, [location]);
 
-  // Vibrant color palette for icons
   const iconColors = {
     profile: "#642b8f",
     dashboard: "#642b8f",
@@ -148,6 +146,29 @@ const ModernSidebar = () => {
     height: "calc(100vh - 120px)",
   });
 
+  const LogoContainer = styled(Box)({
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "16px",
+    minHeight: "60px",
+    borderBottom: "1px solid #f0f0f0",
+  });
+
+  const LogoImage = styled("img")({
+    height: "40px",
+    width: "auto",
+    objectFit: "contain",
+    transition: "all 0.3s ease",
+    maxWidth: "150px",
+  });
+
+  const LogoFallback = styled(Typography)({
+    color: "#642b8f",
+    fontWeight: "bold",
+    fontSize: "1.2rem",
+  });
+
   const handleReportsClick = () => setOpenReports(!openReports);
   const handleTasksClick = () => setOpenTasks(!openTasks);
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
@@ -175,9 +196,8 @@ const ModernSidebar = () => {
       icon: <ClassScheduleIcon />,
       text: "Class Schedules",
       color: iconColors.classSchedules,
-      link: "/service-delivery/department/class-shedules",
+      link: "/service-delivery/department/class-timetable-list",
     },
-
     {
       icon: <TaskIcon />,
       text: "Tasks",
@@ -196,7 +216,6 @@ const ModernSidebar = () => {
       color: iconColors.leaves,
       link: "/service-delivery/department/leaves",
     },
-
     {
       icon: <TentTree />,
       text: "Holidays",
@@ -222,13 +241,8 @@ const ModernSidebar = () => {
       subItems: [
         {
           icon: <ReportsIcon />,
-          text: "Students Feedback",
-          link: "/serviceFeedback",
-        },
-        {
-          icon: <ReportsIcon />,
-          text: "Student Attendance Report",
-          link: "/serviceAttendanceReport",
+          text: "Class Reports",
+          link: "/service-delivary/department/class-reports",
         },
       ],
       open: openReports,
@@ -238,7 +252,7 @@ const ModernSidebar = () => {
       icon: <ProgramsIcon />,
       text: "Programs",
       color: iconColors.programs,
-      link: "/servicePrograms",
+      link: "/service-delivary/department/list-all-programs",
     },
     {
       icon: <SupportIcon />,
@@ -246,26 +260,31 @@ const ModernSidebar = () => {
       color: iconColors.support,
       link: "/serviceSupport",
     },
-    {
-      icon: <LogoutIcon />,
-      text: "Logout",
-      color: iconColors.logout,
-      link: "/",
-    },
   ];
 
   return (
     <StyledDrawer variant="permanent">
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          py: 2,
-          px: 2,
-          marginTop:8
-        }}
-      >
+      {/* Logo and Menu Toggle Container */}
+      <LogoContainer>
+        {!isCollapsed && (
+          <Box sx={{ display: "flex", alignItems: "center", flex: 1 }}>
+            <LogoImage
+              src={mmLogo}
+              alt="MindMentorz Logo"
+              onError={(e) => {
+                console.log("Logo failed to load, showing fallback text");
+                e.target.style.display = "none";
+                // Show fallback text
+                const fallback = e.target.nextElementSibling;
+                if (fallback) fallback.style.display = "block";
+              }}
+              onLoad={() => console.log("Logo loaded successfully")}
+            />
+            <LogoFallback sx={{ display: "none", ml: 1 }}>
+              MindMentorz
+            </LogoFallback>
+          </Box>
+        )}
 
         <IconButton
           onClick={toggleSidebar}
@@ -273,15 +292,18 @@ const ModernSidebar = () => {
             bgcolor: "#642b8f",
             color: "white",
             "&:hover": { bgcolor: "#4a1d6e" },
-            position: isCollapsed ? "static" : "absolute",
-            right: 10,
+            width: 40,
+            height: 40,
+            flexShrink: 0,
           }}
         >
           {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
         </IconButton>
-      </Box>
+      </LogoContainer>
+
+      {/* Menu Items */}
       <ScrollableBox>
-        <List disablePadding>
+        <List disablePadding sx={{ px: 1 }}>
           {menuItems.map((item, index) => {
             // Check if this menu item is active
             const isActive =
@@ -291,7 +313,7 @@ const ModernSidebar = () => {
 
             return (
               <React.Fragment key={index}>
-                <Tooltip title={item.text} placement="right">
+                <Tooltip title={isCollapsed ? item.text : ""} placement="right">
                   {item.link ? (
                     <Link
                       to={item.link}

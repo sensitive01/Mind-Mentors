@@ -1,7 +1,6 @@
-import StudentAttendance from "../../../department-components/common-components/reports/StudentAttendance";
+import StudentAttendance from "../../../department-components/common-components/classtimetable/ConductedClassData";
 import Sidebar from "../../../department-components/operation-new/layout/Sidebar";
-import Topbar from './../../../component/parent-component/parent-dashboard/layout/Topbar';
-
+import Topbar from "./../../../component/parent-component/parent-dashboard/layout/Topbar";
 
 const StudentReport = () => {
   return (
@@ -24,6 +23,5 @@ const StudentReport = () => {
     </div>
   );
 };
-
 
 export default StudentReport;

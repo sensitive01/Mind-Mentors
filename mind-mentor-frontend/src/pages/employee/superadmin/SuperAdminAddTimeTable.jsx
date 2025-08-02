@@ -1,6 +1,6 @@
-import Topbar from '../../../component/parent-component/parent-dashboard/layout/EmployeeTopBar';
+import Topbar from "../../../component/parent-component/parent-dashboard/layout/EmployeeTopBar";
 import Sidebar from "../../../department-components/superadmin/Layout/Sidebar";
-import ClassTimeTables from "../../../department-components/servicedelivery/components/ClassTimeTables";
+import AddNewClassTimeTable from "../../../department-components/common-components/class/AddNewClassTimeTable";
 
 const SuperAdminAddTimeTable = () => {
   return (
@@ -15,7 +15,7 @@ const SuperAdminAddTimeTable = () => {
         <div className="flex-1 overflow-hidden relative z-10">
           <div className="h-full w-full overflow-auto scrollbar-hide">
             <div className="min-w-full p-4 bg-gray-50">
-              <ClassTimeTables />
+              <AddNewClassTimeTable />
             </div>
           </div>
         </div>

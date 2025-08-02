@@ -18,7 +18,6 @@ import {
 import {
   Box,
   Collapse,
-  Divider,
   Drawer,
   IconButton,
   List,
@@ -26,24 +25,17 @@ import {
   ListItemIcon,
   ListItemText,
   Tooltip,
-  Typography,
-  Avatar,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { RouteIcon, TentTree } from "lucide-react";
 import React, { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { getEmployeeData } from "../../../api/service/employee/EmployeeService";
+import { Link, useLocation } from "react-router-dom";
+import mmLogo from "../../../assets/mindmentorz.png"
 
 const ModernSidebar = () => {
   const [openReports, setOpenReports] = useState(false);
-  const empId = localStorage.getItem("empId");
-  const [openTasks, setOpenTasks] = useState(false);
-  const [openLeadManagement, setOpenLeadManagement] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [empData, setEmpData] = useState({});
   const location = useLocation();
-  const navigate = useNavigate();
 
   // Auto-expand parent menu when child is active
   useEffect(() => {
@@ -54,8 +46,6 @@ const ModernSidebar = () => {
         );
         if (isSubItemActive) {
           if (item.text === "Reports") setOpenReports(true);
-          if (item.text === "Tasks") setOpenTasks(true);
-          if (item.text === "Lead Management") setOpenLeadManagement(true);
         }
       }
     });
@@ -135,7 +125,7 @@ const ModernSidebar = () => {
       borderRight: "1px solid rgba(0, 0, 0, 0.12)",
       transition: "width 0.3s ease",
       overflowX: "hidden",
-      overflowY: "auto", // Ensures vertical scrolling
+      overflowY: "auto",
       // Hide scrollbar for Chrome, Safari and Opera
       "&::-webkit-scrollbar": {
         display: "none",
@@ -189,12 +179,8 @@ const ModernSidebar = () => {
       color: iconColors.schedule,
       subItems: [
         {
-          text: "Student Attendance",
-          link: "/operation/department/student-report",
-        },
-        {
-          text: "Coach Feedback",
-          link: "/operation/department/coach-feedback",
+          text: "Class Reports",
+          link: "/operation/department/class-reports",
         },
       ],
       open: openReports,
@@ -225,9 +211,6 @@ const ModernSidebar = () => {
       link: "/operation/department/supports",
     },
   ];
-  const getInitials = (name) => {
-    return name ? name.charAt(0).toUpperCase() : "U";
-  };
 
   const isItemActive = (link) => {
     if (!link) return false;
@@ -284,24 +267,37 @@ const ModernSidebar = () => {
 
   return (
     <StyledDrawer variant="permanent">
+      {/* Logo and Toggle Button Section */}
       <Box
         sx={{
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between",
+          justifyContent: isCollapsed ? "center" : "space-between",
           py: 2,
           px: 2,
-          marginTop:8
+          borderBottom: "1px solid rgba(0, 0, 0, 0.12)",
         }}
       >
+        {!isCollapsed && (
+          <img
+            src={mmLogo}
+            alt="MindMentorz"
+            style={{
+              height: 50,
+              width: "auto",
+              transition: "all 0.3s ease",
+            }}
+          />
+        )}
+        
         <IconButton
           onClick={() => setIsCollapsed(!isCollapsed)}
           sx={{
             bgcolor: "#642b8f",
             color: "white",
             "&:hover": { bgcolor: "#4a1d6e" },
-            position: isCollapsed ? "static" : "absolute",
-            right: 10,
+            width: 32,
+            height: 32,
           }}
         >
           {isCollapsed ? <ChevronRight /> : <ChevronLeft />}

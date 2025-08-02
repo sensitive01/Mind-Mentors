@@ -13,516 +13,397 @@ import {
   Zap,
   ChevronDown,
   MoreHorizontal,
+  Settings,
+  BarChart3,
+  PieChart,
+  Activity,
 } from "lucide-react";
+import { getSuperAdminDashboard } from "../../../api/service/employee/EmployeeService";
 
 const Dashboard = () => {
-  const [activeTab, setActiveTab] = useState(0);
+  const [dashboardData, setDashboardData] = useState({
+    enquiryCount: 0,
+    prospectCount: 0,
+    activeKidsCount: 0,
+    employeeCount: 0,
+    physicalCenterCount: 0,
+  });
   const [timeRange, setTimeRange] = useState("week");
   const [showDropdown, setShowDropdown] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // API data
-  const dashboardData = {
-    enquiryCount: 0,
-    prospectCount: 2,
-    activeKidsCount: 1,
-    employeeCount: 11,
-    physicalCenterCount: 2,
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // Replace with your actual API call
+        const response = await getSuperAdminDashboard();
 
-  // Sample trend data for charts
-  const monthlyData = [
-    { month: "Jan", enquiries: 15, activeKids: 8, prospects: 5 },
-    { month: "Feb", enquiries: 22, activeKids: 12, prospects: 8 },
-    { month: "Mar", enquiries: 18, activeKids: 15, prospects: 6 },
-    { month: "Apr", enquiries: 28, activeKids: 18, prospects: 10 },
-    { month: "May", enquiries: 32, activeKids: 22, prospects: 12 },
-    { month: "Jun", enquiries: 25, activeKids: 20, prospects: 8 },
-  ];
+        if (response.status === 200) {
+          setDashboardData(response.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const skillsData = [
-    { skill: "Chess Openings", beginner: 45, intermediate: 30, advanced: 15 },
-    { skill: "Rubik's Speed", beginner: 35, intermediate: 25, advanced: 20 },
-    { skill: "Problem Solving", beginner: 40, intermediate: 35, advanced: 25 },
-    {
-      skill: "Strategic Thinking",
-      beginner: 38,
-      intermediate: 32,
-      advanced: 18,
-    },
-  ];
+    fetchData();
+  }, [timeRange]);
 
   const StatCard = ({
     title,
     value,
     icon: Icon,
-    trend,
     description,
     color,
+    trend,
   }) => (
-    <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100">
+    <div className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100">
       <div className="flex items-start justify-between mb-4">
         <div className={`p-3 rounded-xl ${color} bg-opacity-10`}>
           <Icon className={`w-6 h-6 ${color.replace("bg-", "text-")}`} />
         </div>
-        <button className="text-gray-400 hover:text-gray-600">
+        <button className="text-gray-400 hover:text-gray-600 transition-colors">
           <MoreHorizontal className="w-5 h-5" />
         </button>
       </div>
 
       <div className="space-y-2">
-        <h3 className="text-gray-600 text-sm font-medium">{title}</h3>
+        <h3 className="text-gray-600 text-sm font-medium uppercase tracking-wide">
+          {title}
+        </h3>
         <div className="flex items-end gap-2">
-          <span className="text-3xl font-bold text-gray-900">{value}</span>
+          <span className="text-3xl font-bold text-gray-900">
+            {loading ? "..." : value.toLocaleString()}
+          </span>
           {trend && (
-            <span
-              className={`text-sm font-medium ${
-                trend > 0 ? "text-green-600" : "text-red-600"
-              } flex items-center`}
-            >
+            <span className="text-sm font-medium text-blue-600 flex items-center">
               <TrendingUp className="w-4 h-4 mr-1" />
-              {Math.abs(trend)}%
+              {trend}
             </span>
           )}
         </div>
-        <p className="text-gray-500 text-xs">{description}</p>
+        <p className="text-gray-500 text-sm">{description}</p>
       </div>
     </div>
   );
 
-  const LineChart = ({ data, height = 200 }) => {
-    const maxValue = Math.max(
-      ...data.map((d) => Math.max(d.enquiries, d.activeKids, d.prospects))
-    );
+  const QuickActionCard = ({ title, icon: Icon, color, onClick }) => (
+    <button
+      onClick={onClick}
+      className={`${color} text-white p-6 rounded-xl hover:opacity-90 transition-all duration-200 hover:scale-105 shadow-lg flex flex-col items-center text-center space-y-3`}
+    >
+      <Icon className="w-8 h-8" />
+      <span className="font-semibold text-lg">{title}</span>
+    </button>
+  );
 
-    return (
-      <div className="relative" style={{ height }}>
-        <svg className="w-full h-full" viewBox="0 0 400 200">
-          {/* Grid lines */}
-          {[0, 1, 2, 3, 4].map((i) => (
-            <line
-              key={i}
-              x1="0"
-              y1={40 + i * 30}
-              x2="400"
-              y2={40 + i * 30}
-              stroke="#f3f4f6"
-              strokeWidth="1"
-            />
-          ))}
-
-          {/* Data lines */}
-          <polyline
-            fill="none"
-            stroke="#3b82f6"
-            strokeWidth="3"
-            points={data
-              .map(
-                (d, i) =>
-                  `${60 + i * 55},${180 - (d.enquiries / maxValue) * 120}`
-              )
-              .join(" ")}
-          />
-          <polyline
-            fill="none"
-            stroke="#10b981"
-            strokeWidth="3"
-            points={data
-              .map(
-                (d, i) =>
-                  `${60 + i * 55},${180 - (d.activeKids / maxValue) * 120}`
-              )
-              .join(" ")}
-          />
-          <polyline
-            fill="none"
-            stroke="#f59e0b"
-            strokeWidth="3"
-            points={data
-              .map(
-                (d, i) =>
-                  `${60 + i * 55},${180 - (d.prospects / maxValue) * 120}`
-              )
-              .join(" ")}
-          />
-
-          {/* Data points */}
-          {data.map((d, i) => (
-            <g key={i}>
-              <circle
-                cx={60 + i * 55}
-                cy={180 - (d.enquiries / maxValue) * 120}
-                r="4"
-                fill="#3b82f6"
-              />
-              <circle
-                cx={60 + i * 55}
-                cy={180 - (d.activeKids / maxValue) * 120}
-                r="4"
-                fill="#10b981"
-              />
-              <circle
-                cx={60 + i * 55}
-                cy={180 - (d.prospects / maxValue) * 120}
-                r="4"
-                fill="#f59e0b"
-              />
-              <text
-                x={60 + i * 55}
-                y="195"
-                textAnchor="middle"
-                className="text-xs fill-gray-500"
-              >
-                {d.month}
-              </text>
-            </g>
-          ))}
-        </svg>
+  const MetricCard = ({ title, value, icon: Icon, color }) => (
+    <div
+      className={`${color} bg-opacity-10 p-6 rounded-xl border border-opacity-20`}
+    >
+      <div className="flex items-center justify-between mb-4">
+        <Icon className={`w-6 h-6 ${color.replace("bg-", "text-")}`} />
+        <span className={`text-2xl font-bold ${color.replace("bg-", "text-")}`}>
+          {loading ? "..." : value}
+        </span>
       </div>
-    );
-  };
-
-  const SkillsBarChart = ({ data }) => (
-    <div className="space-y-4">
-      {data.map((skill, index) => {
-        const total = skill.beginner + skill.intermediate + skill.advanced;
-        return (
-          <div key={index} className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium text-gray-700">
-                {skill.skill}
-              </span>
-              <span className="text-xs text-gray-500">{total} students</span>
-            </div>
-            <div className="flex rounded-lg overflow-hidden bg-gray-100 h-3">
-              <div
-                className="bg-blue-500"
-                style={{ width: `${(skill.beginner / total) * 100}%` }}
-                title={`Beginner: ${skill.beginner}`}
-              />
-              <div
-                className="bg-yellow-500"
-                style={{ width: `${(skill.intermediate / total) * 100}%` }}
-                title={`Intermediate: ${skill.intermediate}`}
-              />
-              <div
-                className="bg-green-500"
-                style={{ width: `${(skill.advanced / total) * 100}%` }}
-                title={`Advanced: ${skill.advanced}`}
-              />
-            </div>
-            <div className="flex gap-4 text-xs text-gray-500">
-              <span className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                Beginner ({skill.beginner})
-              </span>
-              <span className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                Intermediate ({skill.intermediate})
-              </span>
-              <span className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                Advanced ({skill.advanced})
-              </span>
-            </div>
-          </div>
-        );
-      })}
+      <h4
+        className={`font-semibold ${color.replace("bg-", "text-")} opacity-80`}
+      >
+        {title}
+      </h4>
     </div>
   );
+
+  const totalUsers =
+    dashboardData.activeKidsCount + dashboardData.prospectCount;
+  const conversionRate =
+    dashboardData.enquiryCount > 0
+      ? (
+          (dashboardData.prospectCount / dashboardData.enquiryCount) *
+          100
+        ).toFixed(1)
+      : "0";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
           <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Dashboard</h1>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+              Super Admin Dashboard
+            </h1>
+            <p className="text-gray-600 text-lg">
+              Monitor and manage your chess & rubik's learning centers
+            </p>
           </div>
 
-          <div className="relative">
-            <button
-              onClick={() => setShowDropdown(!showDropdown)}
-              className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200"
-            >
-              <Calendar className="w-4 h-4" />
-              {timeRange.charAt(0).toUpperCase() + timeRange.slice(1)} View
-              <ChevronDown className="w-4 h-4" />
-            </button>
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <button
+                onClick={() => setShowDropdown(!showDropdown)}
+                className="flex items-center gap-2 bg-white px-6 py-3 rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-200"
+              >
+                <Calendar className="w-5 h-5 text-gray-600" />
+                <span className="font-medium">
+                  {timeRange.charAt(0).toUpperCase() + timeRange.slice(1)} View
+                </span>
+                <ChevronDown className="w-4 h-4 text-gray-400" />
+              </button>
 
-            {showDropdown && (
-              <div className="absolute right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-                {["day", "week", "month", "quarter"].map((range) => (
-                  <button
-                    key={range}
-                    onClick={() => {
-                      setTimeRange(range);
-                      setShowDropdown(false);
-                    }}
-                    className="block w-full text-left px-4 py-2 hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg"
-                  >
-                    {range.charAt(0).toUpperCase() + range.slice(1)} View
-                  </button>
-                ))}
-              </div>
-            )}
+              {showDropdown && (
+                <div className="absolute right-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-200 z-10 min-w-[160px]">
+                  {["day", "week", "month", "quarter", "year"].map((range) => (
+                    <button
+                      key={range}
+                      onClick={() => {
+                        setTimeRange(range);
+                        setShowDropdown(false);
+                      }}
+                      className="block w-full text-left px-4 py-3 hover:bg-gray-50 first:rounded-t-xl last:rounded-b-xl transition-colors"
+                    >
+                      {range.charAt(0).toUpperCase() + range.slice(1)} View
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <button className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors font-medium shadow-lg">
+              <Settings className="w-5 h-5 inline mr-2" />
+              Settings
+            </button>
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        {/* Key Metrics Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
           <StatCard
             title="Total Enquiries"
             value={dashboardData.enquiryCount}
             icon={MessageCircle}
-            trend={0}
-            description="New interest this period"
+            description="New inquiries received"
             color="bg-blue-500"
+            trend="This period"
           />
           <StatCard
-            title="Prospects"
+            title="Active Prospects"
             value={dashboardData.prospectCount}
             icon={Target}
-            trend={15}
-            description="Potential new students"
-            color="bg-yellow-500"
+            description="Potential enrollments"
+            color="bg-amber-500"
           />
           <StatCard
             title="Active Students"
             value={dashboardData.activeKidsCount}
             icon={UserCheck}
-            trend={8}
-            description="Currently enrolled kids"
+            description="Currently enrolled"
             color="bg-green-500"
           />
           <StatCard
             title="Staff Members"
             value={dashboardData.employeeCount}
             icon={Users}
-            trend={5}
-            description="Chess & Rubik's coaches"
+            description="Total employees"
             color="bg-purple-500"
           />
           <StatCard
             title="Learning Centers"
             value={dashboardData.physicalCenterCount}
             icon={Building}
-            trend={0}
             description="Physical locations"
             color="bg-indigo-500"
           />
         </div>
 
-        {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Enrollment Trends */}
-          <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-blue-500" />
-                Enrollment Trends
+        {/* Analytics Overview */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Performance Metrics */}
+          <div className="lg:col-span-2 bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                <BarChart3 className="w-6 h-6 text-blue-500" />
+                Performance Overview
               </h3>
-              <div className="flex gap-4 text-sm">
-                <span className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                  Enquiries
-                </span>
-                <span className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  Active Students
-                </span>
-                <span className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                  Prospects
-                </span>
-              </div>
             </div>
-            <LineChart data={monthlyData} />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <MetricCard
+                title="Total Learners"
+                value={totalUsers}
+                icon={Users}
+                color="bg-blue-500"
+              />
+              <MetricCard
+                title="Conversion Rate"
+                value={`${conversionRate}%`}
+                icon={TrendingUp}
+                color="bg-green-500"
+              />
+              <MetricCard
+                title="Staff per Center"
+                value={
+                  dashboardData.physicalCenterCount > 0
+                    ? Math.round(
+                        dashboardData.employeeCount /
+                          dashboardData.physicalCenterCount
+                      )
+                    : 0
+                }
+                icon={Building}
+                color="bg-purple-500"
+              />
+              <MetricCard
+                title="Students per Center"
+                value={
+                  dashboardData.physicalCenterCount > 0
+                    ? Math.round(
+                        dashboardData.activeKidsCount /
+                          dashboardData.physicalCenterCount
+                      )
+                    : 0
+                }
+                icon={BookOpen}
+                color="bg-indigo-500"
+              />
+            </div>
           </div>
 
-          {/* Skills Progress */}
-          <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                <Award className="w-5 h-5 text-green-500" />
-                Skills Distribution
-              </h3>
+          {/* Quick Stats */}
+          <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+            <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <Activity className="w-5 h-5 text-green-500" />
+              Quick Stats
+            </h3>
+
+            <div className="space-y-6">
+              <div className="flex justify-between items-center p-4 bg-blue-50 rounded-xl">
+                <div>
+                  <p className="text-sm text-blue-600 font-medium">
+                    Enquiry Status
+                  </p>
+                  <p className="text-2xl font-bold text-blue-700">
+                    {dashboardData.enquiryCount === 0
+                      ? "No new enquiries"
+                      : `${dashboardData.enquiryCount} pending`}
+                  </p>
+                </div>
+                <MessageCircle className="w-8 h-8 text-blue-500" />
+              </div>
+
+              <div className="flex justify-between items-center p-4 bg-green-50 rounded-xl">
+                <div>
+                  <p className="text-sm text-green-600 font-medium">
+                    Active Rate
+                  </p>
+                  <p className="text-2xl font-bold text-green-700">
+                    {totalUsers > 0
+                      ? `${Math.round(
+                          (dashboardData.activeKidsCount / totalUsers) * 100
+                        )}%`
+                      : "0%"}
+                  </p>
+                </div>
+                <UserCheck className="w-8 h-8 text-green-500" />
+              </div>
+
+              <div className="flex justify-between items-center p-4 bg-purple-50 rounded-xl">
+                <div>
+                  <p className="text-sm text-purple-600 font-medium">
+                    Team Size
+                  </p>
+                  <p className="text-2xl font-bold text-purple-700">
+                    {dashboardData.employeeCount} members
+                  </p>
+                </div>
+                <Users className="w-8 h-8 text-purple-500" />
+              </div>
             </div>
-            <SkillsBarChart data={skillsData} />
           </div>
         </div>
 
-        {/* Activity Overview */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100">
-          <div className="border-b border-gray-200">
-            <nav className="flex space-x-8 px-6">
-              {[
-                { name: "Chess Progress", icon: BookOpen },
-                { name: "Rubik's Records", icon: Zap },
-                { name: "Student Analytics", icon: Users },
-              ].map((tab, index) => (
-                <button
-                  key={index}
-                  onClick={() => setActiveTab(index)}
-                  className={`flex items-center gap-2 py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
-                    activeTab === index
-                      ? "border-blue-500 text-blue-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700"
-                  }`}
-                >
-                  <tab.icon className="w-4 h-4" />
-                  {tab.name}
-                </button>
-              ))}
-            </nav>
+        {/* Action Center */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
+          <div className="p-8 border-b border-gray-200">
+            <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+              <Zap className="w-6 h-6 text-yellow-500" />
+              Quick Actions
+            </h3>
+            <p className="text-gray-600 mt-2">
+              Manage your learning centers efficiently
+            </p>
           </div>
 
-          <div className="p-6">
-            {activeTab === 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl">
-                  <h4 className="font-semibold text-blue-900 mb-2">
-                    Opening Mastery
-                  </h4>
-                  <p className="text-2xl font-bold text-blue-700">85%</p>
-                  <p className="text-blue-600 text-sm">
-                    Average completion rate
-                  </p>
-                </div>
-                <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl">
-                  <h4 className="font-semibold text-green-900 mb-2">
-                    Tactical Progress
-                  </h4>
-                  <p className="text-2xl font-bold text-green-700">92%</p>
-                  <p className="text-green-600 text-sm">
-                    Problem solving accuracy
-                  </p>
-                </div>
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl">
-                  <h4 className="font-semibold text-purple-900 mb-2">
-                    Tournament Ready
-                  </h4>
-                  <p className="text-2xl font-bold text-purple-700">12</p>
-                  <p className="text-purple-600 text-sm">Students qualified</p>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 1 && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl">
-                  <h4 className="font-semibold text-orange-900 mb-2">
-                    Speed Records
-                  </h4>
-                  <p className="text-2xl font-bold text-orange-700">45s</p>
-                  <p className="text-orange-600 text-sm">Average solve time</p>
-                </div>
-                <div className="bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-xl">
-                  <h4 className="font-semibold text-red-900 mb-2">
-                    Personal Bests
-                  </h4>
-                  <p className="text-2xl font-bold text-red-700">23</p>
-                  <p className="text-red-600 text-sm">New records this month</p>
-                </div>
-                <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-xl">
-                  <h4 className="font-semibold text-indigo-900 mb-2">
-                    Advanced Methods
-                  </h4>
-                  <p className="text-2xl font-bold text-indigo-700">78%</p>
-                  <p className="text-indigo-600 text-sm">
-                    CFOP method adoption
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 2 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-4">
-                    Age Distribution
-                  </h4>
-                  <div className="space-y-3">
-                    {[
-                      { age: "6-8 years", count: 15, color: "bg-blue-500" },
-                      { age: "9-11 years", count: 25, color: "bg-green-500" },
-                      { age: "12-14 years", count: 18, color: "bg-yellow-500" },
-                      { age: "15+ years", count: 8, color: "bg-purple-500" },
-                    ].map((group, index) => (
-                      <div key={index} className="flex items-center gap-3">
-                        <div className={`w-4 h-4 ${group.color} rounded`}></div>
-                        <span className="text-sm text-gray-600 flex-1">
-                          {group.age}
-                        </span>
-                        <span className="font-semibold text-gray-900">
-                          {group.count}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-4">
-                    Learning Preferences
-                  </h4>
-                  <div className="space-y-3">
-                    {[
-                      {
-                        preference: "Chess Only",
-                        count: 12,
-                        color: "bg-brown-500",
-                      },
-                      {
-                        preference: "Rubik's Only",
-                        count: 8,
-                        color: "bg-orange-500",
-                      },
-                      {
-                        preference: "Both Programs",
-                        count: 28,
-                        color: "bg-teal-500",
-                      },
-                    ].map((pref, index) => (
-                      <div key={index} className="flex items-center gap-3">
-                        <div className={`w-4 h-4 ${pref.color} rounded`}></div>
-                        <span className="text-sm text-gray-600 flex-1">
-                          {pref.preference}
-                        </span>
-                        <span className="font-semibold text-gray-900">
-                          {pref.count}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
+          <div className="p-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <QuickActionCard
+                title="Manage Centers"
+                icon={Building}
+                color="bg-blue-600"
+                onClick={() => console.log("Manage Centers")}
+              />
+              <QuickActionCard
+                title="Staff Overview"
+                icon={Users}
+                color="bg-green-600"
+                onClick={() => console.log("Staff Overview")}
+              />
+              <QuickActionCard
+                title="Student Reports"
+                icon={BookOpen}
+                color="bg-purple-600"
+                onClick={() => console.log("Student Reports")}
+              />
+              <QuickActionCard
+                title="Analytics"
+                icon={PieChart}
+                color="bg-indigo-600"
+                onClick={() => console.log("Analytics")}
+              />
+            </div>
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {[
-            {
-              title: "Schedule Tournament",
-              icon: Award,
-              color: "bg-yellow-500",
-            },
-            { title: "Add New Student", icon: Users, color: "bg-blue-500" },
-            {
-              title: "Progress Reports",
-              icon: BookOpen,
-              color: "bg-green-500",
-            },
-            { title: "Coach Training", icon: Brain, color: "bg-purple-500" },
-          ].map((action, index) => (
-            <button
-              key={index}
-              className={`${action.color} text-white p-4 rounded-xl hover:opacity-90 transition-opacity flex items-center gap-3 shadow-lg`}
-            >
-              <action.icon className="w-5 h-5" />
-              <span className="font-medium">{action.title}</span>
-            </button>
-          ))}
+        {/* System Status */}
+        <div className="bg-gradient-to-r from-gray-900 to-gray-700 rounded-2xl p-8 text-white">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+            <div>
+              <h3 className="text-2xl font-bold mb-2">System Overview</h3>
+              <p className="text-gray-300">
+                Your learning management system is running smoothly across all{" "}
+                {dashboardData.physicalCenterCount} centers
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+              <span className="text-green-400 font-medium">
+                All Systems Operational
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+            <div className="text-center">
+              <p className="text-3xl font-bold text-white">
+                {dashboardData.physicalCenterCount}
+              </p>
+              <p className="text-gray-300">Active Centers</p>
+            </div>
+            <div className="text-center">
+              <p className="text-3xl font-bold text-white">
+                {dashboardData.employeeCount}
+              </p>
+              <p className="text-gray-300">Team Members</p>
+            </div>
+            <div className="text-center">
+              <p className="text-3xl font-bold text-white">{totalUsers}</p>
+              <p className="text-gray-300">Total Learners</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

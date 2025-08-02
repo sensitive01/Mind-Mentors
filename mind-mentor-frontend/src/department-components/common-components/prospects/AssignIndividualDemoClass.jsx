@@ -17,7 +17,6 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
-import toast from "react-hot-toast";
 import {
   employeeBookDemoClassData,
   employeeCancelDemoClass,
@@ -25,8 +24,10 @@ import {
   getKidSheduleDemoDetailsEmployee,
   // cancelDemoClass,
 } from "../../../api/service/employee/EmployeeService";
+import { ToastContainer,toast } from "react-toastify";
 
 const SheduleDemoClass = () => {
+  const empId = localStorage.getItem("empId")
   const navigate = useNavigate();
   const { enqId, isSheduled } = useParams();
   const department = localStorage.getItem("department");
@@ -42,7 +43,7 @@ const SheduleDemoClass = () => {
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [classType, setClassType] = useState("online");
   const [currentStep, setCurrentStep] = useState(0);
-  const [currentMonth, setCurrentMonth] = useState(new Date(2025, 6)); // July 2025
+  const [currentMonth, setCurrentMonth] = useState(new Date(2025, 7)); // July 2025
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
@@ -238,7 +239,8 @@ const SheduleDemoClass = () => {
       console.log(demoDetails._id);
       const response = await employeeCancelDemoClass(
         demoDetails._id,
-        kidData.kidId
+        kidData.kidId,
+        empId
       );
       if (response.status === 200) {
         toast.success("Demo class cancelled successfully");
@@ -282,12 +284,12 @@ const SheduleDemoClass = () => {
       console.log("Booking details:", bookingDetails);
       const response = await employeeBookDemoClassData(
         kidData.kidId,
-        bookingDetails
+        bookingDetails,
+        empId
       );
       if (response.status === 201) {
         toast.success(response.data.message);
         setTimeout(() => {
-          // navigate(`/${department}/department/schedule-demo-class-list-individually/${enqId}/true`);
           navigate(`/${department}/department/enrollment-data`);
         }, 1500);
       }
@@ -467,7 +469,7 @@ const SheduleDemoClass = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
-      <div className="max-w-4xl mx-auto px-4">
+      <div className="max-w-6xl mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-4">
@@ -545,7 +547,7 @@ const SheduleDemoClass = () => {
                 </button>
                 <button
                   onClick={handleCancelDemo}
-                  className="flex items-center px-4 py-2 bg-red-100 text-red-800 rounded-lg hover:bg-red-200 transition-colors"
+                  className="flex items-center px-2 py-2 bg-red-100 text-red-800 rounded-lg hover:bg-red-200 transition-colors"
                 >
                   <X className="w-4 h-4 mr-2" />
                   Cancel Demo
@@ -965,6 +967,16 @@ const SheduleDemoClass = () => {
           </>
         )}
       </div>
+      <ToastContainer
+              position="top-right"
+              autoClose={5000}
+              hideProgressBar={false}
+              closeOnClick
+              pauseOnHover
+              draggable
+              pauseOnFocusLoss
+              style={{ marginTop: "60px" }}
+            />
     </div>
   );
 };

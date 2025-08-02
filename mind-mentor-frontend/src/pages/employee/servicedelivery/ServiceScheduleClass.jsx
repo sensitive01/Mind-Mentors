@@ -1,6 +1,6 @@
-import ScheduleList from "../../../department-components/servicedelivery/components/ScheduleList";
+import ScheduleList from "../../../department-components/common-components/class/ViewClassTimeTable";
 import Sidebar from "../../../department-components/servicedelivery/Layout/Sidebar";
-import Topbar from './../../../component/parent-component/parent-dashboard/layout/Topbar';
+import Topbar from "./../../../component/parent-component/parent-dashboard/layout/Topbar";
 
 const ListingEnquiries = () => {
   return (

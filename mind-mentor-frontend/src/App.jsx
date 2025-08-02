@@ -337,6 +337,14 @@ import KidCompletedClassPage from "./pages/kids/KidCompletedClassPage";
 import KidTournamnetPage from "./pages/parent/KidTournamnetPage";
 import CoachCompletedClass from "./pages/employee/coach/CoachCompletedClass";
 import SuperAdminConductedClass from "./pages/employee/superadmin/SuperAdminConductedClass";
+import ServiceAddTimeTable from "./pages/employee/servicedelivery/ServiceAddTimeTable";
+import ServiceDelivaryEditClass from "./pages/employee/servicedelivery/ServiceDelivaryEditClass";
+import GetDetailedAttandance from "./pages/employee/superadmin/GetDetailedAttandance";
+import OperationDetailedAttandance from "./pages/employee/operation-employee/OperationDetailedAttandance";
+import ServiceDetailedAttandance from "./pages/employee/servicedelivery/ServiceDetailedAttandance";
+import RenewalDetailedAttandance from "./pages/employee/renewalassociate/RenewalDetailedAttandance";
+import CenterDetailedAttandance from "./pages/employee/centeradmin/CenterDetailedAttandance";
+import CoachDetailedAttandance from "./pages/employee/coach/CoachDetailedAttandance";
 
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
@@ -558,6 +566,10 @@ function App() {
             element={<ProspectPage />}
           />
           <Route
+            path="/operation/department/get-detailed-attandance"
+            element={<OperationDetailedAttandance />}
+          />
+          <Route
             path="/operation/department/assign-demo-class/:id"
             element={<AssignDemoClassPage />}
           />
@@ -599,7 +611,7 @@ function App() {
             element={<SupportRequest />}
           />
           <Route
-            path="/operation/department/student-report"
+            path="/operation/department/class-reports"
             element={<StudentReport />}
           />
           <Route
@@ -642,9 +654,10 @@ function App() {
           {/* <Route path="/employee-operation/referal" element={<ReferalPage />} /> */}
 
           <Route
-            path="/service-delivery/department/serviceProfile"
+            path="/service-delivery/department/profile"
             element={<ServiceProfile />}
           />
+
           <Route
             path="/service-delivery/department/dashboard"
             element={<ServiceDashboard />}
@@ -662,8 +675,12 @@ function App() {
             element={<CoachAvailabilityFormPage />}
           />
           <Route
-            path="/service-delivery/department/class-shedules/"
+            path="/service-delivery/department/class-timetable-list"
             element={<ServiceScheduleClass />}
+          />
+          <Route
+            path="/service-delivery/department/get-detailed-attandance"
+            element={<ServiceDetailedAttandance />}
           />
           <Route
             path="/service-delivery/department/assign-class-students"
@@ -709,6 +726,7 @@ function App() {
             path="/service-delivery/department/assign-multiple-class"
             element={<AssignMulipleClassPage />}
           />
+
           <Route
             path="/service-delivery/department/assign-whole-plan-class/:enqId"
             element={<AssignWholeClassToKidPage />}
@@ -716,13 +734,16 @@ function App() {
           <Route path="/serviceInvoice" element={<ServiceInvoice />} />
           <Route path="/serviceFeedback" element={<ServiceFeedback />} />
           <Route
-            path="/serviceAttendanceReport"
+            path="/service-delivary/department/class-reports"
             element={<ServiceAttendanceReport />}
           />
           <Route path="/serviceSupport/add" element={<ServiceSupport />} />
           <Route path="/serviceSupport/" element={<ServiceSupportRequest />} />
           <Route path="/servicekids" element={<ServiceKids />} />
-          <Route path="/servicePrograms" element={<ServicePrograms />} />
+          <Route
+            path="/service-delivary/department/list-all-programs"
+            element={<ServicePrograms />}
+          />
           <Route
             path="/service-delivary/holidays"
             element={<ServiceDelivaryHolidayPage />}
@@ -739,6 +760,14 @@ function App() {
             path="/service-delivery/department/display-whole-selectedClass/:enqId"
             element={<DisplayAssignedClass />}
           />
+          <Route
+            path="/service-delivery/department/add-new-class"
+            element={<ServiceAddTimeTable />}
+          />
+          <Route
+            path="/service-delivery/department/edit-class-shedules/:classId"
+            element={<ServiceDelivaryEditClass />}
+          />
 
           {/* <Route path="/serviceLogin" element={<ServiceLogin />} /> */}
 
@@ -747,7 +776,7 @@ function App() {
             element={<RenewalDashboard />}
           />
           <Route
-            path="/renewal-associate/department/profile"
+            path="/renewal/department/profile"
             element={<RenewalProfile />}
           />
           <Route
@@ -761,6 +790,10 @@ function App() {
           <Route
             path="/renewal/department/edit-leaves/:id"
             element={<RenewalLeavesAdd />}
+          />
+          <Route
+            path="/renewal/department/get-detailed-attandance"
+            element={<RenewalDetailedAttandance />}
           />
           <Route
             path="/renewal/department/task-table"
@@ -820,6 +853,11 @@ function App() {
             element={<CoachDashboard />}
           />
           <Route path="/coach/department/leaves" element={<CoachLeaves />} />
+          <Route
+            path="/coach/department/get-detailed-attandance"
+            element={<CoachDetailedAttandance />}
+          />
+
           <Route
             path="/coach/department/leaves/add"
             element={<CoachLeavesAdd />}
@@ -970,6 +1008,10 @@ function App() {
           <Route
             path="/centeradmin/department/coachAvailabilityform"
             element={<CenterAdminCoachAvailabilityForm />}
+          />
+          <Route
+            path="/centeradmin/department/get-detailed-attandance"
+            element={<CenterDetailedAttandance />}
           />
           <Route
             path="/centeradmin/department/edit-leaves/:id"
@@ -1129,7 +1171,7 @@ function App() {
           />
 
           <Route
-            path="/super-admin/department/class-shedules"
+            path="/super-admin/department/add-new-class"
             element={<SuperAdminAddTimeTable />}
           />
           <Route
@@ -1247,6 +1289,10 @@ function App() {
           <Route
             path="/super-admin/department/discount-table"
             element={<VoucherTablePage />}
+          />
+          <Route
+            path="/super-admin/department/get-detailed-attandance"
+            element={<GetDetailedAttandance />}
           />
           <Route
             path="/super-admin/department/discount-form"
