@@ -149,7 +149,7 @@ const MenuGrid = () => {
         {
           id: id,
           icon: <Video className="w-6 h-6 text-white" />,
-          title: "Today Live Class",
+          title: "Today's Class",
           subtitle: "Class",
           bgColor: "bg-red-600",
           gradient: "from-red-600 to-red-700",

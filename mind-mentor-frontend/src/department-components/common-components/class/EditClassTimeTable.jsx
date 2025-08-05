@@ -136,7 +136,7 @@ const useApiData = () => {
             ) {
               uniqueCentersMap.set(item.centerInfo.centerId, {
                 id: item.centerInfo.centerId,
-                name: item.coachInfo.centerName,
+                name: item.coachInfo.centerName || item.centerInfo.centerName,
                 centerType: item.centerInfo.centerType,
                 businessHours: item.centerInfo.businessHours,
               });
@@ -219,7 +219,7 @@ const useFilteredOptions = (availabilityData, schedule) => {
 
     if (!isEditingWithExistingData) {
       // Filter by center only if not editing existing data
-      if (schedule.centerId) {
+      if (schedule.centerId && schedule.mode === "offline") {
         const beforeFilter = filtered.length;
         filtered = filtered.filter(
           (item) => item.centerInfo?.centerId === schedule.centerId
@@ -393,7 +393,6 @@ const EditClassSchedule = () => {
   ]);
 
   const [classDataLoading, setClassDataLoading] = useState(false);
-  const [showDebug, setShowDebug] = useState(false); // Toggle for debug panel
 
   // Get current schedule (assuming single schedule for now)
   const currentSchedule = schedules[0];
@@ -401,6 +400,90 @@ const EditClassSchedule = () => {
   // Use filtered options
   const { filteredCoaches, filteredPrograms, filteredDays } =
     useFilteredOptions(availabilityData, currentSchedule);
+
+  // Get filtered centers
+  const getFilteredCenters = useCallback(
+    (schedule) => {
+      if (!schedule.mode) return [];
+
+      if (schedule.mode === "online") {
+        // For online mode, return virtual center
+        return [
+          {
+            id: "online-center",
+            name: "Online Center",
+            centerType: "online",
+          },
+        ];
+      }
+
+      // For offline mode, get centers from availability data
+      const availableCenters = new Map();
+
+      availabilityData.forEach((item) => {
+        if (
+          item.coachInfo?.modes?.includes("offline") &&
+          item.centerInfo &&
+          (!schedule.coachId || item.coachId === schedule.coachId) &&
+          (!schedule.program || item.program === schedule.program)
+        ) {
+          if (!availableCenters.has(item.centerInfo.centerId)) {
+            availableCenters.set(item.centerInfo.centerId, {
+              id: item.centerInfo.centerId,
+              name: item.centerInfo.centerName || item.coachInfo.centerName,
+              centerType: item.centerInfo.centerType,
+            });
+          }
+        }
+      });
+
+      return Array.from(availableCenters.values());
+    },
+    [availabilityData]
+  );
+
+  // Get available time options
+  const getAvailableTimeOptions = useCallback(
+    (schedule) => {
+      if (!schedule.mode || !schedule.day) {
+        return generateTimeOptions("00:00", "23:59");
+      }
+
+      // Get available time slots from availability data
+      const availableSlots = availabilityData.filter((item) => {
+        return (
+          item.coachInfo?.modes?.includes(schedule.mode) &&
+          (!schedule.coachId || item.coachId === schedule.coachId) &&
+          (!schedule.program || item.program === schedule.program) &&
+          item.day === schedule.day
+        );
+      });
+
+      if (availableSlots.length === 0) {
+        return generateTimeOptions("00:00", "23:59");
+      }
+
+      // Find min and max times
+      const fromTimes = availableSlots.map((slot) =>
+        timeToMinutes(slot.fromTime)
+      );
+      const toTimes = availableSlots.map((slot) => timeToMinutes(slot.toTime));
+
+      const minTime = Math.min(...fromTimes);
+      const maxTime = Math.max(...toTimes);
+
+      const formatTime = (minutes) => {
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        return `${hours.toString().padStart(2, "0")}:${mins
+          .toString()
+          .padStart(2, "0")}`;
+      };
+
+      return generateTimeOptions(formatTime(minTime), formatTime(maxTime));
+    },
+    [availabilityData]
+  );
 
   // Load class data if editing
   useEffect(() => {
@@ -442,8 +525,12 @@ const EditClassSchedule = () => {
             date: classData.classDate
               ? new Date(classData.classDate).toLocaleDateString("en-GB")
               : "",
-            centerId: classData.centerId || "",
-            centerName: classData.centerName || "",
+            centerId:
+              classData.centerId ||
+              (classData.type === "online" ? "online-center" : ""),
+            centerName:
+              classData.centerName ||
+              (classData.type === "online" ? "Online Center" : ""),
             coachId: classData.coachId || "",
             coachName: classData.coachName || "",
             program: classData.program || "",
@@ -480,17 +567,32 @@ const EditClassSchedule = () => {
         switch (field) {
           case "mode":
             schedule.mode = value;
-            // Reset dependent fields
-            schedule.centerId = "";
-            schedule.centerName = "";
-            schedule.coachId = "";
-            schedule.coachName = "";
-            schedule.program = "";
-            schedule.level = "";
-            schedule.day = "";
-            schedule.date = "";
-            schedule.fromTime = "";
-            schedule.toTime = "";
+
+            if (value === "online") {
+              // Set online center automatically
+              schedule.centerId = "online-center";
+              schedule.centerName = "Online Center";
+            } else {
+              // Reset center for offline mode
+              schedule.centerId = "";
+              schedule.centerName = "";
+            }
+
+            // Don't reset other fields in edit mode if they're already set
+            if (!schedule.coachId) {
+              schedule.coachId = "";
+              schedule.coachName = "";
+            }
+            if (!schedule.program) {
+              schedule.program = "";
+              schedule.level = "";
+            }
+            if (!schedule.day) {
+              schedule.day = "";
+              schedule.date = "";
+              schedule.fromTime = "";
+              schedule.toTime = "";
+            }
             break;
 
           case "coachName":
@@ -498,6 +600,16 @@ const EditClassSchedule = () => {
             if (selectedCoach) {
               schedule.coachName = selectedCoach.name;
               schedule.coachId = selectedCoach.id;
+            }
+            break;
+
+          case "centerName":
+            const selectedCenter = getFilteredCenters(schedule).find(
+              (c) => c.name === value
+            );
+            if (selectedCenter) {
+              schedule.centerName = selectedCenter.name;
+              schedule.centerId = selectedCenter.id;
             }
             break;
 
@@ -517,6 +629,20 @@ const EditClassSchedule = () => {
             }
             break;
 
+          case "fromTime":
+            schedule.fromTime = value;
+            if (
+              schedule.toTime &&
+              timeToMinutes(schedule.toTime) <= timeToMinutes(value)
+            ) {
+              schedule.toTime = "";
+            }
+            break;
+
+          case "toTime":
+            schedule.toTime = value;
+            break;
+
           default:
             schedule[field] = value;
         }
@@ -526,7 +652,7 @@ const EditClassSchedule = () => {
         return newSchedules;
       });
     },
-    [filteredCoaches]
+    [filteredCoaches, getFilteredCenters]
   );
 
   // Get levels for selected program
@@ -541,6 +667,38 @@ const EditClassSchedule = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("📤 Submitting schedules:", schedules);
+
+    // Validation
+    const schedule = schedules[0];
+    const {
+      mode,
+      coachName,
+      coachId,
+      program,
+      level,
+      day,
+      fromTime,
+      toTime,
+      centerId,
+      centerName,
+      maxKids,
+    } = schedule;
+
+    if (
+      !mode ||
+      !coachName ||
+      !coachId ||
+      !program ||
+      !level ||
+      !day ||
+      !fromTime ||
+      !toTime ||
+      !maxKids ||
+      (mode === "offline" && (!centerId || !centerName))
+    ) {
+      toast.error("Please fill in all required fields.");
+      return;
+    }
 
     try {
       const response = await editSheduleTimeTable(classId, schedules);
@@ -574,21 +732,6 @@ const EditClassSchedule = () => {
         maxKids: 0,
       },
     ]);
-  };
-
-  // Debug data
-  const debugData = {
-    loading,
-    error,
-    availabilityDataLength: availabilityData.length,
-    programDataLength: programData.length,
-    centerDataLength: centerData.length,
-    currentSchedule,
-    filteredCoaches: filteredCoaches.length,
-    filteredPrograms: filteredPrograms.length,
-    filteredDays: filteredDays.length,
-    sampleAvailabilityData: availabilityData.slice(0, 2),
-    sampleProgramData: programData.slice(0, 2),
   };
 
   if (loading || classDataLoading) {
@@ -628,20 +771,10 @@ const EditClassSchedule = () => {
         {/* Header */}
         <div className="bg-gradient-to-r from-[#642b8f] to-[#aa88be] p-4 rounded-t-lg text-white flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold">Class Schedule Form</h2>
-            <p className="text-sm opacity-90">
-              {classId ? "Edit class schedule" : "Create class schedules"}
-            </p>
+            <h2 className="text-2xl font-bold">Edit Class Schedule</h2>
+            <p className="text-sm opacity-90">Update class schedule details</p>
           </div>
           <div>
-            {/* <Button
-              onClick={() => setShowDebug(!showDebug)}
-              variant="outlined"
-              size="small"
-              sx={{ mr: 2, color: "white", borderColor: "white" }}
-            >
-              {showDebug ? "Hide" : "Show"} Debug
-            </Button> */}
             <Button
               onClick={() =>
                 navigate(`/${department}/department/class-timetable-list`)
@@ -654,9 +787,6 @@ const EditClassSchedule = () => {
             </Button>
           </div>
         </div>
-
-        {/* Debug Panel */}
-        <DebugPanel data={debugData} show={showDebug} />
 
         {/* Form */}
         <form onSubmit={handleSubmit} onReset={handleReset} className="p-4">
@@ -759,24 +889,12 @@ const EditClassSchedule = () => {
                         handleScheduleChange(0, "centerName", e.target.value)
                       }
                     >
-                      {centerData.length ? (
-                        centerData
-                          .filter((center) => {
-                            // Filter centers that support the selected mode
-                            if (!currentSchedule.mode) return true;
-                            return (
-                              center.centerType === currentSchedule.mode ||
-                              (typeof center.centerType === "string" &&
-                                center.centerType.includes(
-                                  currentSchedule.mode
-                                ))
-                            );
-                          })
-                          .map((center) => (
-                            <MenuItem key={center.id} value={center.name}>
-                              {center.name}
-                            </MenuItem>
-                          ))
+                      {getFilteredCenters(currentSchedule).length ? (
+                        getFilteredCenters(currentSchedule).map((center) => (
+                          <MenuItem key={center.id} value={center.name}>
+                            {center.name}
+                          </MenuItem>
+                        ))
                       ) : (
                         <MenuItem disabled>No centers available</MenuItem>
                       )}
@@ -898,6 +1016,66 @@ const EditClassSchedule = () => {
                   />
                 </Grid>
 
+                {/* Start Time */}
+                <Grid item xs={12} sm={3}>
+                  <FormControl
+                    size="small"
+                    fullWidth
+                    required
+                    disabled={!currentSchedule.day}
+                  >
+                    <InputLabel>Start Time</InputLabel>
+                    <Select
+                      value={currentSchedule.fromTime}
+                      label="Start Time*"
+                      onChange={(e) =>
+                        handleScheduleChange(0, "fromTime", e.target.value)
+                      }
+                    >
+                      {getAvailableTimeOptions(currentSchedule).length ? (
+                        getAvailableTimeOptions(currentSchedule).map((time) => (
+                          <MenuItem key={time} value={time}>
+                            {time}
+                          </MenuItem>
+                        ))
+                      ) : (
+                        <MenuItem disabled>No time slots available</MenuItem>
+                      )}
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                {/* End Time */}
+                <Grid item xs={12} sm={3}>
+                  <FormControl
+                    size="small"
+                    fullWidth
+                    required
+                    disabled={!currentSchedule.fromTime}
+                  >
+                    <InputLabel>End Time</InputLabel>
+                    <Select
+                      value={currentSchedule.toTime}
+                      label="End Time*"
+                      onChange={(e) =>
+                        handleScheduleChange(0, "toTime", e.target.value)
+                      }
+                    >
+                      {currentSchedule.fromTime ? (
+                        getAvailableTimeOptions(currentSchedule)
+                          .filter((time) => time > currentSchedule.fromTime)
+                          .map((time) => (
+                            <MenuItem key={time} value={time}>
+                              {time}
+                            </MenuItem>
+                          ))
+                      ) : (
+                        <MenuItem disabled>Select start time first</MenuItem>
+                      )}
+                    </Select>
+                  </FormControl>
+                </Grid>
+
                 {/* Max Kids */}
                 <Grid item xs={12} sm={3}>
                   <TextField
@@ -929,16 +1107,33 @@ const EditClassSchedule = () => {
                 "&:hover": { backgroundColor: "#53197a" },
               }}
             >
-              Submit Schedule
+              Update Schedule
             </Button>
             <Button type="reset" variant="outlined" color="error">
               Reset
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={() =>
+                navigate(`/${department}/department/class-timetable-list`)
+              }
+            >
+              Cancel
             </Button>
           </Box>
         </form>
       </div>
 
-      <ToastContainer position="top-right" autoClose={3000} />
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        style={{ marginTop: "50px" }}
+        hideProgressBar={false}
+        closeOnClick
+        pauseOnHover
+        draggable
+        pauseOnFocusLoss
+      />
     </div>
   );
 };

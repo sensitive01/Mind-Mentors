@@ -137,9 +137,6 @@ const Dashboard = () => {
             <h1 className="text-4xl font-bold text-gray-900 mb-2">
               Super Admin Dashboard
             </h1>
-            <p className="text-gray-600 text-lg">
-              Monitor and manage your chess & rubik's learning centers
-            </p>
           </div>
 
           <div className="flex items-center gap-4">

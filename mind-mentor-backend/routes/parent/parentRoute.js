@@ -29,6 +29,7 @@ parentRoute.get("/get-kid-exist-program-data/:kidId",parentController.getKidExis
 parentRoute.get("/get-conducted-class-details/:kidId",parentController.getConductedClassDetails)
 parentRoute.get("/get-my-name/:parentId",parentController.getMyName)
 parentRoute.get("/get-kid-shedule-demo-details/:kidId",parentController.getParentSheduleDemoDetails)
+parentRoute.get("/get-reshedule-button/:kidId",parentController.getParentScheduleButton)
 
 
 
@@ -42,6 +43,9 @@ parentRoute.get("/get-kid-shedule-demo-details/:kidId",parentController.getParen
 
 
 
+
+
+parentRoute.post("/get-mm-id-available",parentController.getMMidAvailable)
 parentRoute.post("/parent-submit-enquiry-form",parentController.parentSubmitEnquiryForm)
 parentRoute.post("/login",parentController.parentLogin)
 parentRoute.post("/verify-otp",parentController.parentVerifyOtp)
@@ -68,6 +72,7 @@ parentRoute.post("/book-demo-class-data/:kidId",parentController.parentBookDemoC
 
 
 
+parentRoute.put("/update-mm-id/:kidId",parentController.updateMMid)
 
 
 parentRoute.put("/end-selected-chat/:ticketId",parentController.endSelectedChat)

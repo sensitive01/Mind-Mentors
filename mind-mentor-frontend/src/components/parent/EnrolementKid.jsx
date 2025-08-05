@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { parentAddNewKid } from "../../api/service/parent/ParentService";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const EnrolmentKid = () => {
   const navigate = useNavigate();
+  const { isFromPackage } = useParams();
+  console.log("response", isFromPackage);
+
   const parentId = localStorage.getItem("parentId");
   const [formData, setFormData] = useState({
     kidsName: "",
@@ -27,13 +30,17 @@ const EnrolmentKid = () => {
     try {
       console.log("Form data:", formData);
       const response = await parentAddNewKid(formData, parentId);
-      console.log("response", response);
 
       if (response.status === 201) {
         toast.success("Kid added successfully!");
 
         setTimeout(() => {
-          navigate("/parent/kid");
+          console.log("response", isFromPackage);
+          if (isFromPackage==="true") {
+            navigate("/parent/kid");
+          } else {
+            navigate("/parent-kid-package-selection");
+          }
         }, 2000);
       }
     } catch (error) {

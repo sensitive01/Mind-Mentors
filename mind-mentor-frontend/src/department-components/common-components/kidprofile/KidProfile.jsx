@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 
 const KidProfile = () => {
-  const enqId = "68823484137d7d9528e21dc8";
+  const enqId = "688e1369b824755f364ad0cb";
   const [profileData, setProfileData] = useState(null);
   const [activeModal, setActiveModal] = useState(null);
   const [editMode, setEditMode] = useState(false);

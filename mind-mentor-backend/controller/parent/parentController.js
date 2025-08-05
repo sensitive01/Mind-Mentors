@@ -1663,7 +1663,7 @@ const getMyKidData = async (req, res) => {
     const updatedKidData = await Promise.all(
       kidData.map(async (kid) => {
         const [enqData, demoClass] = await Promise.all([
-          operationDeptModel.findOne({ _id: kid.enqId }, { scheduleDemo: 1 }),
+          operationDeptModel.findOne({ _id: kid.enqId }, { scheduleDemo: 1,enquiryStatus:1 }),
           ClassSchedule.findOne(
             {
               isDemoAdded: true,
@@ -1677,6 +1677,7 @@ const getMyKidData = async (req, res) => {
         return {
           ...kid.toObject(),
           scheduleDemo: enqData?.scheduleDemo || null,
+          enquiryStatus: enqData?.enquiryStatus || null,
           demoClass: demoClass || null,
         };
       })
@@ -2883,7 +2884,100 @@ const parentBookDemoClassData = async (req, res) => {
   }
 };
 
+const getMMidAvailable = async (req, res) => {
+  try {
+    const { MMid } = req.body;
+    console.log("MMid", MMid);
+
+    const isExistChessKidId = await kidModel.findOne({ chessId: MMid });
+
+    if (isExistChessKidId) {
+      return res.status(200).json({ available: false });
+    } else {
+      return res.status(200).json({ available: true });
+    }
+  } catch (err) {
+    console.log("Error in checking the mmid", err);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+
+const updateMMid = async (req, res) => {
+  try {
+    const { kidId } = req.params;
+    const { MMid } = req.body;
+
+    // Check if the new MMid is already taken by another kid
+    const existingKid = await kidModel.findOne({ chessId: MMid });
+    if (existingKid) {
+      return res
+        .status(400)
+        .json({ success: false, message: "MMid is already in use" });
+    }
+
+    // Update the kid's chessId (MMid)
+    const updatedKid = await kidModel.findByIdAndUpdate(
+      { _id: kidId },
+      { chessId: MMid },
+      { new: true }
+    );
+
+    if (!updatedKid) {
+      return res.status(404).json({ success: false, message: "Kid not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "MMid updated successfully",
+      data: updatedKid,
+    });
+  } catch (err) {
+    console.log("Error in updating the mmid", err);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+const getParentScheduleButton = async (req, res) => {
+  try {
+    const { kidId } = req.params;
+
+    // Assuming kidId is the same as enquiry ID (if not, adjust accordingly)
+    const enqData = await operationDeptModel.findOne(
+      { kidId: kidId },
+      { classAssigned: 1 }
+    );
+
+    if (!enqData) {
+      return res.status(404).json({ success: false, message: "No data found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: enqData.classAssigned,
+    });
+  } catch (err) {
+    console.log("Error in getting schedule", err);
+    return res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
 module.exports = {
+  getParentScheduleButton,
+  updateMMid,
+  getMMidAvailable,
   parentBookDemoClassData,
   getParentSheduleDemoDetails,
   updateMyName,

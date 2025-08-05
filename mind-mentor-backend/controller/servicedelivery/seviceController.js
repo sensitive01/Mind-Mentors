@@ -670,7 +670,7 @@ const getActiveKidAndClassData = async (req, res) => {
       paymentStatus: "Success",
       isClassAdded: false,
     });
-    console.log("paymentClassData".paymentClassData);
+    console.log("paymentClassData",paymentClassData);
 
     if (!paymentClassData) {
       return res.status(404).json({

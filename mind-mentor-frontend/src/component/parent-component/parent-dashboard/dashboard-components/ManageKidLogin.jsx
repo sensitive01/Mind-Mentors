@@ -3,19 +3,26 @@ import { useNavigate, useParams } from "react-router-dom";
 import {
   changeChildPin,
   ParentManageChildLogin,
+  checkMmIdAvailability,
+  updateChildChessId,
 } from "../../../../api/service/parent/ParentService";
 import { toast, ToastContainer } from "react-toastify";
-import { Lock, User, CreditCard } from "lucide-react"; // Changed Id to CreditCard
+import { Lock, User, CreditCard, CheckCircle, XCircle } from "lucide-react";
 import "react-toastify/dist/ReactToastify.css";
 import "./float.css";
 
 const ManageChildLogin = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const { id } = useParams();
   const [child, setChild] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [pinValues, setPinValues] = useState(["", "", "", ""]);
+  const [chessId, setChessId] = useState("");
+  const [originalChessId, setOriginalChessId] = useState("");
+  const [chessIdStatus, setChessIdStatus] = useState(null); // null, 'checking', 'available', 'taken'
+  const [chessIdError, setChessIdError] = useState("");
   const inputRefs = [useRef(), useRef(), useRef(), useRef()];
+  const chessIdTimeoutRef = useRef(null);
 
   useEffect(() => {
     const fetchChildData = async () => {
@@ -25,6 +32,8 @@ const ManageChildLogin = () => {
 
         if (response && response.data) {
           setChild(response.data);
+          setChessId(response.data.chessId || "");
+          setOriginalChessId(response.data.chessId || "");
 
           // Properly handle the PIN value
           if (
@@ -33,7 +42,6 @@ const ManageChildLogin = () => {
           ) {
             const pinString = String(response.data.kidPin).padStart(4, "0");
             console.log("Formatted PIN string:", pinString);
-
             setPinValues(pinString.split(""));
           }
         }
@@ -48,9 +56,74 @@ const ManageChildLogin = () => {
     fetchChildData();
   }, [id]);
 
+  // Chess ID validation with debounce
+  useEffect(() => {
+    if (chessIdTimeoutRef.current) {
+      clearTimeout(chessIdTimeoutRef.current);
+    }
+
+    if (chessId.trim() === "") {
+      setChessIdStatus(null);
+      setChessIdError("");
+      return;
+    }
+
+    // If chess ID hasn't changed from original, don't check
+    if (chessId.trim() === originalChessId) {
+      setChessIdStatus(null);
+      setChessIdError("");
+      return;
+    }
+
+    // Basic validation
+    if (chessId.trim().length < 3) {
+      setChessIdStatus(null);
+      setChessIdError("Chess ID must be at least 3 characters");
+      return;
+    }
+
+    setChessIdStatus("checking");
+    setChessIdError("");
+
+    chessIdTimeoutRef.current = setTimeout(async () => {
+      try {
+        const response = await checkMmIdAvailability(chessId.trim());
+
+        if (response.status === 200) {
+          const { available } = response.data;
+
+          if (available) {
+            setChessIdStatus("available");
+            setChessIdError("");
+          } else {
+            setChessIdStatus("taken");
+            setChessIdError("Chess ID already taken");
+          }
+        }
+      } catch (error) {
+        console.error("Error checking chess ID:", error);
+        setChessIdStatus(null);
+        setChessIdError("Error checking availability");
+      }
+    }, 800);
+
+    return () => {
+      if (chessIdTimeoutRef.current) {
+        clearTimeout(chessIdTimeoutRef.current);
+      }
+    };
+  }, [chessId, originalChessId]);
+
   useEffect(() => {
     console.log("Current pinValues:", pinValues);
   }, [pinValues]);
+
+  const handleChessIdChange = (e) => {
+    const value = e.target.value;
+    // Allow only alphanumeric characters and basic symbols
+    const sanitizedValue = value.replace(/[^a-zA-Z0-9_-]/g, "");
+    setChessId(sanitizedValue);
+  };
 
   const handlePinChange = (index, value) => {
     const newValue = value.replace(/\D/g, "");
@@ -74,34 +147,124 @@ const ManageChildLogin = () => {
     }
   };
 
-  const handleSavePin = async () => {
+  const handleSaveChanges = async () => {
     const combinedPin = pinValues.join("");
+    const trimmedChessId = chessId.trim();
 
+    // Validation
     if (combinedPin.length !== 4) {
       toast.error("PIN must be 4 digits");
       return;
     }
 
-    // Only make API call if PIN has changed
-    if (combinedPin !== String(child.kidPin)) {
-      try {
-        const response = await changeChildPin(id, combinedPin);
-
-        if (response.status === 200) {
-          setChild((prev) => ({ ...prev, kidPin: combinedPin }));
-          toast.success(response.data.message || "PIN updated successfully");
-          setTimeout(() => {
-            navigate(`/parent/kid/attendance/${id}`)
-            
-          },1500);
-        }
-      } catch (error) {
-        console.error("Error updating PIN:", error);
-        toast.error("Failed to update PIN");
-      }
-    } else {
-      toast.info("PIN remains unchanged");
+    if (trimmedChessId === "") {
+      toast.error("Chess ID is required");
+      return;
     }
+
+    if (trimmedChessId.length < 3) {
+      toast.error("Chess ID must be at least 3 characters");
+      return;
+    }
+
+    // Check if chess ID is taken (but not the original one)
+    if (chessIdStatus === "taken") {
+      toast.error("Chess ID is already taken. Please choose a different one.");
+      return;
+    }
+
+    // Check if chess ID is still being validated
+    if (chessIdStatus === "checking") {
+      toast.warning("Please wait while we check Chess ID availability");
+      return;
+    }
+
+    const pinChanged = combinedPin !== String(child.kidPin);
+    const chessIdChanged = trimmedChessId !== originalChessId;
+
+    if (!pinChanged && !chessIdChanged) {
+      toast.info("No changes detected");
+      return;
+    }
+
+    try {
+      const promises = [];
+
+      // Update PIN if changed
+      if (pinChanged) {
+        promises.push(changeChildPin(id, combinedPin));
+      }
+
+      // Update Chess ID if changed
+      if (chessIdChanged) {
+        promises.push(updateChildChessId(id, trimmedChessId));
+      }
+
+      const responses = await Promise.all(promises);
+
+      // Check if all requests were successful
+      const allSuccessful = responses.every(
+        (response) => response.status === 200
+      );
+
+      if (allSuccessful) {
+        // Update local state
+        setChild((prev) => ({
+          ...prev,
+          kidPin: pinChanged ? combinedPin : prev.kidPin,
+          chessId: chessIdChanged ? trimmedChessId : prev.chessId,
+        }));
+
+        setOriginalChessId(trimmedChessId);
+        setChessIdStatus(null);
+
+        const updateMessages = [];
+        if (pinChanged) updateMessages.push("PIN");
+        if (chessIdChanged) updateMessages.push("Chess ID");
+
+        toast.success(`${updateMessages.join(" and ")} updated successfully`);
+
+        setTimeout(() => {
+          navigate(`/parent/kid/attendance/${id}`);
+        }, 1500);
+      }
+    } catch (error) {
+      console.error("Error updating data:", error);
+
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error("Failed to update. Please try again.");
+      }
+    }
+  };
+
+  const getChessIdInputClassName = () => {
+    let baseClass =
+      "w-full pl-10 pr-12 py-3 border rounded-lg text-gray-700 transition-all duration-200 focus:outline-none focus:ring-2";
+
+    if (chessIdStatus === "checking") {
+      return `${baseClass} bg-yellow-50 border-yellow-300 focus:ring-yellow-200`;
+    } else if (chessIdStatus === "available") {
+      return `${baseClass} bg-green-50 border-green-300 focus:ring-green-200`;
+    } else if (chessIdStatus === "taken" || chessIdError) {
+      return `${baseClass} bg-red-50 border-red-300 focus:ring-red-200`;
+    } else {
+      return `${baseClass} bg-gray-50 border-gray-200 focus:ring-primary focus:border-primary`;
+    }
+  };
+
+  const getStatusIcon = () => {
+    if (chessIdStatus === "checking") {
+      return (
+        <div className="animate-spin h-5 w-5 border-2 border-yellow-500 border-t-transparent rounded-full"></div>
+      );
+    } else if (chessIdStatus === "available") {
+      return <CheckCircle className="h-5 w-5 text-green-500" />;
+    } else if (chessIdStatus === "taken") {
+      return <XCircle className="h-5 w-5 text-red-500" />;
+    }
+    return null;
   };
 
   if (isLoading) {
@@ -169,7 +332,7 @@ const ManageChildLogin = () => {
               </h1>
 
               <p className="text-white text-opacity-90 text-sm">
-                Update your child's PIN for secure account access
+                Update your child's PIN and Chess ID for secure account access
               </p>
             </div>
           </div>
@@ -197,20 +360,51 @@ const ManageChildLogin = () => {
 
               <div className="relative">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Chess ID
+                  Chess ID *
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <CreditCard className="h-5 w-5 text-gray-400" />{" "}
-                    {/* Changed from Id to CreditCard */}
+                    <CreditCard className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
                     type="text"
-                    value={child.chessId || ""}
-                    className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 focus:ring-primary focus:border-primary transition-all duration-200"
-                    disabled
+                    value={chessId}
+                    onChange={handleChessIdChange}
+                    className={getChessIdInputClassName()}
+                    placeholder="Enter unique Chess ID"
+                    maxLength={20}
                   />
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                    {getStatusIcon()}
+                  </div>
                 </div>
+
+                {/* Status messages */}
+                {chessIdStatus === "checking" && (
+                  <p className="mt-1 text-sm text-yellow-600">
+                    Checking availability...
+                  </p>
+                )}
+                {chessIdStatus === "available" && (
+                  <p className="mt-1 text-sm text-green-600">
+                    Chess ID is available!
+                  </p>
+                )}
+                {chessIdStatus === "taken" && (
+                  <p className="mt-1 text-sm text-red-600">
+                    Chess ID is already taken
+                  </p>
+                )}
+                {chessIdError && chessIdStatus !== "taken" && (
+                  <p className="mt-1 text-sm text-red-600">{chessIdError}</p>
+                )}
+                {!chessIdError &&
+                  !chessIdStatus &&
+                  chessId.trim() !== originalChessId && (
+                    <p className="mt-1 text-sm text-gray-500">
+                      Must be at least 3 characters (letters, numbers, _, -)
+                    </p>
+                  )}
               </div>
             </div>
 
@@ -218,7 +412,7 @@ const ManageChildLogin = () => {
             <div className="space-y-5">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  PIN Code
+                  PIN Code *
                 </label>
 
                 <div className="flex justify-center gap-3 sm:gap-4">
@@ -247,15 +441,23 @@ const ManageChildLogin = () => {
               </div>
 
               <button
-                onClick={handleSavePin}
+                onClick={handleSaveChanges}
+                disabled={
+                  chessIdStatus === "checking" ||
+                  chessIdStatus === "taken" ||
+                  chessIdError
+                }
                 className="w-full py-3 px-4 bg-primary text-white rounded-lg font-medium 
                        shadow-md hover:shadow-lg
                        transition-all duration-300
                        transform hover:-translate-y-1
                        active:shadow-inner active:translate-y-0
-                       focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                       focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2
+                       disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
-                Update PIN
+                {chessIdStatus === "checking"
+                  ? "Checking..."
+                  : "Update Details"}
               </button>
             </div>
           </div>

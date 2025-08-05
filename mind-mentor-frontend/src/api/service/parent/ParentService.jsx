@@ -549,12 +549,44 @@ export const getKidSheduleDemoDetails = async (kidId) => {
   }
 };
 
-
-export const parentBookDemoClassData = async (kidId,bookingDetails) => {
+export const parentBookDemoClassData = async (kidId, bookingDetails) => {
   try {
     const response = await parentInstance.post(
-      `/parent/book-demo-class-data/${kidId}`,{bookingDetails}
+      `/parent/book-demo-class-data/${kidId}`,
+      { bookingDetails }
     );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+export const checkMmIdAvailability = async (MMid) => {
+  try {
+    const response = await parentInstance.post(`/parent/get-mm-id-available`, {
+      MMid,
+    });
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+export const updateChildChessId = async (id,MMid) => {
+  try {
+    const response = await parentInstance.put(`/parent/update-mm-id/${id}`, {
+      MMid,
+    });
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+
+export const getIsSheduledResponse = async (id) => {
+  try {
+    const response = await parentInstance.get(`/parent/get-reshedule-button/${id}`);
     return response;
   } catch (err) {
     return err;

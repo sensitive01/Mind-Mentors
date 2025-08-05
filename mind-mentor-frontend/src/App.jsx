@@ -345,6 +345,8 @@ import ServiceDetailedAttandance from "./pages/employee/servicedelivery/ServiceD
 import RenewalDetailedAttandance from "./pages/employee/renewalassociate/RenewalDetailedAttandance";
 import CenterDetailedAttandance from "./pages/employee/centeradmin/CenterDetailedAttandance";
 import CoachDetailedAttandance from "./pages/employee/coach/CoachDetailedAttandance";
+import ParentSheduleLiveClassPage from "./pages/parent/ParentSheduleLiveClassPage";
+import ParentResheduleTheClass from "./pages/parent/ParentResheduleTheClass";
 
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
@@ -444,8 +446,15 @@ function App() {
             <Route path="new-dashboard/kid-1" element={<NewDashboard />} />
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="kid" element={<ParentKidsDetailsPage />} />
-            <Route path="add-kid" element={<AddKid />} />
+            <Route path="add-kid/:isFromPackage" element={<AddKid />} />
             <Route path="kid/attendance/:id" element={<AttendancePage />} />
+            <Route path="kid/reshedule-sheduled-class/:kidId" element={<ParentResheduleTheClass />} />
+
+            <Route
+              path="kid/shedule-new-live-class/:kidId"
+              element={<ParentSheduleLiveClassPage />}
+            />
+
             <Route
               path="kid/show-kid-attandance/:kidId"
               element={<ParentKidAttandacePage />}

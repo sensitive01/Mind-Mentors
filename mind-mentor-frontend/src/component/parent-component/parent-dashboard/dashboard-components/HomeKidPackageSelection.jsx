@@ -49,6 +49,7 @@ const HomeKidPackageSelection = () => {
   const [paymentId, setPaymentId] = useState("");
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [selectedCenterAddress, setSelectedCenterAddress] = useState("");
+
   const [data, setData] = useState({
     kidId: "",
     kidName: "",
@@ -64,6 +65,8 @@ const HomeKidPackageSelection = () => {
   const [availableLevels, setAvailableLevels] = useState([]);
   const [allPrograms, setAllPrograms] = useState([]);
   const [viewOnlyMode, setViewOnlyMode] = useState(false);
+  const hasValidProgram =
+    selectedProgram || (data.programs && data.programs.length > 0);
 
   // Helper function to format time display
   const getTimeSlotDisplay = (timeSlot) => {
@@ -824,7 +827,10 @@ const HomeKidPackageSelection = () => {
               </h2>
 
               {/* Online/Offline Config */}
-              {(packageType === "online" || packageType === "offline") && (
+              {/* Online/Offline Config */}
+              {(packageType === "online" ||
+                packageType === "offline" ||
+                packageType === "hybrid") && (
                 <div className="space-y-6">
                   {/* Time Slot */}
                   <div>
@@ -832,7 +838,10 @@ const HomeKidPackageSelection = () => {
                       When do you prefer classes?
                     </label>
                     <div className="grid grid-cols-1 gap-4 max-w-md">
-                      {["day", "night"].map((slot) => (
+                      {(packageType === "offline"
+                        ? ["day"]
+                        : ["day", "night"]
+                      ).map((slot) => (
                         <label
                           key={slot}
                           className="flex items-center cursor-pointer p-3 border rounded-lg hover:bg-gray-50"
@@ -854,7 +863,7 @@ const HomeKidPackageSelection = () => {
                   </div>
 
                   {/* Center Selection */}
-                  {selectedTimeSlot && (
+                  {selectedTimeSlot && packageType !== "hybrid" && (
                     <div>
                       <label className="block font-medium mb-3">
                         {packageType === "online" &&
@@ -1098,7 +1107,9 @@ const HomeKidPackageSelection = () => {
                         !packageType ||
                         totalAmount <= 0 ||
                         isProcessingPayment ||
-                        viewOnlyMode||!selectedKid||!selectedProgram
+                        viewOnlyMode ||
+                        !selectedKid ||
+                        !hasValidProgram
                       }
                       className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium"
                     >
@@ -1110,27 +1121,14 @@ const HomeKidPackageSelection = () => {
                 ) : (
                   <div className="flex items-end">
                     <button
-                      onClick={()=>navigate("/parent/add-kid")} // make sure this function exists
-                      className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 font-medium"
+                      onClick={() => navigate("/parent/add-kid/false")} // make sure this function exists
+                      className="w-full bg-primary text-white py-3 px-4 rounded-lg hover:bg-primary font-medium"
                     >
                       Add Kid
                     </button>
                   </div>
                 )}
               </div>
-            </div>
-          )}
-
-          {/* Payment Success */}
-          {paymentId && (
-            <div className="bg-white rounded-lg shadow p-6 text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-8 h-8 text-green-600" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">
-                Payment Successful!
-              </h3>
-              <p className="text-gray-600 mb-4">Payment ID: {paymentId}</p>
             </div>
           )}
         </>

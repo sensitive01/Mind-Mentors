@@ -91,7 +91,7 @@ const KidsDetails = ({ kids }) => {
               </p>
             </div>
             <button
-              onClick={() => navigate("/parent/add-kid")}
+              onClick={() => navigate("/parent/add-kid/true")}
               className="group px-3 py-2 rounded-lg bg-primary text-white font-medium shadow-lg hover:shadow-xl transform transition-all duration-300 hover:-translate-y-1"
             >
               <span className="flex items-center text-sm">
@@ -207,7 +207,7 @@ const KidsDetails = ({ kids }) => {
               adventure today.
             </p>
             <button
-              onClick={() => navigate("/parent/add-kid")}
+              onClick={() => navigate("/parent/add-kid/true")}
               className="inline-flex items-center px-4 py-2 rounded-lg bg-gradient-to-r from-primary to-primary hover:from-primary hover:to-primary text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 group"
             >
               <UserPlus className="w-4 h-4 mr-2 group-hover:rotate-12 transition-transform" />

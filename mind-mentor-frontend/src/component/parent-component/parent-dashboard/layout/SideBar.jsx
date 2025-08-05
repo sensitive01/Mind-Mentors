@@ -12,33 +12,13 @@ import {
 } from "lucide-react";
 import account from "../../../../images/boy.png";
 import refer from "../../../../images/Refer.png";
-import hoverAudio from "../../../../images/tunetank.com_mouse-hover.wav";
 
 const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [scrollPosition, setScrollPosition] = useState(0);
-  const [audio] = useState(new Audio(hoverAudio)); // Fixed: Use the imported hoverAudio file
 
   const isActive = (path) => location.pathname === path;
-
-  const playHoverSound = () => {
-    audio.volume = 0.5; // Set a comfortable volume level
-    audio.currentTime = 0; // Reset sound to start
-    audio.play().catch((err) => console.log("Audio play failed:", err));
-  };
-
-  // Initialize audio
-  useEffect(() => {
-    // Preload the audio
-    audio.load();
-
-    // Cleanup
-    return () => {
-      audio.pause();
-      audio.currentTime = 0;
-    };
-  }, [audio]);
 
   const navLinks = [
     { path: "/parent/dashboard", icon: Home, label: "Home", iconSize: 19 },
@@ -82,7 +62,6 @@ const Sidebar = () => {
         <button
           onClick={() => navigate("/parent/profile/manage")}
           className="relative group"
-          onMouseEnter={playHoverSound}
         >
           <div className="w-12 h-12 rounded-full overflow-hidden transform transition-all duration-500 ease-in-out group-hover:scale-110 group-hover:shadow-lg group-hover:ring-4 group-hover:ring-[#642b8f] mt-6">
             <img
@@ -102,7 +81,6 @@ const Sidebar = () => {
             <Link
               key={link.path}
               to={link.path}
-              onMouseEnter={playHoverSound}
               className={`group relative flex flex-col items-center justify-center py-4 px-2 rounded-lg transition-all duration-300 ease-in-out ${
                 isActive(link.path) ? "bg-[#642b8f]" : "hover:bg-[#F3E5F5]"
               }`}
@@ -142,7 +120,6 @@ const Sidebar = () => {
       <div className={`p-3 mt-auto ${isScrolled ? "hidden" : ""}`}>
         <div
           onClick={() => navigate("/parent/new-referal")}
-          onMouseEnter={playHoverSound}
           className="w-full relative group cursor-pointer transform transition-all duration-500 ease-in-out hover:scale-105"
         >
           <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-[#642b8f]/0 to-[#642b8f]/0 transition-opacity duration-300 group-hover:from-[#642b8f]/10 group-hover:to-[#642b8f]/10" />

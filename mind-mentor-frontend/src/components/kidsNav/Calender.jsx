@@ -10,24 +10,38 @@ import {
   AlertCircle,
   CheckCircle,
   XCircle,
-  ExternalLink,
+  BookOpen,
+  Award,
+  Grid,
+  List,
+  Filter,
+  TrendingUp,
+  CalendarPlus,
 } from "lucide-react";
-import { useParams } from "react-router-dom";
-import { fetchkidClassData } from "../../api/service/parent/ParentService";
-import axios from "axios";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  fetchkidClassData,
+  getIsSheduledResponse,
+} from "../../api/service/parent/ParentService";
 
-const ClassScheduleCalendar = ({ classData }) => {
+const ClassScheduleCalendar = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [sessions, setSessions] = useState([]);
   const [filteredSessions, setFilteredSessions] = useState([]);
   const [viewMode, setViewMode] = useState("month");
-  const [joinLoading, setJoinLoading] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showScheduleButton, setShowScheduleButton] = useState(false);
 
+  // Fetch class data from API
   useEffect(() => {
     const fetchClassData = async () => {
       try {
+        setLoading(true);
         const response = await fetchkidClassData(id);
         console.log("API Response:", response);
 
@@ -35,13 +49,19 @@ const ClassScheduleCalendar = ({ classData }) => {
           const allSessions = response.data.classData.map((session) => ({
             ...session,
             parsedDate: new Date(session.classDate),
-            startTime: session.scheduleDetails?.classTime || "",
-            coach: session.scheduleDetails?.coachName || "",
-            center: session.scheduleDetails?.centerName || "",
-            program: session.scheduleDetails?.program || "",
-            level: session.scheduleDetails?.level || "",
-            kidJoinUrl: session.scheduleDetails?.kidJoinUrl || "",
-            studentName: session.scheduleDetails?.studentName || "New Kid",
+            startTime:
+              session.scheduleDetails?.classTime || session.classTime || "",
+            endTime: session.scheduleDetails?.endTime || "",
+            coach:
+              session.scheduleDetails?.coachName || session.coachName || "",
+            center:
+              session.scheduleDetails?.centerName || session.centerName || "",
+            program: session.scheduleDetails?.program || session.program || "",
+            level: session.scheduleDetails?.level || session.level || "",
+            studentName:
+              session.scheduleDetails?.studentName ||
+              session.studentName ||
+              "Student",
           }));
 
           console.log("Processed sessions:", allSessions);
@@ -49,84 +69,90 @@ const ClassScheduleCalendar = ({ classData }) => {
         }
       } catch (error) {
         console.error("Error fetching class data:", error);
+        setError("Failed to load class data. Please try again.");
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchClassData();
+    if (id) {
+      fetchClassData();
+    }
   }, [id]);
 
   useEffect(() => {
-    // Filter sessions for the selected date
+    const fetchData = async () => {
+      const response = await getIsSheduledResponse(id);
+      if (response.status === 200) {
+        setShowScheduleButton(response.data.data);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // Filter sessions for selected date
+  useEffect(() => {
     const dateString = selectedDate.toISOString().split("T")[0];
-    const filteredSessions = sessions.filter((session) => {
+    let filtered = sessions.filter((session) => {
       const sessionDate = new Date(session.classDate)
         .toISOString()
         .split("T")[0];
       return sessionDate === dateString;
     });
-    setFilteredSessions(filteredSessions);
-  }, [selectedDate, sessions]);
 
-  // API call function for joining session
-  const joinSessionAPI = async (joinUrl, kidName) => {
-    try {
-      setJoinLoading(true);
-      console.log("joinUrl", joinUrl, "kidName", kidName);
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((session) => session.status === statusFilter);
+    }
 
-      const urlParts = joinUrl.split("/");
-      const classRoomId = urlParts[urlParts.length - 1]; // Gets the last part (3g5hyd80)
+    setFilteredSessions(filtered);
+  }, [selectedDate, sessions, statusFilter]);
 
-      console.log("Extracted classRoomId:", classRoomId);
-      const response = await axios.get(
-        `https://live.mindmentorz.in/api/new-class/get-new-class/${classRoomId}`
-      );
+  // Handle schedule new class
+  const handleScheduleClass = () => {
+    navigate(`/parent/kid/shedule-new-live-class/${id}`);
+  };
 
-      const { meetingID } = response.data;
+    const handleRescheduleClass = () => {
+    navigate(`/parent/kid/reshedule-sheduled-class/${id}`);
+  };
 
-      const joinResponse = await axios.post(
-        `https://live.mindmentorz.in/api/new-class/new-sign-join-url`,
-        {
-          fullName: kidName,
-          meetingID: meetingID,
-          password: "apwd",
-        }
-      );
-      window.location.href = joinResponse.data.signedUrl;
-    } catch (error) {
-      console.error("Error joining session:", error);
-      // You might want to show a toast/notification here
-      alert("Failed to join session. Please try again.");
-    } finally {
-      setJoinLoading(false);
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case "scheduled":
+        return "bg-blue-50 text-blue-700 border-blue-200";
+      case "completed":
+        return "bg-green-50 text-green-700 border-green-200";
+      case "rescheduled":
+        return "bg-amber-50 text-amber-700 border-amber-200";
+      case "cancelled":
+        return "bg-red-50 text-red-700 border-red-200";
+      default:
+        return "bg-gray-50 text-gray-700 border-gray-200";
     }
   };
 
-  const handleJoinSession = async (joinUrl, studentName) => {
-    if (joinUrl && studentName) {
-      await joinSessionAPI(joinUrl, studentName);
-    } else {
-      console.error("Missing joinUrl or student name");
-      alert("Unable to join session. Missing required information.");
+  const getStatusIcon = (status) => {
+    switch (status?.toLowerCase()) {
+      case "scheduled":
+        return <Calendar className="w-4 h-4" />;
+      case "completed":
+        return <CheckCircle className="w-4 h-4" />;
+      case "rescheduled":
+        return <AlertCircle className="w-4 h-4" />;
+      case "cancelled":
+        return <XCircle className="w-4 h-4" />;
+      default:
+        return <Calendar className="w-4 h-4" />;
     }
   };
 
-  const daysInMonth = (year, month) => {
-    return new Date(year, month + 1, 0).getDate();
-  };
+  const getDaysInMonth = (year, month) =>
+    new Date(year, month + 1, 0).getDate();
+  const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
 
-  const getFirstDayOfMonth = (year, month) => {
-    return new Date(year, month, 1).getDay();
-  };
-
-  const getPreviousMonth = () => {
+  const navigateMonth = (direction) => {
     const newDate = new Date(currentDate);
-    newDate.setMonth(newDate.getMonth() - 1);
-    setCurrentDate(newDate);
-  };
-
-  const getNextMonth = () => {
-    const newDate = new Date(currentDate);
-    newDate.setMonth(newDate.getMonth() + 1);
+    newDate.setMonth(newDate.getMonth() + direction);
     setCurrentDate(newDate);
   };
 
@@ -149,39 +175,9 @@ const ClassScheduleCalendar = ({ classData }) => {
     });
   };
 
-  const getStatusColor = (status) => {
-    switch (status.toLowerCase()) {
-      case "scheduled":
-        return "bg-blue-100 text-blue-800 border-blue-400";
-      case "completed":
-        return "bg-green-100 text-green-800 border-green-400";
-      case "rescheduled":
-        return "bg-amber-100 text-amber-800 border-amber-400";
-      case "cancelled":
-        return "bg-red-100 text-red-800 border-red-400";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-400";
-    }
-  };
-
-  const getStatusIcon = (status) => {
-    switch (status.toLowerCase()) {
-      case "scheduled":
-        return <Calendar className="w-4 h-4" />;
-      case "completed":
-        return <CheckCircle className="w-4 h-4" />;
-      case "rescheduled":
-        return <AlertCircle className="w-4 h-4" />;
-      case "cancelled":
-        return <XCircle className="w-4 h-4" />;
-      default:
-        return <Calendar className="w-4 h-4" />;
-    }
-  };
-
   const renderCalendarDays = () => {
     const days = [];
-    const totalDays = daysInMonth(
+    const totalDays = getDaysInMonth(
       currentDate.getFullYear(),
       currentDate.getMonth()
     );
@@ -190,17 +186,17 @@ const ClassScheduleCalendar = ({ classData }) => {
       currentDate.getMonth()
     );
 
-    // Add empty cells for days before the first day of the month
+    // Empty cells for days before first day of month
     for (let i = 0; i < firstDay; i++) {
       days.push(
         <div
           key={`empty-${i}`}
-          className="h-24 bg-gray-50 border border-gray-200 p-1"
+          className="h-20 bg-gray-50/50 border border-gray-100"
         ></div>
       );
     }
 
-    // Add cells for each day of the month
+    // Calendar days
     for (let day = 1; day <= totalDays; day++) {
       const dateSessions = getSessionsForDate(
         currentDate.getFullYear(),
@@ -224,38 +220,46 @@ const ClassScheduleCalendar = ({ classData }) => {
       days.push(
         <div
           key={day}
-          className={`h-24 border border-gray-200 p-1 overflow-hidden transition-colors hover:bg-indigo-50 cursor-pointer
-                    ${isToday ? "bg-blue-50" : ""}
-                    ${
-                      isSelected
-                        ? "bg-indigo-100 border-indigo-400 border-2"
-                        : ""
-                    }`}
+          className={`h-20 border border-gray-100 p-2 cursor-pointer transition-all duration-200 hover:bg-indigo-50 relative overflow-hidden
+            ${isToday ? "bg-blue-50 border-blue-200" : ""}
+            ${
+              isSelected
+                ? "bg-indigo-100 border-indigo-300 ring-2 ring-indigo-200"
+                : ""
+            }`}
           onClick={() => handleDateClick(day)}
         >
-          <div className="flex justify-between items-center mb-1">
+          <div className="flex justify-between items-start mb-1">
             <span
               className={`text-sm font-medium rounded-full w-6 h-6 flex items-center justify-center
-                            ${isToday ? "bg-blue-500 text-white" : ""}
-                            ${isSelected ? "bg-indigo-600 text-white" : ""}`}
+              ${isToday ? "bg-blue-500 text-white" : ""}
+              ${isSelected && !isToday ? "bg-indigo-600 text-white" : ""}`}
             >
               {day}
             </span>
             {dateSessions.length > 0 && (
-              <span className="text-xs font-medium bg-indigo-100 text-indigo-800 px-1.5 py-0.5 rounded-full">
+              <span className="bg-indigo-500 text-white text-xs px-1.5 py-0.5 rounded-full font-medium">
                 {dateSessions.length}
               </span>
             )}
           </div>
-          <div className="space-y-1 overflow-hidden max-h-16">
+
+          <div className="space-y-1">
             {dateSessions.slice(0, 2).map((session, index) => (
               <div
                 key={session._id || index}
-                className={`text-xs p-1 rounded truncate border-l-2 ${getStatusColor(
+                className={`text-xs p-1 rounded border-l-2 truncate ${getStatusColor(
                   session.status
                 )}`}
               >
-                {session.startTime} - {session.type}
+                <div className="flex items-center gap-1">
+                  {session.type === "online" ? (
+                    <Video className="w-3 h-3" />
+                  ) : (
+                    <MapPin className="w-3 h-3" />
+                  )}
+                  <span>{session.startTime}</span>
+                </div>
               </div>
             ))}
             {dateSessions.length > 2 && (
@@ -285,321 +289,476 @@ const ClassScheduleCalendar = ({ classData }) => {
     "November",
     "December",
   ];
-
   const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-  const formatSessionDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
+  // Calculate stats from actual data
+  const totalClasses = sessions.length;
+  const completedClasses = sessions.filter(
+    (s) => s.status === "completed"
+  ).length;
+  const scheduledClasses = sessions.filter(
+    (s) => s.status === "scheduled"
+  ).length;
+  const progressPercentage =
+    totalClasses > 0 ? Math.round((completedClasses / totalClasses) * 100) : 0;
+
+  // Get upcoming classes
+  const upcomingClasses = sessions
+    .filter((session) => {
+      const sessionDate = new Date(session.classDate);
+      const today = new Date();
+      return sessionDate >= today && session.status === "scheduled";
+    })
+    .sort((a, b) => new Date(a.classDate) - new Date(b.classDate))
+    .slice(0, 3);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading class schedule...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center bg-white p-8 rounded-xl shadow-lg">
+          <XCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-white rounded-lg shadow-xl overflow-hidden">
-      {/* Calendar Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold flex items-center space-x-2">
-            <Calendar className="w-5 h-5" />
-            <span>Class Schedule</span>
-          </h2>
-          <div className="flex space-x-2">
-            <button
-              onClick={() => setViewMode("month")}
-              className={`px-3 py-1 rounded ${
-                viewMode === "month"
-                  ? "bg-white text-indigo-600"
-                  : "bg-indigo-500"
-              }`}
-            >
-              Month
-            </button>
-            <button
-              onClick={() => setViewMode("list")}
-              className={`px-3 py-1 rounded ${
-                viewMode === "list"
-                  ? "bg-white text-indigo-600"
-                  : "bg-indigo-500"
-              }`}
-            >
-              List
-            </button>
-          </div>
-        </div>
-
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={getPreviousMonth}
-              className="p-1 hover:bg-indigo-500 rounded"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <span className="font-medium text-lg">
-              {months[currentDate.getMonth()]} {currentDate.getFullYear()}
-            </span>
-            <button
-              onClick={getNextMonth}
-              className="p-1 hover:bg-indigo-500 rounded"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
-          <div className="text-sm">
-            Selected:{" "}
-            {selectedDate.toLocaleDateString("en-US", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Status Indicators */}
-      <div className="bg-gray-50 px-6 py-2 border-b flex items-center space-x-4 text-sm">
-        <div className="flex items-center space-x-1">
-          <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-          <span>Scheduled</span>
-        </div>
-        <div className="flex items-center space-x-1">
-          <div className="w-3 h-3 rounded-full bg-green-500"></div>
-          <span>Completed</span>
-        </div>
-        <div className="flex items-center space-x-1">
-          <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-          <span>Rescheduled</span>
-        </div>
-        <div className="flex items-center space-x-1">
-          <div className="w-3 h-3 rounded-full bg-red-500"></div>
-          <span>Cancelled</span>
-        </div>
-      </div>
-
-      {viewMode === "month" ? (
-        <>
-          {/* Calendar Grid */}
-          <div className="grid grid-cols-7">
-            {daysOfWeek.map((day) => (
-              <div
-                key={day}
-                className="py-2 text-center font-medium text-gray-700 border-b border-gray-200 bg-gray-50"
-              >
-                {day}
-              </div>
-            ))}
-            {renderCalendarDays()}
-          </div>
-        </>
-      ) : (
-        <div className="p-4 max-h-96 overflow-y-auto">
-          {sessions.length > 0 ? (
-            sessions.map((session) => (
-              <div
-                key={session._id}
-                className={`p-3 mb-2 rounded-lg border-l-4 ${getStatusColor(
-                  session.status
-                )}`}
-                onClick={() => setSelectedDate(new Date(session.classDate))}
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <div className="font-medium">
-                      Session {session.sessionNumber}
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      {formatSessionDate(session.classDate)}
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      {session.program} - {session.level}
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div
-                      className={`px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${getStatusColor(
-                        session.status
-                      )}`}
-                    >
-                      {getStatusIcon(session.status)}
-                      <span>{session.status}</span>
-                    </div>
-                    {session.kidJoinUrl && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleJoinSession(
-                            session.kidJoinUrl,
-                            session.studentName
-                          );
-                        }}
-                        disabled={joinLoading}
-                        className={`text-white px-2 py-1 rounded-md transition-colors text-xs flex items-center space-x-1 ${
-                          joinLoading
-                            ? "bg-gray-400 cursor-not-allowed"
-                            : "bg-green-600 hover:bg-green-700"
-                        }`}
-                      >
-                        <ExternalLink className="w-3 h-3" />
-                        <span>{joinLoading ? "Joining..." : "Join"}</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-                <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
-                  <div className="flex items-center space-x-2">
-                    <Clock className="w-4 h-4 text-gray-500" />
-                    <span>{session.startTime}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <User className="w-4 h-4 text-gray-500" />
-                    <span>{session.coach}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 flex items-center justify-center">
-                      {session.type === "online" ? (
-                        <Video className="w-4 h-4 text-gray-500" />
-                      ) : (
-                        <MapPin className="w-4 h-4 text-gray-500" />
-                      )}
-                    </div>
-                    <span className="capitalize">{session.type}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <MapPin className="w-4 h-4 text-gray-500" />
-                    <span className="text-xs truncate">{session.center}</span>
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="text-center p-6 text-gray-500">
-              No sessions found for the selected period
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+      <div className="max-w-7xl mx-auto p-6">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Class Schedule
+              </h1>
+              <p className="text-gray-600">
+                Track your child's learning journey
+              </p>
             </div>
-          )}
-        </div>
-      )}
 
-      {/* Selected Date Details */}
-      <div className="border-t border-gray-200 p-4">
-        <h3 className="font-medium text-lg mb-3">
-          {selectedDate.toLocaleDateString("en-US", {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-            year: "numeric",
-          })}
-        </h3>
-
-        {filteredSessions.length > 0 ? (
-          <div className="space-y-4">
-            {filteredSessions.map((session) => (
-              <div
-                key={session._id}
-                className={`p-4 rounded-lg border-l-4 shadow-sm ${getStatusColor(
-                  session.status
-                )}`}
+            {showScheduleButton ? (
+              <button
+                onClick={handleRescheduleClass}
+                className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-lg hover:shadow-xl"
               >
-                <div className="flex justify-between items-center mb-2">
-                  <h4 className="font-medium">
-                    Session {session.sessionNumber}
-                  </h4>
-                  <div className="flex items-center space-x-2">
-                    <div
-                      className={`px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${getStatusColor(
-                        session.status
-                      )}`}
+                <CalendarPlus className="w-5 h-5" />
+                Reschedule Class
+              </button>
+            ) : (
+              <button
+                onClick={handleScheduleClass}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-lg hover:shadow-xl"
+              >
+                <CalendarPlus className="w-5 h-5" />
+                Schedule Class
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-blue-100 p-2 rounded-lg">
+                <Calendar className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-gray-900">
+                  {totalClasses}
+                </p>
+                <p className="text-sm text-gray-600">Total Classes</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-green-100 p-2 rounded-lg">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-gray-900">
+                  {completedClasses}
+                </p>
+                <p className="text-sm text-gray-600">Completed</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-amber-100 p-2 rounded-lg">
+                <Clock className="w-5 h-5 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-gray-900">
+                  {scheduledClasses}
+                </p>
+                <p className="text-sm text-gray-600">Upcoming</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-purple-100 p-2 rounded-lg">
+                <TrendingUp className="w-5 h-5 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-gray-900">
+                  {progressPercentage}%
+                </p>
+                <p className="text-sm text-gray-600">Progress</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Calendar Section */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+              {/* Calendar Header */}
+              <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold flex items-center gap-2">
+                    <Calendar className="w-5 h-5" />
+                    <span>Class Calendar</span>
+                  </h2>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setViewMode("month")}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                        viewMode === "month"
+                          ? "bg-white text-indigo-600"
+                          : "bg-indigo-500 hover:bg-indigo-400"
+                      }`}
                     >
-                      {getStatusIcon(session.status)}
-                      <span>{session.status}</span>
-                    </div>
-                    {/* {session.kidJoinUrl && (
-                      <button
-                        onClick={() =>
-                          handleJoinSession(
-                            session.kidJoinUrl,
-                            session.studentName
-                          )
-                        }
-                        disabled={joinLoading}
-                        className={`text-white px-4 py-2 rounded-md transition-colors flex items-center space-x-2 ${
-                          joinLoading
-                            ? "bg-gray-400 cursor-not-allowed"
-                            : "bg-green-600 hover:bg-green-700"
-                        }`}
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                        <span>
-                          {joinLoading ? "Joining Session..." : "Join Session"}
-                        </span>
-                      </button>
-                    )} */}
+                      <Grid className="w-4 h-4 inline mr-1" />
+                      Month
+                    </button>
+                    <button
+                      onClick={() => setViewMode("list")}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                        viewMode === "list"
+                          ? "bg-white text-indigo-600"
+                          : "bg-indigo-500 hover:bg-indigo-400"
+                      }`}
+                    >
+                      <List className="w-4 h-4 inline mr-1" />
+                      List
+                    </button>
                   </div>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <div className="flex items-center space-x-2 mb-2">
-                      <Clock className="w-4 h-4 text-gray-500" />
-                      <span>{session.startTime}</span>
-                    </div>
-                    <div className="flex items-center space-x-2 mb-2">
-                      <User className="w-4 h-4 text-gray-500" />
-                      <span>{session.coach}</span>
-                    </div>
-                    <div className="flex items-center space-x-2 mb-2">
-                      {session.type === "online" ? (
-                        <>
-                          <Video className="w-4 h-4 text-gray-500" />
-                          <span>Online Class</span>
-                        </>
-                      ) : (
-                        <>
-                          <MapPin className="w-4 h-4 text-gray-500" />
-                          <span>In-person Class</span>
-                        </>
-                      )}
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <MapPin className="w-4 h-4 text-gray-500" />
-                      <span className="text-sm">{session.center}</span>
-                    </div>
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => navigateMonth(-1)}
+                      className="p-2 hover:bg-indigo-500 rounded-lg transition-colors"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <span className="font-semibold text-lg min-w-[200px] text-center">
+                      {months[currentDate.getMonth()]}{" "}
+                      {currentDate.getFullYear()}
+                    </span>
+                    <button
+                      onClick={() => navigateMonth(1)}
+                      className="p-2 hover:bg-indigo-500 rounded-lg transition-colors"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
                   </div>
-
-                  <div>
-                    <div className="text-sm text-gray-600 mb-2">
-                      <span className="font-medium">Day:</span> {session.day}
-                    </div>
-                    <div className="text-sm text-gray-600 mb-2">
-                      <span className="font-medium">Program:</span>{" "}
-                      {session.program}
-                    </div>
-                    <div className="text-sm text-gray-600 mb-2">
-                      <span className="font-medium">Level:</span>{" "}
-                      {session.level}
-                    </div>
-                    <div className="text-sm text-gray-600 mb-2">
-                      <span className="font-medium">Session ID:</span>{" "}
-                      {session.sessionId}
-                    </div>
-                    <div className="text-sm text-gray-600 mb-2">
-                      <span className="font-medium">Student:</span>{" "}
-                      {session.studentName}
-                    </div>
+                  <div className="text-sm bg-indigo-500 px-3 py-1.5 rounded-lg">
+                    Selected:{" "}
+                    {selectedDate.toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    })}
                   </div>
                 </div>
               </div>
-            ))}
+
+              {/* Status Legend */}
+              <div className="bg-gray-50 px-6 py-3 border-b flex flex-wrap items-center gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                  <span>Scheduled</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  <span>Completed</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                  <span>Rescheduled</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                  <span>Cancelled</span>
+                </div>
+              </div>
+
+              {viewMode === "month" ? (
+                <div className="grid grid-cols-7">
+                  {daysOfWeek.map((day) => (
+                    <div
+                      key={day}
+                      className="py-3 text-center font-semibold text-gray-700 border-b border-gray-200 bg-gray-50"
+                    >
+                      {day}
+                    </div>
+                  ))}
+                  {renderCalendarDays()}
+                </div>
+              ) : (
+                <div className="p-6 max-h-96 overflow-y-auto">
+                  <div className="mb-4 flex items-center gap-3">
+                    <Filter className="w-4 h-4 text-gray-500" />
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm"
+                    >
+                      <option value="all">All Statuses</option>
+                      <option value="scheduled">Scheduled</option>
+                      <option value="completed">Completed</option>
+                      <option value="rescheduled">Rescheduled</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </div>
+
+                  {sessions.length > 0 ? (
+                    sessions
+                      .filter(
+                        (session) =>
+                          statusFilter === "all" ||
+                          session.status === statusFilter
+                      )
+                      .map((session) => (
+                        <div
+                          key={session._id}
+                          className={`p-4 mb-3 rounded-xl border-l-4 shadow-sm transition-all hover:shadow-md ${getStatusColor(
+                            session.status
+                          )}`}
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <div className="font-semibold text-lg mb-1">
+                                Session {session.sessionNumber}
+                              </div>
+                              <div className="text-sm text-gray-600 mb-2">
+                                {new Date(session.classDate).toLocaleDateString(
+                                  "en-US",
+                                  {
+                                    weekday: "long",
+                                    month: "long",
+                                    day: "numeric",
+                                    year: "numeric",
+                                  }
+                                )}
+                              </div>
+                              <div className="text-sm font-medium text-gray-700">
+                                {session.program} - {session.level}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div
+                                className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(
+                                  session.status
+                                )}`}
+                              >
+                                {getStatusIcon(session.status)}
+                                <span className="capitalize">
+                                  {session.status}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="mt-3 grid grid-cols-2 gap-4 text-sm">
+                            <div className="flex items-center gap-2">
+                              <Clock className="w-4 h-4 text-gray-500" />
+                              <span>{session.startTime}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <User className="w-4 h-4 text-gray-500" />
+                              <span>{session.coach}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {session.type === "online" ? (
+                                <Video className="w-4 h-4 text-gray-500" />
+                              ) : (
+                                <MapPin className="w-4 h-4 text-gray-500" />
+                              )}
+                              <span className="capitalize">
+                                {session.type} Class
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <MapPin className="w-4 h-4 text-gray-500" />
+                              <span className="truncate">{session.center}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                  ) : (
+                    <div className="text-center p-8 text-gray-500">
+                      <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                      <p>No sessions found</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-        ) : (
-          <div className="text-center p-8 bg-gray-50 rounded-lg border border-gray-200">
-            <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-            <p className="text-gray-500">No classes scheduled for this date</p>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Upcoming Classes */}
+            <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Clock className="w-5 h-5 text-indigo-600" />
+                Upcoming Classes
+              </h3>
+
+              {upcomingClasses.length > 0 ? (
+                <div className="space-y-4">
+                  {upcomingClasses.map((session) => (
+                    <div
+                      key={session._id}
+                      className="p-4 border border-gray-200 rounded-lg hover:border-indigo-300 transition-colors"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            Session {session.sessionNumber}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {new Date(session.classDate).toLocaleDateString(
+                              "en-US",
+                              {
+                                month: "short",
+                                day: "numeric",
+                              }
+                            )}
+                          </p>
+                        </div>
+                        {session.type === "online" ? (
+                          <Video className="w-4 h-4 text-blue-600" />
+                        ) : (
+                          <MapPin className="w-4 h-4 text-green-600" />
+                        )}
+                      </div>
+
+                      <div className="text-sm text-gray-600 mb-3">
+                        <p>{session.startTime}</p>
+                        <p>{session.coach}</p>
+                        <p className="text-xs text-gray-500">
+                          {session.program} - {session.level}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center p-4 text-gray-500">
+                  <Calendar className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                  <p className="text-sm">No upcoming classes</p>
+                </div>
+              )}
+            </div>
+
+            {/* Selected Date Details */}
+            <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                {selectedDate.toLocaleDateString("en-US", {
+                  weekday: "long",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </h3>
+
+              {filteredSessions.length > 0 ? (
+                <div className="space-y-4">
+                  {filteredSessions.map((session) => (
+                    <div
+                      key={session._id}
+                      className={`p-4 rounded-lg border-l-4 ${getStatusColor(
+                        session.status
+                      )}`}
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-medium">
+                          Session {session.sessionNumber}
+                        </h4>
+                        <div
+                          className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(
+                            session.status
+                          )}`}
+                        >
+                          {getStatusIcon(session.status)}
+                          <span className="capitalize">{session.status}</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2 text-sm text-gray-600">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4" />
+                          <span>{session.startTime}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4" />
+                          <span>{session.coach}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <BookOpen className="w-4 h-4" />
+                          <span>{session.program}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {session.type === "online" ? (
+                            <Video className="w-4 h-4" />
+                          ) : (
+                            <MapPin className="w-4 h-4" />
+                          )}
+                          <span className="capitalize">
+                            {session.type} Class
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center p-4 text-gray-500">
+                  <Calendar className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                  <p className="text-sm">No classes scheduled</p>
+                </div>
+              )}
+            </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

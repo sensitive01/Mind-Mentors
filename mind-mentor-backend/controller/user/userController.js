@@ -3466,7 +3466,10 @@ const getEnquiryRelatedAllKidData = async (req, res) => {
 const getSuperAdminDashboardData = async (req, res) => {
   try {
     const enqData = await enquiryData.find({ enquiryField: "enquiryList" });
-    const prospectData = await enquiryData.find({ enquiryField: "prospects" });
+    const prospectData = await enquiryData.find({
+      enquiryField: "prospects",
+      paymentStatus: { $ne: "Success" },
+    });
     const activeKids = await enquiryData.find({ paymentStatus: "Success" });
     const employeeData = await Employee.find();
     const physicalCenter = await PhysicalCenter.find();
