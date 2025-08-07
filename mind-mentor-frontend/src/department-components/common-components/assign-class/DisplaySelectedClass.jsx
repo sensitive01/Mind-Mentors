@@ -28,6 +28,7 @@ export default function DisplaySelectedClass() {
   const navigate = useNavigate();
   const { enqId } = useParams();
   const department = localStorage.getItem("department");
+  const empId = localStorage.getItem("empId")
   const [kidName, setKidName] = useState("");
   const [programData, setProgramData] = useState(null);
   const [data, setData] = useState([]);
@@ -248,7 +249,10 @@ export default function DisplaySelectedClass() {
         enqId,
         updatedData,
         pauseRemarks,
-        classId
+        classId,
+        pauseDate,
+        pauseEndDate,
+        empId
       );
       console.log("Pause API response:", response);
 
@@ -282,7 +286,7 @@ export default function DisplaySelectedClass() {
         updatedData.filter((session) => session.status === "scheduled")
       );
 
-      const response = await resumeTheClass(enqId, updatedData, classId);
+      const response = await resumeTheClass(enqId, updatedData, classId,empId);
 
       setData(updatedData);
       setIsPaused(false);

@@ -62,7 +62,7 @@ const NewEnquiryForm = () => {
     try {
       if (id) {
         // Update enquiry
-        await updateEnquiry(id, formData);
+        await updateEnquiry( formData,id);
       } else {
         // Create new enquiry
         await createEnquiry(formData);

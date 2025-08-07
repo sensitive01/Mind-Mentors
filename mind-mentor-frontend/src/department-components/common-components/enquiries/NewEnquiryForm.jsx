@@ -89,7 +89,7 @@ const NewEnquiryForm = () => {
     console.log("formData", formData);
     try {
       if (id) {
-        await updateEnquiry(id, formData);
+        await updateEnquiry(formData, id);
       } else {
         await createEnquiry(formData);
         toast.success("Enquiry submitted successfully!");

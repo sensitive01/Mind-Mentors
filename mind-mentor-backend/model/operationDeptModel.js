@@ -47,6 +47,7 @@ const operationDeptSchema = new mongoose.Schema(
 
     enquiryType: { type: String, enum: ["warm", "cold"], default: "warm" },
     enquiryStage: { type: String },
+    recomentedLevel: { type: String },
 
     enquiryStatus: {
       type: String,

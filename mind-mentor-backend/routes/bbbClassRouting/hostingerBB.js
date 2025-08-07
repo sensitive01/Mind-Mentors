@@ -91,6 +91,9 @@ router.post(
         .json({ error: "Class name and coach name are required" });
     }
 
+    const allClasses  =await ClassSchedule.find()
+    console.log("allClasses",allClasses)
+
     const classData = await ClassSchedule.findById(sheduledClassId);
     if (!classData) {
       return res.status(404).json({ error: "Scheduled class not found" });

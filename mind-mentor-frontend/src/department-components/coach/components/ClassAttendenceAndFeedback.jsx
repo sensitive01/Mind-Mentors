@@ -8,6 +8,7 @@ import {
   MessageCircle,
   Users,
   UserCheck,
+  TrendingUp,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -22,6 +23,16 @@ const ClassAttendanceAndFeedback = () => {
   const { classId } = useParams();
   const [classDetails, setClassDetails] = useState({});
 
+  // Available levels for students
+  const availableLevels = [
+    "Absolute Beginner",
+    "Lower Beginner", 
+    "Upper Beginner",
+    "Lower Intermediate",
+    "Upper Intermediate",
+    "Advanced"
+  ];
+
   useEffect(() => {
     const fetchclassData = async () => {
       const response = await getClassData(classId);
@@ -35,14 +46,23 @@ const ClassAttendanceAndFeedback = () => {
 
   const [attendance, setAttendance] = useState({});
   const [individualFeedback, setIndividualFeedback] = useState({});
+  const [studentLevelUpdates, setStudentLevelUpdates] = useState({});
   const [overallClassFeedback, setOverallClassFeedback] = useState("");
   const [showIndividualFeedbackInput, setShowIndividualFeedbackInput] = useState({});
+  const [showLevelUpdateInput, setShowLevelUpdateInput] = useState({});
   const [showOverallFeedback, setShowOverallFeedback] = useState(false);
 
   const toggleAttendance = (studentId) => {
     setAttendance((prev) => ({
       ...prev,
       [studentId]: !prev[studentId],
+    }));
+  };
+
+  const handleLevelUpdate = (studentId, newLevel) => {
+    setStudentLevelUpdates((prev) => ({
+      ...prev,
+      [studentId]: newLevel,
     }));
   };
 
@@ -58,6 +78,7 @@ const ClassAttendanceAndFeedback = () => {
       studentName: student.kidName,
       present: attendance[student.kidId] || false,
       feedback: individualFeedback[student.kidId] || "",
+      levelUpdate: studentLevelUpdates[student.kidId] || null, // Include level update
       studentType: classDetails?.selectedStudents?.find(s => s.kidId === student.kidId) ? 'regular' : 'demo'
     }));
 
@@ -93,6 +114,123 @@ const ClassAttendanceAndFeedback = () => {
 
   const regularStudentsCount = classDetails?.selectedStudents?.length || 0;
   const demoStudentsCount = classDetails?.demoAssignedKid?.length || 0;
+
+  const renderStudentCard = (student, isDemo = false) => (
+    <div
+      key={student.kidId}
+      className={`bg-white p-4 rounded-lg shadow border ${
+        isDemo ? 'border-green-200' : 'border-blue-200'
+      } transition-shadow hover:shadow-md`}
+    >
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex items-center gap-3">
+          <div className={`w-2 h-2 ${isDemo ? 'bg-green-500' : 'bg-blue-500'} rounded-full`}></div>
+          <h4 className="text-lg font-semibold">{student.kidName}</h4>
+          <span className={`text-xs ${
+            isDemo ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+          } px-2 py-1 rounded-full`}>
+            {isDemo ? 'Demo' : 'Regular'}
+          </span>
+          {student.currentLevel && (
+            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+              Current: {student.currentLevel}
+            </span>
+          )}
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={() => toggleAttendance(student.kidId)}
+            className={`px-4 py-2 rounded-md text-white transition-colors ${
+              attendance[student.kidId]
+                ? "bg-green-600 hover:bg-green-700"
+                : "bg-red-600 hover:bg-red-700"
+            }`}
+          >
+            {attendance[student.kidId] ? "Present" : "Absent"}
+          </button>
+          <button
+            onClick={() =>
+              setShowIndividualFeedbackInput((prev) => ({
+                ...prev,
+                [student.kidId]: !prev[student.kidId],
+              }))
+            }
+            className="px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-50 flex items-center gap-2"
+          >
+            <MessageCircle className="w-4 h-4" />
+            Feedback
+          </button>
+          <button
+            onClick={() =>
+              setShowLevelUpdateInput((prev) => ({
+                ...prev,
+                [student.kidId]: !prev[student.kidId],
+              }))
+            }
+            className="px-4 py-2 rounded-md border border-indigo-300 text-indigo-600 hover:bg-indigo-50 flex items-center gap-2"
+          >
+            <TrendingUp className="w-4 h-4" />
+            Update Level
+          </button>
+        </div>
+      </div>
+
+      {/* Individual Feedback Input */}
+      {showIndividualFeedbackInput[student.kidId] && (
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Individual Feedback
+          </label>
+          <textarea
+            className="w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            rows="3"
+            placeholder={`Enter individual feedback for ${student.kidName}...`}
+            value={individualFeedback[student.kidId] || ""}
+            onChange={(e) =>
+              setIndividualFeedback((prev) => ({
+                ...prev,
+                [student.kidId]: e.target.value,
+              }))
+            }
+          />
+        </div>
+      )}
+
+      {/* Level Update Input */}
+      {showLevelUpdateInput[student.kidId] && (
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Update Student Level (Optional)
+          </label>
+          <select
+            className="w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            value={studentLevelUpdates[student.kidId] || ""}
+            onChange={(e) => handleLevelUpdate(student.kidId, e.target.value)}
+          >
+            <option value="">-- Select New Level (Optional) --</option>
+            {availableLevels.map((level) => (
+              <option key={level} value={level}>
+                {level}
+              </option>
+            ))}
+          </select>
+          {studentLevelUpdates[student.kidId] && (
+            <div className="mt-2 p-2 bg-indigo-50 rounded text-sm">
+              <span className="text-indigo-700">
+                Level will be updated to: <strong>{studentLevelUpdates[student.kidId]}</strong>
+              </span>
+              <button
+                onClick={() => handleLevelUpdate(student.kidId, "")}
+                className="ml-2 text-indigo-600 hover:text-indigo-800 underline"
+              >
+                Clear
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="max-w-6xl mx-auto p-6">
@@ -187,62 +325,7 @@ const ClassAttendanceAndFeedback = () => {
                 <Users className="w-5 h-5 text-blue-600" />
                 Regular Students ({regularStudentsCount})
               </h3>
-
-              {classDetails?.selectedStudents?.map((student) => (
-                <div
-                  key={student.kidId}
-                  className="bg-white p-4 rounded-lg shadow border border-blue-200 transition-shadow hover:shadow-md"
-                >
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <h4 className="text-lg font-semibold">{student.kidName}</h4>
-                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Regular</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => toggleAttendance(student.kidId)}
-                        className={`px-4 py-2 rounded-md text-white transition-colors ${
-                          attendance[student.kidId]
-                            ? "bg-green-600 hover:bg-green-700"
-                            : "bg-red-600 hover:bg-red-700"
-                        }`}
-                      >
-                        {attendance[student.kidId] ? "Present" : "Absent"}
-                      </button>
-                      <button
-                        onClick={() =>
-                          setShowIndividualFeedbackInput((prev) => ({
-                            ...prev,
-                            [student.kidId]: !prev[student.kidId],
-                          }))
-                        }
-                        className="px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-50 flex items-center gap-2"
-                      >
-                        <MessageCircle className="w-4 h-4" />
-                        Individual Feedback
-                      </button>
-                    </div>
-                  </div>
-
-                  {showIndividualFeedbackInput[student.kidId] && (
-                    <div className="mt-4">
-                      <textarea
-                        className="w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        rows="3"
-                        placeholder="Enter individual feedback for this student..."
-                        value={individualFeedback[student.kidId] || ""}
-                        onChange={(e) =>
-                          setIndividualFeedback((prev) => ({
-                            ...prev,
-                            [student.kidId]: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                  )}
-                </div>
-              ))}
+              {classDetails?.selectedStudents?.map((student) => renderStudentCard(student, false))}
             </div>
           )}
 
@@ -253,62 +336,7 @@ const ClassAttendanceAndFeedback = () => {
                 <UserCheck className="w-5 h-5 text-green-600" />
                 Demo Students ({demoStudentsCount})
               </h3>
-
-              {classDetails?.demoAssignedKid?.map((student) => (
-                <div
-                  key={student.kidId}
-                  className="bg-white p-4 rounded-lg shadow border border-green-200 transition-shadow hover:shadow-md"
-                >
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <h4 className="text-lg font-semibold">{student.kidName}</h4>
-                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Demo</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => toggleAttendance(student.kidId)}
-                        className={`px-4 py-2 rounded-md text-white transition-colors ${
-                          attendance[student.kidId]
-                            ? "bg-green-600 hover:bg-green-700"
-                            : "bg-red-600 hover:bg-red-700"
-                        }`}
-                      >
-                        {attendance[student.kidId] ? "Present" : "Absent"}
-                      </button>
-                      <button
-                        onClick={() =>
-                          setShowIndividualFeedbackInput((prev) => ({
-                            ...prev,
-                            [student.kidId]: !prev[student.kidId],
-                          }))
-                        }
-                        className="px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-50 flex items-center gap-2"
-                      >
-                        <MessageCircle className="w-4 h-4" />
-                        Individual Feedback
-                      </button>
-                    </div>
-                  </div>
-
-                  {showIndividualFeedbackInput[student.kidId] && (
-                    <div className="mt-4">
-                      <textarea
-                        className="w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        rows="3"
-                        placeholder="Enter individual feedback for this demo student..."
-                        value={individualFeedback[student.kidId] || ""}
-                        onChange={(e) =>
-                          setIndividualFeedback((prev) => ({
-                            ...prev,
-                            [student.kidId]: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                  )}
-                </div>
-              ))}
+              {classDetails?.demoAssignedKid?.map((student) => renderStudentCard(student, true))}
             </div>
           )}
 

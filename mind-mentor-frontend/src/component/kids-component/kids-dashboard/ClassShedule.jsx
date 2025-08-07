@@ -1,4 +1,4 @@
-import { Calendar, Clock, Users, Video, X } from "lucide-react";
+import { Calendar, Clock, Rocket, Users, Video, X } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { getMyUpcomingClassData } from "../../../api/service/kid/KidService";
 
@@ -129,17 +129,18 @@ const KidsChessClassSchedule = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-primary/90 to-primary/70 flex items-center justify-center p-8">
-        <div className="text-center">
-          <div className="text-8xl animate-spin mb-6">♟️</div>
-          <h2 className="text-3xl font-bold text-purple-600 mb-4">
-            Loading your chess adventures...
+      <div className="flex flex-col justify-center items-center h-screen bg-gradient-to-r from-primary to-blue-400 animate-background">
+        <Rocket size={64} className="text-white animate-bounce mb-4" />
+        <div className="absolute animate-ping w-40 h-40 bg-blue-300 rounded-full opacity-50"></div>
+
+        {/* Kid-friendly message */}
+        <div className="text-center mt-8 z-10">
+          <h2 className="text-white text-2xl font-bold mb-2 animate-pulse">
+            🎈 No Class is Scheduled! 🎈
           </h2>
-          <div className="flex justify-center space-x-2">
-            <div className="w-4 h-4 bg-purple-400 rounded-full animate-bounce"></div>
-            <div className="w-4 h-4 bg-pink-400 rounded-full animate-bounce delay-100"></div>
-            <div className="w-4 h-4 bg-orange-400 rounded-full animate-bounce delay-200"></div>
-          </div>
+          <p className="text-white text-lg font-medium opacity-90">
+            Time to play and have fun! 🌟
+          </p>
         </div>
       </div>
     );

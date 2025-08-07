@@ -347,6 +347,8 @@ import CenterDetailedAttandance from "./pages/employee/centeradmin/CenterDetaile
 import CoachDetailedAttandance from "./pages/employee/coach/CoachDetailedAttandance";
 import ParentSheduleLiveClassPage from "./pages/parent/ParentSheduleLiveClassPage";
 import ParentResheduleTheClass from "./pages/parent/ParentResheduleTheClass";
+import InvoiceTemplate from "./department-components/invoicetemplate/InvoiceTemplate";
+import FinanceAccounting from "./department-components/financeexel/FinanceAccounting";
 
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
@@ -355,6 +357,9 @@ function App() {
     <>
       <Router>
         <Routes>
+          <Route path="/invoice-template" element={<InvoiceTemplate />} />
+          <Route path="/expense-tracker" element={<FinanceAccounting />} />
+
           <Route path="/class-feed-back" element={<ClassRatingComponent />} />
           <Route path="/thank-you-page" element={<ThankYouPage />} />
 
@@ -448,7 +453,10 @@ function App() {
             <Route path="kid" element={<ParentKidsDetailsPage />} />
             <Route path="add-kid/:isFromPackage" element={<AddKid />} />
             <Route path="kid/attendance/:id" element={<AttendancePage />} />
-            <Route path="kid/reshedule-sheduled-class/:kidId" element={<ParentResheduleTheClass />} />
+            <Route
+              path="kid/reshedule-sheduled-class/:kidId"
+              element={<ParentResheduleTheClass />}
+            />
 
             <Route
               path="kid/shedule-new-live-class/:kidId"

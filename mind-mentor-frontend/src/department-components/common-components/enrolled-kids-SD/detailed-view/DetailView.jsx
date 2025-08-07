@@ -53,6 +53,7 @@ const SectionTitle = ({ children }) => (
 const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
   const navigate = useNavigate();
   const department = localStorage.getItem("department");
+  const empId = localStorage.getItem("empId")
 
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [formData, setFormData] = useState(data);
@@ -72,7 +73,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
 
   const handleSave = async () => {
     console.log("Updated data:", formData);
-    const response = await updateEnquiry(formData);
+    const response = await updateEnquiry(formData,empId);
     console.log("Response0", response);
     if (response.status === 200) {
       onEditSave(response.data);
@@ -167,12 +168,8 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                 />
               </Grid>
 
-              <Grid item xs={12} md={3}>
-                <DetailCard title="ENQUIRY TYPE" value={data.enquiryType} />
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <DetailCard title="ENQUIRY FIELD" value={data.enquiryField} />
-              </Grid>
+       
+            
               {data.enquiryStatus === "Active" && !data.classAssigned && (
                 <Grid item xs={12} md={3} style={{ overflow: "visible" }}>
                   <DetailCard

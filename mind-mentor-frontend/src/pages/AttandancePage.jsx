@@ -50,12 +50,9 @@ const AttendancePage = () => {
                 Back
               </button>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-     
-
-                <div className="bg-white rounded-lg shadow-sm p-4 lg:col-span-2">
-                  <MenuGrid />
-                </div>
+              {/* Full width MenuGrid */}
+              <div className="bg-white rounded-lg shadow-sm p-4">
+                <MenuGrid />
               </div>
             </div>
           </div>

@@ -1,6 +1,8 @@
 /* eslint-disable react/prop-types */
 import { Plus, Trash2, X } from "lucide-react";
 import { useState, useEffect } from "react";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 import { getAllProgrameDataEnquiry } from "../../../../../api/service/employee/EmployeeService";
 
 const EditDialogBox = ({
@@ -14,6 +16,32 @@ const EditDialogBox = ({
   const [selectedCenter, setSelectedCenter] = useState("");
   const [availablePrograms, setAvailablePrograms] = useState([]);
   const [availableLevels, setAvailableLevels] = useState({});
+  const [isFetchingPincode, setIsFetchingPincode] = useState(false);
+
+  // Enhanced name change handlers
+  const handleParentNameChange = (value) => {
+    console.log("EditDialog - Parent name changed:", value);
+    const names = value.trim().split(" ");
+    const firstName = names[0] || "";
+    const lastName = names.slice(1).join(" ");
+
+    // Update all related fields
+    handleInputChange("parentName", value);
+    handleInputChange("parentFirstName", firstName);
+    handleInputChange("parentLastName", lastName);
+  };
+
+  const handleKidNameChange = (value) => {
+    console.log("EditDialog - Kid name changed:", value);
+    const names = value.trim().split(" ");
+    const firstName = names[0] || "";
+    const lastName = names.slice(1).join(" ");
+
+    // Update all related fields
+    handleInputChange("kidName", value);
+    handleInputChange("kidFirstName", firstName);
+    handleInputChange("kidLastName", lastName);
+  };
 
   // Fetch programs data on component mount
   useEffect(() => {
@@ -33,16 +61,87 @@ const EditDialogBox = ({
     }
   }, [showEdit]);
 
+  // Initialize program options when edit dialog opens and data is available
+  useEffect(() => {
+    if (showEdit && programsData.length > 0) {
+      // Create a flattened list of all unique programs from all centers
+      const allPrograms = programsData
+        .flatMap((center) => center.programLevels)
+        .filter(
+          (prog, index, arr) =>
+            arr.findIndex((p) => p.program === prog.program) === index
+        );
+
+      setAvailablePrograms(allPrograms);
+
+      // If there are existing programs in formData, find levels for each one
+      if (formData?.programs && formData.programs.length > 0) {
+        const newAvailableLevels = {};
+        formData.programs.forEach((program, index) => {
+          const programData = allPrograms.find(
+            (p) => p.program === program.program
+          );
+          if (programData) {
+            newAvailableLevels[index] = programData.levels;
+          }
+        });
+        setAvailableLevels(newAvailableLevels);
+      }
+    }
+  }, [showEdit, programsData, formData?.programs]);
+
+  // Fetch city and state based on pincode
+  const fetchPincodeDetails = async (pincode) => {
+    if (pincode.length === 6) {
+      setIsFetchingPincode(true);
+      try {
+        const response = await fetch(
+          `https://api.postalpincode.in/pincode/${pincode}`
+        );
+        const data = await response.json();
+
+        if (data[0].Status === "Success") {
+          const postOffice = data[0].PostOffice[0];
+          handleInputChange("city", postOffice.District);
+          handleInputChange("state", postOffice.State);
+        }
+      } catch (error) {
+        console.error("Error fetching pincode details:", error);
+      } finally {
+        setIsFetchingPincode(false);
+      }
+    }
+  };
+
+  // Handle pincode change
+  const handlePincodeChange = (e) => {
+    const value = e.target.value;
+    handleInputChange("pincode", value);
+
+    // Only fetch if pincode is 6 digits
+    if (value.length === 6) {
+      fetchPincodeDetails(value);
+    }
+  };
+
   // Handle center selection and update available programs
   const handleCenterChange = (centerId) => {
     setSelectedCenter(centerId);
     const selectedCenterData = programsData.find(
       (center) => center._id === centerId
     );
+
     if (selectedCenterData) {
       setAvailablePrograms(selectedCenterData.programLevels || []);
     } else {
-      setAvailablePrograms([]);
+      // If no center selected, show all programs
+      const allPrograms = programsData
+        .flatMap((center) => center.programLevels)
+        .filter(
+          (prog, index, arr) =>
+            arr.findIndex((p) => p.program === prog.program) === index
+        );
+      setAvailablePrograms(allPrograms);
     }
     setAvailableLevels({});
 
@@ -52,9 +151,20 @@ const EditDialogBox = ({
 
   // Handle program selection and update available levels for specific program
   const handleProgramChange = (programName, programIndex) => {
-    const selectedProgramData = availablePrograms.find(
+    // Find the program data from availablePrograms
+    let selectedProgramData = availablePrograms.find(
       (prog) => prog.program === programName
     );
+
+    // If not found in availablePrograms, search across all centers
+    if (!selectedProgramData) {
+      for (const center of programsData) {
+        selectedProgramData = center.programLevels.find(
+          (p) => p.program === programName
+        );
+        if (selectedProgramData) break;
+      }
+    }
 
     const newAvailableLevels = { ...availableLevels };
     if (selectedProgramData) {
@@ -66,10 +176,17 @@ const EditDialogBox = ({
 
     // Update the program in formData
     const updatedPrograms = [...(formData?.programs || [])];
+    const existingLevel = updatedPrograms[programIndex]?.level;
+
+    // Keep existing level if it's valid for the new program, otherwise use first available level
+    const validLevel = selectedProgramData?.levels?.includes(existingLevel)
+      ? existingLevel
+      : selectedProgramData?.levels?.[0] || "";
+
     updatedPrograms[programIndex] = {
       ...updatedPrograms[programIndex],
       program: programName,
-      level: "", // Reset level when program changes
+      level: validLevel,
     };
     handleInputChange("programs", updatedPrograms);
   };
@@ -143,9 +260,8 @@ const EditDialogBox = ({
                     type="text"
                     className="w-full p-2 border rounded-lg focus:ring-1 focus:ring-purple-500"
                     value={formData?.parentName || ""}
-                    onChange={(e) =>
-                      handleInputChange("parentName", e.target.value)
-                    }
+                    onChange={(e) => handleParentNameChange(e.target.value)}
+                    placeholder="Enter parent's full name"
                   />
                 </div>
                 <div>
@@ -163,39 +279,52 @@ const EditDialogBox = ({
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     WhatsApp Number
                   </label>
-                  <input
-                    type="text"
-                    className="w-full p-2 border rounded-lg focus:ring-1 focus:ring-purple-500"
+                  <PhoneInput
+                    country={"in"}
                     value={formData?.whatsappNumber || ""}
-                    onChange={(e) =>
-                      handleInputChange("whatsappNumber", e.target.value)
+                    onChange={(value) =>
+                      handleInputChange("whatsappNumber", value)
                     }
+                    inputStyle={{
+                      width: "100%",
+                      height: "42px",
+                      fontSize: "16px",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "8px",
+                    }}
+                    containerStyle={{
+                      width: "100%",
+                    }}
+                    buttonStyle={{
+                      border: "1px solid #d1d5db",
+                      borderRadius: "8px 0 0 8px",
+                    }}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Contact Number
                   </label>
-                  <input
-                    type="text"
-                    className="w-full p-2 border rounded-lg focus:ring-1 focus:ring-purple-500"
+                  <PhoneInput
+                    country={"in"}
                     value={formData?.contactNumber || ""}
-                    onChange={(e) =>
-                      handleInputChange("contactNumber", e.target.value)
+                    onChange={(value) =>
+                      handleInputChange("contactNumber", value)
                     }
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Address
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full p-2 border rounded-lg focus:ring-1 focus:ring-purple-500"
-                    value={formData?.address || ""}
-                    onChange={(e) =>
-                      handleInputChange("address", e.target.value)
-                    }
+                    inputStyle={{
+                      width: "100%",
+                      height: "42px",
+                      fontSize: "16px",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "8px",
+                    }}
+                    containerStyle={{
+                      width: "100%",
+                    }}
+                    buttonStyle={{
+                      border: "1px solid #d1d5db",
+                      borderRadius: "8px 0 0 8px",
+                    }}
                   />
                 </div>
               </div>
@@ -213,9 +342,8 @@ const EditDialogBox = ({
                     type="text"
                     className="w-full p-2 border rounded-lg focus:ring-1 focus:ring-purple-500"
                     value={formData?.kidName || ""}
-                    onChange={(e) =>
-                      handleInputChange("kidName", e.target.value)
-                    }
+                    onChange={(e) => handleKidNameChange(e.target.value)}
+                    placeholder="Enter kid's full name"
                   />
                 </div>
                 <div>
@@ -252,14 +380,18 @@ const EditDialogBox = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Pincode
+                    {isFetchingPincode && (
+                      <span className="text-blue-500 text-xs ml-2">
+                        Fetching location...
+                      </span>
+                    )}
                   </label>
                   <input
                     type="text"
                     className="w-full p-2 border rounded-lg focus:ring-1 focus:ring-purple-500"
                     value={formData?.pincode || ""}
-                    onChange={(e) =>
-                      handleInputChange("pincode", e.target.value)
-                    }
+                    onChange={handlePincodeChange}
+                    disabled={isFetchingPincode}
                   />
                 </div>
                 <div>
@@ -302,7 +434,7 @@ const EditDialogBox = ({
                     value={selectedCenter}
                     onChange={(e) => handleCenterChange(e.target.value)}
                   >
-                    <option value="">Select a center...</option>
+                    <option value="">All Centers</option>
                     {programsData.map((center) => (
                       <option key={center._id} value={center._id}>
                         {center.centerName} ({center.centerType})
@@ -318,30 +450,41 @@ const EditDialogBox = ({
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold">Programs</h3>
                 <button
-                  className="flex items-center gap-1 px-3 py-1 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1 px-3 py-1 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50"
                   onClick={addProgram}
-                  disabled={!selectedCenter && availablePrograms.length === 0}
                 >
                   <Plus size={16} />
                   Add Program
                 </button>
               </div>
 
-              {!selectedCenter && (
-                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-blue-700 text-sm">
-                    💡 Tip: Select a center above to get filtered program
-                    options, or add programs manually.
-                  </p>
-                </div>
-              )}
-
               <div className="space-y-4">
-                {formData?.programs?.map((program, index) => (
-                  <div key={index} className="p-4 border rounded-lg bg-gray-50">
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-                      <div className="md:col-span-5">
-                        {selectedCenter ? (
+                {formData?.programs?.map((program, index) => {
+                  // Find current program data to get available levels
+                  let currentProgramData = availablePrograms.find(
+                    (p) => p.program === program.program
+                  );
+
+                  // If not found in availablePrograms, search all centers
+                  if (!currentProgramData) {
+                    for (const center of programsData) {
+                      currentProgramData = center.programLevels.find(
+                        (p) => p.program === program.program
+                      );
+                      if (currentProgramData) break;
+                    }
+                  }
+
+                  const levelsForCurrentProgram =
+                    currentProgramData?.levels || [];
+
+                  return (
+                    <div
+                      key={index}
+                      className="p-4 border rounded-lg bg-gray-50"
+                    >
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                        <div className="md:col-span-5">
                           <select
                             className="w-full p-2 border rounded-lg focus:ring-1 focus:ring-purple-500"
                             value={program.program || ""}
@@ -356,22 +499,8 @@ const EditDialogBox = ({
                               </option>
                             ))}
                           </select>
-                        ) : (
-                          <input
-                            type="text"
-                            placeholder="Program Name"
-                            className="w-full p-2 border rounded-lg focus:ring-1 focus:ring-purple-500"
-                            value={program.program || ""}
-                            onChange={(e) => {
-                              const updatedPrograms = [...formData.programs];
-                              updatedPrograms[index].program = e.target.value;
-                              handleInputChange("programs", updatedPrograms);
-                            }}
-                          />
-                        )}
-                      </div>
-                      <div className="md:col-span-5">
-                        {selectedCenter && availableLevels[index] ? (
+                        </div>
+                        <div className="md:col-span-5">
                           <select
                             className="w-full p-2 border rounded-lg focus:ring-1 focus:ring-purple-500"
                             value={program.level || ""}
@@ -381,37 +510,27 @@ const EditDialogBox = ({
                             disabled={!program.program}
                           >
                             <option value="">Select Level</option>
-                            {availableLevels[index].map((level, levelIndex) => (
-                              <option key={levelIndex} value={level}>
-                                {level}
-                              </option>
-                            ))}
+                            {levelsForCurrentProgram.map(
+                              (level, levelIndex) => (
+                                <option key={levelIndex} value={level}>
+                                  {level}
+                                </option>
+                              )
+                            )}
                           </select>
-                        ) : (
-                          <input
-                            type="text"
-                            placeholder="Level"
-                            className="w-full p-2 border rounded-lg focus:ring-1 focus:ring-purple-500"
-                            value={program.level || ""}
-                            onChange={(e) => {
-                              const updatedPrograms = [...formData.programs];
-                              updatedPrograms[index].level = e.target.value;
-                              handleInputChange("programs", updatedPrograms);
-                            }}
-                          />
-                        )}
-                      </div>
-                      <div className="md:col-span-2 flex justify-end">
-                        <button
-                          onClick={() => removeProgram(index)}
-                          className="text-red-500 hover:text-red-600"
-                        >
-                          <Trash2 size={20} />
-                        </button>
+                        </div>
+                        <div className="md:col-span-2 flex justify-end">
+                          <button
+                            onClick={() => removeProgram(index)}
+                            className="text-red-500 hover:text-red-600"
+                          >
+                            <Trash2 size={20} />
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
 
                 {(!formData?.programs || formData.programs.length === 0) && (
                   <div className="text-center py-8 text-gray-500">
@@ -564,19 +683,6 @@ const EditDialogBox = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Remarks
-                  </label>
-                  <textarea
-                    className="w-full p-2 border rounded-lg focus:ring-1 focus:ring-purple-500 min-h-24 resize-none"
-                    placeholder="Enter remarks..."
-                    value={formData?.message || ""}
-                    onChange={(e) =>
-                      handleInputChange("message", e.target.value)
-                    }
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Notes
                   </label>
                   <textarea
                     className="w-full p-2 border rounded-lg focus:ring-1 focus:ring-purple-500 min-h-24 resize-none"

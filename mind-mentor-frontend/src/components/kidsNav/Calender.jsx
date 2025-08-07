@@ -17,6 +17,7 @@ import {
   Filter,
   TrendingUp,
   CalendarPlus,
+  Info,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -112,7 +113,7 @@ const ClassScheduleCalendar = () => {
     navigate(`/parent/kid/shedule-new-live-class/${id}`);
   };
 
-    const handleRescheduleClass = () => {
+  const handleRescheduleClass = () => {
     navigate(`/parent/kid/reshedule-sheduled-class/${id}`);
   };
 
@@ -340,6 +341,75 @@ const ClassScheduleCalendar = () => {
     );
   }
 
+  // Show simple no classes message when no sessions exist
+  if (sessions.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+        <div className="max-w-7xl mx-auto p-6">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                  Class Schedule
+                </h1>
+                <p className="text-gray-600">
+                  Track your child's learning journey
+                </p>
+              </div>
+
+              {showScheduleButton ? (
+                <button
+                  onClick={handleRescheduleClass}
+                  className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-lg hover:shadow-xl"
+                >
+                  <CalendarPlus className="w-5 h-5" />
+                  Reschedule Class
+                </button>
+              ) : (
+                <button
+                  onClick={handleScheduleClass}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-lg hover:shadow-xl"
+                >
+                  <CalendarPlus className="w-5 h-5" />
+                  Schedule Class
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* No Classes Message */}
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center max-w-md px-4">
+              <div className="mb-6">
+                <div className="mx-auto w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center">
+                  <Calendar className="w-10 h-10 text-gray-400" />
+                </div>
+              </div>
+              <h3 className="text-2xl font-semibold text-gray-800 mb-3">
+                No Classes Scheduled
+              </h3>
+              <p className="text-gray-600 mb-6">
+                You don't have any classes scheduled at the moment. Get started
+                by scheduling your first class!
+              </p>
+              {!showScheduleButton && (
+                <button
+                  onClick={handleScheduleClass}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-lg font-medium transition-colors inline-flex items-center gap-2"
+                >
+                  <CalendarPlus className="w-5 h-5" />
+                  Schedule Your First Class
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show full calendar interface when sessions exist
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
       <div className="max-w-7xl mx-auto p-6">
@@ -520,6 +590,7 @@ const ClassScheduleCalendar = () => {
                 </div>
               </div>
 
+              {/* Calendar Grid or List View */}
               {viewMode === "month" ? (
                 <div className="grid grid-cols-7">
                   {daysOfWeek.map((day) => (
@@ -549,86 +620,79 @@ const ClassScheduleCalendar = () => {
                     </select>
                   </div>
 
-                  {sessions.length > 0 ? (
-                    sessions
-                      .filter(
-                        (session) =>
-                          statusFilter === "all" ||
-                          session.status === statusFilter
-                      )
-                      .map((session) => (
-                        <div
-                          key={session._id}
-                          className={`p-4 mb-3 rounded-xl border-l-4 shadow-sm transition-all hover:shadow-md ${getStatusColor(
-                            session.status
-                          )}`}
-                        >
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <div className="font-semibold text-lg mb-1">
-                                Session {session.sessionNumber}
-                              </div>
-                              <div className="text-sm text-gray-600 mb-2">
-                                {new Date(session.classDate).toLocaleDateString(
-                                  "en-US",
-                                  {
-                                    weekday: "long",
-                                    month: "long",
-                                    day: "numeric",
-                                    year: "numeric",
-                                  }
-                                )}
-                              </div>
-                              <div className="text-sm font-medium text-gray-700">
-                                {session.program} - {session.level}
-                              </div>
+                  {sessions
+                    .filter(
+                      (session) =>
+                        statusFilter === "all" ||
+                        session.status === statusFilter
+                    )
+                    .map((session) => (
+                      <div
+                        key={session._id}
+                        className={`p-4 mb-3 rounded-xl border-l-4 shadow-sm transition-all hover:shadow-md ${getStatusColor(
+                          session.status
+                        )}`}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <div className="font-semibold text-lg mb-1">
+                              Session {session.sessionNumber}
                             </div>
-                            <div className="flex items-center gap-2">
-                              <div
-                                className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(
-                                  session.status
-                                )}`}
-                              >
-                                {getStatusIcon(session.status)}
-                                <span className="capitalize">
-                                  {session.status}
-                                </span>
-                              </div>
+                            <div className="text-sm text-gray-600 mb-2">
+                              {new Date(session.classDate).toLocaleDateString(
+                                "en-US",
+                                {
+                                  weekday: "long",
+                                  month: "long",
+                                  day: "numeric",
+                                  year: "numeric",
+                                }
+                              )}
+                            </div>
+                            <div className="text-sm font-medium text-gray-700">
+                              {session.program} - {session.level}
                             </div>
                           </div>
-
-                          <div className="mt-3 grid grid-cols-2 gap-4 text-sm">
-                            <div className="flex items-center gap-2">
-                              <Clock className="w-4 h-4 text-gray-500" />
-                              <span>{session.startTime}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <User className="w-4 h-4 text-gray-500" />
-                              <span>{session.coach}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {session.type === "online" ? (
-                                <Video className="w-4 h-4 text-gray-500" />
-                              ) : (
-                                <MapPin className="w-4 h-4 text-gray-500" />
-                              )}
+                          <div className="flex items-center gap-2">
+                            <div
+                              className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(
+                                session.status
+                              )}`}
+                            >
+                              {getStatusIcon(session.status)}
                               <span className="capitalize">
-                                {session.type} Class
+                                {session.status}
                               </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <MapPin className="w-4 h-4 text-gray-500" />
-                              <span className="truncate">{session.center}</span>
                             </div>
                           </div>
                         </div>
-                      ))
-                  ) : (
-                    <div className="text-center p-8 text-gray-500">
-                      <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                      <p>No sessions found</p>
-                    </div>
-                  )}
+
+                        <div className="mt-3 grid grid-cols-2 gap-4 text-sm">
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-gray-500" />
+                            <span>{session.startTime}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <User className="w-4 h-4 text-gray-500" />
+                            <span>{session.coach}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {session.type === "online" ? (
+                              <Video className="w-4 h-4 text-gray-500" />
+                            ) : (
+                              <MapPin className="w-4 h-4 text-gray-500" />
+                            )}
+                            <span className="capitalize">
+                              {session.type} Class
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <MapPin className="w-4 h-4 text-gray-500" />
+                            <span className="truncate">{session.center}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                 </div>
               )}
             </div>
@@ -753,7 +817,7 @@ const ClassScheduleCalendar = () => {
               ) : (
                 <div className="text-center p-4 text-gray-500">
                   <Calendar className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                  <p className="text-sm">No classes scheduled</p>
+                  <p className="text-sm">No classes scheduled for this date</p>
                 </div>
               )}
             </div>

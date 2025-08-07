@@ -14,7 +14,6 @@ import {
 import {
   PlayCircleOutline as LiveIcon,
   ScheduleOutlined as UpcomingIcon,
-  CheckCircleOutline as ConductedIcon,
 } from "@mui/icons-material";
 import {
   getMyClassData,
@@ -63,7 +62,6 @@ const TabPanel = ({ children, value, index, ...other }) => (
 const ScheduleKanban = () => {
   const [department, setDepartment] = useState(null);
   const [empId, setEmpId] = useState(null);
-  const [conductedClasses, setConductedClasses] = useState([]);
   const [liveClasses, setLiveClasses] = useState([]);
   const [upcomingClasses, setUpcomingClasses] = useState({});
   const [selectedClass, setSelectedClass] = useState(null);
@@ -218,8 +216,6 @@ const ScheduleKanban = () => {
           return parseTime(a.classTime) - parseTime(b.classTime);
         });
 
-        const currentConductedClasses = sortedClasses.filter(isConducted);
-        
         // For live classes, filter and modify to only include coach join URL
         const currentLiveClasses = sortedClasses
           .filter(isLiveToday)
@@ -255,7 +251,6 @@ const ScheduleKanban = () => {
             return acc;
           }, {});
 
-        setConductedClasses(currentConductedClasses);
         setLiveClasses(currentLiveClasses);
         setUpcomingClasses(sortedUpcomingClasses);
       } catch (error) {
@@ -325,7 +320,6 @@ const ScheduleKanban = () => {
         }}
       >
         <Container maxWidth="xl" sx={{ pt: 3 }}>
-
           {/* Main Content Card */}
           <Fade in={true} timeout={800}>
             <Paper
@@ -379,19 +373,6 @@ const ScheduleKanban = () => {
                     <Tab
                       icon={
                         <Badge
-                          badgeContent={conductedClasses.length}
-                          color="success"
-                          max={99}
-                        >
-                          <ConductedIcon sx={{ fontSize: 28 }} />
-                        </Badge>
-                      }
-                      label="Conducted Classes"
-                      iconPosition="top"
-                    />
-                    <Tab
-                      icon={
-                        <Badge
                           badgeContent={liveClasses.length}
                           color="error"
                           max={99}
@@ -400,8 +381,12 @@ const ScheduleKanban = () => {
                           <LiveIcon
                             sx={{
                               fontSize: 28,
-                              color: liveClasses.length > 0 ? "#ff4444" : "inherit",
-                              animation: liveClasses.length > 0 ? "pulse 2s infinite" : "none",
+                              color:
+                                liveClasses.length > 0 ? "#ff4444" : "inherit",
+                              animation:
+                                liveClasses.length > 0
+                                  ? "pulse 2s infinite"
+                                  : "none",
                             }}
                           />
                         </Badge>
@@ -435,39 +420,19 @@ const ScheduleKanban = () => {
                   {loading ? (
                     <Box sx={{ textAlign: "center", py: 8 }}>
                       <Typography variant="h6" color="text.secondary">
-                        Loading conducted classes...
-                      </Typography>
-                    </Box>
-                  ) : conductedClasses.length > 0 ? (
-                    <RenderClassList
-                      classes={conductedClasses}
-                      handleCardClick={handleCardClick}
-                    />
-                  ) : (
-                    <Box sx={{ textAlign: "center", py: 8 }}>
-                      <ConductedIcon
-                        sx={{ fontSize: 64, color: "text.disabled", mb: 2 }}
-                      />
-                      <Typography variant="h6" color="text.secondary" gutterBottom>
-                        No Conducted Classes Found
-                      </Typography>
-                      <Typography variant="body2" color="text.disabled">
-                        Classes you've completed will appear here
-                      </Typography>
-                    </Box>
-                  )}
-                </TabPanel>
-
-                <TabPanel value={currentTab} index={1}>
-                  {loading ? (
-                    <Box sx={{ textAlign: "center", py: 8 }}>
-                      <Typography variant="h6" color="text.secondary">
                         Checking for live classes...
                       </Typography>
                     </Box>
                   ) : liveClasses.length > 0 ? (
                     <Box>
-                      <Box sx={{ mb: 3, display: "flex", alignItems: "center", gap: 2 }}>
+                      <Box
+                        sx={{
+                          mb: 3,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 2,
+                        }}
+                      >
                         <Chip
                           icon={<LiveIcon />}
                           label="LIVE NOW"
@@ -484,7 +449,9 @@ const ScheduleKanban = () => {
                           }}
                         />
                         <Typography variant="body2" color="text.secondary">
-                          {liveClasses.length} class{liveClasses.length > 1 ? "es" : ""} currently active - Coach access only
+                          {liveClasses.length} class
+                          {liveClasses.length > 1 ? "es" : ""} currently active
+                          - Coach access only
                         </Typography>
                       </Box>
                       <RenderClassList
@@ -498,7 +465,11 @@ const ScheduleKanban = () => {
                       <LiveIcon
                         sx={{ fontSize: 64, color: "text.disabled", mb: 2 }}
                       />
-                      <Typography variant="h6" color="text.secondary" gutterBottom>
+                      <Typography
+                        variant="h6"
+                        color="text.secondary"
+                        gutterBottom
+                      >
                         No Live Classes Right Now
                       </Typography>
                       <Typography variant="body2" color="text.disabled">
@@ -508,7 +479,7 @@ const ScheduleKanban = () => {
                   )}
                 </TabPanel>
 
-                <TabPanel value={currentTab} index={2}>
+                <TabPanel value={currentTab} index={1}>
                   {loading ? (
                     <Box sx={{ textAlign: "center", py: 8 }}>
                       <Typography variant="h6" color="text.secondary">
@@ -525,7 +496,11 @@ const ScheduleKanban = () => {
                       <UpcomingIcon
                         sx={{ fontSize: 64, color: "text.disabled", mb: 2 }}
                       />
-                      <Typography variant="h6" color="text.secondary" gutterBottom>
+                      <Typography
+                        variant="h6"
+                        color="text.secondary"
+                        gutterBottom
+                      >
                         No Upcoming Classes
                       </Typography>
                       <Typography variant="body2" color="text.disabled">
@@ -549,9 +524,15 @@ const ScheduleKanban = () => {
         {/* Add pulse animation for live indicator */}
         <style jsx>{`
           @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
+            0% {
+              opacity: 1;
+            }
+            50% {
+              opacity: 0.7;
+            }
+            100% {
+              opacity: 1;
+            }
           }
         `}</style>
       </Box>

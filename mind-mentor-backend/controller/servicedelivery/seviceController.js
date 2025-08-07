@@ -670,7 +670,7 @@ const getActiveKidAndClassData = async (req, res) => {
       paymentStatus: "Success",
       isClassAdded: false,
     });
-    console.log("paymentClassData",paymentClassData);
+    console.log("paymentClassData", paymentClassData);
 
     if (!paymentClassData) {
       return res.status(404).json({
@@ -988,21 +988,45 @@ const pauseTheClassTemporary = async (req, res) => {
   try {
     console.log("Welcome to pause the class", req.body);
 
-    const { enqId, classId } = req.params;
-    const { updatedData, pauseRemarks } = req.body;
+    const { enqId, classId, empId } = req.params;
+    const { updatedData, pauseRemarks, pauseStartDate, pauseEndDate } = req.body;
+
+    // ✅ Format date as DD-MM-YYYY
+    const formatDate = (dateStr) => {
+      const date = new Date(dateStr);
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      return `${day}-${month}-${year}`;
+    };
+
+    const formattedStartDate = formatDate(pauseStartDate);
+    const formattedEndDate = formatDate(pauseEndDate);
+
+    // ✅ Get employee data
+    const empData = await Employee.findOne(
+      { _id: empId },
+      { firstName: 1, department: 1 }
+    );
+
+    // ✅ Get existing class schedule
     const exisitingData = await SelectedClass.findOne(
       { _id: classId },
       { generatedSchedule: 1 }
     );
+
     console.log("existing Data", exisitingData);
     console.log("updatedData", updatedData);
 
+    // ✅ Update class with schedule and pause dates
     const updatedClass = await SelectedClass.findOneAndUpdate(
       { _id: classId },
       {
         $set: {
           generatedSchedule: updatedData,
           pauseRemarks,
+          pauseStartDate,
+          pauseEndDate,
         },
       },
       { new: true }
@@ -1011,6 +1035,22 @@ const pauseTheClassTemporary = async (req, res) => {
     if (!updatedClass) {
       return res.status(404).json({ message: "Class not found" });
     }
+
+    // ✅ Push formatted comment to logs
+    await enquiryLogs.updateOne(
+      { enqId: enqId },
+      {
+        $push: {
+          logs: {
+            employeeName: empData.firstName,
+            department: empData.department,
+            comment: `Due to ${pauseRemarks}, the classes are paused from ${formattedStartDate} to ${formattedEndDate}.`,
+            action: "",
+          },
+        },
+      },
+      { upsert: true }
+    );
 
     console.log("Updated class", updatedClass);
 
@@ -1027,10 +1067,15 @@ const pauseTheClassTemporary = async (req, res) => {
   }
 };
 
+
 const resumeTheClassBack = async (req, res) => {
   try {
-    const { enqId, classId } = req.params;
+    const { enqId, classId,empId } = req.params;
     const { updatedData, pauseRemarks } = req.body;
+    const empData = await Employee.findOne(
+      { _id: empId },
+      { firstName: 1, department: 1 }
+    );
 
     const updatedClass = await SelectedClass.findOneAndUpdate(
       { _id: classId },
@@ -1047,7 +1092,20 @@ const resumeTheClassBack = async (req, res) => {
       return res.status(404).json({ message: "Class not found" });
     }
 
-    console.log("Updated class", updatedClass);
+     await enquiryLogs.updateOne(
+      { enqId: enqId },
+      {
+        $push: {
+          logs: {
+            employeeName: empData.firstName,
+            department: empData.department,
+            comment: `The paused classes are resumed `,
+            action: "",
+          },
+        },
+      },
+      { upsert: true }
+    );
 
     res.status(200).json({
       message: "Class Resumed successfully",

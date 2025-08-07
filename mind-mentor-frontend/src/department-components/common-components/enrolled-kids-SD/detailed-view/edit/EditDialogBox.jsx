@@ -249,22 +249,7 @@ const EditDialogBox = ({
             <div>
               <h3 className="text-lg font-semibold mb-4">Status Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Enquiry Field
-                  </label>
-                  <select
-                    className="w-full p-2 border rounded-lg focus:ring-1 focus:ring-purple-500"
-                    value={formData?.enquiryField || ""}
-                    onChange={(e) =>
-                      handleInputChange("enquiryField", e.target.value)
-                    }
-                  >
-                    <option value="">Select Enquiry Field</option>
-                    <option value="enquiryList">Enquiry List</option>
-                    <option value="prospects">Prospects</option>
-                  </select>
-                </div>
+             
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Payment Status
@@ -353,22 +338,7 @@ const EditDialogBox = ({
                     <option value="Unqualified Lead">Unqualified Lead</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Enquiry Type
-                  </label>
-                  <select
-                    className="w-full p-2 border rounded-lg focus:ring-1 focus:ring-purple-500"
-                    value={formData?.enquiryType || ""}
-                    onChange={(e) =>
-                      handleInputChange("enquiryType", e.target.value)
-                    }
-                  >
-                    <option value="">Select Enquiry Type</option>
-                    <option value="warm">Warm</option>
-                    <option value="cold">Cold</option>
-                  </select>
-                </div>
+              
               </div>
             </div>
 

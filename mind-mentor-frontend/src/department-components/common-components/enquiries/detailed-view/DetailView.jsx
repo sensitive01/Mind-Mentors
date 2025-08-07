@@ -69,6 +69,7 @@ const SectionTitle = ({ children }) => (
 );
 
 const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
+  const empId = localStorage.getItem("empId");
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [formData, setFormData] = useState(data);
   const [programsData, setProgramsData] = useState([]);
@@ -77,6 +78,33 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
   const [availableLevels, setAvailableLevels] = useState([]);
   const [isFetchingPincode, setIsFetchingPincode] = useState(false);
 
+  // Helper functions for name handling
+  const getCombinedName = (firstName, lastName) => {
+    if (!firstName && !lastName) return "";
+    return `${firstName || ""} ${lastName || ""}`.trim();
+  };
+
+  const getDisplayParentName = (data) => {
+    if (data.parentName) return data.parentName;
+    return getCombinedName(data.parentFirstName, data.parentLastName);
+  };
+
+  const getDisplayKidName = (data) => {
+    if (data.kidName) return data.kidName;
+    return getCombinedName(data.kidFirstName, data.kidLastName);
+  };
+
+  const getParentFormDisplayName = () => {
+    if (formData.parentName) return formData.parentName;
+    return getCombinedName(formData.parentFirstName, formData.parentLastName);
+  };
+
+  const getKidFormDisplayName = () => {
+    if (formData.kidName) return formData.kidName;
+    return getCombinedName(formData.kidFirstName, formData.kidLastName);
+  };
+
+  // Fetch all programs data
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -92,9 +120,36 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
     fetchData();
   }, []);
 
+  // Update formData when data prop changes
   useEffect(() => {
     setFormData(data);
   }, [data]);
+
+  // Initialize program options when edit dialog opens and data is available
+  useEffect(() => {
+    if (showEdit && programsData.length > 0) {
+      // Create a flattened list of all unique programs from all centers
+      const allPrograms = programsData
+        .flatMap((center) => center.programLevels)
+        .filter(
+          (prog, index, arr) =>
+            arr.findIndex((p) => p.program === prog.program) === index
+        );
+
+      setAvailablePrograms(allPrograms);
+
+      // If there are existing programs in formData, find levels for the first one
+      if (formData.programs && formData.programs.length > 0) {
+        const firstProgram = formData.programs[0];
+        const programData = allPrograms.find(
+          (p) => p.program === firstProgram.program
+        );
+        if (programData) {
+          setAvailableLevels(programData.levels);
+        }
+      }
+    }
+  }, [showEdit, programsData, formData.programs]);
 
   // Fetch city and state based on pincode
   const fetchPincodeDetails = async (pincode) => {
@@ -162,30 +217,55 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
 
       handleInputChange("programs", updatedPrograms);
     } else {
-      setAvailablePrograms([]);
+      // If no center selected, show all programs
+      const allPrograms = programsData
+        .flatMap((center) => center.programLevels)
+        .filter(
+          (prog, index, arr) =>
+            arr.findIndex((p) => p.program === prog.program) === index
+        );
+      setAvailablePrograms(allPrograms);
       setAvailableLevels([]);
     }
   };
 
-  // Handle program selection and update available levels
+  // Updated handleProgramChange function
   const handleProgramChange = (programName, programIndex) => {
-    const selectedProgramData = availablePrograms.find(
+    // Find the program data from availablePrograms
+    let selectedProgramData = availablePrograms.find(
       (prog) => prog.program === programName
     );
 
+    // If not found in availablePrograms, search across all centers
+    if (!selectedProgramData) {
+      for (const center of programsData) {
+        selectedProgramData = center.programLevels.find(
+          (p) => p.program === programName
+        );
+        if (selectedProgramData) break;
+      }
+    }
+
+    // Update available levels for this program
     if (selectedProgramData) {
       setAvailableLevels(selectedProgramData.levels || []);
-    } else {
-      setAvailableLevels([]);
     }
 
     // Update the program in formData
     const updatedPrograms = [...(formData.programs || [])];
+    const existingLevel = updatedPrograms[programIndex]?.level;
+
+    // Keep existing level if it's valid for the new program, otherwise use first available level
+    const validLevel = selectedProgramData?.levels?.includes(existingLevel)
+      ? existingLevel
+      : selectedProgramData?.levels?.[0] || "";
+
     updatedPrograms[programIndex] = {
       ...updatedPrograms[programIndex],
       program: programName,
-      level: selectedProgramData?.levels?.[0] || "", // Set to first level or empty
+      level: validLevel,
     };
+
     handleInputChange("programs", updatedPrograms);
   };
 
@@ -193,13 +273,67 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
     setIsEditOpen(false);
   };
 
+  // Enhanced input change handler for names
   const handleInputChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (field === "parentName") {
+      const names = value.trim().split(" ");
+      const firstName = names[0] || "";
+      const lastName = names.slice(1).join(" ");
+
+      // Update both combined and separate fields
+      setFormData((prev) => ({
+        ...prev,
+        parentName: value,
+        parentFirstName: firstName,
+        parentLastName: lastName,
+      }));
+    } else if (field === "kidName") {
+      const names = value.trim().split(" ");
+      const firstName = names[0] || "";
+      const lastName = names.slice(1).join(" ");
+
+      // Update both combined and separate fields
+      setFormData((prev) => ({
+        ...prev,
+        kidName: value,
+        kidFirstName: firstName,
+        kidLastName: lastName,
+      }));
+    } else if (field === "parentFirstName" || field === "parentLastName") {
+      setFormData((prev) => {
+        const newFirstName =
+          field === "parentFirstName" ? value : prev.parentFirstName;
+        const newLastName =
+          field === "parentLastName" ? value : prev.parentLastName;
+        const combinedName = getCombinedName(newFirstName, newLastName);
+
+        return {
+          ...prev,
+          [field]: value,
+          parentName: combinedName,
+        };
+      });
+    } else if (field === "kidFirstName" || field === "kidLastName") {
+      setFormData((prev) => {
+        const newFirstName =
+          field === "kidFirstName" ? value : prev.kidFirstName;
+        const newLastName = field === "kidLastName" ? value : prev.kidLastName;
+        const combinedName = getCombinedName(newFirstName, newLastName);
+
+        return {
+          ...prev,
+          [field]: value,
+          kidName: combinedName,
+        };
+      });
+    } else {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+    }
   };
 
   const handleSave = async () => {
     console.log("Updated data:", formData);
-    const response = await updateEnquiry(formData);
+    const response = await updateEnquiry(formData, empId);
     console.log("Response0", response);
     if (response.status === 200) {
       onEditSave(response.data);
@@ -218,7 +352,10 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
             <SectionTitle>Parent Information</SectionTitle>
             <Grid container spacing={3}>
               <Grid item xs={12} md={3}>
-                <DetailCard title="PARENT NAME" value={data.parentName} />
+                <DetailCard
+                  title="PARENT NAME"
+                  value={getDisplayParentName(data)}
+                />
               </Grid>
               <Grid item xs={12} md={3}>
                 <DetailCard title="EMAIL" value={formatEmail(data.email)} />
@@ -246,7 +383,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
             <SectionTitle>Kid Information</SectionTitle>
             <Grid container spacing={3}>
               <Grid item xs={12} md={3}>
-                <DetailCard title="KID NAME" value={data.kidName} />
+                <DetailCard title="KID NAME" value={getDisplayKidName(data)} />
               </Grid>
               <Grid item xs={12} md={3}>
                 <DetailCard title="AGE" value={data.kidsAge} />
@@ -289,7 +426,10 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                 <DetailCard title="ENQUIRY FIELD" value={data.enquiryField} />
               </Grid>
               <Grid item xs={12} md={3}>
-                <DetailCard title="PAYMENT STATUS" value={data.paymentStatus} />
+                <DetailCard
+                  title="PAYMENT STATUS"
+                  value={data.paymentStatus || data.payment}
+                />
               </Grid>
               <Grid item xs={12} md={3}>
                 <DetailCard title="SOURCE" value={data.source} />
@@ -334,7 +474,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                     Remarks
                   </Typography>
                   <Typography variant="body1">
-                    {data.message || "No messages"}
+                    {data.message || data.notes || "No messages"}
                   </Typography>
                 </Box>
               </Grid>
@@ -353,7 +493,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                     Notes
                   </Typography>
                   <Typography variant="body1">
-                    {data.notes || "No notes"}
+                    {data.notes || data.message || "No notes"}
                   </Typography>
                 </Box>
               </Grid>
@@ -414,24 +554,25 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                 Parent Information
               </Typography>
               <Grid container spacing={2}>
+                {/* Combined Parent Name Field */}
                 <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth
                     label="Parent Name"
-                    value={formData.parentName || ""}
+                    value={getParentFormDisplayName()}
                     onChange={(e) =>
                       handleInputChange("parentName", e.target.value)
                     }
-                    multiline
+                    placeholder="Enter full name"
                   />
                 </Grid>
+
                 <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth
                     label="Email"
                     value={formData.email || ""}
                     onChange={(e) => handleInputChange("email", e.target.value)}
-                    multiline
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
@@ -501,17 +642,19 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                 Kid Information
               </Typography>
               <Grid container spacing={2}>
+                {/* Combined Kid Name Field */}
                 <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth
                     label="Kid Name"
-                    value={formData.kidName || ""}
+                    value={getKidFormDisplayName()}
                     onChange={(e) =>
                       handleInputChange("kidName", e.target.value)
                     }
-                    multiline
+                    placeholder="Enter full name"
                   />
                 </Grid>
+
                 <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth
@@ -520,7 +663,6 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                     onChange={(e) =>
                       handleInputChange("kidsAge", e.target.value)
                     }
-                    multiline
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
@@ -543,7 +685,6 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                     label="Pincode"
                     value={formData.pincode || ""}
                     onChange={handlePincodeChange}
-                    multiline
                     disabled={isFetchingPincode}
                     helperText={isFetchingPincode ? "Fetching location..." : ""}
                   />
@@ -555,7 +696,6 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                     label="City"
                     value={formData.city || ""}
                     onChange={(e) => handleInputChange("city", e.target.value)}
-                    multiline
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
@@ -564,7 +704,6 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                     label="State"
                     value={formData.state || ""}
                     onChange={(e) => handleInputChange("state", e.target.value)}
-                    multiline
                   />
                 </Grid>
               </Grid>
@@ -593,7 +732,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                       label="Select Center"
                     >
                       <MenuItem value="">
-                        <em>None</em>
+                        <em>All Centers</em>
                       </MenuItem>
                       {programsData.map((center) => (
                         <MenuItem key={center._id} value={center._id}>
@@ -630,17 +769,27 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                     ];
                     handleInputChange("programs", updatedPrograms);
                   }}
-                  disabled={formData.programs?.length > 0} // Disable if at least one program exists
                 >
                   Add Program
                 </Button>
               </Box>
 
               {formData.programs?.map((program, index) => {
-                // Get available programs for the current program selection
-                const currentProgramData = availablePrograms.find(
+                // Find current program data to get available levels
+                let currentProgramData = availablePrograms.find(
                   (p) => p.program === program.program
                 );
+
+                // If not found in availablePrograms, search all centers
+                if (!currentProgramData) {
+                  for (const center of programsData) {
+                    currentProgramData = center.programLevels.find(
+                      (p) => p.program === program.program
+                    );
+                    if (currentProgramData) break;
+                  }
+                }
+
                 const levelsForCurrentProgram =
                   currentProgramData?.levels || [];
 
@@ -757,10 +906,11 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                       Payment Status
                     </InputLabel>
                     <Select
-                      value={formData.payment || ""}
-                      onChange={(e) =>
-                        handleInputChange("payment", e.target.value)
-                      }
+                      value={formData.payment || formData.paymentStatus || ""}
+                      onChange={(e) => {
+                        handleInputChange("payment", e.target.value);
+                        handleInputChange("paymentStatus", e.target.value);
+                      }}
                       label="Payment"
                       disabled
                     >

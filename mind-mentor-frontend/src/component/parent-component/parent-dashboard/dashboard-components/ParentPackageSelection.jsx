@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { CheckCircle, X } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import {
   fetchParentPackageDetails,
+  getMyKidData,
   getTheEnqId,
   parentSelectPackageData,
   setProgramAndLevel,
@@ -17,8 +18,7 @@ import {
   getPParentDiscountAmount,
 } from "../../../../api/service/employee/EmployeeService";
 
-const ParentPackageSelection = () => {
-  const { kidId } = useParams();
+const HomeKidPackageSelection = () => {
   const navigate = useNavigate();
   const parentId = localStorage.getItem("parentId");
   const [packageType, setPackageType] = useState("");
@@ -28,16 +28,17 @@ const ParentPackageSelection = () => {
     hybrid: [],
     kit: [],
   });
-
+  const [selectedKid, setSelectedKid] = useState("");
+  const [kidsList, setKidsList] = useState([]);
   const [selectedCenter, setSelectedCenter] = useState("");
   const [centersList, setCentersList] = useState([]);
   const [enqId, setEnqId] = useState(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState("");
   const [availableCenters, setAvailableCenters] = useState([]);
   const [classRate, setClassRate] = useState(0);
-  const [numberOfClasses, setNumberOfClasses] = useState(4);
-  const [onlineClasses, setOnlineClasses] = useState(4);
-  const [offlineClasses, setOfflineClasses] = useState(4);
+  const [numberOfClasses, setNumberOfClasses] = useState(8); // Changed from 4 to 8
+  const [onlineClasses, setOnlineClasses] = useState(8); // Changed from 4 to 8
+  const [offlineClasses, setOfflineClasses] = useState(8); // Changed from 4 to 8
   const [onlineRate, setOnlineRate] = useState(100);
   const [offlineRate, setOfflineRate] = useState(125);
   const [kitItems, setKitItems] = useState([{ name: "", quantity: 0 }]);
@@ -48,19 +49,26 @@ const ParentPackageSelection = () => {
   const [paymentId, setPaymentId] = useState("");
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [selectedCenterAddress, setSelectedCenterAddress] = useState("");
+
   const [data, setData] = useState({
-    kidId: kidId,
+    kidId: "",
     kidName: "",
     whatsappNumber: "",
     programs: [],
   });
+  const [isLoading, setIsLoading] = useState(true);
 
-  // New state for program selection
-  const [allPrograms, setAllPrograms] = useState([]);
+  // New state variables for program selection
+  const [showProgramSelection, setShowProgramSelection] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("");
-  const [showProgramSelection, setShowProgramSelection] = useState(false);
+  const [availableLevels, setAvailableLevels] = useState([]);
+  const [allPrograms, setAllPrograms] = useState([]);
+  const [viewOnlyMode, setViewOnlyMode] = useState(false);
+  const hasValidProgram =
+    selectedProgram || (data.programs && data.programs.length > 0);
 
+  // Helper function to format time display
   const getTimeSlotDisplay = (timeSlot) => {
     if (timeSlot === "day") {
       return "10:30 AM - 7:30 PM (Day)";
@@ -70,30 +78,375 @@ const ParentPackageSelection = () => {
     return timeSlot;
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const response = await getPParentDiscountAmount(parentId, kidId);
-      console.log(response);
-      if (response.status === 200) {
-        setDiscount(response.data.discountAmount);
-      }
-    };
-    fetchData();
-  }, []);
+  // Helper function to find the correct package and pricing based on number of classes
+  const findPackageForClasses = (
+    packages,
+    numberOfClasses,
+    timeSlot,
+    centerId = null
+  ) => {
+    // Filter packages by time slot first
+    const timeFilteredPackages = packages.filter((pkg) => {
+      const packageTimeSlot = pkg.packageName.toLowerCase().includes("night")
+        ? "night"
+        : "day";
+      return packageTimeSlot === timeSlot;
+    });
 
-  useEffect(() => {
-    const fetchPrograms = async () => {
-      const response = await getAllProgrameData();
-      if (response.status === 200) {
-        setAllPrograms(response.data.programs);
-      }
-    };
-    fetchPrograms();
-  }, []);
+    // Find the package range that the numberOfClasses falls into
+    const applicablePackage = timeFilteredPackages.find((pkg) => {
+      return (
+        numberOfClasses >= pkg.classStartFrom &&
+        numberOfClasses <= pkg.classUpTo
+      );
+    });
 
+    if (applicablePackage) {
+      return {
+        oneClassPrice: applicablePackage.oneClassPrice,
+        packageData: applicablePackage,
+      };
+    }
+
+    // If no exact range found, use the closest higher range or default logic
+    const sortedPackages = timeFilteredPackages.sort(
+      (a, b) => a.classStartFrom - b.classStartFrom
+    );
+
+    for (let pkg of sortedPackages) {
+      if (numberOfClasses <= pkg.classUpTo) {
+        return {
+          oneClassPrice: pkg.oneClassPrice,
+          packageData: pkg,
+        };
+      }
+    }
+
+    // If numberOfClasses is higher than any range, use the highest range pricing
+    if (sortedPackages.length > 0) {
+      return {
+        oneClassPrice: sortedPackages[sortedPackages.length - 1].oneClassPrice,
+        packageData: sortedPackages[sortedPackages.length - 1],
+      };
+    }
+
+    // Fallback
+    return {
+      oneClassPrice: 0,
+      packageData: null,
+    };
+  };
+
+  // Helper function for offline packages (different structure)
+  const findOfflinePackageForClasses = (
+    offlinePackages,
+    numberOfClasses,
+    timeSlot,
+    centerId
+  ) => {
+    if (offlinePackages.length === 0)
+      return { oneClassPrice: 0, packageData: null };
+
+    const centers = offlinePackages[0].centers;
+
+    // Filter by center and time slot
+    const applicableCenter = centers.find((center) => {
+      const centerTimeSlot = center.packageName?.toLowerCase().includes("night")
+        ? "night"
+        : "day";
+      const centerMatches = !centerId || center.centerId === centerId;
+      const timeMatches = centerTimeSlot === timeSlot;
+      const classRangeMatches =
+        numberOfClasses >= center.classStartFrom &&
+        numberOfClasses <= center.classUpTo;
+
+      return centerMatches && timeMatches && classRangeMatches;
+    });
+
+    if (applicableCenter) {
+      return {
+        oneClassPrice: applicableCenter.oneClassPrice,
+        packageData: applicableCenter,
+      };
+    }
+
+    // Fallback logic for offline - find closest range
+    const matchingCenters = centers.filter((center) => {
+      const centerTimeSlot = center.packageName?.toLowerCase().includes("night")
+        ? "night"
+        : "day";
+      const centerMatches = !centerId || center.centerId === centerId;
+      return centerMatches && centerTimeSlot === timeSlot;
+    });
+
+    // Sort by class range and find the closest
+    const sortedCenters = matchingCenters.sort(
+      (a, b) => a.classStartFrom - b.classStartFrom
+    );
+
+    for (let center of sortedCenters) {
+      if (numberOfClasses <= center.classUpTo) {
+        return {
+          oneClassPrice: center.oneClassPrice,
+          packageData: center,
+        };
+      }
+    }
+
+    // If numberOfClasses is higher than any range, use the highest range
+    if (sortedCenters.length > 0) {
+      return {
+        oneClassPrice: sortedCenters[sortedCenters.length - 1].oneClassPrice,
+        packageData: sortedCenters[sortedCenters.length - 1],
+      };
+    }
+
+    return { oneClassPrice: 0, packageData: null };
+  };
+
+  // New function to update class pricing when number of classes changes
+  const updateClassPricing = (numberOfClasses, timeSlot, centerId) => {
+    let pricePerClass = 0;
+
+    if (packageType === "online") {
+      const pricingData = findPackageForClasses(
+        packages.online,
+        numberOfClasses,
+        timeSlot,
+        centerId
+      );
+      pricePerClass = pricingData.oneClassPrice;
+    } else if (packageType === "offline") {
+      const pricingData = findOfflinePackageForClasses(
+        packages.offline,
+        numberOfClasses,
+        timeSlot,
+        centerId
+      );
+      pricePerClass = pricingData.oneClassPrice;
+    }
+
+    setClassRate(pricePerClass);
+  };
+
+  // For hybrid packages - calculate pricing for both online and offline
+  const updateHybridPricing = (
+    centerId,
+    onlineClassCount = onlineClasses,
+    offlineClassCount = offlineClasses
+  ) => {
+    if (!centerId) return;
+
+    // Calculate online pricing (assuming day time for hybrid)
+    const onlinePricingData = findPackageForClasses(
+      packages.online,
+      onlineClassCount,
+      "day",
+      centerId
+    );
+    setOnlineRate(onlinePricingData.oneClassPrice);
+
+    // Calculate offline pricing
+    const offlinePricingData = findOfflinePackageForClasses(
+      packages.offline,
+      offlineClassCount,
+      "day",
+      centerId
+    );
+    setOfflineRate(offlinePricingData.oneClassPrice);
+  };
+
+  // Updated number of classes change handler with proper validation
+  const handleNumberOfClassesChange = (newNumberOfClasses) => {
+    // Allow empty input for user to type
+    if (newNumberOfClasses === "" || newNumberOfClasses === null) {
+      setNumberOfClasses("");
+      return;
+    }
+
+    const classCount = parseInt(newNumberOfClasses);
+
+    // Validate input
+    if (isNaN(classCount) || classCount < 0) {
+      return; // Don't update if invalid
+    }
+
+    setNumberOfClasses(classCount);
+
+    if (selectedTimeSlot && selectedCenter && classCount > 0) {
+      updateClassPricing(classCount, selectedTimeSlot, selectedCenter);
+    }
+  };
+
+  // Input blur handler to enforce minimum requirements
+  const handleNumberOfClassesBlur = () => {
+    if (numberOfClasses === "" || numberOfClasses < 8) {
+      setNumberOfClasses(8);
+      if (selectedTimeSlot && selectedCenter) {
+        updateClassPricing(8, selectedTimeSlot, selectedCenter);
+      }
+    }
+  };
+
+  // Updated handlers for hybrid class count changes
+  const handleOnlineClassesChange = (newOnlineClasses) => {
+    // Allow empty input for user to type
+    if (newOnlineClasses === "" || newOnlineClasses === null) {
+      setOnlineClasses("");
+      return;
+    }
+
+    const classCount = parseInt(newOnlineClasses);
+
+    if (isNaN(classCount) || classCount < 0) {
+      return;
+    }
+
+    setOnlineClasses(classCount);
+    if (selectedCenter && classCount > 0) {
+      const onlinePricingData = findPackageForClasses(
+        packages.online,
+        classCount,
+        "day",
+        selectedCenter
+      );
+      setOnlineRate(onlinePricingData.oneClassPrice);
+    }
+  };
+
+  const handleOnlineClassesBlur = () => {
+    if (onlineClasses === "" || onlineClasses < 8) {
+      setOnlineClasses(8);
+      if (selectedCenter) {
+        const onlinePricingData = findPackageForClasses(
+          packages.online,
+          8,
+          "day",
+          selectedCenter
+        );
+        setOnlineRate(onlinePricingData.oneClassPrice);
+      }
+    }
+  };
+
+  const handleOfflineClassesChange = (newOfflineClasses) => {
+    // Allow empty input for user to type
+    if (newOfflineClasses === "" || newOfflineClasses === null) {
+      setOfflineClasses("");
+      return;
+    }
+
+    const classCount = parseInt(newOfflineClasses);
+
+    if (isNaN(classCount) || classCount < 0) {
+      return;
+    }
+
+    setOfflineClasses(classCount);
+    if (selectedCenter && classCount > 0) {
+      const offlinePricingData = findOfflinePackageForClasses(
+        packages.offline,
+        classCount,
+        "day",
+        selectedCenter
+      );
+      setOfflineRate(offlinePricingData.oneClassPrice);
+    }
+  };
+
+  const handleOfflineClassesBlur = () => {
+    if (offlineClasses === "" || offlineClasses < 8) {
+      setOfflineClasses(8);
+      if (selectedCenter) {
+        const offlinePricingData = findOfflinePackageForClasses(
+          packages.offline,
+          8,
+          "day",
+          selectedCenter
+        );
+        setOfflineRate(offlinePricingData.oneClassPrice);
+      }
+    }
+  };
+
+  // New function that accepts kids data as parameter
+  const handleKidSelectWithData = async (kidId, kidsData = kidsList) => {
+    setIsLoading(true);
+    setSelectedKid(kidId);
+
+    try {
+      // Find the selected kid from the provided kids data
+      const selectedKidData = kidsData.find((kid) => kid._id === kidId);
+
+      if (selectedKidData) {
+        // Check if kid has programs
+        const hasPrograms =
+          selectedKidData.selectedProgram &&
+          selectedKidData.selectedProgram.length > 0;
+
+        // Set basic kid data
+        setData({
+          kidId: kidId,
+          kidName: selectedKidData.kidsName,
+          whatsappNumber: "",
+          programs: hasPrograms ? selectedKidData.selectedProgram : [],
+        });
+
+        // Show program selection if no programs assigned
+        setShowProgramSelection(!hasPrograms);
+        if (!hasPrograms) {
+          setSelectedProgram("");
+          setSelectedLevel("");
+        }
+
+        // Fetch enrollment ID
+        const getEnqId = await getTheEnqId(kidId);
+        setEnqId(getEnqId?.data?.data?._id);
+
+        // Fetch discount
+        const discountResponse = await getPParentDiscountAmount(
+          parentId,
+          kidId
+        );
+        if (discountResponse.status === 200) {
+          setDiscount(discountResponse.data.discountAmount);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching kid details:", error);
+      toast.error("Failed to load kid details");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle kid selection - updated to use the new function
+  const handleKidSelect = async (kidId) => {
+    await handleKidSelectWithData(kidId, kidsList);
+  };
+
+  // Fetch initial data including kids, packages, and programs
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchInitialData = async () => {
+      setIsLoading(true);
       try {
+        // Fetch kids data
+        const kidsResponse = await getMyKidData(parentId);
+        if (kidsResponse.status === 200) {
+          const kidsData = kidsResponse.data.kidData;
+          setKidsList(kidsData);
+          if (kidsData.length === 0) {
+            setViewOnlyMode(kidsData.length === 0);
+          }
+
+          // Auto-select if only one kid - FIXED VERSION
+          if (kidsData.length === 1) {
+            // Pass the kids data directly since state hasn't updated yet
+            await handleKidSelectWithData(kidsData[0]._id, kidsData);
+          }
+        }
+
+        // Fetch package details
         const packageResponse = await fetchParentPackageDetails();
         if (packageResponse.status === 200) {
           const packageData = packageResponse?.data?.data;
@@ -109,54 +462,79 @@ const ParentPackageSelection = () => {
           }
         }
 
-        const getEnqId = await getTheEnqId(kidId);
-        setEnqId(getEnqId?.data?.data?._id);
-
-        if (getEnqId?.data?.data) {
-          const kidData = getEnqId.data.data;
-          console.log("Kid Data:", kidData);
-          setData({
-            kidId: kidId,
-            kidName: kidData.kidName || kidData.kidFirstName ||"",
-            whatsappNumber: kidData.whatsappNumber || "",
-            programs: kidData.programs || [],
-          });
-
-          // Check if programs are empty
-          if (!kidData.programs || kidData.programs.length === 0) {
-            setShowProgramSelection(true);
-          }
+        // Fetch all programs data
+        const programsResponse = await getAllProgrameData();
+        if (programsResponse.status === 200) {
+          setAllPrograms(programsResponse.data.programs);
         }
       } catch (error) {
-        console.error("Error fetching data:", error);
-        toast.error("Failed to load package data");
+        console.error("Error fetching initial data:", error);
+        toast.error("Failed to load initial data");
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    fetchData();
-  }, [kidId]);
+    fetchInitialData();
+  }, [parentId]);
 
-  const handleProgramSelection = async () => {
+  // Handle program selection change
+  const handleProgramChange = (e) => {
+    const programId = e.target.value;
+    setSelectedProgram(programId);
+
+    // Find the selected program to get available levels
+    const program = allPrograms.find((p) => p._id === programId);
+    if (program) {
+      setAvailableLevels(program.programLevel || []);
+    }
+    setSelectedLevel(""); // Reset level when program changes
+  };
+
+  // Handle level selection change
+  const handleLevelChange = (e) => {
+    setSelectedLevel(e.target.value);
+  };
+
+  // Save the selected program and level
+  const saveProgramSelection = async () => {
     if (!selectedProgram || !selectedLevel) {
       toast.error("Please select both program and level");
       return;
     }
 
-    // Update the data with selected program
-    await setProgramAndLevel(selectedProgram, selectedLevel, kidId);
+    const selectedProgramData = allPrograms.find(
+      (p) => p._id === selectedProgram
+    );
+    if (!selectedProgramData) return;
 
-    const newProgram = {
-      program: selectedProgram,
+    const newProgramData = {
+      program: selectedProgramData.programName,
       level: selectedLevel,
-      pgmStatus: "Active",
     };
 
     setData((prev) => ({
       ...prev,
-      programs: [...prev.programs, newProgram],
+      programs: [newProgramData],
     }));
 
-    setShowProgramSelection(false);
+    try {
+      const response = await setProgramAndLevel(
+        selectedProgramData.programName,
+        selectedLevel,
+        data.kidId
+      );
+
+      if (response.status === 200) {
+        setShowProgramSelection(false);
+        toast.success("Program selected successfully");
+      } else {
+        toast.error("Failed to save program selection");
+      }
+    } catch (error) {
+      console.error("Error saving program selection:", error);
+      toast.error("Failed to save program selection");
+    }
   };
 
   const handlePackageTypeChange = (type) => {
@@ -189,9 +567,9 @@ const ParentPackageSelection = () => {
     setSelectedTimeSlot("");
     setAvailableCenters([]);
     setClassRate(0);
-    setNumberOfClasses(4);
-    setOnlineClasses(4);
-    setOfflineClasses(4);
+    setNumberOfClasses(8); // Changed from 4 to 8
+    setOnlineClasses(8); // Changed from 4 to 8
+    setOfflineClasses(8); // Changed from 4 to 8
     setKitItems([{ name: "", quantity: 0 }]);
     setBaseAmount(0);
     setTotalAmount(0);
@@ -201,12 +579,13 @@ const ParentPackageSelection = () => {
     setSelectedCenterAddress("");
   };
 
+  // Updated handleTimeSlotChange function
   const handleTimeSlotChange = (timeSlot) => {
     setSelectedTimeSlot(timeSlot);
     setSelectedCenter("");
     setSelectedCenterAddress("");
     setClassRate(0);
-    setNumberOfClasses(4);
+    setNumberOfClasses(8); // Changed from 4 to 8
 
     let centers = [];
 
@@ -225,6 +604,7 @@ const ParentPackageSelection = () => {
               centerId: center.centerId,
               centerName: center.centerName,
               oneClassPrice: pkg.oneClassPrice || center.oneClassPrice || 100,
+              packageData: pkg, // Store package reference
             })) || []
         );
       }
@@ -244,6 +624,7 @@ const ParentPackageSelection = () => {
           centerName: center.centerName,
           oneClassPrice: center.oneClassPrice || 125,
           address: center.address || "",
+          packageData: center,
         }));
       }
     }
@@ -256,21 +637,26 @@ const ParentPackageSelection = () => {
 
     if (packageType === "online" && uniqueCenters.length === 1) {
       setSelectedCenter(uniqueCenters[0].centerId);
-      setClassRate(uniqueCenters[0].oneClassPrice);
+      // Calculate initial price for 8 classes using dynamic pricing
+      updateClassPricing(8, timeSlot, uniqueCenters[0].centerId);
     }
   };
 
+  // Updated handleCenterSelectionForTimeSlot function
   const handleCenterSelectionForTimeSlot = (centerId) => {
     setSelectedCenter(centerId);
 
     const selectedCenterData = availableCenters.find(
       (center) => center.centerId === centerId
     );
+
     if (selectedCenterData) {
-      setClassRate(selectedCenterData.oneClassPrice);
       if (packageType === "offline" && selectedCenterData.address) {
         setSelectedCenterAddress(selectedCenterData.address);
       }
+
+      // Update pricing based on current number of classes using dynamic pricing
+      updateClassPricing(numberOfClasses, selectedTimeSlot, centerId);
     }
   };
 
@@ -298,44 +684,13 @@ const ParentPackageSelection = () => {
     return { baseAmount: base, totalAmount: discountedTotal };
   };
 
+  // Updated handleCenterChange for hybrid
   const handleCenterChange = (e) => {
     const centerId = e.target.value;
     setSelectedCenter(centerId);
 
     if (packageType === "hybrid" && centerId) {
-      let onlinePrice = 100;
-      if (packages.online.length > 0) {
-        const onlinePackagesForCenter = packages.online.filter((pkg) =>
-          pkg.centers?.some((center) => center.centerId === centerId)
-        );
-        if (onlinePackagesForCenter.length > 0) {
-          const dayPackage =
-            onlinePackagesForCenter.find((pkg) =>
-              pkg.packageName.toLowerCase().includes("day")
-            ) || onlinePackagesForCenter[0];
-          onlinePrice = dayPackage.oneClassPrice;
-        }
-      }
-
-      let offlinePrice = 125;
-      if (packages.offline.length > 0) {
-        const offlineCenter = packages.offline[0].centers.find(
-          (c) => c.centerId === centerId
-        );
-        if (offlineCenter) {
-          const dayCenterData = packages.offline[0].centers.find(
-            (c) =>
-              c.centerId === centerId &&
-              c.packageName?.toLowerCase().includes("day")
-          );
-          offlinePrice = dayCenterData
-            ? dayCenterData.oneClassPrice
-            : offlineCenter.oneClassPrice;
-        }
-      }
-
-      setOnlineRate(onlinePrice);
-      setOfflineRate(offlinePrice);
+      updateHybridPricing(centerId);
     }
   };
 
@@ -415,6 +770,11 @@ const ParentPackageSelection = () => {
   };
 
   const handleRazorpayPayment = async () => {
+    if (!selectedKid) {
+      toast.error("Please select a child");
+      return;
+    }
+
     if (!packageType) {
       toast.error("Please select a package type");
       return;
@@ -429,8 +789,8 @@ const ParentPackageSelection = () => {
         toast.error("Please select a center");
         return;
       }
-      if (numberOfClasses < 4) {
-        toast.error("Minimum 4 classes required");
+      if (numberOfClasses < 8) {
+        toast.error("Minimum 8 classes required");
         return;
       }
     }
@@ -440,8 +800,8 @@ const ParentPackageSelection = () => {
         toast.error("Please select a center for hybrid package");
         return;
       }
-      if (onlineClasses < 4 || offlineClasses < 4) {
-        toast.error("Minimum 4 classes required for both online and offline");
+      if (onlineClasses < 8 || offlineClasses < 8) {
+        toast.error("Minimum 8 classes required for both online and offline");
         return;
       }
     }
@@ -535,7 +895,19 @@ const ParentPackageSelection = () => {
     selectedCenter,
     onlineRate,
     offlineRate,
+    discount,
   ]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -544,7 +916,7 @@ const ParentPackageSelection = () => {
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <h1 className="text-xl font-semibold">
-              Choose Package for {data?.kidName}
+              Choose Package for {data?.kidName || "your child"}
             </h1>
             <button
               onClick={() => navigate(-1)}
@@ -557,77 +929,135 @@ const ParentPackageSelection = () => {
       </div>
 
       <div className="max-w-4xl mx-auto p-4">
-        {/* Program Selection Modal */}
-        {showProgramSelection && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-              <h2 className="text-xl font-semibold mb-4">Select Program</h2>
+        {/* Kid Selection Dropdown - Only show if multiple kids */}
+        {viewOnlyMode && (
+          <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-6">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg
+                  className="h-5 w-5 text-yellow-500"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-yellow-700">
+                  You're in view-only mode. To select packages, please add a
+                  child first.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+        {kidsList.length > 1 && (
+          <div className="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 className="text-lg font-semibold mb-4">Select Child</h2>
+            <select
+              value={selectedKid}
+              onChange={(e) => handleKidSelect(e.target.value)}
+              className="w-full p-3 border rounded-lg"
+            >
+              <option value="">Select a child</option>
+              {kidsList.map((kid) => (
+                <option key={kid._id} value={kid._id}>
+                  {kid.kidsName}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block font-medium mb-2">Program</label>
-                  <select
-                    value={selectedProgram}
-                    onChange={(e) => {
-                      setSelectedProgram(e.target.value);
-                      setSelectedLevel("");
-                    }}
-                    className="w-full p-3 border rounded-lg"
-                  >
-                    <option value="">Select a program</option>
-                    {allPrograms.map((program) => (
-                      <option key={program._id} value={program.programName}>
-                        {program.programName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {selectedProgram && (
-                  <div>
-                    <label className="block font-medium mb-2">Level</label>
-                    <select
-                      value={selectedLevel}
-                      onChange={(e) => setSelectedLevel(e.target.value)}
-                      className="w-full p-3 border rounded-lg"
-                      disabled={!selectedProgram}
-                    >
-                      <option value="">Select a level</option>
-                      {allPrograms
-                        .find((p) => p.programName === selectedProgram)
-                        ?.programLevel.map((level) => (
-                          <option key={level} value={level}>
-                            {level}
-                          </option>
-                        ))}
-                    </select>
-                  </div>
-                )}
-
-                <div className="flex justify-end space-x-3 pt-4">
-                  <button
-                    onClick={() => {
-                      setShowProgramSelection(false);
-                      navigate(-1);
-                    }}
-                    className="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-100"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleProgramSelection}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                  >
-                    Save Program
-                  </button>
-                </div>
+        {/* Program Information (shown when kid has programs) */}
+        {selectedKid && !showProgramSelection && data.programs.length > 0 && (
+          <div className="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 className="text-lg font-semibold mb-4">Program Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-500">
+                  Selected Program
+                </label>
+                <p className="mt-1 text-lg font-medium">
+                  {data.programs[0].program}
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-500">
+                  Selected Level
+                </label>
+                <p className="mt-1 text-lg font-medium">
+                  {data.programs[0].level}
+                </p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Only show package selection if program is selected or already exists */}
-        {!showProgramSelection && (
+        {/* Program Selection (shown when kid has no programs) */}
+        {showProgramSelection && (
+          <div className="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 className="text-lg font-semibold mb-4">
+              Select Program for {data?.kidName}
+            </h2>
+
+            <div className="space-y-4">
+              {/* Program Selection */}
+              <div>
+                <label className="block font-medium mb-2">Select Program</label>
+                <select
+                  value={selectedProgram}
+                  onChange={handleProgramChange}
+                  className="w-full p-3 border rounded-lg"
+                >
+                  <option value="">Select a program</option>
+                  {allPrograms.map((program) => (
+                    <option key={program._id} value={program._id}>
+                      {program.programName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Level Selection (only shown when program is selected) */}
+              {selectedProgram && (
+                <div>
+                  <label className="block font-medium mb-2">Select Level</label>
+                  <select
+                    value={selectedLevel}
+                    onChange={handleLevelChange}
+                    className="w-full p-3 border rounded-lg"
+                  >
+                    <option value="">Select a level</option>
+                    {availableLevels.map((level) => (
+                      <option key={level} value={level}>
+                        {level}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Save Button */}
+              <div className="pt-2">
+                <button
+                  onClick={saveProgramSelection}
+                  disabled={!selectedProgram || !selectedLevel}
+                  className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                >
+                  Save Program Selection
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Only show package selection if a kid is selected and has programs (not showing program selection) */}
+        {selectedKid && !showProgramSelection && hasValidProgram && (
           <>
             {/* Step 1: Choose Package Type */}
             <div className="bg-white rounded-lg shadow p-6 mb-6">
@@ -664,26 +1094,6 @@ const ParentPackageSelection = () => {
                   2. Set Up Your Classes
                 </h2>
 
-                {/* Display selected program info */}
-                {data.programs.length > 0 && (
-                  <div className="mb-6 p-4 bg-blue-50 rounded-lg">
-                    <h3 className="font-medium mb-2">Selected Program</h3>
-                    <div className="flex flex-wrap gap-4">
-                      {data.programs.map((program, index) => (
-                        <div
-                          key={index}
-                          className="bg-white p-3 rounded shadow-sm"
-                        >
-                          <p className="font-medium">{program.program}</p>
-                          <p className="text-sm text-gray-600">
-                            {program.level}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
                 {/* Online/Offline Config */}
                 {(packageType === "online" || packageType === "offline") && (
                   <div className="space-y-6">
@@ -693,7 +1103,10 @@ const ParentPackageSelection = () => {
                         When do you prefer classes?
                       </label>
                       <div className="grid grid-cols-1 gap-4 max-w-md">
-                        {["day", "night"].map((slot) => (
+                        {(packageType === "offline"
+                          ? ["day"]
+                          : ["day", "night"]
+                        ).map((slot) => (
                           <label
                             key={slot}
                             className="flex items-center cursor-pointer p-3 border rounded-lg hover:bg-gray-50"
@@ -729,9 +1142,6 @@ const ParentPackageSelection = () => {
                             <span className="font-medium">
                               {availableCenters[0].centerName}
                             </span>
-                            <span className="ml-2 text-gray-600">
-                              - ₹{availableCenters[0].oneClassPrice}/class
-                            </span>
                           </div>
                         ) : (
                           <select
@@ -747,8 +1157,7 @@ const ParentPackageSelection = () => {
                                 key={center.centerId}
                                 value={center.centerId}
                               >
-                                {center.centerName} - ₹{center.oneClassPrice}
-                                /class
+                                {center.centerName}
                               </option>
                             ))}
                           </select>
@@ -766,21 +1175,32 @@ const ParentPackageSelection = () => {
                     )}
 
                     {/* Number of Classes */}
-                    {selectedCenter && classRate > 0 && (
+                    {selectedCenter && (
                       <div>
                         <label className="block font-medium mb-3">
-                          How many classes? (Minimum 4)
+                          How many classes? (Minimum 8)
                         </label>
-                        <input
-                          type="number"
-                          value={numberOfClasses}
-                          onChange={(e) => setNumberOfClasses(e.target.value)}
-                          className="w-32 p-3 border rounded-lg text-center"
-                          min="4"
-                        />
-                        <span className="ml-3 text-gray-600">
-                          ₹{classRate} per class
-                        </span>
+                        <div className="flex items-center space-x-3">
+                          <input
+                            type="number"
+                            value={numberOfClasses}
+                            onChange={(e) =>
+                              handleNumberOfClassesChange(e.target.value)
+                            }
+                            onBlur={handleNumberOfClassesBlur}
+                            className="w-32 p-3 border rounded-lg text-center"
+                            min="8"
+                            placeholder="8"
+                          />
+                          <span className="text-gray-600">
+                            ₹{classRate} per class
+                          </span>
+                        </div>
+                        {numberOfClasses !== "" && numberOfClasses < 8 && (
+                          <p className="text-red-500 text-sm mt-2">
+                            Minimum 8 classes required
+                          </p>
+                        )}
                       </div>
                     )}
                   </div>
@@ -811,34 +1231,56 @@ const ParentPackageSelection = () => {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                           <label className="block font-medium mb-3">
-                            Online Classes (Minimum 4)
+                            Online Classes (Minimum 8)
                           </label>
-                          <input
-                            type="number"
-                            value={onlineClasses}
-                            onChange={(e) => setOnlineClasses(e.target.value)}
-                            className="w-full p-3 border rounded-lg"
-                            min="4"
-                          />
-                          <p className="text-sm text-gray-600 mt-1">
-                            ₹{onlineRate} per class
-                          </p>
+                          <div className="space-y-2">
+                            <input
+                              type="number"
+                              value={onlineClasses}
+                              onChange={(e) =>
+                                handleOnlineClassesChange(e.target.value)
+                              }
+                              onBlur={handleOnlineClassesBlur}
+                              className="w-full p-3 border rounded-lg"
+                              min="8"
+                              placeholder="8"
+                            />
+                            <p className="text-sm text-gray-600">
+                              ₹{onlineRate} per class
+                            </p>
+                            {onlineClasses !== "" && onlineClasses < 8 && (
+                              <p className="text-red-500 text-sm">
+                                Minimum 8 classes required
+                              </p>
+                            )}
+                          </div>
                         </div>
 
                         <div>
                           <label className="block font-medium mb-3">
-                            Center Classes (Minimum 4)
+                            Center Classes (Minimum 8)
                           </label>
-                          <input
-                            type="number"
-                            value={offlineClasses}
-                            onChange={(e) => setOfflineClasses(e.target.value)}
-                            className="w-full p-3 border rounded-lg"
-                            min="4"
-                          />
-                          <p className="text-sm text-gray-600 mt-1">
-                            ₹{offlineRate} per class
-                          </p>
+                          <div className="space-y-2">
+                            <input
+                              type="number"
+                              value={offlineClasses}
+                              onChange={(e) =>
+                                handleOfflineClassesChange(e.target.value)
+                              }
+                              onBlur={handleOfflineClassesBlur}
+                              className="w-full p-3 border rounded-lg"
+                              min="8"
+                              placeholder="8"
+                            />
+                            <p className="text-sm text-gray-600">
+                              ₹{offlineRate} per class
+                            </p>
+                            {offlineClasses !== "" && offlineClasses < 8 && (
+                              <p className="text-red-500 text-sm">
+                                Minimum 8 classes required
+                              </p>
+                            )}
+                          </div>
                         </div>
                       </div>
                     )}
@@ -882,7 +1324,7 @@ const ParentPackageSelection = () => {
                                   updateKitItem(
                                     index,
                                     "quantity",
-                                    Math.max(1, parseInt(e.target.value) || 0)
+                                    Math.max(0, parseInt(e.target.value) || 0)
                                   )
                                 }
                                 className="flex-1 p-3 border rounded-lg text-center"
@@ -928,6 +1370,31 @@ const ParentPackageSelection = () => {
                         <span className="capitalize">{packageType}</span>
                       </div>
                       <div className="flex justify-between">
+                        <span>Program:</span>
+                        <span>{data.programs[0]?.program || "N/A"}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Level:</span>
+                        <span>{data.programs[0]?.level || "N/A"}</span>
+                      </div>
+                      {packageType === "online" || packageType === "offline" ? (
+                        <div className="flex justify-between">
+                          <span>Classes:</span>
+                          <span>{numberOfClasses}</span>
+                        </div>
+                      ) : packageType === "hybrid" ? (
+                        <>
+                          <div className="flex justify-between">
+                            <span>Online Classes:</span>
+                            <span>{onlineClasses}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Offline Classes:</span>
+                            <span>{offlineClasses}</span>
+                          </div>
+                        </>
+                      ) : null}
+                      <div className="flex justify-between">
                         <span>Amount (Includes GST):</span>
                         <span>₹{baseAmount.toFixed(2)}</span>
                       </div>
@@ -943,12 +1410,16 @@ const ParentPackageSelection = () => {
                       </div>
                     </div>
                   </div>
-
                   <div className="flex items-end">
                     <button
                       onClick={handleRazorpayPayment}
                       disabled={
-                        !packageType || totalAmount <= 0 || isProcessingPayment
+                        !packageType ||
+                        totalAmount <= 0 ||
+                        isProcessingPayment ||
+                        viewOnlyMode ||
+                        !selectedKid ||
+                        !hasValidProgram
                       }
                       className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium"
                     >
@@ -960,20 +1431,25 @@ const ParentPackageSelection = () => {
                 </div>
               </div>
             )}
-
-            {/* Payment Success */}
-            {paymentId && (
-              <div className="bg-white rounded-lg shadow p-6 text-center">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle className="w-8 h-8 text-green-600" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">
-                  Payment Successful!
-                </h3>
-                <p className="text-gray-600 mb-4">Payment ID: {paymentId}</p>
-              </div>
-            )}
           </>
+        )}
+
+        {/* View Only Mode - Add Kid Button */}
+        {viewOnlyMode && (
+          <div className="bg-white rounded-lg shadow p-6 text-center">
+            <h2 className="text-lg font-semibold mb-4">
+              No Children Added Yet
+            </h2>
+            <p className="text-gray-600 mb-6">
+              You need to add a child before you can select packages.
+            </p>
+            <button
+              onClick={() => navigate("/parent/add-kid/false")}
+              className="bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 font-medium"
+            >
+              Add Child
+            </button>
+          </div>
         )}
       </div>
 
@@ -992,4 +1468,4 @@ const ParentPackageSelection = () => {
   );
 };
 
-export default ParentPackageSelection;
+export default HomeKidPackageSelection;

@@ -26,7 +26,10 @@ import LocationOnIcon from "@mui/icons-material/LocationOn";
 
 import { toast, ToastContainer } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import { getCoachAvailabilityData, sheduleTimeTable } from "../../../api/service/employee/serviceDeliveryService";
+import {
+  getCoachAvailabilityData,
+  sheduleTimeTable,
+} from "../../../api/service/employee/serviceDeliveryService";
 import { getAllProgrameData } from "../../../api/service/employee/EmployeeService";
 
 // Map day names to their index in the week (0 = Sunday, 1 = Monday, etc.)
@@ -531,9 +534,18 @@ const AddNewClassTimeTable = () => {
       case "mode":
         schedule.mode = value;
         if (value === "online") {
-          // For online mode, set default center values
-          schedule.centerId = "online-center";
-          schedule.centerName = "Online Center";
+          // Find the online center from centerData
+          const onlineCenter = centerData.find(
+            (center) => center.centerType === "online"
+          );
+          if (onlineCenter) {
+            schedule.centerId = onlineCenter.id;
+            schedule.centerName = onlineCenter.name;
+          } else {
+            // Fallback if no online center found in centerData
+            schedule.centerId = "online-center";
+            schedule.centerName = "Online Center";
+          }
         } else {
           // For offline mode, reset center fields
           schedule.centerId = "";

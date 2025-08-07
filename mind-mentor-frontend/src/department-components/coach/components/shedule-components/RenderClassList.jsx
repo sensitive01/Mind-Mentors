@@ -49,7 +49,7 @@ const RenderClassList = ({
 
     // For live classes, use coach join URL directly
     if (isLiveTab && classItem.coachJoinUrl) {
-      localStorage.setItem("bbTempClassId",classItem.bbTempClassId)
+      localStorage.setItem("bbTempClassId", classItem.bbTempClassId);
       window.open(classItem.coachJoinUrl, "_blank", "noopener,noreferrer");
       return;
     }
@@ -127,7 +127,7 @@ const RenderClassList = ({
             </IconText>
           </Box>
 
-          {isLiveTab && (
+          {isLiveTab && classItem.type === "online" && (
             <Box
               sx={{
                 display: "flex",

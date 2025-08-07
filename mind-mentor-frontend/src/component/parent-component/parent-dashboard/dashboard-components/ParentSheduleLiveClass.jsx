@@ -14,11 +14,15 @@ import {
 } from "lucide-react";
 
 import { useNavigate, useParams } from "react-router-dom";
-import { getTheEnqId } from "../../../../api/service/parent/ParentService";
+import {
+  getTheEnqId,
+  parentGetSheduledClassData,
+  parentSheduleWholeClasses,
+} from "../../../../api/service/parent/ParentService";
 import {
   assignWholeClass,
   getActiveKidData,
-  getScheduledClassData,
+  // getScheduledClassData,
 } from "../../../../api/service/employee/serviceDeliveryService";
 
 // Simple Info Card
@@ -370,7 +374,9 @@ const ParentSheduleLiveClass = () => {
     const fetchClassData = async () => {
       try {
         if (!enqId || !kidData) return;
-        const response = await getScheduledClassData(enqId);
+        // const response = await getScheduledClassData(enqId);
+        const response = await parentGetSheduledClassData(enqId);
+
         console.log("fetchClassData", response);
         if (response.status === 200) {
           let filteredClasses = response.data.classData;
@@ -607,7 +613,7 @@ const ParentSheduleLiveClass = () => {
   const handleSubmit = async () => {
     setModalState((prev) => ({ ...prev, success: true }));
     try {
-      await assignWholeClass({
+      await parentSheduleWholeClasses({
         studentId: enqId,
         studentName: kidData?.kidName,
         selectedClasses,

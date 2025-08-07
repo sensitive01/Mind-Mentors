@@ -116,13 +116,13 @@ export const getLastClassData = async (classId) => {
   return response;
 };
 
-export const pauseTheClass = async (enqId,updatedData,pauseRemarks,classId) => {
-  const response = await serviceInstance.post(`/service/pause-class-temporary/${enqId}/${classId}`,{updatedData,pauseRemarks});
+export const pauseTheClass = async (enqId,updatedData,pauseRemarks,classId,pauseStartDate,pauseEndDate,empId) => {
+  const response = await serviceInstance.post(`/service/pause-class-temporary/${enqId}/${classId}/${empId}`,{updatedData,pauseRemarks,pauseStartDate,pauseEndDate});
   return response;
 };
 
-export const resumeTheClass = async (enqId,updatedData,classId) => {
-  const response = await serviceInstance.post(`/service/resume-the-class/${enqId}/${classId}`,{updatedData});
+export const resumeTheClass = async (enqId,updatedData,classId,empId) => {
+  const response = await serviceInstance.post(`/service/resume-the-class/${enqId}/${classId}/${empId}`,{updatedData});
   return response;
 };
 

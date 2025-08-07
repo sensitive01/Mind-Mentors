@@ -128,7 +128,7 @@ const ClassDetailsModal = ({
                   ml: 2,
                 }}
               >
-                {selectedClass.classTime}
+                {selectedClass.classTime} - {selectedClass.type} 
               </Typography>
             </DetailRow>
 

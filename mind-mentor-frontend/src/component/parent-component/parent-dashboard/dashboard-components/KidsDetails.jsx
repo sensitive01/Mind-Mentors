@@ -200,7 +200,7 @@ const KidsDetails = ({ kids }) => {
               <UserPlus className="w-6 h-6 text-primary group-hover:rotate-12 transition-transform" />
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">
-              Begin Your Child's Chess Journey
+              Begin Your Child's Journey
             </h3>
             <p className="text-gray-600 mb-4 text-sm max-w-md mx-auto">
               Transform your child's potential into mastery. Start their chess
@@ -211,7 +211,7 @@ const KidsDetails = ({ kids }) => {
               className="inline-flex items-center px-4 py-2 rounded-lg bg-gradient-to-r from-primary to-primary hover:from-primary hover:to-primary text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 group"
             >
               <UserPlus className="w-4 h-4 mr-2 group-hover:rotate-12 transition-transform" />
-              Add Your First Champion
+              Add Your Champion
               <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>

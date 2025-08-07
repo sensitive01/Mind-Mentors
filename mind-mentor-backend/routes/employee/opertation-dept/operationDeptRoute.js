@@ -70,7 +70,7 @@ operationRoute.post("/save-employee-attance-data/:empId", operationController.cr
 operationRoute.put("/enquiry-form/:enqId/step/:step", operationController.updateEnquiryDetails);
 operationRoute.put("/move-to-prospects/:id", operationController.updateProspectData);
 operationRoute.put("/move-to-enquiry/:id", operationController.moveBackToEnquiry);
-operationRoute.put("/enquiry-form/:id", operationController.updateEnquiry)
+operationRoute.put("/enquiry-form/:id/:empId", operationController.updateEnquiry)
 operationRoute.put("/prospect-status/:id",operationController.updateProspectStatus);
 operationRoute.put("/enquiry-status/:id",operationController.updateEnquiryStatus);
 operationRoute.put("/schedule-demo/:id", operationController.scheduleDemo);

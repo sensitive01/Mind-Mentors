@@ -8,7 +8,7 @@ const ChessLoader = () => {
         {/* Main loader container */}
         <div className="relative bg-white rounded-3xl p-12 shadow-2xl border-2 border-amber-200">
           {/* Chess board grid */}
-          <div className="grid grid-cols-4 gap-1 w-24 h-24 mb-8 p-2 bg-amber-900 rounded-lg shadow-inner">
+          <div className="grid ml-24  grid-cols-4 gap-1 w-24 h-24 mb-8 p-2 bg-amber-900 rounded-lg shadow-inner">
             {/* Alternating chess squares */}
             {[...Array(16)].map((_, i) => {
               const row = Math.floor(i / 4);

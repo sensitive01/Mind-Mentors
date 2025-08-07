@@ -32,10 +32,10 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
   const [selectedTimeSlot, setSelectedTimeSlot] = useState(""); // "day" or "night"
   const [availableCenters, setAvailableCenters] = useState([]);
   const [classRate, setClassRate] = useState(0);
-  const [numberOfClasses, setNumberOfClasses] = useState(0);
+  const [numberOfClasses, setNumberOfClasses] = useState(4); // Changed from 0 to 4
 
-  const [onlineClasses, setOnlineClasses] = useState(0);
-  const [offlineClasses, setOfflineClasses] = useState(0);
+  const [onlineClasses, setOnlineClasses] = useState(4); // Changed from 0 to 4
+  const [offlineClasses, setOfflineClasses] = useState(4); // Changed from 0 to 4
   const [onlineRate, setOnlineRate] = useState(100);
   const [offlineRate, setOfflineRate] = useState(125);
 
@@ -47,6 +47,297 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
   const [totalAmount, setTotalAmount] = useState(0);
 
   const [paymentId, setPaymentId] = useState("");
+
+  // Helper function to find the correct package and pricing based on number of classes
+  const findPackageForClasses = (
+    packages,
+    numberOfClasses,
+    timeSlot,
+    centerId = null
+  ) => {
+    // Filter packages by time slot first
+    const timeFilteredPackages = packages.filter((pkg) => {
+      const packageTimeSlot = pkg.packageName.toLowerCase().includes("night")
+        ? "night"
+        : "day";
+      return packageTimeSlot === timeSlot;
+    });
+
+    // Find the package range that the numberOfClasses falls into
+    const applicablePackage = timeFilteredPackages.find((pkg) => {
+      return (
+        numberOfClasses >= pkg.classStartFrom &&
+        numberOfClasses <= pkg.classUpTo
+      );
+    });
+
+    if (applicablePackage) {
+      return {
+        oneClassPrice: applicablePackage.oneClassPrice,
+        packageData: applicablePackage,
+      };
+    }
+
+    // If no exact range found, use the closest higher range or default logic
+    const sortedPackages = timeFilteredPackages.sort(
+      (a, b) => a.classStartFrom - b.classStartFrom
+    );
+
+    for (let pkg of sortedPackages) {
+      if (numberOfClasses <= pkg.classUpTo) {
+        return {
+          oneClassPrice: pkg.oneClassPrice,
+          packageData: pkg,
+        };
+      }
+    }
+
+    // If numberOfClasses is higher than any range, use the highest range pricing
+    if (sortedPackages.length > 0) {
+      return {
+        oneClassPrice: sortedPackages[sortedPackages.length - 1].oneClassPrice,
+        packageData: sortedPackages[sortedPackages.length - 1],
+      };
+    }
+
+    // Fallback
+    return {
+      oneClassPrice: 0,
+      packageData: null,
+    };
+  };
+
+  // Helper function for offline packages (different structure)
+  const findOfflinePackageForClasses = (
+    offlinePackages,
+    numberOfClasses,
+    timeSlot,
+    centerId
+  ) => {
+    if (offlinePackages.length === 0)
+      return { oneClassPrice: 0, packageData: null };
+
+    const centers = offlinePackages[0].centers;
+
+    // Filter by center and time slot
+    const applicableCenter = centers.find((center) => {
+      const centerTimeSlot = center.packageName?.toLowerCase().includes("night")
+        ? "night"
+        : "day";
+      const centerMatches = !centerId || center.centerId === centerId;
+      const timeMatches = centerTimeSlot === timeSlot;
+      const classRangeMatches =
+        numberOfClasses >= center.classStartFrom &&
+        numberOfClasses <= center.classUpTo;
+
+      return centerMatches && timeMatches && classRangeMatches;
+    });
+
+    if (applicableCenter) {
+      return {
+        oneClassPrice: applicableCenter.oneClassPrice,
+        packageData: applicableCenter,
+      };
+    }
+
+    // Fallback logic for offline - find closest range
+    const matchingCenters = centers.filter((center) => {
+      const centerTimeSlot = center.packageName?.toLowerCase().includes("night")
+        ? "night"
+        : "day";
+      const centerMatches = !centerId || center.centerId === centerId;
+      return centerMatches && centerTimeSlot === timeSlot;
+    });
+
+    // Sort by class range and find the closest
+    const sortedCenters = matchingCenters.sort(
+      (a, b) => a.classStartFrom - b.classStartFrom
+    );
+
+    for (let center of sortedCenters) {
+      if (numberOfClasses <= center.classUpTo) {
+        return {
+          oneClassPrice: center.oneClassPrice,
+          packageData: center,
+        };
+      }
+    }
+
+    // If numberOfClasses is higher than any range, use the highest range
+    if (sortedCenters.length > 0) {
+      return {
+        oneClassPrice: sortedCenters[sortedCenters.length - 1].oneClassPrice,
+        packageData: sortedCenters[sortedCenters.length - 1],
+      };
+    }
+
+    return { oneClassPrice: 0, packageData: null };
+  };
+
+  // New function to update class pricing when number of classes changes
+  const updateClassPricing = (numberOfClasses, timeSlot, centerId) => {
+    let pricePerClass = 0;
+
+    if (packageType === "online") {
+      const pricingData = findPackageForClasses(
+        packages.online,
+        numberOfClasses,
+        timeSlot,
+        centerId
+      );
+      pricePerClass = pricingData.oneClassPrice;
+    } else if (packageType === "offline") {
+      const pricingData = findOfflinePackageForClasses(
+        packages.offline,
+        numberOfClasses,
+        timeSlot,
+        centerId
+      );
+      pricePerClass = pricingData.oneClassPrice;
+    }
+
+    setClassRate(pricePerClass);
+  };
+
+  // For hybrid packages - calculate pricing for both online and offline
+  const updateHybridPricing = (
+    centerId,
+    onlineClassCount = onlineClasses,
+    offlineClassCount = offlineClasses
+  ) => {
+    if (!centerId) return;
+
+    // Calculate online pricing (assuming day time for hybrid)
+    const onlinePricingData = findPackageForClasses(
+      packages.online,
+      onlineClassCount,
+      "day",
+      centerId
+    );
+    setOnlineRate(onlinePricingData.oneClassPrice);
+
+    // Calculate offline pricing
+    const offlinePricingData = findOfflinePackageForClasses(
+      packages.offline,
+      offlineClassCount,
+      "day",
+      centerId
+    );
+    setOfflineRate(offlinePricingData.oneClassPrice);
+  };
+
+  // Updated number of classes change handler with proper validation
+  const handleNumberOfClassesChange = (newNumberOfClasses) => {
+    // Allow empty input for user to type
+    if (newNumberOfClasses === "" || newNumberOfClasses === null) {
+      setNumberOfClasses("");
+      return;
+    }
+
+    const classCount = parseInt(newNumberOfClasses);
+
+    // Validate input
+    if (isNaN(classCount) || classCount < 0) {
+      return; // Don't update if invalid
+    }
+
+    setNumberOfClasses(classCount);
+
+    if (selectedTimeSlot && selectedCenter && classCount > 0) {
+      updateClassPricing(classCount, selectedTimeSlot, selectedCenter);
+    }
+  };
+
+  // Input blur handler to enforce minimum requirements
+  const handleNumberOfClassesBlur = () => {
+    if (numberOfClasses === "" || numberOfClasses < 4) {
+      setNumberOfClasses(4);
+      if (selectedTimeSlot && selectedCenter) {
+        updateClassPricing(4, selectedTimeSlot, selectedCenter);
+      }
+    }
+  };
+
+  // Updated handlers for hybrid class count changes
+  const handleOnlineClassesChange = (newOnlineClasses) => {
+    // Allow empty input for user to type
+    if (newOnlineClasses === "" || newOnlineClasses === null) {
+      setOnlineClasses("");
+      return;
+    }
+
+    const classCount = parseInt(newOnlineClasses);
+
+    if (isNaN(classCount) || classCount < 0) {
+      return;
+    }
+
+    setOnlineClasses(classCount);
+    if (selectedCenter && classCount > 0) {
+      const onlinePricingData = findPackageForClasses(
+        packages.online,
+        classCount,
+        "day",
+        selectedCenter
+      );
+      setOnlineRate(onlinePricingData.oneClassPrice);
+    }
+  };
+
+  const handleOnlineClassesBlur = () => {
+    if (onlineClasses === "" || onlineClasses < 4) {
+      setOnlineClasses(4);
+      if (selectedCenter) {
+        const onlinePricingData = findPackageForClasses(
+          packages.online,
+          4,
+          "day",
+          selectedCenter
+        );
+        setOnlineRate(onlinePricingData.oneClassPrice);
+      }
+    }
+  };
+
+  const handleOfflineClassesChange = (newOfflineClasses) => {
+    // Allow empty input for user to type
+    if (newOfflineClasses === "" || newOfflineClasses === null) {
+      setOfflineClasses("");
+      return;
+    }
+
+    const classCount = parseInt(newOfflineClasses);
+
+    if (isNaN(classCount) || classCount < 0) {
+      return;
+    }
+
+    setOfflineClasses(classCount);
+    if (selectedCenter && classCount > 0) {
+      const offlinePricingData = findOfflinePackageForClasses(
+        packages.offline,
+        classCount,
+        "day",
+        centerId
+      );
+      setOfflineRate(offlinePricingData.oneClassPrice);
+    }
+  };
+
+  const handleOfflineClassesBlur = () => {
+    if (offlineClasses === "" || offlineClasses < 4) {
+      setOfflineClasses(4);
+      if (selectedCenter) {
+        const offlinePricingData = findOfflinePackageForClasses(
+          packages.offline,
+          4,
+          "day",
+          selectedCenter
+        );
+        setOfflineRate(offlinePricingData.oneClassPrice);
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -115,9 +406,9 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
     setSelectedTimeSlot("");
     setAvailableCenters([]);
     setClassRate(0);
-    setNumberOfClasses(0);
-    setOnlineClasses(0);
-    setOfflineClasses(0);
+    setNumberOfClasses(4); // Changed from 0 to 4
+    setOnlineClasses(4); // Changed from 0 to 4
+    setOfflineClasses(4); // Changed from 0 to 4
     setKitItems([{ name: "", quantity: 0 }]);
     setBaseAmount(0);
     setTotalAmount(0);
@@ -126,11 +417,12 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
     setOfflineRate(125);
   };
 
+  // Updated handleTimeSlotChange function
   const handleTimeSlotChange = (timeSlot) => {
     setSelectedTimeSlot(timeSlot);
     setSelectedCenter("");
     setClassRate(0);
-    setNumberOfClasses(0);
+    setNumberOfClasses(4); // Changed from 0 to 4
 
     let centers = [];
 
@@ -149,6 +441,7 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
               centerId: center.centerId,
               centerName: center.centerName,
               oneClassPrice: pkg.oneClassPrice || center.oneClassPrice || 100,
+              packageData: pkg, // Store package reference
             })) || []
         );
       }
@@ -167,6 +460,7 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
           centerId: center.centerId,
           centerName: center.centerName,
           oneClassPrice: center.oneClassPrice || 125,
+          packageData: center,
         }));
       }
     }
@@ -178,14 +472,17 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
     setAvailableCenters(uniqueCenters);
   };
 
+  // Updated handleCenterSelectionForTimeSlot function
   const handleCenterSelectionForTimeSlot = (centerId) => {
     setSelectedCenter(centerId);
 
     const selectedCenterData = availableCenters.find(
       (center) => center.centerId === centerId
     );
+
     if (selectedCenterData) {
-      setClassRate(selectedCenterData.oneClassPrice);
+      // Update pricing based on current number of classes using dynamic pricing
+      updateClassPricing(numberOfClasses, selectedTimeSlot, centerId);
     }
   };
 
@@ -215,46 +512,13 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
     return { baseAmount: base, totalAmount: discountedTotal };
   };
 
+  // Updated handleCenterChange for hybrid
   const handleCenterChange = (e) => {
     const centerId = e.target.value;
     setSelectedCenter(centerId);
 
     if (packageType === "hybrid" && centerId) {
-      // Get online rate from online packages for this center
-      let onlinePrice = 100; // default
-      if (packages.online.length > 0) {
-        const onlineCenter = packages.online[0].centers?.find(
-          (c) => c.centerId === centerId
-        );
-        if (onlineCenter) {
-          // Use the lowest online rate for this center from available packages
-          const onlinePackagesForCenter = packages.online.filter((pkg) =>
-            pkg.centers?.some((center) => center.centerId === centerId)
-          );
-          if (onlinePackagesForCenter.length > 0) {
-            // Get the average or use first available rate
-            onlinePrice = onlinePackagesForCenter[0].oneClassPrice;
-          }
-        }
-      }
-
-      // Get offline rate from offline packages for this center
-      let offlinePrice = 125; // default
-      if (packages.offline.length > 0) {
-        const offlineCenter = packages.offline[0].centers.find(
-          (c) => c.centerId === centerId
-        );
-        if (offlineCenter) {
-          offlinePrice = offlineCenter.oneClassPrice;
-        }
-      }
-
-      setOnlineRate(onlinePrice);
-      setOfflineRate(offlinePrice);
-
-      console.log(
-        `Center ${centerId} rates - Online: ₹${onlinePrice}, Offline: ₹${offlinePrice}`
-      );
+      updateHybridPricing(centerId);
     }
   };
 
@@ -291,8 +555,8 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
           toast.error("Please select a center");
           return;
         }
-        if (numberOfClasses === 0) {
-          toast.error("Please enter number of classes");
+        if (numberOfClasses < 4) {
+          toast.error("Minimum 4 classes required");
           return;
         }
       }
@@ -302,8 +566,8 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
           toast.error("Please select a center for hybrid package");
           return;
         }
-        if (onlineClasses + offlineClasses === 0) {
-          toast.error("Please enter number of classes");
+        if (onlineClasses < 4 || offlineClasses < 4) {
+          toast.error("Minimum 4 classes required for both online and offline");
           return;
         }
       }
@@ -530,19 +794,21 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
                         10.30 am - 7.30 pm (Day)
                       </span>
                     </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="timeSlot"
-                        value="night"
-                        checked={selectedTimeSlot === "night"}
-                        onChange={(e) => handleTimeSlotChange(e.target.value)}
-                        className="mr-2 text-purple-600 focus:ring-purple-500"
-                      />
-                      <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                        7.30 pm - 10.30 am (Night)
-                      </span>
-                    </label>
+                    {packageType === "online" && (
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="timeSlot"
+                          value="night"
+                          checked={selectedTimeSlot === "night"}
+                          onChange={(e) => handleTimeSlotChange(e.target.value)}
+                          className="mr-2 text-purple-600 focus:ring-purple-500"
+                        />
+                        <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                          7.30 pm - 10.30 am (Night)
+                        </span>
+                      </label>
+                    )}
                   </div>
                 </div>
 
@@ -562,7 +828,7 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
                       <option value="">Select a center</option>
                       {availableCenters.map((center) => (
                         <option key={center.centerId} value={center.centerId}>
-                          {center.centerName} (₹{center.oneClassPrice}/class)
+                          {center.centerName}
                         </option>
                       ))}
                     </select>
@@ -570,21 +836,29 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
                 )}
 
                 {/* Number of Classes */}
-                {selectedCenter && classRate > 0 && (
+                {selectedCenter && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Number of Classes (₹{classRate}/class)
+                      Number of Classes (Minimum 4) - ₹{classRate}/class
                     </label>
-                    <input
-                      type="number"
-                      value={numberOfClasses}
-                      onChange={(e) =>
-                        setNumberOfClasses(Number(e.target.value))
-                      }
-                      className="block w-full rounded-md border border-gray-300 px-4 py-2"
-                      min="0"
-                      placeholder="Enter number of classes"
-                    />
+                    <div className="space-y-2">
+                      <input
+                        type="number"
+                        value={numberOfClasses}
+                        onChange={(e) =>
+                          handleNumberOfClassesChange(e.target.value)
+                        }
+                        onBlur={handleNumberOfClassesBlur}
+                        className="block w-full rounded-md border border-gray-300 px-4 py-2"
+                        min="4"
+                        placeholder="4"
+                      />
+                      {numberOfClasses !== "" && numberOfClasses < 4 && (
+                        <p className="text-red-500 text-sm">
+                          Minimum 4 classes required
+                        </p>
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -650,34 +924,52 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
                   <>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Number of Online Classes (₹{onlineRate}/class)
+                        Number of Online Classes (Minimum 4) - ₹{onlineRate}
+                        /class
                       </label>
-                      <input
-                        type="number"
-                        value={onlineClasses}
-                        onChange={(e) =>
-                          setOnlineClasses(Number(e.target.value))
-                        }
-                        className="block w-full rounded-md border border-gray-300 px-4 py-2"
-                        min="0"
-                        placeholder="Enter number of online classes"
-                      />
+                      <div className="space-y-2">
+                        <input
+                          type="number"
+                          value={onlineClasses}
+                          onChange={(e) =>
+                            handleOnlineClassesChange(e.target.value)
+                          }
+                          onBlur={handleOnlineClassesBlur}
+                          className="block w-full rounded-md border border-gray-300 px-4 py-2"
+                          min="4"
+                          placeholder="4"
+                        />
+                        {onlineClasses !== "" && onlineClasses < 4 && (
+                          <p className="text-red-500 text-sm">
+                            Minimum 4 classes required
+                          </p>
+                        )}
+                      </div>
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Number of Offline Classes (₹{offlineRate}/class)
+                        Number of Offline Classes (Minimum 4) - ₹{offlineRate}
+                        /class
                       </label>
-                      <input
-                        type="number"
-                        value={offlineClasses}
-                        onChange={(e) =>
-                          setOfflineClasses(Number(e.target.value))
-                        }
-                        className="block w-full rounded-md border border-gray-300 px-4 py-2"
-                        min="0"
-                        placeholder="Enter number of offline classes"
-                      />
+                      <div className="space-y-2">
+                        <input
+                          type="number"
+                          value={offlineClasses}
+                          onChange={(e) =>
+                            handleOfflineClassesChange(e.target.value)
+                          }
+                          onBlur={handleOfflineClassesBlur}
+                          className="block w-full rounded-md border border-gray-300 px-4 py-2"
+                          min="4"
+                          placeholder="4"
+                        />
+                        {offlineClasses !== "" && offlineClasses < 4 && (
+                          <p className="text-red-500 text-sm">
+                            Minimum 4 classes required
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </>
                 )}
@@ -734,6 +1026,34 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
             {packageType && (
               <div className="bg-white p-4 rounded-lg shadow-sm">
                 <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Package Type:</span>
+                    <span className="font-medium capitalize">
+                      {packageType}
+                    </span>
+                  </div>
+                  {(packageType === "online" || packageType === "offline") &&
+                    numberOfClasses > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Classes:</span>
+                        <span className="font-medium">{numberOfClasses}</span>
+                      </div>
+                    )}
+                  {packageType === "hybrid" &&
+                    (onlineClasses > 0 || offlineClasses > 0) && (
+                      <>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Online Classes:</span>
+                          <span className="font-medium">{onlineClasses}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">
+                            Offline Classes:
+                          </span>
+                          <span className="font-medium">{offlineClasses}</span>
+                        </div>
+                      </>
+                    )}
                   <div className="flex justify-between">
                     <span className="text-gray-600">
                       Base Amount (GST Included)

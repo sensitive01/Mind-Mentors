@@ -30,6 +30,8 @@ parentRoute.get("/get-conducted-class-details/:kidId",parentController.getConduc
 parentRoute.get("/get-my-name/:parentId",parentController.getMyName)
 parentRoute.get("/get-kid-shedule-demo-details/:kidId",parentController.getParentSheduleDemoDetails)
 parentRoute.get("/get-reshedule-button/:kidId",parentController.getParentScheduleButton)
+parentRoute.get("/get-sheduled-class-data/:enqId",parentController.parentGetSheduledClassData)
+
 
 
 
@@ -64,6 +66,12 @@ parentRoute.put("/update-ticket-chats/:ticketId",parentController.updateSupportC
 parentRoute.post("/send-referal-data/:parentId",parentController.sendReferalData)
 parentRoute.post("/save-program-level/:kidId",parentController.saveProgramAndLevel)
 parentRoute.post("/book-demo-class-data/:kidId",parentController.parentBookDemoClassData)
+parentRoute.post("/parent-shedule-whole-class",parentController.parentAssignWholeClass)
+parentRoute.post("/parent-pause-class/:enqId/:classId",parentController.parentPauseTheClass)
+parentRoute.post("/parent-resume-class/:enqId/:classId",parentController.parentResumeTheClass)
+
+
+
 
 
 

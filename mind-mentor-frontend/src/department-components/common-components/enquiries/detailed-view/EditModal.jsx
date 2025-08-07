@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import { Button, Card, Select, Typography } from "antd";
 import { Box, Grid, Plus, Trash2 } from "lucide-react";
-import React from "react";
+import React, { useEffect } from "react";
 import PhoneInput from "react-phone-input-2";
 
 const EditModal = ({
@@ -28,6 +28,67 @@ const EditModal = ({
   selectedCenter,
   handleCenterChange,
 }) => {
+  // Helper function to get combined name
+  const getCombinedName = (firstName, lastName) => {
+    if (!firstName && !lastName) return "";
+    return `${firstName || ""} ${lastName || ""}`.trim();
+  };
+
+  // Helper function to get display value for combined name field
+  const getParentDisplayName = () => {
+    if (formData.parentName) return formData.parentName;
+    return getCombinedName(formData.parentFirstName, formData.parentLastName);
+  };
+
+  const getKidDisplayName = () => {
+    if (formData.kidName) return formData.kidName;
+    return getCombinedName(formData.kidFirstName, formData.kidLastName);
+  };
+
+  // Enhanced input change handler for names
+  const handleNameInputChange = (field, value) => {
+    if (field === "parentName") {
+      const names = value.trim().split(" ");
+      const firstName = names[0] || "";
+      const lastName = names.slice(1).join(" ");
+
+      // Update both combined and separate fields
+      handleInputChange("parentName", value);
+      handleInputChange("parentFirstName", firstName);
+      handleInputChange("parentLastName", lastName);
+    } else if (field === "kidName") {
+      const names = value.trim().split(" ");
+      const firstName = names[0] || "";
+      const lastName = names.slice(1).join(" ");
+
+      // Update both combined and separate fields
+      handleInputChange("kidName", value);
+      handleInputChange("kidFirstName", firstName);
+      handleInputChange("kidLastName", lastName);
+    } else if (field === "parentFirstName" || field === "parentLastName") {
+      handleInputChange(field, value);
+
+      // Update combined name
+      const firstName =
+        field === "parentFirstName" ? value : formData.parentFirstName;
+      const lastName =
+        field === "parentLastName" ? value : formData.parentLastName;
+      const combinedName = getCombinedName(firstName, lastName);
+      handleInputChange("parentName", combinedName);
+    } else if (field === "kidFirstName" || field === "kidLastName") {
+      handleInputChange(field, value);
+
+      // Update combined name
+      const firstName =
+        field === "kidFirstName" ? value : formData.kidFirstName;
+      const lastName = field === "kidLastName" ? value : formData.kidLastName;
+      const combinedName = getCombinedName(firstName, lastName);
+      handleInputChange("kidName", combinedName);
+    } else {
+      handleInputChange(field, value);
+    }
+  };
+
   return (
     <>
       <Grid item xs={12}>
@@ -35,24 +96,52 @@ const EditModal = ({
           Parent Information
         </Typography>
         <Grid container spacing={2}>
+          {/* Combined Parent Name Field */}
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
               label="Parent Name"
-              value={formData.parentName || ""}
-              onChange={(e) => handleInputChange("parentName", e.target.value)}
-              multiline
+              value={getParentDisplayName()}
+              onChange={(e) =>
+                handleNameInputChange("parentName", e.target.value)
+              }
+              placeholder="Enter full name"
             />
           </Grid>
+
+          {/* Separate Parent Name Fields */}
+          {/* <Grid item xs={12} md={3}>
+            <TextField
+              fullWidth
+              label="First Name"
+              value={formData.parentFirstName || ""}
+              onChange={(e) =>
+                handleNameInputChange("parentFirstName", e.target.value)
+              }
+              placeholder="First name"
+            />
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <TextField
+              fullWidth
+              label="Last Name"
+              value={formData.parentLastName || ""}
+              onChange={(e) =>
+                handleNameInputChange("parentLastName", e.target.value)
+              }
+              placeholder="Last name"
+            />
+          </Grid> */}
+
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
               label="Email"
               value={formData.email || ""}
-              onChange={(e) => handleInputChange("email", e.target.value)}
-              multiline
+              onChange={(e) => handleNameInputChange("email", e.target.value)}
             />
           </Grid>
+
           <Grid item xs={12} md={6}>
             <Box>
               <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>
@@ -61,7 +150,9 @@ const EditModal = ({
               <PhoneInput
                 country={"in"}
                 value={formData.whatsappNumber || ""}
-                onChange={(value) => handleInputChange("whatsappNumber", value)}
+                onChange={(value) =>
+                  handleNameInputChange("whatsappNumber", value)
+                }
                 inputStyle={{
                   width: "100%",
                   height: "56px",
@@ -87,7 +178,9 @@ const EditModal = ({
               <PhoneInput
                 country={"in"}
                 value={formData.contactNumber || ""}
-                onChange={(value) => handleInputChange("contactNumber", value)}
+                onChange={(value) =>
+                  handleNameInputChange("contactNumber", value)
+                }
                 inputStyle={{
                   width: "100%",
                   height: "56px",
@@ -113,22 +206,47 @@ const EditModal = ({
           Kid Information
         </Typography>
         <Grid container spacing={2}>
+          {/* Combined Kid Name Field */}
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
               label="Kid Name"
-              value={formData.kidName || ""}
-              onChange={(e) => handleInputChange("kidName", e.target.value)}
-              multiline
+              value={getKidDisplayName()}
+              onChange={(e) => handleNameInputChange("kidName", e.target.value)}
+              placeholder="Enter full name"
             />
           </Grid>
+
+          {/* Separate Kid Name Fields */}
+          <Grid item xs={12} md={3}>
+            <TextField
+              fullWidth
+              label="First Name"
+              value={formData.kidFirstName || ""}
+              onChange={(e) =>
+                handleNameInputChange("kidFirstName", e.target.value)
+              }
+              placeholder="First name"
+            />
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <TextField
+              fullWidth
+              label="Last Name"
+              value={formData.kidLastName || ""}
+              onChange={(e) =>
+                handleNameInputChange("kidLastName", e.target.value)
+              }
+              placeholder="Last name"
+            />
+          </Grid>
+
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
               label="Age"
               value={formData.kidsAge || ""}
-              onChange={(e) => handleInputChange("kidsAge", e.target.value)}
-              multiline
+              onChange={(e) => handleNameInputChange("kidsAge", e.target.value)}
             />
           </Grid>
           <Grid item xs={12} md={6}>
@@ -137,7 +255,9 @@ const EditModal = ({
               fullWidth
               label="Gender"
               value={formData.kidsGender || ""}
-              onChange={(e) => handleInputChange("kidsGender", e.target.value)}
+              onChange={(e) =>
+                handleNameInputChange("kidsGender", e.target.value)
+              }
             >
               <MenuItem value="Male">Male</MenuItem>
               <MenuItem value="Female">Female</MenuItem>
@@ -148,8 +268,7 @@ const EditModal = ({
               fullWidth
               label="Pincode"
               value={formData.pincode || ""}
-              onChange={(e) => handleInputChange("pincode", e.target.value)}
-              multiline
+              onChange={(e) => handleNameInputChange("pincode", e.target.value)}
             />
           </Grid>
 
@@ -158,8 +277,7 @@ const EditModal = ({
               fullWidth
               label="City"
               value={formData.city || ""}
-              onChange={(e) => handleInputChange("city", e.target.value)}
-              multiline
+              onChange={(e) => handleNameInputChange("city", e.target.value)}
             />
           </Grid>
           <Grid item xs={12} md={6}>
@@ -167,8 +285,7 @@ const EditModal = ({
               fullWidth
               label="State"
               value={formData.state || ""}
-              onChange={(e) => handleInputChange("state", e.target.value)}
-              multiline
+              onChange={(e) => handleNameInputChange("state", e.target.value)}
             />
           </Grid>
         </Grid>
@@ -229,7 +346,7 @@ const EditModal = ({
                 ...(formData.programs || []),
                 { program: "", level: "" },
               ];
-              handleInputChange("programs", updatedPrograms);
+              handleNameInputChange("programs", updatedPrograms);
             }}
           >
             Add Program
@@ -275,7 +392,7 @@ const EditModal = ({
                     onChange={(e) => {
                       const updatedPrograms = [...formData.programs];
                       updatedPrograms[index].level = e.target.value;
-                      handleInputChange("programs", updatedPrograms);
+                      handleNameInputChange("programs", updatedPrograms);
                     }}
                     label="Level"
                     disabled={!program.program}
@@ -295,7 +412,7 @@ const EditModal = ({
                     const updatedPrograms = formData.programs.filter(
                       (_, i) => i !== index
                     );
-                    handleInputChange("programs", updatedPrograms);
+                    handleNameInputChange("programs", updatedPrograms);
                   }}
                 >
                   <Trash2 size={20} />
@@ -323,7 +440,7 @@ const EditModal = ({
                 labelId="enquiry-field-label"
                 value={formData.enquiryField || ""}
                 onChange={(e) =>
-                  handleInputChange("enquiryField", e.target.value)
+                  handleNameInputChange("enquiryField", e.target.value)
                 }
                 label="Enquiry Field"
               >
@@ -341,8 +458,11 @@ const EditModal = ({
                 Payment Status
               </InputLabel>
               <Select
-                value={formData.payment || ""}
-                onChange={(e) => handleInputChange("payment", e.target.value)}
+                value={formData.payment || formData.paymentStatus || ""}
+                onChange={(e) => {
+                  handleNameInputChange("payment", e.target.value);
+                  handleNameInputChange("paymentStatus", e.target.value);
+                }}
                 label="Payment"
                 disabled
               >
@@ -362,7 +482,9 @@ const EditModal = ({
               </InputLabel>
               <Select
                 value={formData.source || ""}
-                onChange={(e) => handleInputChange("source", e.target.value)}
+                onChange={(e) =>
+                  handleNameInputChange("source", e.target.value)
+                }
               >
                 <MenuItem value="">-Select-</MenuItem>
                 <MenuItem value="website">Website</MenuItem>
@@ -388,7 +510,7 @@ const EditModal = ({
               <Select
                 value={formData.disposition || ""}
                 onChange={(e) =>
-                  handleInputChange("disposition", e.target.value)
+                  handleNameInputChange("disposition", e.target.value)
                 }
               >
                 <MenuItem value="RnR">RnR</MenuItem>
@@ -409,7 +531,7 @@ const EditModal = ({
               <Select
                 value={formData.scheduleDemo?.status || ""}
                 onChange={(e) =>
-                  handleInputChange("scheduleDemo", {
+                  handleNameInputChange("scheduleDemo", {
                     ...formData.scheduleDemo,
                     status: e.target.value,
                   })
@@ -434,7 +556,7 @@ const EditModal = ({
               <Select
                 value={formData.enquiryStatus || ""}
                 onChange={(e) =>
-                  handleInputChange("enquiryStatus", e.target.value)
+                  handleNameInputChange("enquiryStatus", e.target.value)
                 }
               >
                 <MenuItem value="Pending">Pending</MenuItem>
@@ -455,7 +577,7 @@ const EditModal = ({
               <Select
                 value={formData.enquiryType || ""}
                 onChange={(e) =>
-                  handleInputChange("enquiryType", e.target.value)
+                  handleNameInputChange("enquiryType", e.target.value)
                 }
               >
                 <MenuItem value="warm">Warm</MenuItem>
@@ -477,8 +599,11 @@ const EditModal = ({
               label="Remarks"
               multiline
               rows={4}
-              value={formData.message || ""}
-              onChange={(e) => handleInputChange("message", e.target.value)}
+              value={formData.message || formData.notes || ""}
+              onChange={(e) => {
+                handleNameInputChange("message", e.target.value);
+                handleNameInputChange("notes", e.target.value);
+              }}
             />
           </Grid>
         </Grid>

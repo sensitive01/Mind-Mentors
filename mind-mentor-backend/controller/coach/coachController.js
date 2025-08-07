@@ -10,6 +10,8 @@ const enquiryLogs = require("../../model/enquiryLogs");
 const operationDeptModel = require("../../model/operationDeptModel");
 const { zoomIntegration2 } = require("../../utils/zoomIntegration2");
 const bbbClassModel = require("../../model/bbbClassModel/bbbClassModel");
+const NotesSection = require("../../model/enquiryNoteSection");
+const demoClass = require("../../model/demoClassModel");
 
 // Post availabile days for the class
 
@@ -175,11 +177,16 @@ const addFeedBackAndAttendance = async (req, res) => {
     const { submissionData } = req.body;
     const { classId, coachId } = req.params;
     console.log("Submission data:", submissionData);
+    const empData = await Employee.findOne(
+      { _id: coachId },
+      { firstName: 1, department: 1 }
+    );
 
     const classType = await ClassSchedule.findOne({
       _id: classId,
-      classType: "Demo",
+      isDemoAdded: true,
     });
+    console.log("classType", classType);
 
     if (classType) {
       await ClassSchedule.updateOne(
@@ -197,6 +204,17 @@ const addFeedBackAndAttendance = async (req, res) => {
         }
       );
     }
+
+    const demoStatusUpdatePromises = submissionData?.students?.map(
+      async (student) => {
+        await demoClass.findOneAndUpdate(
+          { kidId: student.studentId, classId: classId },
+          { $set: { status: "Conducted" } }
+        );
+      }
+    );
+
+    await Promise.all(demoStatusUpdatePromises);
 
     const newClass = new ConductedClass({
       classId: submissionData.classId,
@@ -232,22 +250,64 @@ const addFeedBackAndAttendance = async (req, res) => {
 
     const logUpdatePromises = submissionData?.students?.map(async (student) => {
       const kid = kidsData.find((k) => k.kidId === student.studentId);
-      console.log("kids", kid);
-      if (kid && kid.logs) {
-        console.log("ok");
+      if (
+        student.studentType === "demo" &&
+        student.levelUpdate && // Make sure it's provided
+        student.studentId
+      ) {
+        const recNote = `Recommending level upgrade from ${classType.program} wit level ${classType.level} to  ${student.levelUpdate}`;
+
+        const enqData = await operationDeptModel.findOneAndUpdate(
+          { kidId: student.studentId },
+          { $set: { recomentedLevel: student.levelUpdate, note: recNote,"scheduleDemo.status":"Conducted" } },
+          { new: true, upsert: true }
+        );
+        await enquiryLogs.findByIdAndUpdate(
+          kid.logs,
+          {
+            $push: {
+              logs: {
+                employeeId: coachId,
+                comment: `Recommending level upgrade for the kid  ${student.levelUpdate}. Created on ${formattedDateTime}`,
+                conductedClassId: classId,
+                createdAt: new Date(),
+                employeeName: empData.firstName,
+                department: empData.department,
+              },
+            },
+          },
+          { new: true }
+        );
+        await NotesSection.findOneAndUpdate(
+          { enqId: enqData._id },
+          {
+            $push: {
+              notes: {
+                employeeId: coachId,
+                note: recNote,
+                updatedBy: empData.firstName,
+                department: empData.department,
+                createdOn: formattedDateTime,
+              },
+            },
+          },
+          { new: true }
+        );
         await enquiryLogs.findByIdAndUpdate(
           kid.logs,
           {
             $push: {
               logs: {
                 coachId,
-                action: `Attendance marked as ${
+                comment: `Attendance marked as ${
                   student.present ? "Present" : "Absent"
                 }. Feedback: "${
                   student.feedback || "No feedback provided"
                 }". Created on ${formattedDateTime}`,
                 conductedClassId: classId,
                 createdAt: new Date(),
+                employeeName: empData.firstName,
+                department: empData.department,
               },
             },
           },

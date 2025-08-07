@@ -895,7 +895,12 @@ const getProspectsData = async (req, res) => {
 const updateEnquiry = async (req, res) => {
   try {
     console.log("Welcome to update enquiry", req.params, req.body);
-    const { id } = req.params;
+    const { id, empId } = req.params;
+
+    const empData = await Employee.findById(empId, {
+      firstName: 1,
+      department: 1,
+    });
 
     if (req.body.parentName) {
       const parentNameParts = req.body.parentName.trim().split(" ");
@@ -912,6 +917,29 @@ const updateEnquiry = async (req, res) => {
     const updatedEntry = await OperationDept.findByIdAndUpdate(id, req.body, {
       new: true,
     });
+
+    console.log("updatedEntry", updatedEntry);
+    const kidData = await kidSchema.findOneAndUpdate(
+      { _id: updatedEntry.kidId },
+      { kidsName: req.body.kidFirstName },
+      { new: true }
+    );
+
+    console.log("kidData", kidData);
+    await enquiryLogs.updateOne(
+      { enqId: id },
+      {
+        $push: {
+          logs: {
+            employeeName: empData.firstName,
+            department: empData.department,
+            comment: `Form data are updated `,
+            action: "",
+          },
+        },
+      },
+      { upsert: true }
+    );
 
     if (!updatedEntry) {
       return res.status(404).json({ message: "Enquiry not found" });

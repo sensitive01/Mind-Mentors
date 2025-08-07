@@ -572,7 +572,7 @@ export const checkMmIdAvailability = async (MMid) => {
   }
 };
 
-export const updateChildChessId = async (id,MMid) => {
+export const updateChildChessId = async (id, MMid) => {
   try {
     const response = await parentInstance.put(`/parent/update-mm-id/${id}`, {
       MMid,
@@ -583,10 +583,72 @@ export const updateChildChessId = async (id,MMid) => {
   }
 };
 
-
 export const getIsSheduledResponse = async (id) => {
   try {
-    const response = await parentInstance.get(`/parent/get-reshedule-button/${id}`);
+    const response = await parentInstance.get(
+      `/parent/get-reshedule-button/${id}`
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+export const parentGetSheduledClassData = async (enqId) => {
+  try {
+    const response = await parentInstance.get(
+      `/parent/get-sheduled-class-data/${enqId}`
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+export const parentSheduleWholeClasses = async (submissionData) => {
+  try {
+    const response = await parentInstance.post(
+      `/parent/parent-shedule-whole-class`,
+      { submissionData }
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+export const parentPauseTheClass = async (
+  enqId,
+  updatedData,
+  pauseRemarks,
+  classId,
+  pauseStartDate,
+  pauseEndDate
+) => {
+  try {
+    const response = await parentInstance.post(
+      `/parent/parent-pause-class/${enqId}/${classId}`,
+      {
+        updatedData,
+        pauseRemarks,
+        pauseStartDate,
+        pauseEndDate,
+      }
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};
+
+export const parentResumeTheClass = async (enqId, updatedData, classId) => {
+  try {
+    const response = await parentInstance.post(
+      `/parent/parent-resume-class/${enqId}/${classId}`,
+      {
+        updatedData,
+      }
+    );
     return response;
   } catch (err) {
     return err;

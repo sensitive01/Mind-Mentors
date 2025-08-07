@@ -21,7 +21,7 @@ import {
   pauseTheClass,
   resumeTheClass,
 } from "../../../../api/service/employee/serviceDeliveryService";
-import { getTheEnqId } from "../../../../api/service/parent/ParentService";
+import { getTheEnqId, parentPauseTheClass, parentResumeTheClass } from "../../../../api/service/parent/ParentService";
 import PauseModel from "../../../../department-components/common-components/assign-class/PauseModel";
 
 export default function ResheduleClasses() {
@@ -249,11 +249,13 @@ export default function ResheduleClasses() {
       );
       console.log("Updated data after pause:", updatedData);
 
-      const response = await pauseTheClass(
+      const response = await parentPauseTheClass(
         enqId,
         updatedData,
         pauseRemarks,
-        classId
+        classId,
+        pauseDate,
+        pauseEndDate
       );
       console.log("Pause API response:", response);
 
@@ -287,7 +289,7 @@ export default function ResheduleClasses() {
         updatedData.filter((session) => session.status === "scheduled")
       );
 
-      const response = await resumeTheClass(enqId, updatedData, classId);
+      const response = await parentResumeTheClass(enqId, updatedData, classId);
 
       setData(updatedData);
       setIsPaused(false);

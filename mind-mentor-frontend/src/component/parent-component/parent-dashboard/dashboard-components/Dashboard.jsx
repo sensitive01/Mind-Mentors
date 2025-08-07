@@ -5,9 +5,9 @@ import {
   getMyKidData,
   getParentName,
   updateParentName,
-  // updateParentName
 } from "../../../../api/service/parent/ParentService";
 import { useNavigate } from "react-router-dom";
+import { ChevronRight, UserPlus } from "lucide-react";
 
 const NameUpdateModal = ({
   showNameModal,
@@ -216,54 +216,46 @@ const ParentDashboard = () => {
                   color: "bg-blue-100",
                 },
               ];
-            } else if (demoStatus === "Completed") {
-              // Full dashboard data for completed demos
+            } else if (
+              demoStatus === "Conducted" &&
+              enquiryStatus === "Pending"
+            ) {
+              // Demo conducted but not enrolled - show demo results
               stats = {
                 level: program.level || "Beginner",
-                progress: 65,
-                streak: 5,
-                totalGames: program.program === "Chess" ? 24 : 0,
-                wins: program.program === "Chess" ? 15 : 0,
-                avgTime: program.program === "Rubik's Cube" ? "1:45" : "",
-                bestTime: program.program === "Rubik's Cube" ? "1:20" : "",
-                timeSpent: "12h",
-                nextMilestone:
-                  program.program === "Chess"
-                    ? "Learn castle move"
-                    : "Learn advanced F2L",
+                progress: 35,
+                streak: 2,
+                totalGames: program.program === "Chess" ? 5 : 0,
+                wins: program.program === "Chess" ? 3 : 0,
+                avgTime: program.program === "Rubik's Cube" ? "2:30" : "",
+                bestTime: program.program === "Rubik's Cube" ? "2:15" : "",
+                timeSpent: "3h",
+                nextMilestone: "Complete enrollment to continue",
               };
 
               attendance = {
-                total: 16,
-                attended: 9,
-                nextClass: demoClassInfo
-                  ? demoClassInfo.displayText
-                  : "Today, 4:00 PM",
+                total: 1,
+                attended: 1,
+                missed: 0,
+                remaining: 0,
+                percentage: 100,
+                nextClass: "Complete enrollment to schedule next class",
               };
 
               recentAchievements = [
                 {
+                  title: "Demo Class Completed!",
+                  date: "Recently",
+                  icon: "🎉",
+                  color: "bg-green-100",
+                },
+                {
                   title:
                     program.program === "Chess"
-                      ? "First Checkmate!"
-                      : "Sub 2-minute Solve",
-                  date: "2 days ago",
+                      ? "Learned Basic Moves"
+                      : "First Cube Solve",
+                  date: "In demo class",
                   icon: program.program === "Chess" ? "♟️" : "🎲",
-                  color: "bg-purple-100",
-                },
-                {
-                  title: "5-day Practice Streak",
-                  date: "Today",
-                  icon: "🔥",
-                  color: "bg-orange-100",
-                },
-                {
-                  title:
-                    program.program === "Chess"
-                      ? "Completed Pawn Lesson"
-                      : "Mastered White Cross",
-                  date: "Yesterday",
-                  icon: "📚",
                   color: "bg-blue-100",
                 },
               ];
@@ -316,8 +308,8 @@ const ParentDashboard = () => {
               avatar: kid.gender === "female" ? girlAvatar : boyAvatar,
               program: program.program,
               demoStatus,
-              enquiryStatus, // Add enquiry status
-              demoClassInfo, // Add demo class info
+              enquiryStatus,
+              demoClassInfo,
               attendance,
               stats,
               recentAchievements,
@@ -371,6 +363,11 @@ const ParentDashboard = () => {
     navigate(`/parent/kid/demo-class-shedule/${kidId}`);
   };
 
+  // NEW: Handle enrollment navigation
+  const handleEnrollNow = (kidId) => {
+    navigate(`/parent-package-selection/${kidId}`);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-4 md:p-6 flex items-center justify-center">
@@ -394,19 +391,24 @@ const ParentDashboard = () => {
           handleNameSubmit={handleNameSubmit}
           nameUpdateLoading={nameUpdateLoading}
         />
-        <div className="text-center max-w-md">
-          <div className="text-5xl mb-4">👶</div>
-          <h2 className="text-2xl font-bold text-slate-800 mb-2">
-            No children found
-          </h2>
-          <p className="text-slate-600 mb-6">
-            It looks like you haven't added any children to your account yet.
+        <div className="bg-white rounded-lg shadow-lg p-6 text-center max-w-lg mx-auto">
+          <div className="bg-purple-100 w-12 h-12 rounded-full mx-auto mb-4 flex items-center justify-center group hover:scale-110 transition-transform duration-300">
+            <UserPlus className="w-6 h-6 text-primary group-hover:rotate-12 transition-transform" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">
+            Begin Your Child's Journey
+          </h3>
+          <p className="text-gray-600 mb-4 text-sm max-w-md mx-auto">
+            Transform your child's potential into mastery. Start their chess
+            adventure today.
           </p>
           <button
-            onClick={handleAddKid}
-            className="px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary transition-colors"
+            onClick={() => navigate("/parent/add-kid/true")}
+            className="inline-flex items-center px-4 py-2 rounded-lg bg-gradient-to-r from-primary to-primary hover:from-primary hover:to-primary text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 group"
           >
-            Add Your First Child
+            <UserPlus className="w-4 h-4 mr-2 group-hover:rotate-12 transition-transform" />
+            Add Your Champion
+            <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
       </div>
@@ -549,7 +551,7 @@ const ParentDashboard = () => {
                   <div className="font-semibold text-slate-700 mt-1 group-hover:text-green-700">
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        selectedChildData.demoStatus === "Completed"
+                        selectedChildData.demoStatus === "Conducted"
                           ? "bg-green-100 text-green-800"
                           : selectedChildData.demoStatus === "Scheduled"
                           ? "bg-blue-100 text-blue-800"
@@ -602,9 +604,15 @@ const ParentDashboard = () => {
         </div>
       </div>
 
-      {/* Conditional Main Content based on Enquiry Status */}
+      {/* Conditional Main Content based on Status */}
       {selectedChildData.enquiryStatus === "Active" ? (
         <ActiveStudentDashboard childData={selectedChildData} />
+      ) : selectedChildData.demoStatus === "Conducted" &&
+        selectedChildData.enquiryStatus === "Pending" ? (
+        <DemoConductedEnrollmentView
+          childData={selectedChildData}
+          handleEnrollNow={handleEnrollNow}
+        />
       ) : selectedChildData.demoStatus === "Pending" ? (
         <DemoPendingView childData={selectedChildData} navigate={navigate} />
       ) : selectedChildData.demoStatus === "Scheduled" ? (
@@ -616,12 +624,201 @@ const ParentDashboard = () => {
   );
 };
 
-// New view for active students (enrolled kids)
+// NEW: Demo Conducted with Enrollment Pending View
+const DemoConductedEnrollmentView = ({ childData, handleEnrollNow }) => (
+  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    {/* Main Content */}
+    <div className="lg:col-span-2 space-y-6">
+      {/* Demo Results Card */}
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
+        <div className="flex items-center gap-3 mb-6">
+          <span className="text-3xl">🎉</span>
+          <h3 className="text-lg font-semibold text-slate-800">
+            Demo Class Completed Successfully!
+          </h3>
+        </div>
+
+        {/* Demo Class Details */}
+        {childData.demoClassInfo && (
+          <div className="bg-green-50 rounded-lg p-6 mb-6">
+            <div className="flex items-start gap-4">
+              <span className="text-3xl">✅</span>
+              <div className="flex-1">
+                <h4 className="font-semibold text-slate-800 text-lg mb-3">
+                  Demo Class Details
+                </h4>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-white rounded-lg p-4">
+                    <div className="text-sm text-slate-600">Program</div>
+                    <div className="font-medium text-slate-800 mt-1 flex items-center gap-2">
+                      <span className="text-xl">
+                        {childData.program === "Chess" ? "♟️" : "🎲"}
+                      </span>
+                      {childData.demoClassInfo.program}
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-4">
+                    <div className="text-sm text-slate-600">Level</div>
+                    <div className="font-medium text-slate-800 mt-1">
+                      {childData.demoClassInfo.level}
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-4">
+                    <div className="text-sm text-slate-600">Class Time</div>
+                    <div className="font-medium text-slate-800 mt-1">
+                      {childData.demoClassInfo.classTime}
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-4">
+                    <div className="text-sm text-slate-600">Coach</div>
+                    <div className="font-medium text-slate-800 mt-1">
+                      {childData.demoClassInfo.coachName}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Enrollment Call to Action */}
+        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <h4 className="text-xl font-semibold mb-2">
+                Ready to Start the Learning Journey?
+              </h4>
+              <p className="text-indigo-100 mb-4">
+                {childData.name} showed great potential in the demo class!
+                Choose a package to continue learning and unlock their full
+                potential.
+              </p>
+            </div>
+            <button
+              onClick={() => handleEnrollNow(childData.id)}
+              className="bg-white text-indigo-600 px-6 py-3 rounded-lg font-semibold hover:bg-indigo-50 transition-colors whitespace-nowrap ml-4"
+            >
+              Enroll Now
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Sidebar */}
+    <div className="space-y-6">
+      {/* Recent Achievements */}
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
+        <h3 className="text-lg font-semibold text-slate-800 mb-4">
+          Demo Achievements
+        </h3>
+        <div className="space-y-3">
+          {childData.recentAchievements.length > 0 ? (
+            childData.recentAchievements.map((achievement, index) => (
+              <div
+                key={index}
+                className={`flex items-center gap-4 p-3 ${achievement.color} rounded-lg`}
+              >
+                <span className="text-2xl">{achievement.icon}</span>
+                <div className="flex-1">
+                  <div className="font-medium text-slate-800">
+                    {achievement.title}
+                  </div>
+                  <div className="text-sm text-slate-500">
+                    {achievement.date}
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center p-6">
+              <div className="text-4xl mb-3">🏆</div>
+              <div className="text-slate-600">No achievements yet</div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Next Steps */}
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
+        <h3 className="text-lg font-semibold text-slate-800 mb-4">
+          What's Next?
+        </h3>
+        <div className="space-y-4">
+          <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
+            <span className="text-2xl">1️⃣</span>
+            <div>
+              <div className="font-medium text-slate-800">Choose Package</div>
+              <div className="text-sm text-slate-600">
+                Select the perfect learning plan for {childData.name}
+              </div>
+            </div>
+          </div>
+          <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
+            <span className="text-2xl">2️⃣</span>
+            <div>
+              <div className="font-medium text-slate-800">Start Classes</div>
+              <div className="text-sm text-slate-600">
+                Begin regular learning sessions with expert coaches
+              </div>
+            </div>
+          </div>
+          <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-lg">
+            <span className="text-2xl">3️⃣</span>
+            <div>
+              <div className="font-medium text-slate-800">Track Progress</div>
+              <div className="text-sm text-slate-600">
+                Monitor achievements and skill development
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Package Highlights */}
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
+        <h3 className="text-lg font-semibold text-slate-800 mb-4">
+          Package Benefits
+        </h3>
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <span className="text-green-500">✓</span>
+            <span className="text-sm text-slate-700">One-on-one coaching</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-green-500">✓</span>
+            <span className="text-sm text-slate-700">Flexible scheduling</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-green-500">✓</span>
+            <span className="text-sm text-slate-700">Progress tracking</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-green-500">✓</span>
+            <span className="text-sm text-slate-700">
+              Interactive learning tools
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-green-500">✓</span>
+            <span className="text-sm text-slate-700">Regular assessments</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// Enhanced Active Student Dashboard with Class Statistics
 const ActiveStudentDashboard = ({ childData }) => (
   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
     {/* Main Dashboard Section */}
     <div className="lg:col-span-2 space-y-6">
-      {/* Class Statistics */}
+      {/* Class Statistics - Enhanced for Active Students */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
@@ -635,32 +832,39 @@ const ActiveStudentDashboard = ({ childData }) => (
           </span>
         </div>
 
+        {/* Enhanced Statistics Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-blue-50 rounded-lg p-4 text-center">
+          <div className="bg-blue-50 rounded-lg p-4 text-center hover:bg-blue-100 transition-colors">
             <div className="text-2xl font-bold text-blue-600">
               {childData.attendance.total}
             </div>
             <div className="text-sm text-blue-600 font-medium">
               Total Classes
             </div>
+            <div className="text-xs text-blue-500 mt-1">Scheduled sessions</div>
           </div>
-          <div className="bg-green-50 rounded-lg p-4 text-center">
+          <div className="bg-green-50 rounded-lg p-4 text-center hover:bg-green-100 transition-colors">
             <div className="text-2xl font-bold text-green-600">
               {childData.attendance.attended}
             </div>
             <div className="text-sm text-green-600 font-medium">Attended</div>
+            <div className="text-xs text-green-500 mt-1">
+              Completed successfully
+            </div>
           </div>
-          <div className="bg-red-50 rounded-lg p-4 text-center">
+          <div className="bg-red-50 rounded-lg p-4 text-center hover:bg-red-100 transition-colors">
             <div className="text-2xl font-bold text-red-600">
               {childData.attendance.missed}
             </div>
             <div className="text-sm text-red-600 font-medium">Missed</div>
+            <div className="text-xs text-red-500 mt-1">Absent sessions</div>
           </div>
-          <div className="bg-purple-50 rounded-lg p-4 text-center">
+          <div className="bg-purple-50 rounded-lg p-4 text-center hover:bg-purple-100 transition-colors">
             <div className="text-2xl font-bold text-purple-600">
               {childData.attendance.remaining}
             </div>
             <div className="text-sm text-purple-600 font-medium">Remaining</div>
+            <div className="text-xs text-purple-500 mt-1">Classes left</div>
           </div>
         </div>
 
@@ -674,9 +878,12 @@ const ActiveStudentDashboard = ({ childData }) => (
           </div>
           <div className="h-3 bg-slate-100 rounded-full">
             <div
-              className="h-full bg-gradient-to-r from-green-400 to-green-500 rounded-full"
+              className="h-full bg-gradient-to-r from-green-400 to-green-500 rounded-full transition-all duration-500"
               style={{ width: `${childData.attendance.percentage}%` }}
             />
+          </div>
+          <div className="text-xs text-slate-500 mt-1">
+            Great attendance record! Keep it up!
           </div>
         </div>
       </div>
@@ -694,7 +901,7 @@ const ActiveStudentDashboard = ({ childData }) => (
           </div>
           {childData.program === "Chess" ? (
             <span className="text-sm font-medium text-indigo-600">
-              {childData.stats.wins} wins
+              {childData.stats.wins} wins / {childData.stats.totalGames} games
             </span>
           ) : (
             <span className="text-sm font-medium text-indigo-600">
@@ -716,7 +923,7 @@ const ActiveStudentDashboard = ({ childData }) => (
             </div>
             <div className="h-2 bg-slate-100 rounded-full">
               <div
-                className="h-full bg-indigo-500 rounded-full"
+                className="h-full bg-indigo-500 rounded-full transition-all duration-500"
                 style={{ width: `${childData.stats.progress}%` }}
               />
             </div>
@@ -731,7 +938,7 @@ const ActiveStudentDashboard = ({ childData }) => (
                   {childData.stats.streak} Day Streak!
                 </div>
                 <div className="text-sm text-slate-600">
-                  Keep practicing daily
+                  Keep practicing daily to maintain your streak
                 </div>
               </div>
             </div>
@@ -770,7 +977,7 @@ const ActiveStudentDashboard = ({ childData }) => (
             childData.recentAchievements.map((achievement, index) => (
               <div
                 key={index}
-                className={`flex items-center gap-4 p-3 ${achievement.color} rounded-lg`}
+                className={`flex items-center gap-4 p-3 ${achievement.color} rounded-lg hover:shadow-sm transition-shadow`}
               >
                 <span className="text-2xl">{achievement.icon}</span>
                 <div className="flex-1">
@@ -789,27 +996,6 @@ const ActiveStudentDashboard = ({ childData }) => (
               <div className="text-slate-600">No achievements yet</div>
             </div>
           )}
-        </div>
-      </div>
-
-      {/* Next Class Info */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
-        <h3 className="text-lg font-semibold text-slate-800 mb-4">
-          Next Class
-        </h3>
-        <div className="bg-indigo-50 rounded-lg p-4">
-          <div className="flex items-center gap-3 mb-3">
-            <span className="text-2xl">📅</span>
-            <div className="flex-1">
-              <div className="font-medium text-slate-800">Upcoming Class</div>
-              <div className="text-sm text-slate-600">
-                {childData.attendance.nextClass}
-              </div>
-            </div>
-          </div>
-          <div className="text-xs text-indigo-600 font-medium">
-            Don't forget to practice before class!
-          </div>
         </div>
       </div>
 
@@ -965,14 +1151,14 @@ const DemoScheduledView = ({ childData }) => (
                         Next Class Date
                       </div>
                       <div className="font-medium text-slate-800 mt-1">
-                        {childData.demoClassInfo.nextClassDate}
+                        {childData?.classInfo?.nextClassDate}
                       </div>
                     </div>
 
                     <div className="bg-white rounded-lg p-4">
                       <div className="text-sm text-slate-600">Time</div>
                       <div className="font-medium text-slate-800 mt-1">
-                        {childData.demoClassInfo.classTime}
+                        {childData?.demoClassInfo.classTime}
                       </div>
                     </div>
 

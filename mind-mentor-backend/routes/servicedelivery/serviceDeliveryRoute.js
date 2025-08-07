@@ -30,8 +30,8 @@ serviceRoute.post("/assign-whole-class", serviceController.assignWholeClass);
 serviceRoute.put("/add-extra-class-to-kid/:classId", serviceController.addExtraClassToKid);
 
 
-serviceRoute.post("/pause-class-temporary/:enqId/:classId", serviceController.pauseTheClassTemporary);
-serviceRoute.post("/resume-the-class/:enqId/:classId", serviceController.resumeTheClassBack);
+serviceRoute.post("/pause-class-temporary/:enqId/:classId/:empId", serviceController.pauseTheClassTemporary);
+serviceRoute.post("/resume-the-class/:enqId/:classId/:empId", serviceController.resumeTheClassBack);
 
 
 

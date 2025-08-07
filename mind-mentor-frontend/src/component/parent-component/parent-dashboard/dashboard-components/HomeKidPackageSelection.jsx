@@ -36,9 +36,9 @@ const HomeKidPackageSelection = () => {
   const [selectedTimeSlot, setSelectedTimeSlot] = useState("");
   const [availableCenters, setAvailableCenters] = useState([]);
   const [classRate, setClassRate] = useState(0);
-  const [numberOfClasses, setNumberOfClasses] = useState(4);
-  const [onlineClasses, setOnlineClasses] = useState(4);
-  const [offlineClasses, setOfflineClasses] = useState(4);
+  const [numberOfClasses, setNumberOfClasses] = useState(8); // Changed from 4 to 8
+  const [onlineClasses, setOnlineClasses] = useState(8); // Changed from 4 to 8
+  const [offlineClasses, setOfflineClasses] = useState(8); // Changed from 4 to 8
   const [onlineRate, setOnlineRate] = useState(100);
   const [offlineRate, setOfflineRate] = useState(125);
   const [kitItems, setKitItems] = useState([{ name: "", quantity: 0 }]);
@@ -68,6 +68,10 @@ const HomeKidPackageSelection = () => {
   const hasValidProgram =
     selectedProgram || (data.programs && data.programs.length > 0);
 
+  // Helper to determine if package selection should be shown
+  const shouldShowPackageSelection =
+    (selectedKid && !showProgramSelection && hasValidProgram) || viewOnlyMode;
+
   // Helper function to format time display
   const getTimeSlotDisplay = (timeSlot) => {
     if (timeSlot === "day") {
@@ -76,6 +80,297 @@ const HomeKidPackageSelection = () => {
       return "7:30 PM - 10:30 AM (Night)";
     }
     return timeSlot;
+  };
+
+  // Helper function to find the correct package and pricing based on number of classes
+  const findPackageForClasses = (
+    packages,
+    numberOfClasses,
+    timeSlot,
+    centerId = null
+  ) => {
+    // Filter packages by time slot first
+    const timeFilteredPackages = packages.filter((pkg) => {
+      const packageTimeSlot = pkg.packageName.toLowerCase().includes("night")
+        ? "night"
+        : "day";
+      return packageTimeSlot === timeSlot;
+    });
+
+    // Find the package range that the numberOfClasses falls into
+    const applicablePackage = timeFilteredPackages.find((pkg) => {
+      return (
+        numberOfClasses >= pkg.classStartFrom &&
+        numberOfClasses <= pkg.classUpTo
+      );
+    });
+
+    if (applicablePackage) {
+      return {
+        oneClassPrice: applicablePackage.oneClassPrice,
+        packageData: applicablePackage,
+      };
+    }
+
+    // If no exact range found, use the closest higher range or default logic
+    const sortedPackages = timeFilteredPackages.sort(
+      (a, b) => a.classStartFrom - b.classStartFrom
+    );
+
+    for (let pkg of sortedPackages) {
+      if (numberOfClasses <= pkg.classUpTo) {
+        return {
+          oneClassPrice: pkg.oneClassPrice,
+          packageData: pkg,
+        };
+      }
+    }
+
+    // If numberOfClasses is higher than any range, use the highest range pricing
+    if (sortedPackages.length > 0) {
+      return {
+        oneClassPrice: sortedPackages[sortedPackages.length - 1].oneClassPrice,
+        packageData: sortedPackages[sortedPackages.length - 1],
+      };
+    }
+
+    // Fallback
+    return {
+      oneClassPrice: 0,
+      packageData: null,
+    };
+  };
+
+  // Helper function for offline packages (different structure)
+  const findOfflinePackageForClasses = (
+    offlinePackages,
+    numberOfClasses,
+    timeSlot,
+    centerId
+  ) => {
+    if (offlinePackages.length === 0)
+      return { oneClassPrice: 0, packageData: null };
+
+    const centers = offlinePackages[0].centers;
+
+    // Filter by center and time slot
+    const applicableCenter = centers.find((center) => {
+      const centerTimeSlot = center.packageName?.toLowerCase().includes("night")
+        ? "night"
+        : "day";
+      const centerMatches = !centerId || center.centerId === centerId;
+      const timeMatches = centerTimeSlot === timeSlot;
+      const classRangeMatches =
+        numberOfClasses >= center.classStartFrom &&
+        numberOfClasses <= center.classUpTo;
+
+      return centerMatches && timeMatches && classRangeMatches;
+    });
+
+    if (applicableCenter) {
+      return {
+        oneClassPrice: applicableCenter.oneClassPrice,
+        packageData: applicableCenter,
+      };
+    }
+
+    // Fallback logic for offline - find closest range
+    const matchingCenters = centers.filter((center) => {
+      const centerTimeSlot = center.packageName?.toLowerCase().includes("night")
+        ? "night"
+        : "day";
+      const centerMatches = !centerId || center.centerId === centerId;
+      return centerMatches && centerTimeSlot === timeSlot;
+    });
+
+    // Sort by class range and find the closest
+    const sortedCenters = matchingCenters.sort(
+      (a, b) => a.classStartFrom - b.classStartFrom
+    );
+
+    for (let center of sortedCenters) {
+      if (numberOfClasses <= center.classUpTo) {
+        return {
+          oneClassPrice: center.oneClassPrice,
+          packageData: center,
+        };
+      }
+    }
+
+    // If numberOfClasses is higher than any range, use the highest range
+    if (sortedCenters.length > 0) {
+      return {
+        oneClassPrice: sortedCenters[sortedCenters.length - 1].oneClassPrice,
+        packageData: sortedCenters[sortedCenters.length - 1],
+      };
+    }
+
+    return { oneClassPrice: 0, packageData: null };
+  };
+
+  // New function to update class pricing when number of classes changes
+  const updateClassPricing = (numberOfClasses, timeSlot, centerId) => {
+    let pricePerClass = 0;
+
+    if (packageType === "online") {
+      const pricingData = findPackageForClasses(
+        packages.online,
+        numberOfClasses,
+        timeSlot,
+        centerId
+      );
+      pricePerClass = pricingData.oneClassPrice;
+    } else if (packageType === "offline") {
+      const pricingData = findOfflinePackageForClasses(
+        packages.offline,
+        numberOfClasses,
+        timeSlot,
+        centerId
+      );
+      pricePerClass = pricingData.oneClassPrice;
+    }
+
+    setClassRate(pricePerClass);
+  };
+
+  // For hybrid packages - calculate pricing for both online and offline
+  const updateHybridPricing = (
+    centerId,
+    onlineClassCount = onlineClasses,
+    offlineClassCount = offlineClasses
+  ) => {
+    if (!centerId) return;
+
+    // Calculate online pricing (assuming day time for hybrid)
+    const onlinePricingData = findPackageForClasses(
+      packages.online,
+      onlineClassCount,
+      "day",
+      centerId
+    );
+    setOnlineRate(onlinePricingData.oneClassPrice);
+
+    // Calculate offline pricing
+    const offlinePricingData = findOfflinePackageForClasses(
+      packages.offline,
+      offlineClassCount,
+      "day",
+      centerId
+    );
+    setOfflineRate(offlinePricingData.oneClassPrice);
+  };
+
+  // Updated number of classes change handler with proper validation
+  const handleNumberOfClassesChange = (newNumberOfClasses) => {
+    // Allow empty input for user to type
+    if (newNumberOfClasses === "" || newNumberOfClasses === null) {
+      setNumberOfClasses("");
+      return;
+    }
+
+    const classCount = parseInt(newNumberOfClasses);
+
+    // Validate input
+    if (isNaN(classCount) || classCount < 0) {
+      return; // Don't update if invalid
+    }
+
+    setNumberOfClasses(classCount);
+
+    if (selectedTimeSlot && selectedCenter && classCount > 0) {
+      updateClassPricing(classCount, selectedTimeSlot, selectedCenter);
+    }
+  };
+
+  // Input blur handler to enforce minimum requirements
+  const handleNumberOfClassesBlur = () => {
+    if (numberOfClasses === "" || numberOfClasses < 8) {
+      setNumberOfClasses(8);
+      if (selectedTimeSlot && selectedCenter) {
+        updateClassPricing(8, selectedTimeSlot, selectedCenter);
+      }
+    }
+  };
+
+  // Updated handlers for hybrid class count changes
+  const handleOnlineClassesChange = (newOnlineClasses) => {
+    // Allow empty input for user to type
+    if (newOnlineClasses === "" || newOnlineClasses === null) {
+      setOnlineClasses("");
+      return;
+    }
+
+    const classCount = parseInt(newOnlineClasses);
+
+    if (isNaN(classCount) || classCount < 0) {
+      return;
+    }
+
+    setOnlineClasses(classCount);
+    if (selectedCenter && classCount > 0) {
+      const onlinePricingData = findPackageForClasses(
+        packages.online,
+        classCount,
+        "day",
+        selectedCenter
+      );
+      setOnlineRate(onlinePricingData.oneClassPrice);
+    }
+  };
+
+  const handleOnlineClassesBlur = () => {
+    if (onlineClasses === "" || onlineClasses < 8) {
+      setOnlineClasses(8);
+      if (selectedCenter) {
+        const onlinePricingData = findPackageForClasses(
+          packages.online,
+          8,
+          "day",
+          selectedCenter
+        );
+        setOnlineRate(onlinePricingData.oneClassPrice);
+      }
+    }
+  };
+
+  const handleOfflineClassesChange = (newOfflineClasses) => {
+    // Allow empty input for user to type
+    if (newOfflineClasses === "" || newOfflineClasses === null) {
+      setOfflineClasses("");
+      return;
+    }
+
+    const classCount = parseInt(newOfflineClasses);
+
+    if (isNaN(classCount) || classCount < 0) {
+      return;
+    }
+
+    setOfflineClasses(classCount);
+    if (selectedCenter && classCount > 0) {
+      const offlinePricingData = findOfflinePackageForClasses(
+        packages.offline,
+        classCount,
+        "day",
+        selectedCenter
+      );
+      setOfflineRate(offlinePricingData.oneClassPrice);
+    }
+  };
+
+  const handleOfflineClassesBlur = () => {
+    if (offlineClasses === "" || offlineClasses < 8) {
+      setOfflineClasses(8);
+      if (selectedCenter) {
+        const offlinePricingData = findOfflinePackageForClasses(
+          packages.offline,
+          8,
+          "day",
+          selectedCenter
+        );
+        setOfflineRate(offlinePricingData.oneClassPrice);
+      }
+    }
   };
 
   // New function that accepts kids data as parameter
@@ -276,9 +571,9 @@ const HomeKidPackageSelection = () => {
     setSelectedTimeSlot("");
     setAvailableCenters([]);
     setClassRate(0);
-    setNumberOfClasses(4);
-    setOnlineClasses(4);
-    setOfflineClasses(4);
+    setNumberOfClasses(8); // Changed from 4 to 8
+    setOnlineClasses(8); // Changed from 4 to 8
+    setOfflineClasses(8); // Changed from 4 to 8
     setKitItems([{ name: "", quantity: 0 }]);
     setBaseAmount(0);
     setTotalAmount(0);
@@ -288,12 +583,13 @@ const HomeKidPackageSelection = () => {
     setSelectedCenterAddress("");
   };
 
+  // Updated handleTimeSlotChange function
   const handleTimeSlotChange = (timeSlot) => {
     setSelectedTimeSlot(timeSlot);
     setSelectedCenter("");
     setSelectedCenterAddress("");
     setClassRate(0);
-    setNumberOfClasses(4);
+    setNumberOfClasses(8); // Changed from 4 to 8
 
     let centers = [];
 
@@ -312,6 +608,7 @@ const HomeKidPackageSelection = () => {
               centerId: center.centerId,
               centerName: center.centerName,
               oneClassPrice: pkg.oneClassPrice || center.oneClassPrice || 100,
+              packageData: pkg, // Store package reference
             })) || []
         );
       }
@@ -331,6 +628,7 @@ const HomeKidPackageSelection = () => {
           centerName: center.centerName,
           oneClassPrice: center.oneClassPrice || 125,
           address: center.address || "",
+          packageData: center,
         }));
       }
     }
@@ -343,21 +641,26 @@ const HomeKidPackageSelection = () => {
 
     if (packageType === "online" && uniqueCenters.length === 1) {
       setSelectedCenter(uniqueCenters[0].centerId);
-      setClassRate(uniqueCenters[0].oneClassPrice);
+      // Calculate initial price for 8 classes using dynamic pricing
+      updateClassPricing(8, timeSlot, uniqueCenters[0].centerId);
     }
   };
 
+  // Updated handleCenterSelectionForTimeSlot function
   const handleCenterSelectionForTimeSlot = (centerId) => {
     setSelectedCenter(centerId);
 
     const selectedCenterData = availableCenters.find(
       (center) => center.centerId === centerId
     );
+
     if (selectedCenterData) {
-      setClassRate(selectedCenterData.oneClassPrice);
       if (packageType === "offline" && selectedCenterData.address) {
         setSelectedCenterAddress(selectedCenterData.address);
       }
+
+      // Update pricing based on current number of classes using dynamic pricing
+      updateClassPricing(numberOfClasses, selectedTimeSlot, centerId);
     }
   };
 
@@ -385,44 +688,13 @@ const HomeKidPackageSelection = () => {
     return { baseAmount: base, totalAmount: discountedTotal };
   };
 
+  // Updated handleCenterChange for hybrid
   const handleCenterChange = (e) => {
     const centerId = e.target.value;
     setSelectedCenter(centerId);
 
     if (packageType === "hybrid" && centerId) {
-      let onlinePrice = 100;
-      if (packages.online.length > 0) {
-        const onlinePackagesForCenter = packages.online.filter((pkg) =>
-          pkg.centers?.some((center) => center.centerId === centerId)
-        );
-        if (onlinePackagesForCenter.length > 0) {
-          const dayPackage =
-            onlinePackagesForCenter.find((pkg) =>
-              pkg.packageName.toLowerCase().includes("day")
-            ) || onlinePackagesForCenter[0];
-          onlinePrice = dayPackage.oneClassPrice;
-        }
-      }
-
-      let offlinePrice = 125;
-      if (packages.offline.length > 0) {
-        const offlineCenter = packages.offline[0].centers.find(
-          (c) => c.centerId === centerId
-        );
-        if (offlineCenter) {
-          const dayCenterData = packages.offline[0].centers.find(
-            (c) =>
-              c.centerId === centerId &&
-              c.packageName?.toLowerCase().includes("day")
-          );
-          offlinePrice = dayCenterData
-            ? dayCenterData.oneClassPrice
-            : offlineCenter.oneClassPrice;
-        }
-      }
-
-      setOnlineRate(onlinePrice);
-      setOfflineRate(offlinePrice);
+      updateHybridPricing(centerId);
     }
   };
 
@@ -521,8 +793,8 @@ const HomeKidPackageSelection = () => {
         toast.error("Please select a center");
         return;
       }
-      if (numberOfClasses < 4) {
-        toast.error("Minimum 4 classes required");
+      if (numberOfClasses < 8) {
+        toast.error("Minimum 8 classes required");
         return;
       }
     }
@@ -532,8 +804,8 @@ const HomeKidPackageSelection = () => {
         toast.error("Please select a center for hybrid package");
         return;
       }
-      if (onlineClasses < 4 || offlineClasses < 4) {
-        toast.error("Minimum 4 classes required for both online and offline");
+      if (onlineClasses < 8 || offlineClasses < 8) {
+        toast.error("Minimum 8 classes required for both online and offline");
         return;
       }
     }
@@ -788,350 +1060,438 @@ const HomeKidPackageSelection = () => {
           </div>
         )}
 
-        {/* Only show package selection if a kid is selected and has programs (not showing program selection) */}
-
-        <>
-          {/* Step 1: Choose Package Type */}
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 className="text-lg font-semibold mb-4">
-              1. Choose How You Want to Learn
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { value: "online", label: "Online Class", icon: "💻" },
-                { value: "offline", label: "Center Class", icon: "🏢" },
-                { value: "hybrid", label: "Hybrid Class", icon: "🔄" },
-                { value: "kit", label: "Kit Only", icon: "📦" },
-              ].map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => handlePackageTypeChange(option.value)}
-                  className={`p-4 rounded-lg border-2 text-center ${
-                    packageType === option.value
-                      ? "border-blue-500 bg-blue-50 text-blue-700"
-                      : "border-gray-200 hover:border-blue-300"
-                  }`}
-                >
-                  <div className="text-2xl mb-2">{option.icon}</div>
-                  <div className="font-medium">{option.label}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Step 2: Configure Package */}
-          {packageType && (
+        {/* Package selection - Now shows for both regular users AND view-only mode */}
+        {shouldShowPackageSelection && (
+          <>
+            {/* Step 1: Choose Package Type */}
             <div className="bg-white rounded-lg shadow p-6 mb-6">
               <h2 className="text-lg font-semibold mb-4">
-                2. Set Up Your Classes
+                1. Choose How You Want to Learn
               </h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { value: "online", label: "Online Class", icon: "💻" },
+                  { value: "offline", label: "Center Class", icon: "🏢" },
+                  { value: "hybrid", label: "Hybrid Class", icon: "🔄" },
+                  { value: "kit", label: "Kit Only", icon: "📦" },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => handlePackageTypeChange(option.value)}
+                    className={`p-4 rounded-lg border-2 text-center ${
+                      packageType === option.value
+                        ? "border-blue-500 bg-blue-50 text-blue-700"
+                        : "border-gray-200 hover:border-blue-300"
+                    }`}
+                  >
+                    <div className="text-2xl mb-2">{option.icon}</div>
+                    <div className="font-medium">{option.label}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
 
-              {/* Online/Offline Config */}
-              {/* Online/Offline Config */}
-              {(packageType === "online" ||
-                packageType === "offline" ||
-                packageType === "hybrid") && (
-                <div className="space-y-6">
-                  {/* Time Slot */}
-                  <div>
-                    <label className="block font-medium mb-3">
-                      When do you prefer classes?
-                    </label>
-                    <div className="grid grid-cols-1 gap-4 max-w-md">
-                      {(packageType === "offline"
-                        ? ["day"]
-                        : ["day", "night"]
-                      ).map((slot) => (
-                        <label
-                          key={slot}
-                          className="flex items-center cursor-pointer p-3 border rounded-lg hover:bg-gray-50"
+            {/* Step 2: Configure Package */}
+            {packageType && (
+              <div className="bg-white rounded-lg shadow p-6 mb-6">
+                <h2 className="text-lg font-semibold mb-4">
+                  2. Set Up Your Classes
+                </h2>
+
+                {/* Show exploration message in view-only mode */}
+                {viewOnlyMode && (
+                  <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <svg
+                          className="h-5 w-5 text-blue-500"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
                         >
-                          <input
-                            type="radio"
-                            name="timeSlot"
-                            value={slot}
-                            checked={selectedTimeSlot === slot}
-                            onChange={(e) =>
-                              handleTimeSlotChange(e.target.value)
-                            }
-                            className="mr-3"
+                          <path
+                            fillRule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                            clipRule="evenodd"
                           />
-                          <span>{getTimeSlotDisplay(slot)}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Center Selection */}
-                  {selectedTimeSlot && packageType !== "hybrid" && (
-                    <div>
-                      <label className="block font-medium mb-3">
-                        {packageType === "online" &&
-                        availableCenters.length === 1
-                          ? "Center"
-                          : "Choose Center"}
-                      </label>
-                      {packageType === "online" &&
-                      availableCenters.length === 1 ? (
-                        <div className="p-3 bg-gray-50 border rounded-lg">
-                          <span className="font-medium">
-                            {availableCenters[0].centerName}
-                          </span>
-                          <span className="ml-2 text-gray-600">
-                            - ₹{availableCenters[0].oneClassPrice}/class
-                          </span>
-                        </div>
-                      ) : (
-                        <select
-                          value={selectedCenter}
-                          onChange={(e) =>
-                            handleCenterSelectionForTimeSlot(e.target.value)
-                          }
-                          className="w-full max-w-md p-3 border rounded-lg"
-                        >
-                          <option value="">Select a center</option>
-                          {availableCenters.map((center) => (
-                            <option
-                              key={center.centerId}
-                              value={center.centerId}
-                            >
-                              {center.centerName} - ₹{center.oneClassPrice}
-                              /class
-                            </option>
-                          ))}
-                        </select>
-                      )}
-
-                      {/* Display address for offline centers */}
-                      {packageType === "offline" && selectedCenterAddress && (
-                        <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                          <p className="text-sm text-blue-800">
-                            <strong>Address:</strong> {selectedCenterAddress}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Number of Classes */}
-                  {selectedCenter && classRate > 0 && (
-                    <div>
-                      <label className="block font-medium mb-3">
-                        How many classes? (Minimum 4)
-                      </label>
-                      <input
-                        type="number"
-                        value={numberOfClasses}
-                        onChange={(e) => setNumberOfClasses(e.target.value)}
-                        className="w-32 p-3 border rounded-lg text-center"
-                        min="4"
-                      />
-                      <span className="ml-3 text-gray-600">
-                        ₹{classRate} per class
-                      </span>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Hybrid Config */}
-              {packageType === "hybrid" && (
-                <div className="space-y-6">
-                  <div>
-                    <label className="block font-medium mb-3">
-                      Choose Center
-                    </label>
-                    <select
-                      value={selectedCenter}
-                      onChange={handleCenterChange}
-                      className="w-full max-w-md p-3 border rounded-lg"
-                    >
-                      <option value="">Select a center</option>
-                      {centersList.map((center) => (
-                        <option key={center.centerId} value={center.centerId}>
-                          {center.centerName}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {selectedCenter && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block font-medium mb-3">
-                          Online Classes (Minimum 4)
-                        </label>
-                        <input
-                          type="number"
-                          value={onlineClasses}
-                          onChange={(e) => setOnlineClasses(e.target.value)}
-                          className="w-full p-3 border rounded-lg"
-                          min="4"
-                        />
-                        <p className="text-sm text-gray-600 mt-1">
-                          ₹{onlineRate} per class
-                        </p>
+                        </svg>
                       </div>
-
-                      <div>
-                        <label className="block font-medium mb-3">
-                          Center Classes (Minimum 4)
-                        </label>
-                        <input
-                          type="number"
-                          value={offlineClasses}
-                          onChange={(e) => setOfflineClasses(e.target.value)}
-                          className="w-full p-3 border rounded-lg"
-                          min="4"
-                        />
-                        <p className="text-sm text-gray-600 mt-1">
-                          ₹{offlineRate} per class
+                      <div className="ml-3">
+                        <p className="text-sm text-blue-700">
+                          You're exploring packages. Add a child to proceed with
+                          purchase.
                         </p>
                       </div>
                     </div>
-                  )}
-                </div>
-              )}
+                  </div>
+                )}
 
-              {/* Kit Config */}
-              {packageType === "kit" && (
-                <div className="space-y-4">
-                  {kitItems.map((item, index) => (
-                    <div key={index} className="border rounded-lg p-4">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="md:col-span-2">
-                          <label className="block font-medium mb-2">
-                            Choose Kit
-                          </label>
-                          <select
-                            value={item.name}
-                            onChange={(e) =>
-                              updateKitItem(index, "name", e.target.value)
-                            }
-                            className="w-full p-3 border rounded-lg"
+                {/* Online/Offline Config */}
+                {(packageType === "online" || packageType === "offline") && (
+                  <div className="space-y-6">
+                    {/* Time Slot */}
+                    <div>
+                      <label className="block font-medium mb-3">
+                        When do you prefer classes?
+                      </label>
+                      <div className="grid grid-cols-1 gap-4 max-w-md">
+                        {(packageType === "offline"
+                          ? ["day"]
+                          : ["day", "night"]
+                        ).map((slot) => (
+                          <label
+                            key={slot}
+                            className="flex items-center cursor-pointer p-3 border rounded-lg hover:bg-gray-50"
                           >
-                            <option value="">Select kit</option>
-                            {kitItemsList.map((kit) => (
-                              <option key={kit._id} value={kit._id}>
-                                {kit.packageName} - ₹{kit.amount}
+                            <input
+                              type="radio"
+                              name="timeSlot"
+                              value={slot}
+                              checked={selectedTimeSlot === slot}
+                              onChange={(e) =>
+                                handleTimeSlotChange(e.target.value)
+                              }
+                              className="mr-3"
+                            />
+                            <span>{getTimeSlotDisplay(slot)}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Center Selection */}
+                    {selectedTimeSlot && (
+                      <div>
+                        <label className="block font-medium mb-3">
+                          {packageType === "online" &&
+                          availableCenters.length === 1
+                            ? "Center"
+                            : "Choose Center"}
+                        </label>
+                        {packageType === "online" &&
+                        availableCenters.length === 1 ? (
+                          <div className="p-3 bg-gray-50 border rounded-lg">
+                            <span className="font-medium">
+                              {availableCenters[0].centerName}
+                            </span>
+                          </div>
+                        ) : (
+                          <select
+                            value={selectedCenter}
+                            onChange={(e) =>
+                              handleCenterSelectionForTimeSlot(e.target.value)
+                            }
+                            className="w-full max-w-md p-3 border rounded-lg"
+                          >
+                            <option value="">Select a center</option>
+                            {availableCenters.map((center) => (
+                              <option
+                                key={center.centerId}
+                                value={center.centerId}
+                              >
+                                {center.centerName}
                               </option>
                             ))}
                           </select>
+                        )}
+
+                        {/* Display address for offline centers */}
+                        {packageType === "offline" && selectedCenterAddress && (
+                          <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <p className="text-sm text-blue-800">
+                              <strong>Address:</strong> {selectedCenterAddress}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Number of Classes */}
+                    {selectedCenter && (
+                      <div>
+                        <label className="block font-medium mb-3">
+                          How many classes? (Minimum 8)
+                        </label>
+                        <div className="flex items-center space-x-3">
+                          <input
+                            type="number"
+                            value={numberOfClasses}
+                            onChange={(e) =>
+                              handleNumberOfClassesChange(e.target.value)
+                            }
+                            onBlur={handleNumberOfClassesBlur}
+                            className="w-32 p-3 border rounded-lg text-center"
+                            min="8"
+                            placeholder="8"
+                          />
+                          <span className="text-gray-600">
+                            ₹{classRate} per class
+                          </span>
                         </div>
+                        {numberOfClasses !== "" && numberOfClasses < 8 && (
+                          <p className="text-red-500 text-sm mt-2">
+                            Minimum 8 classes required
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Hybrid Config */}
+                {packageType === "hybrid" && (
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block font-medium mb-3">
+                        Choose Center
+                      </label>
+                      <select
+                        value={selectedCenter}
+                        onChange={handleCenterChange}
+                        className="w-full max-w-md p-3 border rounded-lg"
+                      >
+                        <option value="">Select a center</option>
+                        {centersList.map((center) => (
+                          <option key={center.centerId} value={center.centerId}>
+                            {center.centerName}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {selectedCenter && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                          <label className="block font-medium mb-2">
-                            Quantity
+                          <label className="block font-medium mb-3">
+                            Online Classes (Minimum 8)
                           </label>
-                          <div className="flex items-center">
+                          <div className="space-y-2">
                             <input
                               type="number"
-                              value={item.quantity}
+                              value={onlineClasses}
                               onChange={(e) =>
-                                updateKitItem(
-                                  index,
-                                  "quantity",
-                                  Math.max(0, parseInt(e.target.value) || 0)
-                                )
+                                handleOnlineClassesChange(e.target.value)
                               }
-                              className="flex-1 p-3 border rounded-lg text-center"
-                              min="1"
+                              onBlur={handleOnlineClassesBlur}
+                              className="w-full p-3 border rounded-lg"
+                              min="8"
+                              placeholder="8"
                             />
-                            {kitItems.length > 1 && (
-                              <button
-                                onClick={() => removeKitItem(index)}
-                                className="ml-2 text-red-500 hover:text-red-700"
-                              >
-                                <X className="w-5 h-5" />
-                              </button>
+                            <p className="text-sm text-gray-600">
+                              ₹{onlineRate} per class
+                            </p>
+                            {onlineClasses !== "" && onlineClasses < 8 && (
+                              <p className="text-red-500 text-sm">
+                                Minimum 8 classes required
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block font-medium mb-3">
+                            Center Classes (Minimum 8)
+                          </label>
+                          <div className="space-y-2">
+                            <input
+                              type="number"
+                              value={offlineClasses}
+                              onChange={(e) =>
+                                handleOfflineClassesChange(e.target.value)
+                              }
+                              onBlur={handleOfflineClassesBlur}
+                              className="w-full p-3 border rounded-lg"
+                              min="8"
+                              placeholder="8"
+                            />
+                            <p className="text-sm text-gray-600">
+                              ₹{offlineRate} per class
+                            </p>
+                            {offlineClasses !== "" && offlineClasses < 8 && (
+                              <p className="text-red-500 text-sm">
+                                Minimum 8 classes required
+                              </p>
                             )}
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                  <button
-                    onClick={addKitItem}
-                    className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-400"
-                  >
-                    + Add Kit
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Step 3: Payment */}
-          {packageType && totalAmount > 0 && (
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-lg font-semibold mb-4">
-                3. Complete Payment
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="font-medium mb-3">Summary</h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Package:</span>
-                      <span className="capitalize">{packageType}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Program:</span>
-                      <span>{data.programs[0]?.program || "N/A"}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Level:</span>
-                      <span>{data.programs[0]?.level || "N/A"}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Amount (Includes GST):</span>
-                      <span>₹{baseAmount.toFixed(2)}</span>
-                    </div>
-                    {discount > 0 && (
-                      <div className="flex justify-between text-green-600">
-                        <span>Discount:</span>
-                        <span>-₹{discount.toFixed(2)}</span>
-                      </div>
                     )}
-                    <div className="flex justify-between font-semibold text-lg border-t pt-2">
-                      <span>Total (Includes GST):</span>
-                      <span>₹{totalAmount.toFixed(2)}</span>
-                    </div>
                   </div>
-                </div>
-                {!viewOnlyMode ? (
-                  <div className="flex items-end">
+                )}
+
+                {/* Kit Config */}
+                {packageType === "kit" && (
+                  <div className="space-y-4">
+                    {kitItems.map((item, index) => (
+                      <div key={index} className="border rounded-lg p-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="md:col-span-2">
+                            <label className="block font-medium mb-2">
+                              Choose Kit
+                            </label>
+                            <select
+                              value={item.name}
+                              onChange={(e) =>
+                                updateKitItem(index, "name", e.target.value)
+                              }
+                              className="w-full p-3 border rounded-lg"
+                            >
+                              <option value="">Select kit</option>
+                              {kitItemsList.map((kit) => (
+                                <option key={kit._id} value={kit._id}>
+                                  {kit.packageName} - ₹{kit.amount}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block font-medium mb-2">
+                              Quantity
+                            </label>
+                            <div className="flex items-center">
+                              <input
+                                type="number"
+                                value={item.quantity}
+                                onChange={(e) =>
+                                  updateKitItem(
+                                    index,
+                                    "quantity",
+                                    Math.max(0, parseInt(e.target.value) || 0)
+                                  )
+                                }
+                                className="flex-1 p-3 border rounded-lg text-center"
+                                min="1"
+                              />
+                              {kitItems.length > 1 && (
+                                <button
+                                  onClick={() => removeKitItem(index)}
+                                  className="ml-2 text-red-500 hover:text-red-700"
+                                >
+                                  <X className="w-5 h-5" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                     <button
-                      onClick={handleRazorpayPayment}
-                      disabled={
-                        !packageType ||
-                        totalAmount <= 0 ||
-                        isProcessingPayment ||
-                        viewOnlyMode ||
-                        !selectedKid ||
-                        !hasValidProgram
-                      }
-                      className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium"
+                      onClick={addKitItem}
+                      className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-400"
                     >
-                      {isProcessingPayment
-                        ? "Processing..."
-                        : `Pay ₹${totalAmount.toFixed(2)}`}
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex items-end">
-                    <button
-                      onClick={() => navigate("/parent/add-kid/false")} // make sure this function exists
-                      className="w-full bg-primary text-white py-3 px-4 rounded-lg hover:bg-primary font-medium"
-                    >
-                      Add Kid
+                      + Add Kit
                     </button>
                   </div>
                 )}
               </div>
-            </div>
-          )}
-        </>
+            )}
+
+            {/* Step 3: Payment */}
+            {packageType && totalAmount > 0 && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <h2 className="text-lg font-semibold mb-4">
+                  3. Complete Payment
+                </h2>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="font-medium mb-3">Summary</h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>Package:</span>
+                        <span className="capitalize">{packageType}</span>
+                      </div>
+                      {!viewOnlyMode && (
+                        <>
+                          <div className="flex justify-between">
+                            <span>Program:</span>
+                            <span>{data.programs[0]?.program || "N/A"}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Level:</span>
+                            <span>{data.programs[0]?.level || "N/A"}</span>
+                          </div>
+                        </>
+                      )}
+                      {/* Add program/level placeholders for view-only mode */}
+                      {viewOnlyMode && (
+                        <>
+                          <div className="flex justify-between text-gray-500">
+                            <span>Program:</span>
+                            <span>Will be selected after adding child</span>
+                          </div>
+                          <div className="flex justify-between text-gray-500">
+                            <span>Level:</span>
+                            <span>Will be selected after adding child</span>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Rest of summary details */}
+                      {packageType === "online" || packageType === "offline" ? (
+                        <div className="flex justify-between">
+                          <span>Classes:</span>
+                          <span>{numberOfClasses}</span>
+                        </div>
+                      ) : packageType === "hybrid" ? (
+                        <>
+                          <div className="flex justify-between">
+                            <span>Online Classes:</span>
+                            <span>{onlineClasses}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Offline Classes:</span>
+                            <span>{offlineClasses}</span>
+                          </div>
+                        </>
+                      ) : null}
+                      <div className="flex justify-between">
+                        <span>Amount (Includes GST):</span>
+                        <span>₹{baseAmount.toFixed(2)}</span>
+                      </div>
+                      {discount > 0 && !viewOnlyMode && (
+                        <div className="flex justify-between text-green-600">
+                          <span>Discount:</span>
+                          <span>-₹{discount.toFixed(2)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between font-semibold text-lg border-t pt-2">
+                        <span>Total (Includes GST):</span>
+                        <span>₹{totalAmount.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-end">
+                    {!viewOnlyMode ? (
+                      <button
+                        onClick={handleRazorpayPayment}
+                        disabled={
+                          !packageType ||
+                          totalAmount <= 0 ||
+                          isProcessingPayment ||
+                          !selectedKid ||
+                          !hasValidProgram
+                        }
+                        className="w-full bg-primary text-white py-3 px-4 rounded-lg hover:bg-primary disabled:opacity-50 font-medium"
+                      >
+                        {isProcessingPayment
+                          ? "Processing..."
+                          : `Pay ₹${totalAmount.toFixed(2)}`}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => navigate("/parent/add-kid/false")}
+                        className="w-full bg-primary text-white py-3 px-4 rounded-lg hover:bg-primary font-medium"
+                      >
+                        Add Child to Purchase
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       <ToastContainer

@@ -3588,9 +3588,9 @@ const cancelDemoClass = async (req, res) => {
     });
 
     // Step 3: Remove kid from scheduled class
-    const classData = await ClassSchedule.updateOne(
+    const classData = await ClassSchedule.findOneAndUpdate(
       { _id: existingDemo.classId },
-      { $pull: { demoAssignedKid: { kidId } } }
+      { $pull: { demoAssignedKid: { kidId } } },{ new: true }
     );
 
     console.log("ClassData", classData);

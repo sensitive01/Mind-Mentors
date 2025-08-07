@@ -169,9 +169,9 @@ export const fetchAllEnquiries = async () => {
   const response = await operationDeptInstance.get("/enquiry-form");
   return response.data;
 };
-export const updateEnquiry = async (updatedData) => {
+export const updateEnquiry = async (updatedData,empId) => {
   const response = await operationDeptInstance.put(
-    `/enquiry-form/${updatedData._id}`,
+    `/enquiry-form/${updatedData._id}/${empId}`,
     updatedData
   );
   return response;

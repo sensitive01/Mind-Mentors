@@ -58,17 +58,36 @@ const SectionTitle = ({ children }) => (
 );
 
 const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
+  console.log("DetailView - Initial Data:", data);
   const navigate = useNavigate();
   const department = localStorage.getItem("department");
+  const empId = localStorage.getItem("empId")
 
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [formData, setFormData] = useState(data);
+  const [currentData, setCurrentData] = useState(data); // Track current display data
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [physicalCenter, setPhysicalCenter] = useState([]);
   const [programsData, setProgramsData] = useState([]);
 
   const [verifyPaymentDialogOpen, setIsVerifyPaymentDialogOpen] =
     useState(false);
+
+  // Helper functions for name handling
+  const getCombinedName = (firstName, lastName) => {
+    if (!firstName && !lastName) return "";
+    return `${firstName || ""} ${lastName || ""}`.trim();
+  };
+
+  const getDisplayParentName = (data) => {
+    if (data?.parentName) return data.parentName;
+    return getCombinedName(data?.parentFirstName, data?.parentLastName);
+  };
+
+  const getDisplayKidName = (data) => {
+    if (data?.kidName) return data.kidName;
+    return getCombinedName(data?.kidFirstName, data?.kidLastName);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -86,7 +105,9 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
   }, []);
 
   useEffect(() => {
+    console.log("DetailView - Data prop changed:", data);
     setFormData(data);
+    setCurrentData(data); // Update current display data when data prop changes
   }, [data]);
 
   useEffect(() => {
@@ -102,18 +123,53 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
 
   const handleCloseEdit = () => {
     setIsEditOpen(false);
+    onEditClose(); // Call the parent's onEditClose
   };
 
   const handleInputChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    console.log("DetailView - Input changed:", { field, value });
+    setFormData((prev) => {
+      const updated = { ...prev, [field]: value };
+      console.log("DetailView - Updated formData:", updated);
+      return updated;
+    });
   };
 
   const handleSave = async () => {
-    console.log("Updated data:", formData);
-    const response = await updateEnquiry(formData);
-    console.log("Response0", response);
-    if (response.status === 200) {
-      onEditSave(response.data);
+    console.log("DetailView - Saving data:", formData);
+    try {
+      const response = await updateEnquiry(formData,empId);
+      console.log("DetailView - Save response:", response);
+      
+      if (response.status === 200) {
+        console.log("DetailView - Response data:", response.data);
+        
+        // Create updated data with the form data as priority
+        // This ensures that what user edited is what gets displayed
+        const updatedData = {
+          ...currentData, // Keep existing data as fallback
+          ...formData, // Use the form data that user actually edited
+          ...response.data, // Override with any server-specific data
+          // Ensure name fields are preserved from formData
+          parentName: formData.parentName || response.data?.parentName || currentData.parentName,
+          kidName: formData.kidName || response.data?.kidName || currentData.kidName,
+          parentFirstName: formData.parentFirstName || response.data?.parentFirstName || currentData.parentFirstName,
+          parentLastName: formData.parentLastName || response.data?.parentLastName || currentData.parentLastName,
+          kidFirstName: formData.kidFirstName || response.data?.kidFirstName || currentData.kidFirstName,
+          kidLastName: formData.kidLastName || response.data?.kidLastName || currentData.kidLastName,
+        };
+        
+        console.log("DetailView - Final updated data:", updatedData);
+        console.log("DetailView - Parent name will display:", getDisplayParentName(updatedData));
+        console.log("DetailView - Kid name will display:", getDisplayKidName(updatedData));
+        
+        // Update both current display data and call parent callback
+        setCurrentData(updatedData);
+        setFormData(updatedData); // Also update formData to stay in sync
+        onEditSave(updatedData);
+      }
+    } catch (error) {
+      console.error("Error updating enquiry:", error);
     }
     handleCloseEdit();
   };
@@ -129,6 +185,11 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
   };
 
   if (!data) return null;
+
+  // Use currentData for display to show updated values
+  const displayData = currentData;
+  console.log("DetailView - Display data:", displayData);
+
   return (
     <Box sx={{ position: "relative" }}>
       {/* Content */}
@@ -139,24 +200,29 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
             <SectionTitle>Parent Information</SectionTitle>
             <Grid container spacing={3}>
               <Grid item xs={12} md={3}>
-                <DetailCard title="PARENT NAME" value={data.parentName} />
+                <DetailCard
+                  title="PARENT NAME"
+                  value={getDisplayParentName(displayData)}
+                />
               </Grid>
               <Grid item xs={12} md={3}>
-                <DetailCard title="EMAIL" value={formatEmail(data.email)} />
+                <DetailCard
+                  title="EMAIL"
+                  value={formatEmail(displayData?.email)}
+                />
               </Grid>
               <Grid item xs={12} md={3}>
                 <DetailCard
                   title="WHATSAPP NUMBER"
-                  value={formatWhatsAppNumber(data.whatsappNumber)}
+                  value={formatWhatsAppNumber(displayData?.whatsappNumber)}
                 />
               </Grid>
               <Grid item xs={12} md={3}>
                 <DetailCard
                   title="CONTACT NUMBER"
-                  value={formatWhatsAppNumber(data.contactNumber)}
+                  value={formatWhatsAppNumber(displayData?.contactNumber)}
                 />
               </Grid>
-             
             </Grid>
           </Grid>
 
@@ -165,24 +231,26 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
             <SectionTitle>Kid Information</SectionTitle>
             <Grid container spacing={3}>
               <Grid item xs={12} md={3}>
-                <DetailCard title="KID NAME" value={data.kidName} />
+                <DetailCard 
+                  title="KID NAME" 
+                  value={getDisplayKidName(displayData)} 
+                />
               </Grid>
               <Grid item xs={12} md={3}>
-                <DetailCard title="AGE" value={data.kidsAge} />
+                <DetailCard title="AGE" value={displayData?.kidsAge} />
               </Grid>
               <Grid item xs={12} md={3}>
-                <DetailCard title="GENDER" value={data.kidsGender} />
+                <DetailCard title="GENDER" value={displayData?.kidsGender} />
               </Grid>
               <Grid item xs={12} md={3}>
-                <DetailCard title="KID PINCODE" value={data.pincode} />
+                <DetailCard title="KID PINCODE" value={displayData?.pincode} />
               </Grid>
               <Grid item xs={12} md={3}>
-                <DetailCard title="KID CITY" value={data.city} />
+                <DetailCard title="KID CITY" value={displayData?.city} />
               </Grid>
               <Grid item xs={12} md={3}>
-                <DetailCard title="KID STATE" value={data.state} />
+                <DetailCard title="KID STATE" value={displayData?.state} />
               </Grid>
-             
             </Grid>
           </Grid>
 
@@ -190,7 +258,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
           <Grid item xs={12}>
             <SectionTitle>Program Details</SectionTitle>
             <Grid container spacing={3}>
-              {data.programs?.map((program, index) => (
+              {displayData?.programs?.map((program, index) => (
                 <Grid item xs={12} md={4} key={index}>
                   <DetailCard
                     title={`PROGRAM ${index + 1}`}
@@ -206,43 +274,48 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
             <SectionTitle>Status Information</SectionTitle>
             <Grid container spacing={3}>
               <Grid item xs={12} md={3}>
-                <DetailCard title="PAYMENT STATUS" value={data.paymentStatus} />
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <DetailCard title="SOURCE" value={data.source} />
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <DetailCard title="DISPOSITION" value={data.disposition} />
-              </Grid>
-
-              {/* <Grid item xs={12} md={3}>
                 <DetailCard
-                  title="ENROLLMENT STATUS"
-                  value={data.enquiryStatus}
+                  title="PAYMENT STATUS"
+                  value={displayData?.paymentStatus}
                 />
-              </Grid> */}
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <DetailCard title="SOURCE" value={displayData?.source} />
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <DetailCard
+                  title="DISPOSITION"
+                  value={displayData?.disposition}
+                />
+              </Grid>
 
               <Grid item xs={12} md={3}>
-                <DetailCard title="ENQUIRY TYPE" value={data.enquiryType} />
+                <DetailCard
+                  title="ENQUIRY TYPE"
+                  value={displayData?.enquiryType}
+                />
               </Grid>
               <Grid item xs={12} md={3}>
-                <DetailCard title="ENQUIRY FIELD" value={data.enquiryField} />
+                <DetailCard
+                  title="ENQUIRY FIELD"
+                  value={displayData?.enquiryField}
+                />
               </Grid>
-              {data.enquiryField === "prospects" && (
+              {displayData?.enquiryField === "prospects" && (
                 <Grid item xs={12} md={3} style={{ overflow: "visible" }}>
                   <DetailCard
                     title={
-                      data.scheduleDemo?.status === "Pending"
+                      displayData?.scheduleDemo?.status === "Pending"
                         ? "SCHEDULE DEMO CLASS"
                         : "DEMO CLASS ACTIONS"
                     }
                     value={
                       <div className="flex flex-col gap-3  rounded-lg">
-                        {data.scheduleDemo?.status === "Pending" ? (
+                        {displayData?.scheduleDemo?.status === "Pending" ? (
                           <button
                             onClick={() =>
                               navigate(
-                                `/${department}/department/schedule-demo-class-list-individually/${data._id}/false`
+                                `/${department}/department/schedule-demo-class-list-individually/${displayData?._id}/false`
                               )
                             }
                             className="w-full px-3 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:border-primary/80 hover:text-white transition-all duration-800 text-sm font-medium rounded-md shadow-2xl"
@@ -254,7 +327,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                             <button
                               onClick={() =>
                                 navigate(
-                                  `/${department}/department/schedule-demo-class-list-individually/${data._id}/true`
+                                  `/${department}/department/schedule-demo-class-list-individually/${displayData?._id}/true`
                                 )
                               }
                               className="w-full px-2 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:text-white  hover:border-primary/80 transition-all duration-200 text-sm font-medium rounded-md shadow-sm"
@@ -269,18 +342,18 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                 </Grid>
               )}
 
-              {(data.paymentStatus === "Pending" ||
-                data.paymentStatus === "Success") && (
+              {(displayData?.paymentStatus === "Pending" ||
+                displayData?.paymentStatus === "Success") && (
                 <Grid item xs={12} md={3} style={{ overflow: "visible" }}>
                   <DetailCard
                     title={
-                      data.paymentStatus === "Pending"
+                      displayData?.paymentStatus === "Pending"
                         ? "CHOOSE CLASS PACKAGE"
                         : "VIEW PAYMENT"
                     }
                     value={
                       <div className="flex flex-col gap-1 w-full">
-                        {data.paymentStatus === "Pending" ? (
+                        {displayData?.paymentStatus === "Pending" ? (
                           <button
                             onClick={() => setIsPaymentDialogOpen(true)}
                             className="w-full px-2 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:text-white hover:border-primary/80 transition-all duration-200 text-sm font-medium rounded-md shadow-sm"
@@ -290,7 +363,9 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                         ) : (
                           <>
                             <button
-                              onClick={() => handleGetPaymentId(data._id)}
+                              onClick={() =>
+                                handleGetPaymentId(displayData?._id)
+                              }
                               className="w-full px-2 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:text-white hover:border-primary/80 transition-all duration-200 text-sm font-medium rounded-md shadow-sm"
                             >
                               View Payment
@@ -324,7 +399,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                     Remarks
                   </Typography>
                   <Typography variant="body1">
-                    {data.message || "No messages"}
+                    {displayData?.message || "No messages"}
                   </Typography>
                 </Box>
               </Grid>
@@ -343,7 +418,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                     Notes
                   </Typography>
                   <Typography variant="body1">
-                    {data.notes || "No notes"}
+                    {displayData?.notes || "No notes"}
                   </Typography>
                 </Box>
               </Grid>
@@ -362,7 +437,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                     Status Log
                   </Typography>
                   <Typography variant="body1">
-                    {data.lastNoteAction || "No status updates"}
+                    {displayData?.lastNoteAction || "No status updates"}
                   </Typography>
                 </Box>
               </Grid>
@@ -372,7 +447,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
       </Box>
       <EditDialogBox
         showEdit={showEdit}
-        onEditClose={onEditClose}
+        onEditClose={handleCloseEdit}
         formData={formData}
         handleInputChange={handleInputChange}
         handleSave={handleSave}
@@ -381,12 +456,12 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
       <PaymentDialog
         open={isPaymentDialogOpen}
         onClose={() => setIsPaymentDialogOpen(false)}
-        data={data}
-        enqId={formData._id}
+        data={displayData}
+        enqId={formData?._id}
       />
 
       <PaymentVerification
-        data={data.paymentLink}
+        data={displayData?.paymentLink}
         open={verifyPaymentDialogOpen}
         onCancel={() => setIsVerifyPaymentDialogOpen(false)}
         physicalCenter={physicalCenter}

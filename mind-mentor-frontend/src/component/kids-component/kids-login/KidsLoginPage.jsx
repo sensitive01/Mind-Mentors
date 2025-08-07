@@ -4,13 +4,15 @@ import { ArrowRight } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 
 import "react-phone-input-2/lib/style.css";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { validateKidChessId } from "../../../api/service/kid/KidService";
 import KidLeftSide from "./KidLeftSide";
 
 const KidsLoginPage = () => {
+  const [searchParams] = useSearchParams();
+  const mmid = searchParams.get("mmid");
   const navigate = useNavigate();
-  const [chessId, setChessId] = useState("");
+  const [chessId, setChessId] = useState(mmid||"");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -55,7 +57,7 @@ const KidsLoginPage = () => {
                 htmlFor="mobile"
                 className="block text-sm font-medium text-gray-700"
               >
-                Enter your chess id - MM2097657
+                Enter your chess id
               </label>
 
               <div className="relative">
