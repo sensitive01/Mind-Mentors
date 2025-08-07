@@ -80,7 +80,7 @@ function generateSignature(apiKey, apiSecret, meetingNumber, role) {
   return signature;
 }
 
-require("./utils/autoGenerateTheMeetingLink");
+// require("./utils/autoGenerateTheMeetingLink");
 
 // ✅ Routes
 app.use("/parent", parentRoute);

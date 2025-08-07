@@ -20,7 +20,7 @@ const dbConnect = () => {
     )
     .then(() => {
       console.log("Connected to the database Atlas");
-      require("../../utils/autoDeleteTheLinks");
+      // require("../../utils/autoDeleteTheLinks");
     })
     .catch((err) => {
       console.error("Error in connecting the database", err);
