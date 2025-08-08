@@ -7,6 +7,7 @@ import {
   getScheduledClassData,
 } from "../../../api/service/employee/serviceDeliveryService";
 import { useNavigate, useParams } from "react-router-dom";
+import ClassCalenderSelection from "../../../component/parent-component/parent-dashboard/dashboard-components/ClassCalenderSelection";
 
 // Extracted components
 const InfoCard = ({ label, value }) => (
@@ -791,7 +792,7 @@ const AssigningWholeClassToKid = () => {
             />
           </div>
 
-          <ClassSelectionDropdown
+          <ClassCalenderSelection
             isOpen={isDropdownOpen}
             onToggle={() => setIsDropdownOpen(!isDropdownOpen)}
             selectedClasses={selectedClasses}

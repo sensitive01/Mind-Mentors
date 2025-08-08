@@ -89,7 +89,7 @@ const KidAttendance = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {classData[0]?.studentDetails.name}'s Attendance & Progress
+            Attendance & Progress
           </h1>
           <p className="text-gray-600">
             Track your child's class attendance and receive detailed feedback

@@ -347,7 +347,7 @@ export default function DisplaySelectedClass() {
     console.log("Updated data after cancellation:", sortedData);
 
     try {
-      const response = await resumeTheClass(enqId, sortedData, classId);
+      const response = await resumeTheClass(enqId, sortedData, classId,empId);
       console.log("Resume class API response:", response);
 
       setData(sortedData);
@@ -398,7 +398,7 @@ export default function DisplaySelectedClass() {
       console.log("Updated data after reschedule:", updatedData);
 
       try {
-        const response = await resumeTheClass(enqId, updatedData, classId);
+        const response = await resumeTheClass(enqId, updatedData, classId,empId);
         console.log("Resume class API response:", response);
 
         // Update state

@@ -3,13 +3,11 @@ const mongoose = require("mongoose");
 const ProgramSchema = new mongoose.Schema({
   program: { type: String },
   level: { type: String },
-  status: { type: String, default: "Enquiry Kid" }, // enquiry,Active kid, deactive kid
+  status: { type: String, default: "Enquiry Kid" },
+  demoAttended: { type: Boolean, default: false },
   enrolledDate: { type: Date },
-  totalClass: { type: Number, default: 0 },
-  attendedClass: { type: Number, default: 0 },
-  remainingClass: { type: Number, default: 0 },
   centerName: { type: String },
-  centerType: { type: String },
+  centerType: { type: String }
 });
 
 const operationDeptSchema = new mongoose.Schema(
@@ -21,7 +19,6 @@ const operationDeptSchema = new mongoose.Schema(
     isSameAsContact: { type: Boolean },
     email: { type: String },
     relationship: { type: String },
-    // otherRelationship: { type: String },
 
     source: { type: String },
     message: { type: String },
@@ -35,11 +32,43 @@ const operationDeptSchema = new mongoose.Schema(
     city: { type: String },
     state: { type: String },
     pincode: { type: String },
-    programs: {
-      type: [ProgramSchema],
-    },
-    isEnquiryNew: { type: Boolean, default: true },
 
+    programs: { type: [ProgramSchema] },
+
+    // ---- CLASS COUNTS AT TOP LEVEL ----
+    totalClassCount: {
+      online: { type: Number, default: 0 },
+      offline: { type: Number, default: 0 },
+      both: { type: Number, default: 0 }
+    },
+    attendedClass: {
+      online: { type: Number, default: 0 },
+      offline: { type: Number, default: 0 },
+      both: { type: Number, default: 0 }
+    },
+    remainingClass: {
+      online: { type: Number, default: 0 },
+      offline: { type: Number, default: 0 },
+      both: { type: Number, default: 0 }
+    },
+    absentClass: {
+      online: { type: Number, default: 0 },
+      offline: { type: Number, default: 0 },
+      both: { type: Number, default: 0 }
+    },
+    pausedClass: {
+      online: { type: Number, default: 0 },
+      offline: { type: Number, default: 0 },
+      both: { type: Number, default: 0 }
+    },
+    canceledClass: {
+      online: { type: Number, default: 0 },
+      offline: { type: Number, default: 0 },
+      both: { type: Number, default: 0 }
+    },
+    // -----------------------------------
+
+    isEnquiryNew: { type: Boolean, default: true },
     schoolName: { type: String },
     address: { type: String },
     schoolPincode: { type: String },
@@ -51,30 +80,13 @@ const operationDeptSchema = new mongoose.Schema(
 
     enquiryStatus: {
       type: String,
-      // enum: [
-      //   "Pending",
-      //   "Qualified Lead",
-      //   "Unqualified Lead",
-      //   "Unattended",
-      //   "Demo Interested",
-      //   "Demo Assigned",
-      //   "Demo Taken",
-      //   "Payment Link Sent",
-      //   "Enrolled",
-      //   "Need Clarification",
-      //   "Call Later",
-      //   "Not Interested",
-      //   "Not Answering",
-      //   "Wrong Number",
-      //   "Prospectus Sent"
-      // ],
-      default: "Pending",
+      default: "Pending"
     },
 
     disposition: {
       type: String,
       enum: ["RnR", "Call Back", "None", "Connected"],
-      default: "None",
+      default: "None"
     },
 
     enquiryField: { type: String, default: "enquiryList" },
@@ -82,33 +94,37 @@ const operationDeptSchema = new mongoose.Schema(
       status: {
         type: String,
         enum: ["Pending", "Scheduled", "Conducted", "Cancelled", "Attended"],
-        default: "Pending",
+        default: "Pending"
       },
-      sheduledDay: { type: String },
+      sheduledDay: { type: String }
     },
 
     referral: [
       {
         referredTo: { type: String },
-        referredEmail: { type: String },
-      },
+        referredEmail: { type: String }
+      }
     ],
     logs: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Log",
+      ref: "Log"
     },
     isNewUser: { type: Boolean, default: true },
-    paymentData: { type: String },
 
-    // paymentLink: { type: String },
+    paymentData: [
+      {
+        type: String
+      }
+    ],
+
     paymentStatus: {
       type: String,
       enum: ["Pending", "Success", "Requested", "Processing"],
-      default: "Pending",
+      default: "Pending"
     },
     paymentRenewal: { type: String },
     classAssigned: { type: Boolean, default: false },
-    employeeAssisted: { type: String },
+    employeeAssisted: { type: String }
   },
   { timestamps: true }
 );

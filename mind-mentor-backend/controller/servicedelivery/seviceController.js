@@ -1042,8 +1042,8 @@ const pauseTheClassTemporary = async (req, res) => {
       {
         $push: {
           logs: {
-            employeeName: empData.firstName,
-            department: empData.department,
+            employeeName: empData?.firstName||"Parent",
+            department: empData?.department||"NA",
             comment: `Due to ${pauseRemarks}, the classes are paused from ${formattedStartDate} to ${formattedEndDate}.`,
             action: "",
           },
@@ -1097,8 +1097,8 @@ const resumeTheClassBack = async (req, res) => {
       {
         $push: {
           logs: {
-            employeeName: empData.firstName,
-            department: empData.department,
+            employeeName: empData?.firstName||"Parent",
+            department: empData?.department||"NA",
             comment: `The paused classes are resumed `,
             action: "",
           },

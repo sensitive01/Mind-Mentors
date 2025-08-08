@@ -25,6 +25,7 @@ import { getTheEnqId, parentPauseTheClass, parentResumeTheClass } from "../../..
 import PauseModel from "../../../../department-components/common-components/assign-class/PauseModel";
 
 export default function ResheduleClasses() {
+  const parentId = localStorage.getItem("parentId")
   const navigate = useNavigate();
   const { kidId } = useParams();
   const department = localStorage.getItem("department");
@@ -289,7 +290,7 @@ export default function ResheduleClasses() {
         updatedData.filter((session) => session.status === "scheduled")
       );
 
-      const response = await parentResumeTheClass(enqId, updatedData, classId);
+      const response = await parentResumeTheClass(enqId, updatedData, classId,parentId);
 
       setData(updatedData);
       setIsPaused(false);
@@ -350,7 +351,7 @@ export default function ResheduleClasses() {
     console.log("Updated data after cancellation:", sortedData);
 
     try {
-      const response = await resumeTheClass(enqId, sortedData, classId);
+      const response = await resumeTheClass(enqId, sortedData, classId,parentId);
       console.log("Resume class API response:", response);
 
       setData(sortedData);
@@ -401,7 +402,7 @@ export default function ResheduleClasses() {
       console.log("Updated data after reschedule:", updatedData);
 
       try {
-        const response = await resumeTheClass(enqId, updatedData, classId);
+        const response = await resumeTheClass(enqId, updatedData, classId,parentId);
         console.log("Resume class API response:", response);
 
         // Update state

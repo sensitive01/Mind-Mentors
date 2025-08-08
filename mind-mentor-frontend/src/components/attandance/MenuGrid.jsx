@@ -70,7 +70,7 @@ const MenuGrid = () => {
         {
           id: id,
           icon: <User className="w-6 h-6" />,
-          title: "Manage Profile",
+          title: "Kid Login",
           subtitle: "Update info",
           color: "bg-purple-500",
           route: `/parent/kid/manage-login/${id}`,
@@ -97,7 +97,7 @@ const MenuGrid = () => {
         {
           id: id,
           icon: <User className="w-6 h-6" />,
-          title: "Manage Profile",
+          title: "Kid Login",
           subtitle: "Update details",
           color: "bg-purple-500",
           route: `/parent/kid/manage-login/${id}`,
@@ -140,7 +140,7 @@ const MenuGrid = () => {
         {
           id: id,
           icon: <Calendar className="w-6 h-6" />,
-          title: "Schedule",
+          title: "Class Schedules",
           subtitle: "View classes",
           color: "bg-blue-500",
           route: `/parent/kid/classShedule/${id}`,
@@ -148,7 +148,7 @@ const MenuGrid = () => {
         {
           id: id,
           icon: <User className="w-6 h-6" />,
-          title: "Profile",
+          title: "Kid Login",
           subtitle: "Manage account",
           color: "bg-purple-500",
           route: `/parent/kid/manage-login/${id}`,
@@ -161,14 +161,14 @@ const MenuGrid = () => {
           color: "bg-green-500",
           route: `/parent-my-package-data/${id}`,
         },
-        {
-          id: id,
-          icon: <Receipt className="w-6 h-6" />,
-          title: "Billing",
-          subtitle: "Payments",
-          color: "bg-orange-500",
-          route: `/fee-details/${id}`,
-        },
+        // {
+        //   id: id,
+        //   icon: <Receipt className="w-6 h-6" />,
+        //   title: "Billing",
+        //   subtitle: "Payments",
+        //   color: "bg-orange-500",
+        //   route: `/fee-details/${id}`,
+        // },
         {
           id: id,
           icon: <Award className="w-6 h-6" />,

@@ -25,7 +25,6 @@ const PauseModel = ({
         <h2 className="text-xl font-bold text-gray-800 mb-4">Pause Classes</h2>
 
         <div className="mb-4">
-          
           {/* From Date */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -70,14 +69,14 @@ const PauseModel = ({
           {/* Remarks */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Remarks
+              Reason
             </label>
             <textarea
               value={pauseRemarks}
               onChange={(e) => setPauseRemarks(e.target.value)}
               className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               rows="3"
-              placeholder="Enter your remarks here..."
+              placeholder="Please mention your reason for pausing ..."
               style={{ resize: "none" }}
             />
           </div>

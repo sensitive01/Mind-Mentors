@@ -11,7 +11,7 @@ import {
 } from "../../../../utils/formatContacts";
 import EditDialogBox from "./edit/EditDialogBox";
 
-const DetailCard = ({ title, value }) => (
+const DetailCard = ({ title, value, isEmail = false }) => (
   <Box
     sx={{
       p: 2.5,
@@ -30,7 +30,21 @@ const DetailCard = ({ title, value }) => (
     >
       {title}
     </Typography>
-    <Typography variant="body1" color="text.primary" sx={{ lineHeight: 1.6 }}>
+    <Typography 
+      variant="body1" 
+      color="text.primary" 
+      sx={{ 
+        lineHeight: 1.6,
+        // Handle email overflow
+        wordBreak: isEmail ? 'break-all' : 'normal',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: isEmail ? 'normal' : 'nowrap',
+        fontSize: isEmail ? '0.85rem' : '1rem',
+        maxWidth: '100%'
+      }}
+      title={isEmail ? value : undefined} // Show full email on hover
+    >
       {value || "N/A"}
     </Typography>
   </Box>
@@ -53,7 +67,7 @@ const SectionTitle = ({ children }) => (
 const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
   const navigate = useNavigate();
   const department = localStorage.getItem("department");
-  const empId = localStorage.getItem("empId")
+  const empId = localStorage.getItem("empId");
 
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [formData, setFormData] = useState(data);
@@ -73,7 +87,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
 
   const handleSave = async () => {
     console.log("Updated data:", formData);
-    const response = await updateEnquiry(formData,empId);
+    const response = await updateEnquiry(formData, empId);
     console.log("Response0", response);
     if (response.status === 200) {
       onEditSave(response.data);
@@ -81,7 +95,30 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
     handleCloseEdit();
   };
 
+  // Helper function to format email for better display
+  const formatEmailForDisplay = (email) => {
+    if (!email) return "N/A";
+    
+    const formattedEmail = formatEmail(email);
+    
+    // If email is too long, truncate intelligently
+    if (formattedEmail.length > 30) {
+      const atIndex = formattedEmail.indexOf('@');
+      if (atIndex > 0) {
+        const username = formattedEmail.substring(0, atIndex);
+        const domain = formattedEmail.substring(atIndex);
+        
+        // Show first 10 chars of username + ... + full domain
+        if (username.length > 10) {
+          return `${username.substring(0, 10)}...${domain}`;
+        }
+      }
+    }
+    return formattedEmail;
+  };
+
   if (!data) return null;
+
   return (
     <Box sx={{ position: "relative" }}>
       {/* Content */}
@@ -95,7 +132,11 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                 <DetailCard title="PARENT NAME" value={data.parentName} />
               </Grid>
               <Grid item xs={12} md={3}>
-                <DetailCard title="EMAIL" value={formatEmail(data.email)} />
+                <DetailCard 
+                  title="EMAIL" 
+                  value={formatEmailForDisplay(data.email)} 
+                  isEmail={true}
+                />
               </Grid>
               <Grid item xs={12} md={3}>
                 <DetailCard
@@ -106,7 +147,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
               <Grid item xs={12} md={3}>
                 <DetailCard
                   title="CONTACT NUMBER"
-                  value={formatWhatsAppNumber(data?.contactNumber||data?.whatsappNumber)}
+                  value={formatWhatsAppNumber(data?.contactNumber || data?.whatsappNumber)}
                 />
               </Grid>
             </Grid>
@@ -125,7 +166,6 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
               <Grid item xs={12} md={3}>
                 <DetailCard title="GENDER" value={data.kidsGender} />
               </Grid>
-
               <Grid item xs={12} md={3}>
                 <DetailCard title="PINCODE" value={data.pincode} />
               </Grid>
@@ -160,7 +200,6 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
               <Grid item xs={12} md={3}>
                 <DetailCard title="DISPOSITION" value={data.disposition} />
               </Grid>
-
               <Grid item xs={12} md={3}>
                 <DetailCard
                   title="ENROLLMENT STATUS"
@@ -168,8 +207,6 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                 />
               </Grid>
 
-       
-            
               {data.enquiryStatus === "Active" && !data.classAssigned && (
                 <Grid item xs={12} md={3} style={{ overflow: "visible" }}>
                   <DetailCard
@@ -280,6 +317,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
           </Grid>
         </Grid>
       </Box>
+      
       <EditDialogBox
         showEdit={showEdit}
         onEditClose={onEditClose}

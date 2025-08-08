@@ -175,8 +175,9 @@ const getSuperAdminScheduledClasses = async (req, res) => {
 const addFeedBackAndAttendance = async (req, res) => {
   try {
     const { submissionData } = req.body;
+    console.log("submissionData", submissionData);
     const { classId, coachId } = req.params;
-    console.log("Submission data:", submissionData);
+
     const empData = await Employee.findOne(
       { _id: coachId },
       { firstName: 1, department: 1 }
@@ -186,8 +187,8 @@ const addFeedBackAndAttendance = async (req, res) => {
       _id: classId,
       isDemoAdded: true,
     });
-    console.log("classType", classType);
 
+    // Remove kids from demoAssignedKid if demo class
     if (classType) {
       await ClassSchedule.updateOne(
         { _id: classId },
@@ -205,17 +206,17 @@ const addFeedBackAndAttendance = async (req, res) => {
       );
     }
 
-    const demoStatusUpdatePromises = submissionData?.students?.map(
-      async (student) => {
+    // Update demo status
+    await Promise.all(
+      submissionData?.students?.map(async (student) => {
         await demoClass.findOneAndUpdate(
           { kidId: student.studentId, classId: classId },
           { $set: { status: "Conducted" } }
         );
-      }
+      })
     );
 
-    await Promise.all(demoStatusUpdatePromises);
-
+    // Save conducted class
     const newClass = new ConductedClass({
       classId: submissionData.classId,
       coachId: submissionData.coachId,
@@ -230,71 +231,116 @@ const addFeedBackAndAttendance = async (req, res) => {
       status: "Conducted",
       coachClassFeedBack: submissionData?.overallClassFeedback || "",
     });
-
     await newClass.save();
 
+    // Get kids data for logs
     const kidIds = submissionData?.students?.map(
       (student) => student.studentId
     );
-    console.log("kidId", kidIds);
     const kidsData = await operationDeptModel.find(
       { kidId: { $in: kidIds } },
       { logs: 1, kidId: 1 }
     );
-    console.log("kidsData operation", kidsData);
 
     const formattedDateTime = new Intl.DateTimeFormat("en-US", {
       dateStyle: "medium",
       timeStyle: "short",
     }).format(new Date());
 
-    const logUpdatePromises = submissionData?.students?.map(async (student) => {
-      const kid = kidsData.find((k) => k.kidId === student.studentId);
-      if (
-        student.studentType === "demo" &&
-        student.levelUpdate && // Make sure it's provided
-        student.studentId
-      ) {
-        const recNote = `Recommending level upgrade from ${classType.program} wit level ${classType.level} to  ${student.levelUpdate}`;
+    // Update logs, notes, and attendance counters
+    await Promise.all(
+      submissionData?.students?.map(async (student) => {
+        const kid = kidsData.find((k) => k.kidId === student.studentId);
 
-        const enqData = await operationDeptModel.findOneAndUpdate(
-          { kidId: student.studentId },
-          { $set: { recomentedLevel: student.levelUpdate, note: recNote,"scheduleDemo.status":"Conducted" } },
-          { new: true, upsert: true }
-        );
-        await enquiryLogs.findByIdAndUpdate(
-          kid.logs,
-          {
-            $push: {
-              logs: {
-                employeeId: coachId,
-                comment: `Recommending level upgrade for the kid  ${student.levelUpdate}. Created on ${formattedDateTime}`,
-                conductedClassId: classId,
-                createdAt: new Date(),
-                employeeName: empData.firstName,
-                department: empData.department,
+        // 🔹 Attendance counter update with defaults
+        if (student.studentType?.toLowerCase() === "regular") {
+          // Ensure defaults exist
+          await operationDeptModel.updateOne(
+            { kidId: student.studentId },
+            {
+              $setOnInsert: {
+                "attendedClass.online": 0,
+                "absentClass.online": 0,
+                "remainingClass.online": 0,
               },
             },
-          },
-          { new: true }
-        );
-        await NotesSection.findOneAndUpdate(
-          { enqId: enqData._id },
-          {
-            $push: {
-              notes: {
-                employeeId: coachId,
+            { upsert: true }
+          );
+
+          // Increment values
+          await operationDeptModel.updateOne(
+            { kidId: student.studentId },
+            {
+              $inc: {
+                "attendedClass.online": student.present ? 1 : 0,
+                "attendedClass.both": student.present ? 1 : 0,
+                "absentClass.online": student.present ? 0 : 1,
+                "absentClass.both": student.present ? 0 : 1,
+
+                "remainingClass.online": -1,
+                "remainingClass.both": -1,
+              },
+            }
+          );
+        }
+
+        // 🔹 Demo student level upgrade
+        if (
+          student.studentType === "demo" &&
+          student.levelUpdate &&
+          student.studentId
+        ) {
+          const recNote = `Recommending level upgrade from ${classType.program} with level ${classType.level} to ${student.levelUpdate}`;
+
+          const enqData = await operationDeptModel.findOneAndUpdate(
+            { kidId: student.studentId },
+            {
+              $set: {
+                recomentedLevel: student.levelUpdate,
                 note: recNote,
-                updatedBy: empData.firstName,
-                department: empData.department,
-                createdOn: formattedDateTime,
+                "scheduleDemo.status": "Conducted",
               },
             },
-          },
-          { new: true }
-        );
-        await enquiryLogs.findByIdAndUpdate(
-          kid.logs,
+            { new: true, upsert: true }
+          );
+
+          await enquiryLogs.findByIdAndUpdate(
+            kid.logs,
+            {
+              $push: {
+                logs: {
+                  employeeId: coachId,
+                  comment: `Recommending level upgrade for the kid ${student.levelUpdate}. Created on ${formattedDateTime}`,
+                  conductedClassId: classId,
+                  createdAt: new Date(),
+                  employeeName: empData.firstName,
+                  department: empData.department,
+                },
+              },
+            },
+            { new: true }
+          );
+
+          await NotesSection.findOneAndUpdate(
+            { enqId: enqData._id },
+            {
+              $push: {
+                notes: {
+                  employeeId: coachId,
+                  note: recNote,
+                  updatedBy: empData.firstName,
+                  department: empData.department,
+                  createdOn: formattedDateTime,
+                },
+              },
+            },
+            { new: true }
+          );
+        }
+
+        // 🔹 Always log attendance
+        await enquiryLogs.findOneAndUpdate(
+          kid?.logs,
           {
             $push: {
               logs: {
@@ -313,14 +359,12 @@ const addFeedBackAndAttendance = async (req, res) => {
           },
           { new: true }
         );
-      }
-    });
-
-    await Promise.all(logUpdatePromises);
+      })
+    );
 
     res.status(201).json({
       message:
-        "New class with attendance and feedback added successfully, logs updated.",
+        "New class with attendance and feedback added successfully, counters and logs updated.",
       class: newClass,
     });
   } catch (err) {

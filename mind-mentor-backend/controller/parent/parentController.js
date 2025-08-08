@@ -122,6 +122,7 @@ const parentLogin = async (req, res) => {
       const enqList = await operationDeptModel.create({
         whatsappNumber: mobile,
         parentFirstName: "Parent_New Enquiry",
+        contactNumber: mobile,
       });
 
       const logEntry = {
@@ -216,7 +217,7 @@ const parentStudentRegistration = async (req, res) => {
         parentMobile: formData.mobile,
         parentName: formData.name,
         parentEmail: formData.email,
-        state: state,
+
         kids: [],
         type: "exist",
       });
@@ -229,7 +230,7 @@ const parentStudentRegistration = async (req, res) => {
           $set: {
             parentName: formData.name,
             parentEmail: formData.email,
-            state: state,
+
             type: "exist",
           },
         },
@@ -262,6 +263,8 @@ const parentStudentRegistration = async (req, res) => {
           $set: {
             kidFirstName: formData.kidsName,
             email: formData.email,
+            state: formData.state,
+            city: formData.city,
 
             kidsAge: formData.age,
             kidsGender: formData.gender,
@@ -312,6 +315,8 @@ const parentStudentRegistration = async (req, res) => {
             kidsAge: formData.age,
             kidsGender: formData.gender,
             pincode: formData.pincode,
+            city: formData.city,
+            state: formData.state,
             paymentStatus: "pending",
             source: "MindMentorz website",
             email: formData.email,
@@ -1686,7 +1691,7 @@ const getMyKidData = async (req, res) => {
         const [enqData, demoClassFromSchedule] = await Promise.all([
           operationDeptModel.findOne(
             { _id: kid.enqId },
-            { scheduleDemo: 1, enquiryStatus: 1 }
+            { scheduleDemo: 1, enquiryStatus: 1 ,totalClassCount:1,attendedClass:1,remainingClass:1,absentClass:1}
           ),
           ClassSchedule.findOne(
             {
@@ -1726,6 +1731,11 @@ const getMyKidData = async (req, res) => {
           scheduleDemo: enqData?.scheduleDemo || null,
           enquiryStatus: enqData?.enquiryStatus || null,
           demoClass: demoClass || null,
+          totalClassCount:enqData.totalClassCount,
+          attendedClass:enqData.attendedClass,
+          remainingClass:enqData.remainingClass,
+          absentClass:enqData.absentClass,
+          
         };
       })
     );
@@ -1814,12 +1824,159 @@ const getTheKidEnqId = async (req, res) => {
   }
 };
 
+// const parentSelectThePackage = async (req, res) => {
+//   try {
+//     const { parentId } = req.params;
+//     const { finalData, enqId } = req.body;
+//     let doualPackage = false;
+
+//     const alreadyExistPackage = await packagePaymentData
+//       .findOne({
+//         enqId: enqId,
+//         isPackageActive: true,
+//         paymentStatus: "Success",
+//       })
+//       .sort({ createdAt: -1 });
+//     if (alreadyExistPackage) {
+//       doualPackage = true;
+//     }
+
+//     console.log("finalData", finalData, "enqId", enqId, "parentId", parentId);
+
+//     if (!finalData) {
+//       return res
+//         .status(400)
+//         .json({ message: "Package data (finalData) is required." });
+//     }
+//     const kidData = await kidModel.findOne(
+//       { _id: finalData.kidId },
+//       { kidsName: 1, selectedProgram: 1, whatsappNumber: 1, contactNumber: 1 }
+//     );
+
+//     const { selectedProgram } = kidData;
+//     console.log(selectedProgram);
+
+//     const paymentId = `PAY-${uuidv4().slice(0, 8).toUpperCase()}`;
+
+//     const checkId = finalData.enqId || enqId;
+
+//     const newPackage = new packagePaymentData({
+//       paymentId,
+//       enqId: finalData.enqId || enqId,
+//       kidName: kidData.kidsName,
+//       kidId: finalData.kidId,
+//       whatsappNumber: kidData.whatsappNumber || kidData.contactNumber,
+//       programs: kidData.programs,
+//       selectedProgram: selectedProgram[0].program,
+//       selectedLevel: selectedProgram[0].level,
+//       classMode: finalData.classMode,
+//       discount: finalData.discount,
+//       baseAmount: finalData.baseAmount,
+//       totalAmount: finalData.totalAmount,
+//       packageId: finalData.packageId,
+//       selectedPackage: finalData.selectedPackage,
+//       onlineClasses: finalData.onlineClasses,
+//       offlineClasses: finalData.offlineClasses,
+//       centerId: finalData.centerId || null,
+//       centerName: finalData.centerName,
+//       timeSlot: finalData.timeSlot,
+//       classRate: finalData.classRate,
+//       razorpayPaymentId: finalData.razorpayPaymentId,
+//       paymentStatus: "Success",
+//       isPackageActive: true,
+//       isExtraPackage: doualPackage,
+//     });
+//     const savedPackage = await newPackage.save();
+//     const newKidData = await kidModel.findOneAndUpdate(
+//       { _id: finalData.kidId },
+//       { $set: { status: "Active" } }
+//     );
+
+//     // await operationDeptModel.findOneAndUpdate(
+//     //   { _id: finalData.enqId },
+//     //   {
+//     //     $set: {
+//     //       enquiryStatus: "Active",
+//     //       paymentStatus: "Success",
+//     //       isNewUser: false,
+//     //       enquiryField: "prospects",
+//     //     },
+//     //   }
+//     // );
+
+//     await operationDeptModel.findOneAndUpdate(
+//       { _id: finalData.enqId },
+//       {
+//         $set: {
+//           enquiryStatus: "Active",
+//           paymentStatus: "Success",
+//           isNewUser: false,
+//           enquiryField: "prospects",
+//           // Update total class count
+//           "programs.$.totalClassCount.online": finalData.onlineClasses || 0,
+//           "programs.$.totalClassCount.offline": finalData.offlineClasses || 0,
+//           "programs.$.totalClassCount.both":
+//             (finalData.onlineClasses || 0) + (finalData.offlineClasses || 0),
+//           // Also initialize remainingClass to the same values at package selection
+//           "programs.$.remainingClass.online": finalData.onlineClasses || 0,
+//           "programs.$.remainingClass.offline": finalData.offlineClasses || 0,
+//           "programs.$.remainingClass.both":
+//             (finalData.onlineClasses || 0) + (finalData.offlineClasses || 0),
+//         },
+//         $push: { paymentData: savedPackage._id }, // push payment record ID
+//       }
+//     );
+
+//     let comment = `Parent selected package for kid: ${
+//       kidData.kidsName || newKidData.kidsName || "N/A"
+//     }`;
+
+//     const online = finalData.onlineClasses;
+//     const offline = finalData.offlineClasses;
+
+//     const details = [];
+//     if (online) details.push(`Online Classes: ${online}`);
+//     if (offline) details.push(`Offline Classes: ${offline}`);
+//     if (details.length > 0)
+//       comment += ` (${details.join(", ")}) paid amount is ${
+//         finalData.totalAmount
+//       } through mindmentorz platform`;
+
+//     await enquiryLogs.updateOne(
+//       { enqId: finalData.enqId || enqId },
+//       {
+//         $push: {
+//           logs: {
+//             employeeName: "Parent",
+//             comment: comment,
+//             action: "Parent Package Selection",
+//           },
+//         },
+//       },
+//       { upsert: true }
+//     );
+
+//     res.status(201).json({
+//       message: "Parent's package selection saved successfully.",
+//       paymentId,
+//       data: savedPackage,
+//     });
+//   } catch (err) {
+//     console.error("Error in selecting the package", err);
+//     res.status(500).json({
+//       message: "Failed to save parent's package selection.",
+//       error: err.message,
+//     });
+//   }
+// };
+
 const parentSelectThePackage = async (req, res) => {
   try {
     const { parentId } = req.params;
     const { finalData, enqId } = req.body;
-    let doualPackage = false;
+    let dualPackage = false;
 
+    // Check if parent already has an active package
     const alreadyExistPackage = await packagePaymentData
       .findOne({
         enqId: enqId,
@@ -1827,38 +1984,40 @@ const parentSelectThePackage = async (req, res) => {
         paymentStatus: "Success",
       })
       .sort({ createdAt: -1 });
-    if (alreadyExistPackage) {
-      doualPackage = true;
-    }
 
-    console.log("finalData", finalData, "enqId", enqId, "parentId", parentId);
+    if (alreadyExistPackage) {
+      dualPackage = true;
+    }
 
     if (!finalData) {
       return res
         .status(400)
         .json({ message: "Package data (finalData) is required." });
     }
+
+    // Fetch kid data
     const kidData = await kidModel.findOne(
       { _id: finalData.kidId },
       { kidsName: 1, selectedProgram: 1, whatsappNumber: 1, contactNumber: 1 }
     );
 
+    if (!kidData) {
+      return res.status(404).json({ message: "Kid not found." });
+    }
+
     const { selectedProgram } = kidData;
-    console.log(selectedProgram);
-
     const paymentId = `PAY-${uuidv4().slice(0, 8).toUpperCase()}`;
-
     const checkId = finalData.enqId || enqId;
 
+    // Save package payment record
     const newPackage = new packagePaymentData({
       paymentId,
-      enqId: finalData.enqId || enqId,
+      enqId: checkId,
       kidName: kidData.kidsName,
       kidId: finalData.kidId,
       whatsappNumber: kidData.whatsappNumber || kidData.contactNumber,
-      programs: kidData.programs,
-      selectedProgram: selectedProgram[0].program,
-      selectedLevel: selectedProgram[0].level,
+      selectedProgram: selectedProgram[0]?.program,
+      selectedLevel: selectedProgram[0]?.level,
       classMode: finalData.classMode,
       discount: finalData.discount,
       baseAmount: finalData.baseAmount,
@@ -1874,48 +2033,65 @@ const parentSelectThePackage = async (req, res) => {
       razorpayPaymentId: finalData.razorpayPaymentId,
       paymentStatus: "Success",
       isPackageActive: true,
-      isExtraPackage: doualPackage,
+      isExtraPackage: dualPackage,
     });
+
     const savedPackage = await newPackage.save();
-    const newKidData = await kidModel.findOneAndUpdate(
+
+    // Update kid status
+    await kidModel.findOneAndUpdate(
       { _id: finalData.kidId },
       { $set: { status: "Active" } }
     );
 
+    // Update operationDept counts at top level (NOT inside programs)
     await operationDeptModel.findOneAndUpdate(
-      { _id: finalData.enqId },
+      { _id: checkId },
       {
         $set: {
           enquiryStatus: "Active",
           paymentStatus: "Success",
           isNewUser: false,
           enquiryField: "prospects",
+          totalClassCount: {
+            online: finalData.onlineClasses || 0,
+            offline: finalData.offlineClasses || 0,
+            both:
+              (finalData.onlineClasses || 0) + (finalData.offlineClasses || 0),
+          },
+          remainingClass: {
+            online: finalData.onlineClasses || 0,
+            offline: finalData.offlineClasses || 0,
+            both:
+              (finalData.onlineClasses || 0) + (finalData.offlineClasses || 0),
+          },
         },
+        $push: { paymentData: savedPackage._id },
       }
     );
 
+    // Log enquiry update
     let comment = `Parent selected package for kid: ${
-      kidData.kidsName || newKidData.kidsName || "N/A"
+      kidData.kidsName || "N/A"
     }`;
-
-    const online = finalData.onlineClasses;
-    const offline = finalData.offlineClasses;
-
     const details = [];
-    if (online) details.push(`Online Classes: ${online}`);
-    if (offline) details.push(`Offline Classes: ${offline}`);
-    if (details.length > 0)
+    if (finalData.onlineClasses)
+      details.push(`Online Classes: ${finalData.onlineClasses}`);
+    if (finalData.offlineClasses)
+      details.push(`Offline Classes: ${finalData.offlineClasses}`);
+    if (details.length > 0) {
       comment += ` (${details.join(", ")}) paid amount is ${
         finalData.totalAmount
       } through mindmentorz platform`;
+    }
 
     await enquiryLogs.updateOne(
-      { enqId: finalData.enqId || enqId },
+      { enqId: checkId },
       {
         $push: {
           logs: {
             employeeName: "Parent",
-            comment: comment,
+            comment,
             action: "Parent Package Selection",
           },
         },
@@ -3220,7 +3396,8 @@ const parentPauseTheClass = async (req, res) => {
     console.log("Welcome to pause the class", req.body);
 
     const { enqId, classId } = req.params;
-    const { updatedData, pauseRemarks, pauseStartDate, pauseEndDate } = req.body;
+    const { updatedData, pauseRemarks, pauseStartDate, pauseEndDate } =
+      req.body;
 
     // Format date to dd-mm-yy
     const formatDate = (dateStr) => {
@@ -3284,7 +3461,6 @@ const parentPauseTheClass = async (req, res) => {
     });
   }
 };
-
 
 const parentResumeTheClass = async (req, res) => {
   try {

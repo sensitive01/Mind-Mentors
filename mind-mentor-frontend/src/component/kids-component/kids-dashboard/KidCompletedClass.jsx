@@ -108,7 +108,7 @@ const KidCompletedClass = () => {
               Ready for Adventure? 🚀
             </h2>
             <p className="text-white/90 text-xl mb-6">
-              Complete your first class to unlock awesome achievements!
+              Complete your class to unlock awesome achievements!
             </p>
             <div className="bg-white/20 backdrop-blur-sm rounded-3xl p-6 max-w-md mx-auto">
               <p className="text-white font-semibold">

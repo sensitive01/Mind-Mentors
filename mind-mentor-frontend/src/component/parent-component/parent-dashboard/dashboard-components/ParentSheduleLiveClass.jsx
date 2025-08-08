@@ -24,6 +24,7 @@ import {
   getActiveKidData,
   // getScheduledClassData,
 } from "../../../../api/service/employee/serviceDeliveryService";
+import ClassCalenderSelection from "./ClassCalenderSelection";
 
 // Simple Info Card
 const InfoCard = ({ label, value }) => (
@@ -733,7 +734,7 @@ const ParentSheduleLiveClass = () => {
         </div>
 
         {/* Class Selection */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        {/* <div className="bg-white rounded-lg shadow-sm border p-6">
           <h2 className="text-lg font-semibold mb-4">
             Select Available Classes
           </h2>
@@ -743,6 +744,19 @@ const ParentSheduleLiveClass = () => {
             selectedClasses={selectedClasses}
             onClassSelection={handleClassSelection}
             availableClasses={availableClasses}
+            classMode={kidData.classDetails?.classMode}
+          />
+        </div> */}
+        {/* Calendar-Based Class Selection */}
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <h2 className="text-lg font-semibold mb-4">
+            Select Classes Using Calendar
+          </h2>
+          <ClassCalenderSelection
+            kidData={kidData}
+            availableClasses={availableClasses}
+            selectedClasses={selectedClasses}
+            onClassSelection={handleClassSelection}
             classMode={kidData.classDetails?.classMode}
           />
         </div>

@@ -6,6 +6,7 @@ import Dashboard from "../../component/parent-component/parent-dashboard/dashboa
 
 const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -15,30 +16,48 @@ const DashboardPage = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  const handleMenuClick = () => {
+    setSidebarOpen(true);
+  };
+
+  const handleSidebarClose = () => {
+    setSidebarOpen(false);
+  };
+
+  // Close sidebar on route change (for mobile)
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen overflow-hidden">
       {loading ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
           <ChessLoader />
         </div>
       ) : (
         <>
-  
-          <div className="flex-shrink-0 bg-white text-white h-screen">
-            <Sidebar />
-          </div>
+          {/* Sidebar - Responsive */}
+          <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} />
 
-   
-          <div className="flex-1 flex flex-col bg-gray-100">
-     
-            <div className="h-16 bg-white shadow-md">
-              <Topbar />
+          {/* Main Content Area */}
+          <div className="flex-1 flex flex-col bg-gray-100 min-w-0">
+            {/* Top Bar - Responsive */}
+            <div className="h-16 bg-white shadow-md flex-shrink-0">
+              <Topbar onMenuClick={handleMenuClick} />
             </div>
 
-            <div
-              className="flex-1 p-8 mt-5"
+            {/* Dashboard Content - Responsive */}
+            <div 
+              className="flex-1 overflow-auto"
               style={{
-                overflow: "auto",
                 scrollbarWidth: "none", 
                 msOverflowStyle: "none",
               }}

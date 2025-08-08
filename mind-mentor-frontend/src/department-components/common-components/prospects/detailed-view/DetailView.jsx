@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useState } from "react";
-import { Box, Grid, Typography } from "@mui/material";
+import { Box, Grid, Typography, Tooltip } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import {
   fetchThePhysicalCenters,
@@ -18,30 +18,74 @@ import PaymentDialog from "./PaymentDialog";
 import EditDialogBox from "./edit/EditDialogBox";
 import PaymentVerification from "./PaymentVerification";
 
-const DetailCard = ({ title, value }) => (
-  <Box
-    sx={{
-      p: 2.5,
-      borderRadius: 2,
-      bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
-      height: "100%",
-      display: "flex",
-      flexDirection: "column",
-      gap: 1,
-    }}
-  >
-    <Typography
-      variant="caption"
-      color="text.secondary"
-      sx={{ fontWeight: 600, fontSize: "0.75rem", letterSpacing: "0.5px" }}
+const DetailCard = ({ title, value, isEmail = false, maxLength = 25 }) => {
+  const shouldTruncate = value && value.length > maxLength && !isEmail;
+  const displayValue = shouldTruncate
+    ? `${value.substring(0, maxLength)}...`
+    : value;
+
+  const getTextStyles = () => {
+    if (isEmail) {
+      return {
+        wordBreak: "break-all",
+        overflowWrap: "break-word",
+        whiteSpace: "pre-wrap",
+        fontSize: "0.875rem",
+        lineHeight: 1.4,
+      };
+    }
+    return {
+      lineHeight: 1.6,
+      wordBreak: "break-word",
+      overflowWrap: "break-word",
+    };
+  };
+
+  return (
+    <Box
+      sx={{
+        p: 2.5,
+        borderRadius: 2,
+        bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        gap: 1,
+        minHeight: "100px",
+      }}
     >
-      {title}
-    </Typography>
-    <Typography variant="body1" color="text.primary" sx={{ lineHeight: 1.6 }}>
-      {value || "N/A"}
-    </Typography>
-  </Box>
-);
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{ fontWeight: 600, fontSize: "0.75rem", letterSpacing: "0.5px" }}
+      >
+        {title}
+      </Typography>
+
+      {shouldTruncate ? (
+        <Tooltip title={value} arrow placement="top">
+          <Typography
+            variant="body1"
+            color="text.primary"
+            sx={{
+              ...getTextStyles(),
+              cursor: "pointer",
+              "&:hover": {
+                color: "primary.main",
+              },
+            }}
+          >
+            {displayValue}
+          </Typography>
+        </Tooltip>
+      ) : (
+        <Typography variant="body1" color="text.primary" sx={getTextStyles()}>
+          {value || "N/A"}
+        </Typography>
+      )}
+    </Box>
+  );
+};
 
 const SectionTitle = ({ children }) => (
   <Typography
@@ -61,7 +105,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
   console.log("DetailView - Initial Data:", data);
   const navigate = useNavigate();
   const department = localStorage.getItem("department");
-  const empId = localStorage.getItem("empId")
+  const empId = localStorage.getItem("empId");
 
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [formData, setFormData] = useState(data);
@@ -138,12 +182,12 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
   const handleSave = async () => {
     console.log("DetailView - Saving data:", formData);
     try {
-      const response = await updateEnquiry(formData,empId);
+      const response = await updateEnquiry(formData, empId);
       console.log("DetailView - Save response:", response);
-      
+
       if (response.status === 200) {
         console.log("DetailView - Response data:", response.data);
-        
+
         // Create updated data with the form data as priority
         // This ensures that what user edited is what gets displayed
         const updatedData = {
@@ -151,18 +195,40 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
           ...formData, // Use the form data that user actually edited
           ...response.data, // Override with any server-specific data
           // Ensure name fields are preserved from formData
-          parentName: formData.parentName || response.data?.parentName || currentData.parentName,
-          kidName: formData.kidName || response.data?.kidName || currentData.kidName,
-          parentFirstName: formData.parentFirstName || response.data?.parentFirstName || currentData.parentFirstName,
-          parentLastName: formData.parentLastName || response.data?.parentLastName || currentData.parentLastName,
-          kidFirstName: formData.kidFirstName || response.data?.kidFirstName || currentData.kidFirstName,
-          kidLastName: formData.kidLastName || response.data?.kidLastName || currentData.kidLastName,
+          parentName:
+            formData.parentName ||
+            response.data?.parentName ||
+            currentData.parentName,
+          kidName:
+            formData.kidName || response.data?.kidName || currentData.kidName,
+          parentFirstName:
+            formData.parentFirstName ||
+            response.data?.parentFirstName ||
+            currentData.parentFirstName,
+          parentLastName:
+            formData.parentLastName ||
+            response.data?.parentLastName ||
+            currentData.parentLastName,
+          kidFirstName:
+            formData.kidFirstName ||
+            response.data?.kidFirstName ||
+            currentData.kidFirstName,
+          kidLastName:
+            formData.kidLastName ||
+            response.data?.kidLastName ||
+            currentData.kidLastName,
         };
-        
+
         console.log("DetailView - Final updated data:", updatedData);
-        console.log("DetailView - Parent name will display:", getDisplayParentName(updatedData));
-        console.log("DetailView - Kid name will display:", getDisplayKidName(updatedData));
-        
+        console.log(
+          "DetailView - Parent name will display:",
+          getDisplayParentName(updatedData)
+        );
+        console.log(
+          "DetailView - Kid name will display:",
+          getDisplayKidName(updatedData)
+        );
+
         // Update both current display data and call parent callback
         setCurrentData(updatedData);
         setFormData(updatedData); // Also update formData to stay in sync
@@ -209,6 +275,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                 <DetailCard
                   title="EMAIL"
                   value={formatEmail(displayData?.email)}
+                  isEmail={true}
                 />
               </Grid>
               <Grid item xs={12} md={3}>
@@ -231,9 +298,9 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
             <SectionTitle>Kid Information</SectionTitle>
             <Grid container spacing={3}>
               <Grid item xs={12} md={3}>
-                <DetailCard 
-                  title="KID NAME" 
-                  value={getDisplayKidName(displayData)} 
+                <DetailCard
+                  title="KID NAME"
+                  value={getDisplayKidName(displayData)}
                 />
               </Grid>
               <Grid item xs={12} md={3}>
@@ -398,7 +465,14 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                   >
                     Remarks
                   </Typography>
-                  <Typography variant="body1">
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      wordBreak: "break-word",
+                      overflowWrap: "break-word",
+                      whiteSpace: "pre-wrap",
+                    }}
+                  >
                     {displayData?.message || "No messages"}
                   </Typography>
                 </Box>
@@ -417,7 +491,14 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                   >
                     Notes
                   </Typography>
-                  <Typography variant="body1">
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      wordBreak: "break-word",
+                      overflowWrap: "break-word",
+                      whiteSpace: "pre-wrap",
+                    }}
+                  >
                     {displayData?.notes || "No notes"}
                   </Typography>
                 </Box>
@@ -436,7 +517,14 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                   >
                     Status Log
                   </Typography>
-                  <Typography variant="body1">
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      wordBreak: "break-word",
+                      overflowWrap: "break-word",
+                      whiteSpace: "pre-wrap",
+                    }}
+                  >
                     {displayData?.lastNoteAction || "No status updates"}
                   </Typography>
                 </Box>

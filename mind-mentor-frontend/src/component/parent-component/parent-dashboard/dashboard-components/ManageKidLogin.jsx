@@ -7,7 +7,14 @@ import {
   updateChildChessId,
 } from "../../../../api/service/parent/ParentService";
 import { toast, ToastContainer } from "react-toastify";
-import { Lock, User, CreditCard, CheckCircle, XCircle } from "lucide-react";
+import {
+  Lock,
+  User,
+  CreditCard,
+  CheckCircle,
+  XCircle,
+  Edit3,
+} from "lucide-react";
 import "react-toastify/dist/ReactToastify.css";
 import "./float.css";
 
@@ -19,9 +26,10 @@ const ManageChildLogin = () => {
   const [pinValues, setPinValues] = useState(["", "", "", ""]);
   const [chessId, setChessId] = useState("");
   const [originalChessId, setOriginalChessId] = useState("");
-  const [chessIdStatus, setChessIdStatus] = useState(null); // null, 'checking', 'available', 'taken'
+  const [chessIdStatus, setChessIdStatus] = useState(null);
   const [chessIdError, setChessIdError] = useState("");
   const inputRefs = [useRef(), useRef(), useRef(), useRef()];
+  const chessIdInputRef = useRef(null);
   const chessIdTimeoutRef = useRef(null);
 
   useEffect(() => {
@@ -144,6 +152,20 @@ const ManageChildLogin = () => {
     // Handle backspace to move to previous input
     if (e.key === "Backspace" && !pinValues[index] && index > 0) {
       inputRefs[index - 1].current.focus();
+    }
+  };
+
+  const handleChessIdEditClick = () => {
+    if (chessIdInputRef.current) {
+      chessIdInputRef.current.focus();
+      chessIdInputRef.current.select(); // Select all text for easy editing
+    }
+  };
+
+  const handlePinEditClick = () => {
+    if (inputRefs[0].current) {
+      inputRefs[0].current.focus();
+      inputRefs[0].current.select(); // Select the content of first PIN input
     }
   };
 
@@ -332,7 +354,7 @@ const ManageChildLogin = () => {
               </h1>
 
               <p className="text-white text-opacity-90 text-sm">
-                Update your child's PIN and Chess ID for secure account access
+                Update your child's PIN and MM ID for secure account access
               </p>
             </div>
           </div>
@@ -359,14 +381,26 @@ const ManageChildLogin = () => {
               </div>
 
               <div className="relative">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Chess ID *
+                <label className="flex items-center text-sm font-medium text-gray-700 mb-1">
+                  MM ID *
+                  <button
+                    type="button"
+                    onClick={handleChessIdEditClick}
+                    className="ml-1.5 p-1 rounded-full hover:bg-primary hover:bg-opacity-10 transition-all duration-200 group"
+                    title="Click to edit MM ID"
+                  >
+                    <Edit3 className="h-4 w-4 text-primary animate-pulse group-hover:animate-none group-hover:scale-110" />
+                  </button>
+                  <span className="text-xs text-primary ml-1">
+                    (Click to edit)
+                  </span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <CreditCard className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
+                    ref={chessIdInputRef}
                     type="text"
                     value={chessId}
                     onChange={handleChessIdChange}
@@ -411,28 +445,51 @@ const ManageChildLogin = () => {
             {/* PIN Code Section */}
             <div className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="flex items-center text-sm font-medium text-gray-700 mb-1">
                   PIN Code *
+                  <button
+                    type="button"
+                    onClick={handlePinEditClick}
+                    className="ml-1.5 p-1 rounded-full hover:bg-primary hover:bg-opacity-10 transition-all duration-200 group"
+                    title="Click to edit PIN"
+                  >
+                    <Edit3 className="h-4 w-4 text-primary animate-pulse group-hover:animate-none group-hover:scale-110" />
+                  </button>
+                  <span className="text-xs text-primary ml-1">
+                    (Click to edit)
+                  </span>
                 </label>
 
                 <div className="flex justify-center gap-3 sm:gap-4">
                   {pinValues.map((value, index) => (
-                    <input
-                      key={index}
-                      ref={inputRefs[index]}
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      value={value}
-                      onChange={(e) => handlePinChange(index, e.target.value)}
-                      onKeyDown={(e) => handleKeyDown(index, e)}
-                      className="w-10 h-9 sm:w-16 sm:h-16 text-center text-xl font-mono bg-gray-50 border border-gray-300 rounded-lg
-                             shadow-sm
-                             transition-all duration-200
-                             focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-50
-                             hover:border-primary hover:bg-white"
-                      maxLength={1}
-                    />
+                    <div key={index} className="relative">
+                      <input
+                        ref={inputRefs[index]}
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={value}
+                        onChange={(e) => handlePinChange(index, e.target.value)}
+                        onKeyDown={(e) => handleKeyDown(index, e)}
+                        className="w-10 h-9 sm:w-16 sm:h-16 text-center text-xl font-mono bg-gray-50 border border-gray-300 rounded-lg
+                               shadow-sm
+                               transition-all duration-200
+                               focus:border-primary focus:ring-2 focus:ring-primary focus:ring-opacity-50
+                               hover:border-primary hover:bg-white"
+                        maxLength={1}
+                      />
+                      {/* Small edit indicator on first PIN input */}
+                      {index === 0 && (
+                        <button
+                          type="button"
+                          onClick={handlePinEditClick}
+                          className="absolute -top-1 -right-1 p-0.5 rounded-full hover:bg-primary hover:bg-opacity-10 transition-all duration-200"
+                          title="Click to edit PIN"
+                        >
+                          <Edit3 className="h-3 w-3 text-primary opacity-60 hover:opacity-100" />
+                        </button>
+                      )}
+                    </div>
                   ))}
                 </div>
                 <p className="mt-2 text-sm text-gray-500 text-center">

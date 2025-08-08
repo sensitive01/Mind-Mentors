@@ -9,8 +9,6 @@ const KidsPinPage = () => {
   const navigate = useNavigate();
   const { state } = location;
 
-  console.log("State in parent otp", state);
-
   const [otp, setOtp] = useState(["", "", "", ""]);
   const otpRefs = useRef([]);
 
@@ -36,6 +34,28 @@ const KidsPinPage = () => {
     }
   };
 
+  // Handle paste functionality
+  const handlePaste = (index, e) => {
+    e.preventDefault();
+    const pasteData = e.clipboardData.getData("text");
+    const digits = pasteData.replace(/[^0-9]/g, "").slice(0, 4); // Only get numbers and limit to 4 digits
+
+    if (digits.length > 0) {
+      const updatedOtp = [...otp];
+
+      // Fill the OTP array starting from the current index
+      for (let i = 0; i < digits.length && index + i < 4; i++) {
+        updatedOtp[index + i] = digits[i];
+      }
+
+      setOtp(updatedOtp);
+
+      // Focus on the next empty field or the last field
+      const nextIndex = Math.min(index + digits.length, 3);
+      otpRefs.current[nextIndex].focus();
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log(otp);
@@ -44,14 +64,22 @@ const KidsPinPage = () => {
       console.log(response);
       if (response.status === 200) {
         toast.success(response?.data?.message);
-        localStorage.setItem("role","kid")
-        localStorage.setItem("kidId",response.data.kidId)
+        localStorage.setItem("role", "kid");
+        localStorage.setItem("kidId", response.data.kidId);
         setTimeout(() => {
           navigate("/kids/dashboard");
         }, 1500);
+      } else {
+        toast.error(response?.data?.message || "Invalid Pin");
       }
     } catch (err) {
       console.log("Error in verify the pin", err);
+      // Fixed the error message extraction
+      const errorMessage =
+        err.response?.data?.message ||
+        err?.response?.response?.data?.message ||
+        "Invalid Pin";
+      toast.error(errorMessage);
     }
   };
 
@@ -65,15 +93,13 @@ const KidsPinPage = () => {
             <h2 className="text-2xl lg:text-3xl font-bold text-primary mb-4">
               Kids Login
             </h2>
-            <p className="text-sm text-gray-600">
-              Please enter the OTP sent to your mobile number.
-            </p>
+            <p className="text-sm text-gray-600">Please enter the PIN below.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4 w-full">
             <div className="flex justify-center mb-2">
               <label className="text-sm font-medium text-gray-700">
-                Enter PIN 
+                Enter PIN
               </label>
             </div>
 
@@ -94,6 +120,7 @@ const KidsPinPage = () => {
                     )
                   }
                   onKeyDown={(e) => handleKeyDown(index, e)}
+                  onPaste={(e) => handlePaste(index, e)}
                   required
                 />
               ))}
@@ -117,6 +144,7 @@ const KidsPinPage = () => {
         pauseOnHover
         draggable
         pauseOnFocusLoss
+        className="mt-16"
       />
     </div>
   );

@@ -15,6 +15,7 @@ import {
   Select,
   InputLabel,
   FormControl,
+  Tooltip,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import { Trash2, Plus } from "lucide-react";
@@ -29,30 +30,76 @@ import {
   formatWhatsAppNumber,
 } from "../../../../utils/formatContacts";
 
-const DetailCard = ({ title, value }) => (
-  <Box
-    sx={{
-      p: 2.5,
-      borderRadius: 2,
-      bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
-      height: "100%",
-      display: "flex",
-      flexDirection: "column",
-      gap: 1,
-    }}
-  >
-    <Typography
-      variant="caption"
-      color="text.secondary"
-      sx={{ fontWeight: 600, fontSize: "0.75rem", letterSpacing: "0.5px" }}
+const DetailCard = ({ title, value, isEmail = false, maxLength = 25 }) => {
+  const shouldTruncate = value && value.length > maxLength && !isEmail;
+  const displayValue = shouldTruncate ? `${value.substring(0, maxLength)}...` : value;
+
+  const getTextStyles = () => {
+    if (isEmail) {
+      return {
+        wordBreak: "break-all",
+        overflowWrap: "break-word", 
+        whiteSpace: "pre-wrap",
+        fontSize: "0.875rem",
+        lineHeight: 1.4,
+      };
+    }
+    return { 
+      lineHeight: 1.6,
+      wordBreak: "break-word",
+      overflowWrap: "break-word"
+    };
+  };
+
+  return (
+    <Box
+      sx={{
+        p: 2.5,
+        borderRadius: 2,
+        bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        gap: 1,
+        minHeight: "100px",
+      }}
     >
-      {title}
-    </Typography>
-    <Typography variant="body1" color="text.primary" sx={{ lineHeight: 1.6 }}>
-      {value || "N/A"}
-    </Typography>
-  </Box>
-);
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{ fontWeight: 600, fontSize: "0.75rem", letterSpacing: "0.5px" }}
+      >
+        {title}
+      </Typography>
+      
+      {shouldTruncate ? (
+        <Tooltip title={value} arrow placement="top">
+          <Typography 
+            variant="body1" 
+            color="text.primary" 
+            sx={{ 
+              ...getTextStyles(),
+              cursor: "pointer",
+              "&:hover": {
+                color: "primary.main"
+              }
+            }}
+          >
+            {displayValue}
+          </Typography>
+        </Tooltip>
+      ) : (
+        <Typography 
+          variant="body1" 
+          color="text.primary" 
+          sx={getTextStyles()}
+        >
+          {value || "N/A"}
+        </Typography>
+      )}
+    </Box>
+  );
+};
 
 const SectionTitle = ({ children }) => (
   <Typography
@@ -358,7 +405,11 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                 />
               </Grid>
               <Grid item xs={12} md={3}>
-                <DetailCard title="EMAIL" value={formatEmail(data.email)} />
+                <DetailCard 
+                  title="EMAIL" 
+                  value={formatEmail(data.email)} 
+                  isEmail={true}
+                />
               </Grid>
               <Grid item xs={12} md={3}>
                 <DetailCard
@@ -371,9 +422,6 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                   title="CONTACT NUMBER"
                   value={formatWhatsAppNumber(data.contactNumber)}
                 />
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <DetailCard title="ADDRESS" value={data.address} />
               </Grid>
             </Grid>
           </Grid>
@@ -473,7 +521,14 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                   >
                     Remarks
                   </Typography>
-                  <Typography variant="body1">
+                  <Typography 
+                    variant="body1"
+                    sx={{
+                      wordBreak: "break-word",
+                      overflowWrap: "break-word",
+                      whiteSpace: "pre-wrap"
+                    }}
+                  >
                     {data.message || data.notes || "No messages"}
                   </Typography>
                 </Box>
@@ -492,7 +547,14 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                   >
                     Notes
                   </Typography>
-                  <Typography variant="body1">
+                  <Typography 
+                    variant="body1"
+                    sx={{
+                      wordBreak: "break-word",
+                      overflowWrap: "break-word",
+                      whiteSpace: "pre-wrap"
+                    }}
+                  >
                     {data.notes || data.message || "No notes"}
                   </Typography>
                 </Box>
@@ -511,7 +573,14 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                   >
                     Status Log
                   </Typography>
-                  <Typography variant="body1">
+                  <Typography 
+                    variant="body1"
+                    sx={{
+                      wordBreak: "break-word",
+                      overflowWrap: "break-word",
+                      whiteSpace: "pre-wrap"
+                    }}
+                  >
                     {data.lastNoteAction || "No status updates"}
                   </Typography>
                 </Box>

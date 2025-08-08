@@ -953,7 +953,7 @@ const HomeKidPackageSelection = () => {
               <div className="ml-3">
                 <p className="text-sm text-yellow-700">
                   You're in view-only mode. To select packages, please add a
-                  child first.
+                  child.
                 </p>
               </div>
             </div>

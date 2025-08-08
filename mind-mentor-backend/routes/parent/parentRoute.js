@@ -46,13 +46,14 @@ parentRoute.get("/get-sheduled-class-data/:enqId",parentController.parentGetShed
 
 
 
-
-parentRoute.post("/get-mm-id-available",parentController.getMMidAvailable)
-parentRoute.post("/parent-submit-enquiry-form",parentController.parentSubmitEnquiryForm)
 parentRoute.post("/login",parentController.parentLogin)
 parentRoute.post("/verify-otp",parentController.parentVerifyOtp)
 parentRoute.post("/parent-kids-registration",parentController.parentStudentRegistration)
+
 parentRoute.post("/parent-book-demo-class",parentController.parentBookDemoClass)
+
+parentRoute.post("/get-mm-id-available",parentController.getMMidAvailable)
+parentRoute.post("/parent-submit-enquiry-form",parentController.parentSubmitEnquiryForm)
 parentRoute.post("/manage-child-pin/:id",parentController.changeChildPin)
 parentRoute.post("/book-new-demo-class/:kidId",parentController.parentBookNewDemoClass)
 parentRoute.post("/add-new-kid/:parentId",parentController.parentAddNewKid)

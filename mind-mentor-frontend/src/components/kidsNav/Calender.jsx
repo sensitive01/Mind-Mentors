@@ -391,7 +391,7 @@ const ClassScheduleCalendar = () => {
               </h3>
               <p className="text-gray-600 mb-6">
                 You don't have any classes scheduled at the moment. Get started
-                by scheduling your first class!
+                by scheduling your class!
               </p>
               {!showScheduleButton && (
                 <button
@@ -431,7 +431,7 @@ const ClassScheduleCalendar = () => {
                 className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-lg hover:shadow-xl"
               >
                 <CalendarPlus className="w-5 h-5" />
-                Reschedule Class
+                Edit Class
               </button>
             ) : (
               <button
