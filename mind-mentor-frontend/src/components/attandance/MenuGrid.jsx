@@ -84,7 +84,7 @@ const MenuGrid = () => {
           route: `/parent-my-package-data/${id}`,
         },
       ];
-    } else if (demoStatus === "Scheduled" && paymentStatus !== "Success") {
+    } else if ((demoStatus === "Scheduled"||demoStatus === "Conducted") && paymentStatus !== "Success") {
       return [
         {
           id: id,
@@ -192,6 +192,14 @@ const MenuGrid = () => {
           subtitle: "Competitions",
           color: "bg-pink-500",
           route: `/parent/list-all-tournament/${id}`,
+        },
+        {
+          id: id,
+          icon: <Trophy className="w-6 h-6" />,
+          title: "Chess Kid",
+          subtitle: "Practice Chess",
+          color: "bg-pink-500",
+          route: `/parent/chess-kid/${id}`,
         },
       ];
     }

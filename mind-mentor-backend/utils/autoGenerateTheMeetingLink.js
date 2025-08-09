@@ -1,9 +1,15 @@
-import cron from "node-cron";
-import axios from "axios";
-import ClassSchedule from "../model/classSheduleModel.js";
+const cron = require("node-cron");
+const axios = require("axios");
+const ClassSchedule = require("../model/classSheduleModel.js");
 
 const daysOfWeek = [
-  "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
 ];
 
 cron.schedule("* * * * *", async () => {
@@ -19,7 +25,7 @@ cron.schedule("* * * * *", async () => {
 
   for (const cls of classes) {
     const classTimeStr = cls.classTime?.split(" - ")[0]; // e.g. "4:45 PM"
-    console.log("classTimeStr",classTimeStr)
+    console.log("classTimeStr", classTimeStr);
     if (!classTimeStr) {
       console.log("⛔ classTime not found or invalid:", cls.classTime);
       continue;

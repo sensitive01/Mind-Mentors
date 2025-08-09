@@ -122,6 +122,49 @@ const ParentDashboard = () => {
     };
   };
 
+  // Function to determine next class text
+  const getNextClassText = (kid) => {
+    const { enquiryStatus, demoStatus, demoClass, demoAssigned } = kid;
+
+    // For active students - prioritize demoAssigned for demo classes, then regular class schedule
+    if (enquiryStatus === "Active") {
+      // If there's a demoAssigned and it's not "NA", use it (for demo classes)
+      if (demoAssigned && demoAssigned !== "NA") {
+        return demoAssigned;
+      }
+      // Otherwise use demo class info if available
+      if (demoClass) {
+        const demoClassInfo = formatDemoClassInfo(demoClass);
+        return demoClassInfo?.displayText || "Check schedule for next class";
+      }
+      return "Check schedule for next class";
+    }
+
+    // For scheduled demos - prioritize demoAssigned if available
+    if (demoStatus === "Scheduled") {
+      if (demoAssigned && demoAssigned !== "NA") {
+        return demoAssigned;
+      }
+      if (demoClass) {
+        const demoClassInfo = formatDemoClassInfo(demoClass);
+        return demoClassInfo?.displayText || "Demo class scheduled";
+      }
+      return "Demo class scheduled";
+    }
+
+    // For conducted demos
+    if (demoStatus === "Conducted" && enquiryStatus === "Pending") {
+      return "Complete enrollment to schedule next class";
+    }
+
+    // For pending demos
+    if (demoStatus === "Pending") {
+      return "Not scheduled yet";
+    }
+
+    return "Not scheduled yet";
+  };
+
   useEffect(() => {
     const fetchParentName = async () => {
       try {
@@ -158,69 +201,126 @@ const ParentDashboard = () => {
             const enquiryStatus = kid.enquiryStatus || "Pending";
 
             // Format demo class info if available
-            const demoClassInfo = kid.demoClass
-              ? formatDemoClassInfo(kid.demoClass)
+            const demoClassInfo = kid?.demoClass
+              ? formatDemoClassInfo(kid?.demoClass)
               : null;
 
-            // Create default stats based on enquiry status and demo status
+            // Create stats and attendance based on enquiry status
             let stats = {};
             let attendance = {};
             let recentAchievements = [];
 
             if (enquiryStatus === "Active") {
-              // Full dashboard data for active enquiries (enrolled students)
+              // Use REAL attendance data from API for active students
+              const totalClasses = kid.totalClassCount?.both || 0;
+              const attendedClasses = kid.attendedClass?.both || 0;
+              const absentClasses = kid.absentClass?.both || 0;
+              const remainingClasses = kid.remainingClass?.both || 0;
+              const canceledClasses = kid.canceledClass?.both || 0;
+              const pausedClasses = kid.pausedClass?.both || 0;
+
+              // Calculate attendance percentage
+              const attendancePercentage =
+                totalClasses > 0
+                  ? Math.round((attendedClasses / totalClasses) * 100)
+                  : 0;
+
+              // Real attendance object
+              attendance = {
+                total: totalClasses,
+                attended: attendedClasses,
+                missed: absentClasses,
+                remaining: remainingClasses,
+                canceled: canceledClasses,
+                paused: pausedClasses,
+                percentage: attendancePercentage,
+                nextClass: getNextClassText(kid),
+              };
+
+              // Enhanced stats calculation based on progress
+              const progressPercentage =
+                totalClasses > 0
+                  ? Math.round((attendedClasses / totalClasses) * 100)
+                  : 0;
+
               stats = {
                 level: program.level || "Beginner",
-                progress: 75,
-                streak: 8,
-                totalGames: program.program === "Chess" ? 32 : 0,
-                wins: program.program === "Chess" ? 20 : 0,
+                progress: Math.min(progressPercentage, 100), // Cap at 100%
+                streak: Math.min(attendedClasses, 15), // Approximate streak based on attended classes
+                totalGames:
+                  program.program === "Chess" ? attendedClasses * 2 : 0, // Estimate games per class
+                wins:
+                  program.program === "Chess"
+                    ? Math.floor(attendedClasses * 1.5)
+                    : 0,
                 avgTime: program.program === "Rubik's Cube" ? "1:35" : "",
                 bestTime: program.program === "Rubik's Cube" ? "1:15" : "",
-                timeSpent: "18h",
+                timeSpent: `${Math.round(attendedClasses * 1.5)}h`, // Estimate 1.5 hours per class
                 nextMilestone:
-                  program.program === "Chess"
+                  remainingClasses > 0
+                    ? `Complete ${remainingClasses} more classes`
+                    : program.program === "Chess"
                     ? "Learn advanced tactics"
-                    : "Master OLL algorithms",
+                    : "Master advanced algorithms",
               };
 
-              attendance = {
-                total: 20,
-                attended: 16,
-                missed: 4,
-                remaining: 8,
-                percentage: 80,
-                nextClass: demoClassInfo
-                  ? demoClassInfo.displayText
-                  : "Tomorrow, 4:00 PM",
-              };
+              // Dynamic achievements based on real data
+              recentAchievements = [];
 
-              recentAchievements = [
-                {
-                  title:
-                    program.program === "Chess"
-                      ? "Won Tournament Match!"
-                      : "Sub 90-second Solve",
-                  date: "2 days ago",
-                  icon: program.program === "Chess" ? "♟️" : "🎲",
-                  color: "bg-purple-100",
-                },
-                {
-                  title: "8-day Practice Streak",
-                  date: "Today",
+              if (attendedClasses > 0) {
+                recentAchievements.push({
+                  title: `Completed ${attendedClasses} Classes!`,
+                  date: "Recently",
+                  icon: "🎓",
+                  color: "bg-green-100",
+                });
+              }
+
+              if (attendancePercentage >= 80) {
+                recentAchievements.push({
+                  title: `${attendancePercentage}% Attendance Rate`,
+                  date: "Excellent performance",
+                  icon: "🏆",
+                  color: "bg-yellow-100",
+                });
+              }
+
+              if (attendedClasses >= 5) {
+                recentAchievements.push({
+                  title: "Consistent Learner",
+                  date: "Great progress",
                   icon: "🔥",
                   color: "bg-orange-100",
-                },
-                {
-                  title:
-                    program.program === "Chess"
-                      ? "Mastered Knight Forks"
-                      : "Learned F2L Method",
-                  date: "3 days ago",
-                  icon: "📚",
+                });
+              }
+
+              if (program.program === "Chess" && attendedClasses >= 3) {
+                recentAchievements.push({
+                  title: "Chess Tactics Mastery",
+                  date: "Recent achievement",
+                  icon: "♟️",
+                  color: "bg-purple-100",
+                });
+              }
+
+              if (program.program === "Rubik's Cube" && attendedClasses >= 3) {
+                recentAchievements.push({
+                  title: "Speed Solving Progress",
+                  date: "Recent achievement",
+                  icon: "🎲",
                   color: "bg-blue-100",
-                },
-              ];
+                });
+              }
+
+              // Ensure we have at least one achievement
+              if (recentAchievements.length === 0) {
+                recentAchievements.push({
+                  title: "Learning Journey Started!",
+                  date: "Keep going",
+                  icon: "🌟",
+                  color: "bg-blue-100",
+                });
+              }
             } else if (
               demoStatus === "Conducted" &&
               enquiryStatus === "Pending"
@@ -244,7 +344,7 @@ const ParentDashboard = () => {
                 missed: 0,
                 remaining: 0,
                 percentage: 100,
-                nextClass: "Complete enrollment to schedule next class",
+                nextClass: getNextClassText(kid),
               };
 
               recentAchievements = [
@@ -276,9 +376,7 @@ const ParentDashboard = () => {
               attendance = {
                 total: 0,
                 attended: 0,
-                nextClass: demoClassInfo
-                  ? demoClassInfo.displayText
-                  : "Demo class (Scheduled)",
+                nextClass: getNextClassText(kid),
               };
 
               recentAchievements = [
@@ -301,7 +399,7 @@ const ParentDashboard = () => {
               attendance = {
                 total: 0,
                 attended: 0,
-                nextClass: "Not scheduled yet",
+                nextClass: getNextClassText(kid),
               };
 
               recentAchievements = [];
@@ -315,9 +413,19 @@ const ParentDashboard = () => {
               demoStatus,
               enquiryStatus,
               demoClassInfo,
+              demoAssigned: kid.demoAssigned, // Add demoAssigned to the transformed data
               attendance,
               stats,
               recentAchievements,
+              // Add raw data for reference
+              rawClassData: {
+                totalClassCount: kid.totalClassCount,
+                attendedClass: kid.attendedClass,
+                remainingClass: kid.remainingClass,
+                absentClass: kid.absentClass,
+                canceledClass: kid.canceledClass,
+                pausedClass: kid.pausedClass,
+              },
             };
           });
 
@@ -585,7 +693,7 @@ const ParentDashboard = () => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z"
                     />
                   </svg>
                 </button>
@@ -603,7 +711,7 @@ const ParentDashboard = () => {
           <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
             <div className="text-sm text-slate-500">Next Class</div>
             <div className="font-semibold text-slate-700 mt-1">
-              {selectedChildData.attendance.nextClass}
+              {selectedChildData.demoAssigned}
             </div>
           </div>
         </div>
@@ -628,11 +736,5 @@ const ParentDashboard = () => {
     </div>
   );
 };
-
-
-
-
-
-
 
 export default ParentDashboard;

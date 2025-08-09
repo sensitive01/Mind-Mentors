@@ -31,6 +31,8 @@ parentRoute.get("/get-my-name/:parentId",parentController.getMyName)
 parentRoute.get("/get-kid-shedule-demo-details/:kidId",parentController.getParentSheduleDemoDetails)
 parentRoute.get("/get-reshedule-button/:kidId",parentController.getParentScheduleButton)
 parentRoute.get("/get-sheduled-class-data/:enqId",parentController.parentGetSheduledClassData)
+parentRoute.get("/get-chess-kid-usernames",parentController.getChessKidUserName)
+
 
 
 

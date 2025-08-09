@@ -476,11 +476,11 @@ const ModernSidebar = () => {
       open: openSubscriptions,
       onClick: handleSubscriptionsClick,
     },
-    // {
-    //   icon: <ChessKidIcon />,
-    //   text: "Chesskid",
-    //   link: "/chessKids",
-    // },
+    {
+      icon: <ChessKidIcon />,
+      text: "Chesskid",
+      link: "/super-admin/department/chessKids",
+    },
     {
       icon: <TasksIcon />,
       text: "Tasks",

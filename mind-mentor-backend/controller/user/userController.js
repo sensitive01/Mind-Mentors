@@ -37,6 +37,7 @@ const logsSchema = require("../../model/enquiryLogs");
 const wholeClassSchema = require("../../model/wholeClassAssignedModel");
 const demoClassSchema = require("../../model/demoClassModel");
 const ConductedClass = require("../../model/conductedClassSchema");
+const { default: axios } = require("axios");
 
 const createUser = async (req, res) => {
   try {
@@ -3889,7 +3890,20 @@ const getMyDetailedAttendance = async (req, res) => {
   }
 };
 
+const getChessRfidCount = async(req,res)=>{
+  try{
+    const response = await axios.get("https://www.chesskid.com/groups/rss/11E7FD5D12F7014280004A78600200C0/3MHqxsgC/7?page=")
+    console.log(response)
+
+  }catch(err){
+    console.log("error in rfic",err)
+  }
+}
+
+
+
 module.exports = {
+  getChessRfidCount,
   getMyDetailedAttendance,
   superAdminGetConductedClassDetails,
   employeeBookDemoClass,

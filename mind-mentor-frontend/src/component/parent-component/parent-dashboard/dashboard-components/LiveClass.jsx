@@ -19,12 +19,14 @@ import {
   Key,
   LogIn,
   ArrowRight,
+  LifeBuoy,
 } from "lucide-react";
 import { getKidLiveClass } from "../../../../api/service/parent/ParentService";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 
 const LiveClass = () => {
+  const navigate = useNavigate();
   const { kidId } = useParams();
   const [classData, setClassData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -53,10 +55,7 @@ const LiveClass = () => {
         if (response.status === 200) {
           setClassData(response.data.data);
           setKidName(response.data.kidName);
-          setCurrentChildLogin({
-            mmid: kidId,
-            pin: "1234",
-          });
+          setCurrentChildLogin(response.data.crediantials);
         } else {
           setError("Failed to fetch class data");
         }
@@ -264,7 +263,7 @@ const LiveClass = () => {
     const cancellableClasses = getCancellableClasses();
 
     return (
-      <div className="fixed bottom-4 right-4 z-50">
+      <div className="fixed bottom-4 right-4 z-50 ">
         <div className="bg-white rounded-xl shadow-2xl border border-gray-200 w-80 max-h-[480px] overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 text-white">
@@ -337,6 +336,20 @@ const LiveClass = () => {
                       {cancellableClasses.length} classes available to cancel
                     </p>
                   </button>
+                  <button
+                    onClick={() => navigate("/parent/support")}
+                    className="w-full p-3 text-left bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 shadow-sm transition-all duration-200"
+                  >
+                    <div className="flex items-center gap-3">
+                      <LifeBuoy className="w-5 h-5 text-blue-600" />
+                      <span className="text-blue-800 font-semibold text-sm">
+                        Support & Assistance
+                      </span>
+                    </div>
+                    <p className="text-blue-600 text-xs mt-1">
+                      Need help? Share your queries with our team
+                    </p>
+                  </button>
 
                   <button
                     onClick={() => setShowAssistant(false)}
@@ -395,10 +408,10 @@ const LiveClass = () => {
                 <div className="space-y-2">
                   <button
                     onClick={() => setAssistantStep("platform_guide_login")}
-                    className="w-full p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                    className="w-full p-2 bg-primary text-white rounded-lg  transition-colors flex items-center justify-center gap-2"
                   >
                     <LogIn className="w-4 h-4" />
-                    <span>Go to Login Page</span>
+                    <span>Login Page</span>
                   </button>
 
                   <button
@@ -438,12 +451,12 @@ const LiveClass = () => {
                       <p className="text-gray-800 text-sm">
                         Go to{" "}
                         <a
-                          href="https://live.mindmentorz.in/kids/login"
+                          href={`https://live.mindmentorz.in/kids/login?mmid=${currentChildLogin?.mmid}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-600 underline"
                         >
-                          live.mindmentorz.in/kids/login
+                          {`live.mindmentorz.in/kids/login?mmid=${currentChildLogin?.mmid}`}
                         </a>
                       </p>
                     </div>
@@ -481,26 +494,26 @@ const LiveClass = () => {
                     </div>
                     <ul className="text-yellow-700 text-xs space-y-1 list-disc pl-4">
                       <li>Classes can be joined 5 minutes before start time</li>
-                      <li>Use Chrome or Firefox for best experience</li>
                       <li>Allow camera and microphone permissions</li>
                       <li>Ensure stable internet connection</li>
                     </ul>
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 ">
                     <button
                       onClick={() => setAssistantStep("platform_guide")}
-                      className="flex-1 p-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                      className="flex-1 p-2 mb-8  border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm"
                     >
                       ← Back
                     </button>
                     <a
-                      href="https://live.mindmentorz.in/kids/login"
+                      href={`https://live.mindmentorz.in/kids/login?mmid=${currentChildLogin?.mmid}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex-1 p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm text-center flex items-center justify-center gap-1"
+                      className="flex-1 p-1 mb-8 bg-primary text-white rounded-lg text-sm text-center flex items-center justify-center gap-1 
+             hover:bg-red-600 hover:text-white transition-colors duration-200"
                     >
-                      Open Login Page <ArrowRight className="w-4 h-4" />
+                      Login Page <ArrowRight className="w-4 h-4" />
                     </a>
                   </div>
                 </div>

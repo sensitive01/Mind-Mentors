@@ -1,152 +1,90 @@
-import {
-  Box,
-  createTheme,
-  Paper,
-  ThemeProvider,
-  Typography,
-} from "@mui/material";
-import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import React, { useState } from "react";
+import { getRFID } from "../../../api/service/employee/EmployeeService";
 
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: "#642b8f", // Indigo
-      light: "#818CF8",
-      dark: "#4F46E5",
-    },
-    background: {
-      default: "#F1F5F9",
-      paper: "#FFFFFF",
-    },
-    text: {
-      primary: "#1E293B",
-      secondary: "#64748B",
-    },
-  },
-  components: {
-    MuiDataGrid: {
-      styleOverrides: {
-        root: {
-          borderRadius: 12,
-          border: "none",
-          "& .MuiDataGrid-cell:focus": {
-            outline: "none",
-          },
-        },
-      },
-    },
-  },
-});
+const ChessKidButton = () => {
+  const [count, setCount] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-const columns = [
-  { field: "rollNo", headerName: "Roll No.", width: 100 },
-  { field: "name", headerName: "Name", width: 180 },
-  { field: "chessKidID", headerName: "ChessKid ID", width: 150 },
-  { field: "parents", headerName: "Parents", width: 200 },
-  { field: "whatsappNumber", headerName: "WhatsApp Number", width: 160 },
-  { field: "parentsEmail", headerName: "Parents Email", width: 200 },
-  {
-    field: "goldEnabledTime",
-    headerName: "ChessKid Gold Enabled Time",
-    width: 230,
-  },
-  {
-    field: "goldExpirationDate",
-    headerName: "ChessKid Gold Expiration Date",
-    width: 230,
-  },
-];
+  const fetchCount = async () => {
+    setLoading(true);
+    setError(null);
 
-const tasks = [
-  {
-    id: 1,
-    rollNo: "001",
-    name: "John Doe",
-    chessKidID: "CK001",
-    parents: "Mr. and Mrs. Doe",
-    whatsappNumber: "+1234567890",
-    parentsEmail: "doe@example.com",
-    goldEnabledTime: "2023-12-01",
-    goldExpirationDate: "2024-12-01",
-  },
-  {
-    id: 2,
-    rollNo: "002",
-    name: "Jane Smith",
-    chessKidID: "CK002",
-    parents: "Mr. and Mrs. Smith",
-    whatsappNumber: "+0987654321",
-    parentsEmail: "smith@example.com",
-    goldEnabledTime: "2024-01-15",
-    goldExpirationDate: "2025-01-15",
-  },
-  // Add more rows as needed
-];
-
-const KidsTable = () => {
-  const [rows, setRows] = useState(tasks);
+    try {
+      const response = await getRFID()
+      console.log(response)
+ 
+    } catch (err) {
+      console.error("Error:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <ThemeProvider theme={theme}>
-      <Box sx={{ width: "100%", height: "100%", p: 3 }}>
-        <Paper
-          elevation={0}
-          sx={{
-            p: 3,
-            backgroundColor: "background.paper",
-            borderRadius: 3,
-            height: 650,
-            boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.05)",
+    <div style={{ padding: "20px", textAlign: "center" }}>
+      <button
+        onClick={fetchCount}
+        disabled={loading}
+        style={{
+          backgroundColor: "#642b8f",
+          color: "white",
+          border: "none",
+          borderRadius: "8px",
+          padding: "12px 24px",
+          fontSize: "16px",
+          cursor: loading ? "not-allowed" : "pointer",
+          opacity: loading ? 0.7 : 1,
+        }}
+      >
+        {loading ? "Loading..." : "Get ChessKid Count"}
+      </button>
+
+      {count && typeof count === "object" && (
+        <div
+          style={{
+            marginTop: "16px",
+            textAlign: "left",
+            maxWidth: "400px",
+            margin: "16px auto",
           }}
         >
-          <Typography
-            variant="h5"
-            gutterBottom
-            sx={{
-              color: "text.primary",
-              fontWeight: 600,
-              mb: 3,
+          <h3>Chess Statistics:</h3>
+          <div
+            style={{
+              backgroundColor: "#f5f5f5",
+              padding: "16px",
+              borderRadius: "8px",
             }}
           >
-            Enrollment Data
-          </Typography>
-          <DataGrid
-            rows={rows}
-            columns={columns}
-            disableRowSelectionOnClick
-            slots={{ toolbar: GridToolbar }}
-            slotProps={{
-              toolbar: {
-                showQuickFilter: true,
-                quickFilterProps: { debounceMs: 500 },
-              },
-            }}
-            sx={{
-              height: 500,
-              "& .MuiDataGrid-cell:focus": {
-                outline: "none",
-              },
-              "& .MuiDataGrid-row:hover": {
-                backgroundColor: theme.palette.action.hover,
-              },
-              "& .MuiDataGrid-columnHeader": {
-                backgroundColor: "#642b8f",
-                color: "white",
-                fontWeight: 600,
-              },
-              "& .MuiCheckbox-root.Mui-checked": {
-                color: "#FFFFFF",
-              },
-              "& .MuiDataGrid-columnHeader .MuiCheckbox-root": {
-                color: "#FFFFFF",
-              },
-            }}
-          />
-        </Paper>
-      </Box>
-    </ThemeProvider>
+            {count.slowWins && (
+              <div>
+                <strong>Slow Chess:</strong> {count.slowWins} wins,{" "}
+                {count.slowLosses} losses
+              </div>
+            )}
+            {count.blitzWins && (
+              <div>
+                <strong>Blitz:</strong> {count.blitzWins} wins,{" "}
+                {count.blitzLosses} losses
+              </div>
+            )}
+            {count.puzzleCorrect && (
+              <div>
+                <strong>Puzzles:</strong> {count.puzzleCorrect} correct out of{" "}
+                {count.puzzleAttempted} attempted
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <div style={{ marginTop: "16px", color: "red" }}>Error: {error}</div>
+      )}
+    </div>
   );
 };
 
-export default KidsTable;
+export default ChessKidButton;

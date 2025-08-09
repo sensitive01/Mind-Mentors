@@ -654,3 +654,14 @@ export const parentResumeTheClass = async (enqId, updatedData, classId) => {
     return err;
   }
 };
+
+export const getChessKidUserName = async () => {
+  try {
+    const response = await parentInstance.get(
+      `/parent/get-chess-kid-usernames`
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};

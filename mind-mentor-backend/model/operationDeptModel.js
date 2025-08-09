@@ -7,7 +7,7 @@ const ProgramSchema = new mongoose.Schema({
   demoAttended: { type: Boolean, default: false },
   enrolledDate: { type: Date },
   centerName: { type: String },
-  centerType: { type: String }
+  centerType: { type: String },
 });
 
 const operationDeptSchema = new mongoose.Schema(
@@ -20,7 +20,7 @@ const operationDeptSchema = new mongoose.Schema(
     email: { type: String },
     relationship: { type: String },
 
-    source: { type: String },
+    source: { type: String,default:"MindMentorz Online" },
     message: { type: String },
     notes: { type: String, default: "Empty" },
 
@@ -39,32 +39,32 @@ const operationDeptSchema = new mongoose.Schema(
     totalClassCount: {
       online: { type: Number, default: 0 },
       offline: { type: Number, default: 0 },
-      both: { type: Number, default: 0 }
+      both: { type: Number, default: 0 },
     },
     attendedClass: {
       online: { type: Number, default: 0 },
       offline: { type: Number, default: 0 },
-      both: { type: Number, default: 0 }
+      both: { type: Number, default: 0 },
     },
     remainingClass: {
       online: { type: Number, default: 0 },
       offline: { type: Number, default: 0 },
-      both: { type: Number, default: 0 }
+      both: { type: Number, default: 0 },
     },
     absentClass: {
       online: { type: Number, default: 0 },
       offline: { type: Number, default: 0 },
-      both: { type: Number, default: 0 }
+      both: { type: Number, default: 0 },
     },
     pausedClass: {
       online: { type: Number, default: 0 },
       offline: { type: Number, default: 0 },
-      both: { type: Number, default: 0 }
+      both: { type: Number, default: 0 },
     },
     canceledClass: {
       online: { type: Number, default: 0 },
       offline: { type: Number, default: 0 },
-      both: { type: Number, default: 0 }
+      both: { type: Number, default: 0 },
     },
     // -----------------------------------
 
@@ -77,16 +77,19 @@ const operationDeptSchema = new mongoose.Schema(
     enquiryType: { type: String, enum: ["warm", "cold"], default: "warm" },
     enquiryStage: { type: String },
     recomentedLevel: { type: String },
+    isLevelPromoteRecomented: { type: Boolean, default: false },
+    ischessKidIdAssigned: { type: Boolean, default: false },
+    chessKidName: { type: String },
 
     enquiryStatus: {
       type: String,
-      default: "Pending"
+      default: "Pending",
     },
 
     disposition: {
       type: String,
       enum: ["RnR", "Call Back", "None", "Connected"],
-      default: "None"
+      default: "None",
     },
 
     enquiryField: { type: String, default: "enquiryList" },
@@ -94,37 +97,37 @@ const operationDeptSchema = new mongoose.Schema(
       status: {
         type: String,
         enum: ["Pending", "Scheduled", "Conducted", "Cancelled", "Attended"],
-        default: "Pending"
+        default: "Pending",
       },
-      sheduledDay: { type: String }
+      sheduledDay: { type: String },
     },
 
     referral: [
       {
         referredTo: { type: String },
-        referredEmail: { type: String }
-      }
+        referredEmail: { type: String },
+      },
     ],
     logs: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Log"
+      ref: "Log",
     },
     isNewUser: { type: Boolean, default: true },
 
     paymentData: [
       {
-        type: String
-      }
+        type: String,
+      },
     ],
 
     paymentStatus: {
       type: String,
       enum: ["Pending", "Success", "Requested", "Processing"],
-      default: "Pending"
+      default: "Pending",
     },
     paymentRenewal: { type: String },
     classAssigned: { type: Boolean, default: false },
-    employeeAssisted: { type: String }
+    employeeAssisted: { type: String },
   },
   { timestamps: true }
 );

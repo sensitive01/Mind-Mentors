@@ -29,6 +29,7 @@ import {
   AlertTriangle,
   LogIn,
   ArrowRight,
+  LifeBuoy,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -492,7 +493,8 @@ const DashboardDemoClass = () => {
                   </div>
                   <div className="bg-gray-100 rounded-xl rounded-tl-none p-2 flex-1">
                     <p className="text-gray-800 text-sm">
-                      Hi! I'm here to help you with your child's demo class. What would you like to know?
+                      Hi! I'm here to help you with your child's demo class.
+                      What would you like to know?
                     </p>
                   </div>
                 </div>
@@ -580,6 +582,21 @@ const DashboardDemoClass = () => {
                   </button>
 
                   <button
+                    onClick={() => navigate("/parent/support")}
+                    className="w-full p-3 text-left bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 shadow-sm transition-all duration-200"
+                  >
+                    <div className="flex items-center gap-3">
+                      <LifeBuoy className="w-5 h-5 text-blue-600" />
+                      <span className="text-blue-800 font-semibold text-sm">
+                        Support & Assistance
+                      </span>
+                    </div>
+                    <p className="text-blue-600 text-xs mt-1">
+                      Need help? Share your queries with our team
+                    </p>
+                  </button>
+
+                  <button
                     onClick={() => setShowAssistant(false)}
                     className="w-full p-2 text-left bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors"
                   >
@@ -610,28 +627,52 @@ const DashboardDemoClass = () => {
                 <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-blue-700 text-sm font-medium">Program:</span>
-                      <span className="text-blue-800 text-sm">{demoClass.program}</span>
+                      <span className="text-blue-700 text-sm font-medium">
+                        Program:
+                      </span>
+                      <span className="text-blue-800 text-sm">
+                        {demoClass.program}
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-blue-700 text-sm font-medium">Date:</span>
-                      <span className="text-blue-800 text-sm">{demoClass.date}</span>
+                      <span className="text-blue-700 text-sm font-medium">
+                        Date:
+                      </span>
+                      <span className="text-blue-800 text-sm">
+                        {demoClass.date}
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-blue-700 text-sm font-medium">Time:</span>
-                      <span className="text-blue-800 text-sm">{demoClass.time}</span>
+                      <span className="text-blue-700 text-sm font-medium">
+                        Time:
+                      </span>
+                      <span className="text-blue-800 text-sm">
+                        {demoClass.time}
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-blue-700 text-sm font-medium">Coach:</span>
-                      <span className="text-blue-800 text-sm">{demoClass.coachName}</span>
+                      <span className="text-blue-700 text-sm font-medium">
+                        Coach:
+                      </span>
+                      <span className="text-blue-800 text-sm">
+                        {demoClass.coachName}
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-blue-700 text-sm font-medium">Type:</span>
-                      <span className="text-blue-800 text-sm capitalize">{demoClass.type}</span>
+                      <span className="text-blue-700 text-sm font-medium">
+                        Type:
+                      </span>
+                      <span className="text-blue-800 text-sm capitalize">
+                        {demoClass.type}
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-blue-700 text-sm font-medium">Status:</span>
-                      <span className="text-blue-800 text-sm">{demoClass.status}</span>
+                      <span className="text-blue-700 text-sm font-medium">
+                        Status:
+                      </span>
+                      <span className="text-blue-800 text-sm">
+                        {demoClass.status}
+                      </span>
                     </div>
                   </div>
                 </div>

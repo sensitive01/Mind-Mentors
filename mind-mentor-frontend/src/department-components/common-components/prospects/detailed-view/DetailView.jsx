@@ -335,6 +335,31 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
               ))}
             </Grid>
           </Grid>
+          {displayData?.isLevelPromoteRecomented && (
+            <Grid item xs={12} md={3} style={{ overflow: "visible" }}>
+              <div
+                style={{
+                  backgroundColor: "#FFF4E5", // light orange highlight
+                  border: "1px solid #FFA726", // orange border
+                  borderRadius: "8px",
+                  padding: "10px",
+                }}
+              >
+                <DetailCard
+                  title={
+                    <span style={{ color: "#E65100", fontWeight: "bold" }}>
+                      ⭐ RECOMMENDED LEVEL
+                    </span>
+                  }
+                  value={
+                    <span style={{ fontWeight: "bold", color: "#D84315" }}>
+                      {displayData?.recomentedLevel}
+                    </span>
+                  }
+                />
+              </div>
+            </Grid>
+          )}
 
           {/* Status Information */}
           <Grid item xs={12}>
@@ -368,6 +393,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                   value={displayData?.enquiryField}
                 />
               </Grid>
+
               {displayData?.enquiryField === "prospects" && (
                 <Grid item xs={12} md={3} style={{ overflow: "visible" }}>
                   <DetailCard

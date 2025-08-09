@@ -920,8 +920,16 @@ const updateEnquiry = async (req, res) => {
 
     console.log("updatedEntry", updatedEntry);
     const kidData = await kidSchema.findOneAndUpdate(
-      { _id: updatedEntry.kidId },
-      { kidsName: req.body.kidFirstName },
+      {
+        _id: updatedEntry.kidId,
+        "selectedProgram.program": req.body.programs[0].program,
+      },
+      {
+        $set: {
+          kidsName: req.body.kidFirstName,
+          "selectedProgram.$.level": req.body.programs[0].level,
+        },
+      },
       { new: true }
     );
 

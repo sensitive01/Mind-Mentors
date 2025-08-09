@@ -23,6 +23,7 @@ const referralModel = require("../../model/referralModel");
 const sendMessage = require("../../utils/sendMessage");
 const sendOTP = require("../../utils/sendMessage");
 const SelectedClass = require("../../model/wholeClassAssignedModel");
+const { default: axios } = require("axios");
 
 const parentSubmitEnquiryForm = async (req, res) => {
   try {
@@ -1691,7 +1692,16 @@ const getMyKidData = async (req, res) => {
         const [enqData, demoClassFromSchedule] = await Promise.all([
           operationDeptModel.findOne(
             { _id: kid.enqId },
-            { scheduleDemo: 1, enquiryStatus: 1 ,totalClassCount:1,attendedClass:1,remainingClass:1,absentClass:1}
+            {
+              scheduleDemo: 1,
+              enquiryStatus: 1,
+              totalClassCount: 1,
+              attendedClass: 1,
+              remainingClass: 1,
+              absentClass: 1,
+              canceledClass: 1,
+              pausedClass: 1,
+            }
           ),
           ClassSchedule.findOne(
             {
@@ -1699,9 +1709,22 @@ const getMyKidData = async (req, res) => {
               "demoAssignedKid.kidId": kid._id,
               "demoAssignedKid.status": "Scheduled",
             },
-            { day: 1, classTime: 1, coachName: 1, program: 1, level: 1 }
+            {
+              day: 1,
+              classTime: 1,
+              coachName: 1,
+              program: 1,
+              level: 1,
+              date: 1,
+            }
           ),
         ]);
+
+        const demoAssigned = await demoClassModel.findOne(
+          { kidId: kid._id },
+          { date: 1 }
+        );
+        console.log("demoAssigned", demoAssigned);
 
         let demoClass = demoClassFromSchedule;
 
@@ -1731,11 +1754,13 @@ const getMyKidData = async (req, res) => {
           scheduleDemo: enqData?.scheduleDemo || null,
           enquiryStatus: enqData?.enquiryStatus || null,
           demoClass: demoClass || null,
-          totalClassCount:enqData.totalClassCount,
-          attendedClass:enqData.attendedClass,
-          remainingClass:enqData.remainingClass,
-          absentClass:enqData.absentClass,
-          
+          totalClassCount: enqData.totalClassCount,
+          attendedClass: enqData.attendedClass,
+          remainingClass: enqData.remainingClass,
+          absentClass: enqData.absentClass,
+          canceledClass: enqData.canceledClass,
+          pausedClass: enqData.pausedClass,
+          demoAssigned: demoAssigned?.date || "NA",
         };
       })
     );
@@ -1759,7 +1784,10 @@ const getKidTodayClass = async (req, res) => {
   try {
     console.log("Welcome to parent today class");
     const { kidId } = req.params;
-    const kidData = await kidModel.findOne({ _id: kidId }, { kidsName: 1 });
+    const kidData = await kidModel.findOne(
+      { _id: kidId },
+      { kidsName: 1, chessId: 1, kidPin: 1 }
+    );
 
     const today = new Date();
     const days = [
@@ -1784,6 +1812,10 @@ const getKidTodayClass = async (req, res) => {
       success: true,
       data: classData,
       kidName: kidData?.kidsName,
+      crediantials: {
+        pin: kidData?.kidPin,
+        mmid: kidData.chessId,
+      },
     });
   } catch (err) {
     console.error("Error in getting the live class", err);
@@ -1824,151 +1856,151 @@ const getTheKidEnqId = async (req, res) => {
   }
 };
 
-// const parentSelectThePackage = async (req, res) => {
-//   try {
-//     const { parentId } = req.params;
-//     const { finalData, enqId } = req.body;
-//     let doualPackage = false;
+const parentSelectThePackage = async (req, res) => {
+  try {
+    const { parentId } = req.params;
+    const { finalData, enqId } = req.body;
+    let doualPackage = false;
 
-//     const alreadyExistPackage = await packagePaymentData
-//       .findOne({
-//         enqId: enqId,
-//         isPackageActive: true,
-//         paymentStatus: "Success",
-//       })
-//       .sort({ createdAt: -1 });
-//     if (alreadyExistPackage) {
-//       doualPackage = true;
-//     }
+    const alreadyExistPackage = await packagePaymentData
+      .findOne({
+        enqId: enqId,
+        isPackageActive: true,
+        paymentStatus: "Success",
+      })
+      .sort({ createdAt: -1 });
+    if (alreadyExistPackage) {
+      doualPackage = true;
+    }
 
-//     console.log("finalData", finalData, "enqId", enqId, "parentId", parentId);
+    console.log("finalData", finalData, "enqId", enqId, "parentId", parentId);
 
-//     if (!finalData) {
-//       return res
-//         .status(400)
-//         .json({ message: "Package data (finalData) is required." });
-//     }
-//     const kidData = await kidModel.findOne(
-//       { _id: finalData.kidId },
-//       { kidsName: 1, selectedProgram: 1, whatsappNumber: 1, contactNumber: 1 }
-//     );
+    if (!finalData) {
+      return res
+        .status(400)
+        .json({ message: "Package data (finalData) is required." });
+    }
+    const kidData = await kidModel.findOne(
+      { _id: finalData.kidId },
+      { kidsName: 1, selectedProgram: 1, whatsappNumber: 1, contactNumber: 1 }
+    );
 
-//     const { selectedProgram } = kidData;
-//     console.log(selectedProgram);
+    const { selectedProgram } = kidData;
+    console.log(selectedProgram);
 
-//     const paymentId = `PAY-${uuidv4().slice(0, 8).toUpperCase()}`;
+    const paymentId = `PAY-${uuidv4().slice(0, 8).toUpperCase()}`;
 
-//     const checkId = finalData.enqId || enqId;
+    const checkId = finalData.enqId || enqId;
 
-//     const newPackage = new packagePaymentData({
-//       paymentId,
-//       enqId: finalData.enqId || enqId,
-//       kidName: kidData.kidsName,
-//       kidId: finalData.kidId,
-//       whatsappNumber: kidData.whatsappNumber || kidData.contactNumber,
-//       programs: kidData.programs,
-//       selectedProgram: selectedProgram[0].program,
-//       selectedLevel: selectedProgram[0].level,
-//       classMode: finalData.classMode,
-//       discount: finalData.discount,
-//       baseAmount: finalData.baseAmount,
-//       totalAmount: finalData.totalAmount,
-//       packageId: finalData.packageId,
-//       selectedPackage: finalData.selectedPackage,
-//       onlineClasses: finalData.onlineClasses,
-//       offlineClasses: finalData.offlineClasses,
-//       centerId: finalData.centerId || null,
-//       centerName: finalData.centerName,
-//       timeSlot: finalData.timeSlot,
-//       classRate: finalData.classRate,
-//       razorpayPaymentId: finalData.razorpayPaymentId,
-//       paymentStatus: "Success",
-//       isPackageActive: true,
-//       isExtraPackage: doualPackage,
-//     });
-//     const savedPackage = await newPackage.save();
-//     const newKidData = await kidModel.findOneAndUpdate(
-//       { _id: finalData.kidId },
-//       { $set: { status: "Active" } }
-//     );
+    const newPackage = new packagePaymentData({
+      paymentId,
+      enqId: finalData.enqId || enqId,
+      kidName: kidData.kidsName,
+      kidId: finalData.kidId,
+      whatsappNumber: kidData.whatsappNumber || kidData.contactNumber,
+      programs: kidData.programs,
+      selectedProgram: selectedProgram[0].program,
+      selectedLevel: selectedProgram[0].level,
+      classMode: finalData.classMode,
+      discount: finalData.discount,
+      baseAmount: finalData.baseAmount,
+      totalAmount: finalData.totalAmount,
+      packageId: finalData.packageId,
+      selectedPackage: finalData.selectedPackage,
+      onlineClasses: finalData.onlineClasses,
+      offlineClasses: finalData.offlineClasses,
+      centerId: finalData.centerId || null,
+      centerName: finalData.centerName,
+      timeSlot: finalData.timeSlot,
+      classRate: finalData.classRate,
+      razorpayPaymentId: finalData.razorpayPaymentId,
+      paymentStatus: "Success",
+      isPackageActive: true,
+      isExtraPackage: doualPackage,
+    });
+    const savedPackage = await newPackage.save();
+    const newKidData = await kidModel.findOneAndUpdate(
+      { _id: finalData.kidId },
+      { $set: { status: "Active" } }
+    );
 
-//     // await operationDeptModel.findOneAndUpdate(
-//     //   { _id: finalData.enqId },
-//     //   {
-//     //     $set: {
-//     //       enquiryStatus: "Active",
-//     //       paymentStatus: "Success",
-//     //       isNewUser: false,
-//     //       enquiryField: "prospects",
-//     //     },
-//     //   }
-//     // );
+    // await operationDeptModel.findOneAndUpdate(
+    //   { _id: finalData.enqId },
+    //   {
+    //     $set: {
+    //       enquiryStatus: "Active",
+    //       paymentStatus: "Success",
+    //       isNewUser: false,
+    //       enquiryField: "prospects",
+    //     },
+    //   }
+    // );
 
-//     await operationDeptModel.findOneAndUpdate(
-//       { _id: finalData.enqId },
-//       {
-//         $set: {
-//           enquiryStatus: "Active",
-//           paymentStatus: "Success",
-//           isNewUser: false,
-//           enquiryField: "prospects",
-//           // Update total class count
-//           "programs.$.totalClassCount.online": finalData.onlineClasses || 0,
-//           "programs.$.totalClassCount.offline": finalData.offlineClasses || 0,
-//           "programs.$.totalClassCount.both":
-//             (finalData.onlineClasses || 0) + (finalData.offlineClasses || 0),
-//           // Also initialize remainingClass to the same values at package selection
-//           "programs.$.remainingClass.online": finalData.onlineClasses || 0,
-//           "programs.$.remainingClass.offline": finalData.offlineClasses || 0,
-//           "programs.$.remainingClass.both":
-//             (finalData.onlineClasses || 0) + (finalData.offlineClasses || 0),
-//         },
-//         $push: { paymentData: savedPackage._id }, // push payment record ID
-//       }
-//     );
+    await operationDeptModel.findOneAndUpdate(
+      { _id: finalData.enqId },
+      {
+        $set: {
+          enquiryStatus: "Active",
+          paymentStatus: "Success",
+          isNewUser: false,
+          enquiryField: "prospects",
+          // Update total class count
+          "programs.$.totalClassCount.online": finalData.onlineClasses || 0,
+          "programs.$.totalClassCount.offline": finalData.offlineClasses || 0,
+          "programs.$.totalClassCount.both":
+            (finalData.onlineClasses || 0) + (finalData.offlineClasses || 0),
+          // Also initialize remainingClass to the same values at package selection
+          "programs.$.remainingClass.online": finalData.onlineClasses || 0,
+          "programs.$.remainingClass.offline": finalData.offlineClasses || 0,
+          "programs.$.remainingClass.both":
+            (finalData.onlineClasses || 0) + (finalData.offlineClasses || 0),
+        },
+        $push: { paymentData: savedPackage._id }, // push payment record ID
+      }
+    );
 
-//     let comment = `Parent selected package for kid: ${
-//       kidData.kidsName || newKidData.kidsName || "N/A"
-//     }`;
+    let comment = `Parent selected package for kid: ${
+      kidData.kidsName || newKidData.kidsName || "N/A"
+    }`;
 
-//     const online = finalData.onlineClasses;
-//     const offline = finalData.offlineClasses;
+    const online = finalData.onlineClasses;
+    const offline = finalData.offlineClasses;
 
-//     const details = [];
-//     if (online) details.push(`Online Classes: ${online}`);
-//     if (offline) details.push(`Offline Classes: ${offline}`);
-//     if (details.length > 0)
-//       comment += ` (${details.join(", ")}) paid amount is ${
-//         finalData.totalAmount
-//       } through mindmentorz platform`;
+    const details = [];
+    if (online) details.push(`Online Classes: ${online}`);
+    if (offline) details.push(`Offline Classes: ${offline}`);
+    if (details.length > 0)
+      comment += ` (${details.join(", ")}) paid amount is ${
+        finalData.totalAmount
+      } through mindmentorz platform`;
 
-//     await enquiryLogs.updateOne(
-//       { enqId: finalData.enqId || enqId },
-//       {
-//         $push: {
-//           logs: {
-//             employeeName: "Parent",
-//             comment: comment,
-//             action: "Parent Package Selection",
-//           },
-//         },
-//       },
-//       { upsert: true }
-//     );
+    await enquiryLogs.updateOne(
+      { enqId: finalData.enqId || enqId },
+      {
+        $push: {
+          logs: {
+            employeeName: "Parent",
+            comment: comment,
+            action: "Parent Package Selection",
+          },
+        },
+      },
+      { upsert: true }
+    );
 
-//     res.status(201).json({
-//       message: "Parent's package selection saved successfully.",
-//       paymentId,
-//       data: savedPackage,
-//     });
-//   } catch (err) {
-//     console.error("Error in selecting the package", err);
-//     res.status(500).json({
-//       message: "Failed to save parent's package selection.",
-//       error: err.message,
-//     });
-//   }
-// };
+    res.status(201).json({
+      message: "Parent's package selection saved successfully.",
+      paymentId,
+      data: savedPackage,
+    });
+  } catch (err) {
+    console.error("Error in selecting the package", err);
+    res.status(500).json({
+      message: "Failed to save parent's package selection.",
+      error: err.message,
+    });
+  }
+};
 
 const parentSelectThePackage = async (req, res) => {
   try {
@@ -2044,8 +2076,10 @@ const parentSelectThePackage = async (req, res) => {
       { $set: { status: "Active" } }
     );
 
+    const enqData =await operationDeptModel.findOne({_id:checkId,""},{ischessKidIdAssigned:1})
+
     // Update operationDept counts at top level (NOT inside programs)
-    await operationDeptModel.findOneAndUpdate(
+     await operationDeptModel.findOneAndUpdate(
       { _id: checkId },
       {
         $set: {
@@ -2112,6 +2146,219 @@ const parentSelectThePackage = async (req, res) => {
     });
   }
 };
+
+// const parentSelectThePackage = async (req, res) => {
+//   try {
+//     const { parentId } = req.params;
+//     const { finalData, enqId } = req.body;
+//     let dualPackage = false;
+
+//     // Check if parent already has an active package
+//     const alreadyExistPackage = await packagePaymentData
+//       .findOne({
+//         enqId: enqId,
+//         isPackageActive: true,
+//         paymentStatus: "Success",
+//       })
+//       .sort({ createdAt: -1 });
+
+//     if (alreadyExistPackage) {
+//       dualPackage = true;
+//     }
+
+//     if (!finalData) {
+//       return res
+//         .status(400)
+//         .json({ message: "Package data (finalData) is required." });
+//     }
+
+//     // Fetch kid data
+//     const kidData = await kidModel.findOne(
+//       { _id: finalData.kidId },
+//       {
+//         kidsName: 1,
+//         selectedProgram: 1,
+//         whatsappNumber: 1,
+//         contactNumber: 1,
+//         chessKidId: 1,
+//       }
+//     );
+
+//     if (!kidData) {
+//       return res.status(404).json({ message: "Kid not found." });
+//     }
+
+//     const { selectedProgram } = kidData;
+//     const paymentId = `PAY-${uuidv4().slice(0, 8).toUpperCase()}`;
+//     const checkId = finalData.enqId || enqId;
+
+//     // Save package payment record
+//     const newPackage = new packagePaymentData({
+//       paymentId,
+//       enqId: checkId,
+//       kidName: kidData.kidsName,
+//       kidId: finalData.kidId,
+//       whatsappNumber: kidData.whatsappNumber || kidData.contactNumber,
+//       selectedProgram: selectedProgram[0]?.program,
+//       selectedLevel: selectedProgram[0]?.level,
+//       classMode: finalData.classMode,
+//       discount: finalData.discount,
+//       baseAmount: finalData.baseAmount,
+//       totalAmount: finalData.totalAmount,
+//       packageId: finalData.packageId,
+//       selectedPackage: finalData.selectedPackage,
+//       onlineClasses: finalData.onlineClasses,
+//       offlineClasses: finalData.offlineClasses,
+//       centerId: finalData.centerId || null,
+//       centerName: finalData.centerName,
+//       timeSlot: finalData.timeSlot,
+//       classRate: finalData.classRate,
+//       razorpayPaymentId: finalData.razorpayPaymentId,
+//       paymentStatus: "Success",
+//       isPackageActive: true,
+//       isExtraPackage: dualPackage,
+//     });
+
+//     const savedPackage = await newPackage.save();
+
+//     // Update kid status
+//     await kidModel.findOneAndUpdate(
+//       { _id: finalData.kidId },
+//       { $set: { status: "Active" } }
+//     );
+
+//     // Fetch enquiry data to check chess conditions
+//     const enqData = await operationDeptModel.findOne(
+//       { _id: checkId },
+//       { ischessKidIdAssigned: 1 }
+//     );
+
+//     // Check if program is Chess and ChessKid ID is not assigned
+//     if (
+//       selectedProgram[0]?.program?.toLowerCase() === "chess" &&
+//       !enqData?.ischessKidIdAssigned
+//     ) {
+//       // Call ChessKid API to get a username
+//       const chessRes = await axios.get(
+//         "https://www.chesskid.com/api/v1/users/usernames",
+//         { params: { usernamesCount: 1 } }
+//       );
+
+//       const chessUsername = chessRes.data?.[0];
+//       console.log("Generated ChessKid username:", chessUsername);
+
+//       // Mark as assigned in operationDept
+//       await operationDeptModel.findByIdAndUpdate(checkId, {
+//         $set: { ischessKidIdAssigned: true, chessKidName: chessUsername },
+//       });
+
+//       console.log(`ChessKid name assigned: ${chessUsername}`);
+
+//       // Register the kid on ChessKid
+//       try {
+//         const chessKidPayload = {
+//           avatarFilename: "animals-3.png",
+//           userType: "kid",
+//           club: "MAIN MindMentorz",
+//           username: chessUsername,
+//           password: "Aswinraj@123456", 
+//           email: kidData.whatsappNumber
+//             ? `${kidData.whatsappNumber}@mindmentorz.com`
+//             : `kid_${kidData._id}@mindmentorz.com`, // fallback email
+//           signupProgramId: "11e7fd5d12f7014280004a78600200c0",
+//           locale: "en_US",
+//         };
+
+//         const registerRes = await axios.post(
+//           "https://www.chesskid.com/api/v1/register/account",
+//           chessKidPayload,
+//           { headers: { "Content-Type": "application/json" } }
+//         );
+
+//         console.log("ChessKid account created:", registerRes);
+
+//         // Optionally store returned ChessKid user ID
+//         if (registerRes.data?.userId) {
+//           await kidModel.findByIdAndUpdate(finalData.kidId, {
+//             $set: { chessKidId: registerRes.data.userId },
+//           });
+//         }
+//       } catch (apiErr) {
+//         console.error(
+//           "Error registering ChessKid account:",
+//           apiErr.response?.data || apiErr.message
+//         );
+//       }
+//     }
+
+//     // Update operationDept counts at top level
+//     await operationDeptModel.findOneAndUpdate(
+//       { _id: checkId },
+//       {
+//         $set: {
+//           enquiryStatus: "Active",
+//           paymentStatus: "Success",
+//           isNewUser: false,
+//           enquiryField: "prospects",
+//           totalClassCount: {
+//             online: finalData.onlineClasses || 0,
+//             offline: finalData.offlineClasses || 0,
+//             both:
+//               (finalData.onlineClasses || 0) + (finalData.offlineClasses || 0),
+//           },
+//           remainingClass: {
+//             online: finalData.onlineClasses || 0,
+//             offline: finalData.offlineClasses || 0,
+//             both:
+//               (finalData.onlineClasses || 0) + (finalData.offlineClasses || 0),
+//           },
+//         },
+//         $push: { paymentData: savedPackage._id },
+//       }
+//     );
+
+//     // Log enquiry update
+//     let comment = `Parent selected package for kid: ${
+//       kidData.kidsName || "N/A"
+//     }`;
+//     const details = [];
+//     if (finalData.onlineClasses)
+//       details.push(`Online Classes: ${finalData.onlineClasses}`);
+//     if (finalData.offlineClasses)
+//       details.push(`Offline Classes: ${finalData.offlineClasses}`);
+//     if (details.length > 0) {
+//       comment += ` (${details.join(", ")}) paid amount is ${
+//         finalData.totalAmount
+//       } through mindmentorz platform`;
+//     }
+
+//     await enquiryLogs.updateOne(
+//       { enqId: checkId },
+//       {
+//         $push: {
+//           logs: {
+//             employeeName: "Parent",
+//             comment,
+//             action: "Parent Package Selection",
+//           },
+//         },
+//       },
+//       { upsert: true }
+//     );
+
+//     res.status(201).json({
+//       message: "Parent's package selection saved successfully.",
+//       paymentId,
+//       data: savedPackage,
+//     });
+//   } catch (err) {
+//     console.error("Error in selecting the package", err);
+//     res.status(500).json({
+//       message: "Failed to save parent's package selection.",
+//       error: err.message,
+//     });
+//   }
+// };
 
 const parentAddNewKidData = async (req, res) => {
   try {
@@ -3510,7 +3757,28 @@ const parentResumeTheClass = async (req, res) => {
   }
 };
 
+const getChessKidUserName = async (req, res) => {
+  try {
+    const response = await axios.get(
+      "https://www.chesskid.com/api/v1/users/usernames",
+      {
+        params: {
+          usernamesCount: 9,
+        },
+      }
+    );
+
+    console.log("ChessKid API Response:", response.data);
+
+    res.status(200).json({ userName: response.data });
+  } catch (error) {
+    console.error("Error fetching ChessKid usernames:", error.message);
+    res.status(500).json({ error: "Failed to fetch ChessKid usernames" });
+  }
+};
+
 module.exports = {
+  getChessKidUserName,
   parentResumeTheClass,
   parentPauseTheClass,
   parentAssignWholeClass,

@@ -297,6 +297,7 @@ const addFeedBackAndAttendance = async (req, res) => {
             {
               $set: {
                 recomentedLevel: student.levelUpdate,
+                isLevelPromoteRecomented:true,
                 note: recNote,
                 "scheduleDemo.status": "Conducted",
               },
@@ -310,7 +311,7 @@ const addFeedBackAndAttendance = async (req, res) => {
               $push: {
                 logs: {
                   employeeId: coachId,
-                  comment: `Recommending level upgrade for the kid ${student.levelUpdate}. Created on ${formattedDateTime}`,
+                  comment: `Recommending level upgrade for the kid ${student.levelUpdate}.`,
                   conductedClassId: classId,
                   createdAt: new Date(),
                   employeeName: empData.firstName,
@@ -349,7 +350,7 @@ const addFeedBackAndAttendance = async (req, res) => {
                   student.present ? "Present" : "Absent"
                 }. Feedback: "${
                   student.feedback || "No feedback provided"
-                }". Created on ${formattedDateTime}`,
+                }".`,
                 conductedClassId: classId,
                 createdAt: new Date(),
                 employeeName: empData.firstName,

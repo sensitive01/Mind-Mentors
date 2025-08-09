@@ -25,6 +25,7 @@ userRoute.put('/delete-employee-data/:empId',userController.deleteEmployeeData);
 userRoute.put('/change-the-employee-password/:empId',userController.changeThePassword);
 
 
+userRoute.get('/get-rfid-count-chess',userController.getChessRfidCount);
 
 
 

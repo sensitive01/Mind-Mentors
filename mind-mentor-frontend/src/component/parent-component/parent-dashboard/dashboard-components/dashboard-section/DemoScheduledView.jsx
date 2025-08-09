@@ -1,6 +1,6 @@
 import React from "react";
 
-const DemoScheduledView = ({}) => {
+const DemoScheduledView = ({childData}) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2">
@@ -29,7 +29,7 @@ const DemoScheduledView = ({}) => {
                           Next Class Date
                         </div>
                         <div className="font-medium text-slate-800 mt-1">
-                          {childData?.classInfo?.nextClassDate}
+                          {childData?.demoAssigned}
                         </div>
                       </div>
 

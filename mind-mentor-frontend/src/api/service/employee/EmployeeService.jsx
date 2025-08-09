@@ -1051,3 +1051,10 @@ export const getMyDetailedAttandance = async (empId) => {
   );
   return response;
 };
+
+export const getRFID = async () => {
+  const response = await userInstance.get(
+    `/get-rfid-count-chess`
+  );
+  return response;
+};
