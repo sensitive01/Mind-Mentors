@@ -35,18 +35,20 @@ const AddEmployeeForm = () => {
     role: "",
     centerId: "",
     centerName: "",
-    password:"",
+    password: "",
     modes: {
       online: false,
       offline: false,
     },
+    // New coach-specific fields
+    perHourRate: "",
+    employmentType: "",
   });
 
   const [centers, setCenters] = useState([]);
   const [filteredCenters, setFilteredCenters] = useState([]);
   const [showCenterDropdown, setShowCenterDropdown] = useState(false);
-    const [showPassword, setShowPassword] = useState(false);
-  
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     const fetchCenters = async () => {
@@ -118,6 +120,17 @@ const AddEmployeeForm = () => {
     formData.modes.online,
   ]);
 
+  // Clear coach-specific fields when role changes from coach to something else
+  useEffect(() => {
+    if (formData.role !== "coach" && formData.department !== "coach") {
+      setFormData((prev) => ({
+        ...prev,
+        perHourRate: "",
+        employmentType: "",
+      }));
+    }
+  }, [formData.role, formData.department]);
+
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -169,6 +182,7 @@ const AddEmployeeForm = () => {
         gender: formData.gender,
         department: formData.department,
         role: formData.role,
+        password: formData.password,
         modes: modesArray, // Submit as array of selected modes
       };
 
@@ -176,6 +190,12 @@ const AddEmployeeForm = () => {
       if (formData.centerId) {
         formDataToSubmit.centerId = formData.centerId;
         formDataToSubmit.centerName = formData.centerName;
+      }
+
+      // Include coach-specific fields if role or department is coach
+      if (formData.role === "coach" || formData.department === "coach") {
+        formDataToSubmit.perHourRate = parseFloat(formData.perHourRate);
+        formDataToSubmit.employmentType = formData.employmentType;
       }
 
       let response;
@@ -218,8 +238,16 @@ const AddEmployeeForm = () => {
     { value: "Other", label: "Other" },
   ];
 
+  const employmentTypeOptions = [
+    { value: "full-time", label: "Full-time Employee" },
+    { value: "freelancer", label: "Freelancer" },
+  ];
+
   // Determine if at least one mode is selected (for validation)
   const isAnyModeSelected = formData.modes.online || formData.modes.offline;
+
+  // Check if coach-specific fields should be shown
+  const isCoach = formData.role === "coach" || formData.department === "coach";
 
   return (
     <div className="min-h-screen p-6 bg-gray-100">
@@ -415,6 +443,65 @@ const AddEmployeeForm = () => {
                   </Select>
                 </FormControl>
               </div>
+
+              {/* Coach-specific fields - shown only when coach is selected */}
+              {isCoach && (
+                <>
+                  <h3 className="text-[#642b8f] font-semibold text-lg pb-2 border-b-2 border-[#f8a213] mt-6">
+                    Coach Information
+                  </h3>
+                  
+                  <div className="flex gap-4 mb-4">
+                    <TextField
+                      label="Per Hour Rate"
+                      type="number"
+                      variant="outlined"
+                      className="flex-1"
+                      value={formData.perHourRate}
+                      onChange={(e) =>
+                        handleInputChange("perHourRate", e.target.value)
+                      }
+                      required={isCoach}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">₹</InputAdornment>
+                        ),
+                      }}
+                      inputProps={{
+                        min: 0,
+                        step: "0.01",
+                      }}
+                      helperText="Enter the hourly rate for coaching sessions"
+                    />
+
+                    <FormControl variant="outlined" className="flex-1" required={isCoach}>
+                      <InputLabel id="employment-type-label">Employment Type</InputLabel>
+                      <Select
+                        labelId="employment-type-label"
+                        id="employment-type"
+                        value={formData.employmentType}
+                        onChange={(e) =>
+                          handleInputChange("employmentType", e.target.value)
+                        }
+                        label="Employment Type"
+                      >
+                        <MenuItem value="" disabled>
+                          <em>Select Employment Type</em>
+                        </MenuItem>
+                        {employmentTypeOptions.map((option) => (
+                          <MenuItem key={option.value} value={option.value}>
+                            {option.label}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      <FormHelperText>
+                        Select whether the coach is a full-time employee or freelancer
+                      </FormHelperText>
+                    </FormControl>
+                  </div>
+                </>
+              )}
+
               <TextField
                 label="Password"
                 type={showPassword ? "text" : "password"}
@@ -497,7 +584,7 @@ const AddEmployeeForm = () => {
                 color: "white",
                 padding: "10px 32px",
               }}
-              disabled={!isAnyModeSelected}
+              disabled={!isAnyModeSelected || (isCoach && (!formData.perHourRate || !formData.employmentType))}
             >
               Submit
             </Button>
@@ -520,7 +607,10 @@ const AddEmployeeForm = () => {
                   role: "",
                   centerId: "",
                   centerName: "",
+                  password: "",
                   modes: { online: false, offline: false },
+                  perHourRate: "",
+                  employmentType: "",
                 });
               }}
             >

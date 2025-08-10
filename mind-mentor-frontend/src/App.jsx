@@ -350,6 +350,7 @@ import ParentResheduleTheClass from "./pages/parent/ParentResheduleTheClass";
 import InvoiceTemplate from "./department-components/invoicetemplate/InvoiceTemplate";
 import FinanceAccounting from "./department-components/financeexel/FinanceAccounting";
 import ChessKidPracticePage from "./pages/parent/ChessKidPracticePage";
+import ParentAllStepLoginPage from "./component/parent-component/ParentAllStepLoginPage";
 
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
@@ -405,6 +406,11 @@ function App() {
 
           <Route path="/" element={<HomePage />} />
 
+          <Route
+            path="/parent/login-page"
+            element={<ParentAllStepLoginPage />}
+          />
+
           <Route path="/parent/login" element={<ParentLogin />} />
           <Route path="/parent/enter-otp" element={<ParentOtpPage />} />
           <Route
@@ -458,10 +464,7 @@ function App() {
               path="kid/reshedule-sheduled-class/:kidId"
               element={<ParentResheduleTheClass />}
             />
-            <Route
-              path="chess-kid/:kidId"
-              element={<ChessKidPracticePage />}
-            />
+            <Route path="chess-kid/:kidId" element={<ChessKidPracticePage />} />
 
             <Route
               path="kid/shedule-new-live-class/:kidId"
@@ -1378,7 +1381,10 @@ function App() {
 
           <Route path="/superadminRenewals" element={<SuperadminRenewal />} />
           <Route path="/superadminInvoices" element={<SuperadminInvoice />} />
-          <Route path="/super-admin/department/chessKids" element={<ChessKid />} />
+          <Route
+            path="/super-admin/department/chessKids"
+            element={<ChessKid />}
+          />
 
           <Route path="/superadminFeedback" element={<SuperadminFeedback />} />
           <Route
