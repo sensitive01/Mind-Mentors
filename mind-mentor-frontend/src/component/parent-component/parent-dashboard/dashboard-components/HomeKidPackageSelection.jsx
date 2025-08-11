@@ -21,6 +21,10 @@ import {
 const HomeKidPackageSelection = () => {
   const navigate = useNavigate();
   const parentId = localStorage.getItem("parentId");
+
+  // Storage key for persisting state
+  const STORAGE_KEY = "packageSelectionState";
+
   const [packageType, setPackageType] = useState("");
   const [packages, setPackages] = useState({
     online: [],
@@ -36,9 +40,9 @@ const HomeKidPackageSelection = () => {
   const [selectedTimeSlot, setSelectedTimeSlot] = useState("");
   const [availableCenters, setAvailableCenters] = useState([]);
   const [classRate, setClassRate] = useState(0);
-  const [numberOfClasses, setNumberOfClasses] = useState(8); // Changed from 4 to 8
-  const [onlineClasses, setOnlineClasses] = useState(8); // Changed from 4 to 8
-  const [offlineClasses, setOfflineClasses] = useState(8); // Changed from 4 to 8
+  const [numberOfClasses, setNumberOfClasses] = useState(8);
+  const [onlineClasses, setOnlineClasses] = useState(8);
+  const [offlineClasses, setOfflineClasses] = useState(8);
   const [onlineRate, setOnlineRate] = useState(100);
   const [offlineRate, setOfflineRate] = useState(125);
   const [kitItems, setKitItems] = useState([{ name: "", quantity: 0 }]);
@@ -49,6 +53,7 @@ const HomeKidPackageSelection = () => {
   const [paymentId, setPaymentId] = useState("");
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [selectedCenterAddress, setSelectedCenterAddress] = useState("");
+  const [isStateRestored, setIsStateRestored] = useState(false);
 
   const [data, setData] = useState({
     kidId: "",
@@ -71,6 +76,328 @@ const HomeKidPackageSelection = () => {
   // Helper to determine if package selection should be shown
   const shouldShowPackageSelection =
     (selectedKid && !showProgramSelection && hasValidProgram) || viewOnlyMode;
+
+  // ===============================================================
+  // ENHANCED STATE PERSISTENCE FUNCTIONS
+  // ===============================================================
+
+  // Function to save current state to sessionStorage
+  const savePackageState = () => {
+    const stateToSave = {
+      packageType,
+      selectedTimeSlot,
+      selectedCenter,
+      selectedCenterAddress,
+      numberOfClasses,
+      onlineClasses,
+      offlineClasses,
+      kitItems,
+      classRate,
+      onlineRate,
+      offlineRate,
+      availableCenters,
+      centersList,
+      baseAmount,
+      totalAmount,
+      timestamp: Date.now(),
+    };
+
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+      console.log("Package state saved successfully:", stateToSave);
+    } catch (error) {
+      console.error("Failed to save package state:", error);
+    }
+  };
+
+  // Function to restore state from sessionStorage
+  const restorePackageState = () => {
+    try {
+      const savedState = sessionStorage.getItem(STORAGE_KEY);
+      if (!savedState) return false;
+
+      const parsedState = JSON.parse(savedState);
+      console.log("Attempting to restore state:", parsedState);
+
+      // Check if data is not too old (1 hour limit)
+      const oneHour = 60 * 60 * 1000;
+      if (Date.now() - parsedState.timestamp > oneHour) {
+        sessionStorage.removeItem(STORAGE_KEY);
+        return false;
+      }
+
+      // Force restore all the states immediately
+      if (parsedState.packageType) {
+        console.log("Restoring package type:", parsedState.packageType);
+        setPackageType(parsedState.packageType);
+
+        // Handle hybrid package centers setup
+        if (
+          parsedState.packageType === "hybrid" &&
+          packages.offline.length > 0
+        ) {
+          const offlineCenters = packages.offline[0].centers.map((center) => ({
+            centerId: center.centerId,
+            centerName: center.centerName,
+          }));
+          const uniqueCenters = [
+            ...new Map(
+              offlineCenters.map((item) => [item.centerId, item])
+            ).values(),
+          ];
+          setCentersList(uniqueCenters);
+        }
+      }
+
+      if (parsedState.selectedTimeSlot) {
+        console.log("Restoring time slot:", parsedState.selectedTimeSlot);
+        setSelectedTimeSlot(parsedState.selectedTimeSlot);
+
+        // Rebuild available centers for online/offline
+        if (
+          parsedState.packageType === "online" ||
+          parsedState.packageType === "offline"
+        ) {
+          setTimeout(() => {
+            rebuildAvailableCenters(
+              parsedState.packageType,
+              parsedState.selectedTimeSlot,
+              parsedState
+            );
+          }, 50);
+        }
+      }
+
+      if (parsedState.selectedCenter) {
+        console.log("Restoring selected center:", parsedState.selectedCenter);
+        setSelectedCenter(parsedState.selectedCenter);
+      }
+
+      setSelectedCenterAddress(parsedState.selectedCenterAddress || "");
+      setNumberOfClasses(parsedState.numberOfClasses || 8);
+      setOnlineClasses(parsedState.onlineClasses || 8);
+      setOfflineClasses(parsedState.offlineClasses || 8);
+      setKitItems(parsedState.kitItems || [{ name: "", quantity: 0 }]);
+      setClassRate(parsedState.classRate || 0);
+      setOnlineRate(parsedState.onlineRate || 100);
+      setOfflineRate(parsedState.offlineRate || 125);
+      setBaseAmount(parsedState.baseAmount || 0);
+      setTotalAmount(parsedState.totalAmount || 0);
+
+      // Show restoration indicator
+      setIsStateRestored(true);
+      setTimeout(() => setIsStateRestored(false), 3000);
+
+      console.log("Package state restored successfully");
+      return true;
+    } catch (error) {
+      console.error("Failed to restore package state:", error);
+      sessionStorage.removeItem(STORAGE_KEY);
+      return false;
+    }
+  };
+
+  // Helper function to rebuild available centers
+  const rebuildAvailableCenters = (packageType, timeSlot, savedState) => {
+    console.log("Rebuilding available centers for:", packageType, timeSlot);
+
+    let centers = [];
+
+    if (packageType === "online") {
+      const filteredPackages = packages.online.filter((pkg) => {
+        const packageTimeSlot = pkg.packageName.toLowerCase().includes("night")
+          ? "night"
+          : "day";
+        return packageTimeSlot === timeSlot;
+      });
+
+      if (filteredPackages.length > 0) {
+        centers = filteredPackages.flatMap(
+          (pkg) =>
+            pkg.centers?.map((center) => ({
+              centerId: center.centerId,
+              centerName: center.centerName,
+              oneClassPrice: pkg.oneClassPrice || center.oneClassPrice || 100,
+              packageData: pkg,
+            })) || []
+        );
+      }
+    } else if (packageType === "offline") {
+      if (packages.offline.length > 0) {
+        const filteredCenters = packages.offline[0].centers.filter((center) => {
+          const centerTimeSlot = center.packageName
+            ?.toLowerCase()
+            .includes("night")
+            ? "night"
+            : "day";
+          return centerTimeSlot === timeSlot;
+        });
+
+        centers = filteredCenters.map((center) => ({
+          centerId: center.centerId,
+          centerName: center.centerName,
+          oneClassPrice: center.oneClassPrice || 125,
+          address: center.address || "",
+          packageData: center,
+        }));
+      }
+    }
+
+    const uniqueCenters = [
+      ...new Map(centers.map((item) => [item.centerId, item])).values(),
+    ];
+
+    console.log("Available centers rebuilt:", uniqueCenters);
+    setAvailableCenters(uniqueCenters);
+
+    // Auto-select center if only one available and it matches saved state
+    if (
+      packageType === "online" &&
+      uniqueCenters.length === 1 &&
+      savedState.selectedCenter
+    ) {
+      setSelectedCenter(savedState.selectedCenter);
+    }
+
+    // Restore center address for offline
+    if (
+      packageType === "offline" &&
+      savedState.selectedCenter &&
+      savedState.selectedCenterAddress
+    ) {
+      const selectedCenterData = uniqueCenters.find(
+        (center) => center.centerId === savedState.selectedCenter
+      );
+      if (selectedCenterData && selectedCenterData.address) {
+        setSelectedCenterAddress(selectedCenterData.address);
+      }
+    }
+  };
+
+  // ===============================================================
+  // NEW FUNCTION: Restore package state after program selection
+  // ===============================================================
+  const restorePackageStateAfterProgram = (parsedState) => {
+    try {
+      // Restore package type first
+      if (parsedState.packageType) {
+        setPackageType(parsedState.packageType);
+
+        // Set up centers list for hybrid packages
+        if (
+          parsedState.packageType === "hybrid" &&
+          packages.offline.length > 0
+        ) {
+          const offlineCenters = packages.offline[0].centers.map((center) => ({
+            centerId: center.centerId,
+            centerName: center.centerName,
+          }));
+          const uniqueCenters = [
+            ...new Map(
+              offlineCenters.map((item) => [item.centerId, item])
+            ).values(),
+          ];
+          setCentersList(uniqueCenters);
+        }
+      }
+
+      // Restore time slot
+      if (parsedState.selectedTimeSlot) {
+        setSelectedTimeSlot(parsedState.selectedTimeSlot);
+
+        // Rebuild available centers based on time slot and package type
+        let centers = [];
+        if (parsedState.packageType === "online") {
+          const filteredPackages = packages.online.filter((pkg) => {
+            const packageTimeSlot = pkg.packageName
+              .toLowerCase()
+              .includes("night")
+              ? "night"
+              : "day";
+            return packageTimeSlot === parsedState.selectedTimeSlot;
+          });
+
+          if (filteredPackages.length > 0) {
+            centers = filteredPackages.flatMap(
+              (pkg) =>
+                pkg.centers?.map((center) => ({
+                  centerId: center.centerId,
+                  centerName: center.centerName,
+                  oneClassPrice:
+                    pkg.oneClassPrice || center.oneClassPrice || 100,
+                  packageData: pkg,
+                })) || []
+            );
+          }
+        } else if (parsedState.packageType === "offline") {
+          if (packages.offline.length > 0) {
+            const filteredCenters = packages.offline[0].centers.filter(
+              (center) => {
+                const centerTimeSlot = center.packageName
+                  ?.toLowerCase()
+                  .includes("night")
+                  ? "night"
+                  : "day";
+                return centerTimeSlot === parsedState.selectedTimeSlot;
+              }
+            );
+
+            centers = filteredCenters.map((center) => ({
+              centerId: center.centerId,
+              centerName: center.centerName,
+              oneClassPrice: center.oneClassPrice || 125,
+              address: center.address || "",
+              packageData: center,
+            }));
+          }
+        }
+
+        const uniqueCenters = [
+          ...new Map(centers.map((item) => [item.centerId, item])).values(),
+        ];
+        setAvailableCenters(uniqueCenters);
+      }
+
+      // Restore other states
+      setSelectedCenter(parsedState.selectedCenter || "");
+      setSelectedCenterAddress(parsedState.selectedCenterAddress || "");
+      setNumberOfClasses(parsedState.numberOfClasses || 8);
+      setOnlineClasses(parsedState.onlineClasses || 8);
+      setOfflineClasses(parsedState.offlineClasses || 8);
+      setKitItems(parsedState.kitItems || [{ name: "", quantity: 0 }]);
+      setClassRate(parsedState.classRate || 0);
+      setOnlineRate(parsedState.onlineRate || 100);
+      setOfflineRate(parsedState.offlineRate || 125);
+      setBaseAmount(parsedState.baseAmount || 0);
+      setTotalAmount(parsedState.totalAmount || 0);
+
+      // Show restoration indicator
+      setIsStateRestored(true);
+      setTimeout(() => setIsStateRestored(false), 3000);
+
+      console.log("Package state restored after program selection");
+    } catch (error) {
+      console.error(
+        "Failed to restore package state after program selection:",
+        error
+      );
+    }
+  };
+
+  // Function to clear saved state
+  const clearPackageState = () => {
+    try {
+      sessionStorage.removeItem(STORAGE_KEY);
+      sessionStorage.removeItem(STORAGE_KEY + "_temp"); // Also clear temp storage
+      console.log("Package state cleared successfully");
+    } catch (error) {
+      console.error("Failed to clear package state:", error);
+    }
+  };
+
+  // ===============================================================
+  // EXISTING HELPER FUNCTIONS (unchanged)
+  // ===============================================================
 
   // Helper function to format time display
   const getTimeSlotDisplay = (timeSlot) => {
@@ -471,6 +798,38 @@ const HomeKidPackageSelection = () => {
         if (programsResponse.status === 200) {
           setAllPrograms(programsResponse.data.programs);
         }
+
+        // ===============================================================
+        // CHECK FOR STATE RESTORATION AFTER DATA IS LOADED
+        // ===============================================================
+        const urlParams = new URLSearchParams(window.location.search);
+        const returnFromAddKid = urlParams.get("returnFromAddKid") === "true";
+
+        if (returnFromAddKid) {
+          console.log("Detected return from add kid page");
+          // Clean up URL first
+          urlParams.delete("returnFromAddKid");
+          window.history.replaceState(
+            {},
+            "",
+            `${window.location.pathname}${
+              urlParams.toString() ? "?" + urlParams.toString() : ""
+            }`
+          );
+
+          // For view-only mode or when kids exist, try to restore immediately
+          if (viewOnlyMode || kidsData.length > 0) {
+            console.log("Attempting immediate state restoration...");
+            setTimeout(() => {
+              const restored = restorePackageState();
+              if (restored) {
+                console.log("State restored immediately after return");
+              } else {
+                console.log("No state to restore immediately");
+              }
+            }, 300); // Increased delay to ensure packages data is loaded
+          }
+        }
       } catch (error) {
         console.error("Error fetching initial data:", error);
         toast.error("Failed to load initial data");
@@ -481,6 +840,32 @@ const HomeKidPackageSelection = () => {
 
     fetchInitialData();
   }, [parentId]);
+
+  // ===============================================================
+  // AUTO-SAVE STATE ON CHANGES (with better debouncing)
+  // ===============================================================
+  useEffect(() => {
+    // Only save if we have some meaningful state and not in loading state
+    if (!isLoading && (packageType || selectedTimeSlot || selectedCenter)) {
+      const timeoutId = setTimeout(() => {
+        savePackageState();
+      }, 1000); // Increased debounce time
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [
+    packageType,
+    selectedTimeSlot,
+    selectedCenter,
+    numberOfClasses,
+    onlineClasses,
+    offlineClasses,
+    kitItems,
+    classRate,
+    onlineRate,
+    offlineRate,
+    isLoading,
+  ]);
 
   // Handle program selection change
   const handleProgramChange = (e) => {
@@ -532,6 +917,24 @@ const HomeKidPackageSelection = () => {
       if (response.status === 200) {
         setShowProgramSelection(false);
         toast.success("Program selected successfully");
+
+        // ===============================================================
+        // RESTORE PACKAGE STATE AFTER PROGRAM SELECTION
+        // ===============================================================
+        console.log(
+          "Program selection completed, attempting to restore package state..."
+        );
+
+        // Wait a bit for state to settle, then restore
+        setTimeout(() => {
+          const savedState = sessionStorage.getItem(STORAGE_KEY);
+          if (savedState) {
+            console.log("Found saved state, restoring...");
+            restorePackageState();
+          } else {
+            console.log("No saved state found to restore");
+          }
+        }, 200);
       } else {
         toast.error("Failed to save program selection");
       }
@@ -571,9 +974,9 @@ const HomeKidPackageSelection = () => {
     setSelectedTimeSlot("");
     setAvailableCenters([]);
     setClassRate(0);
-    setNumberOfClasses(8); // Changed from 4 to 8
-    setOnlineClasses(8); // Changed from 4 to 8
-    setOfflineClasses(8); // Changed from 4 to 8
+    setNumberOfClasses(8);
+    setOnlineClasses(8);
+    setOfflineClasses(8);
     setKitItems([{ name: "", quantity: 0 }]);
     setBaseAmount(0);
     setTotalAmount(0);
@@ -589,7 +992,7 @@ const HomeKidPackageSelection = () => {
     setSelectedCenter("");
     setSelectedCenterAddress("");
     setClassRate(0);
-    setNumberOfClasses(8); // Changed from 4 to 8
+    setNumberOfClasses(8);
 
     let centers = [];
 
@@ -846,6 +1249,11 @@ const HomeKidPackageSelection = () => {
             );
 
             if (submitResponse.status === 201) {
+              // ===============================================================
+              // CLEAR SAVED STATE AFTER SUCCESSFUL PAYMENT
+              // ===============================================================
+              clearPackageState();
+
               const receivedPaymentId = submitResponse?.data?.paymentId;
               setPaymentId(receivedPaymentId);
               toast.success(
@@ -887,6 +1295,14 @@ const HomeKidPackageSelection = () => {
     }
   };
 
+  // ===============================================================
+  // UPDATED NAVIGATE TO ADD KID FUNCTION
+  // ===============================================================
+  const navigateToAddKid = () => {
+    savePackageState();
+    navigate("/parent/add-kid/false?returnFromAddKid=true");
+  };
+
   useEffect(() => {
     calculateAmounts();
   }, [
@@ -915,6 +1331,16 @@ const HomeKidPackageSelection = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* State Restoration Indicator */}
+      {isStateRestored && (
+        <div className="fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50">
+          <div className="flex items-center">
+            <CheckCircle className="w-5 h-5 mr-2" />
+            <span>Your previous selections have been restored!</span>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-white shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-4">
@@ -1480,7 +1906,7 @@ const HomeKidPackageSelection = () => {
                       </button>
                     ) : (
                       <button
-                        onClick={() => navigate("/parent/add-kid/false")}
+                        onClick={navigateToAddKid}
                         className="w-full bg-primary text-white py-3 px-4 rounded-lg hover:bg-primary font-medium"
                       >
                         Add Child to Purchase

@@ -351,6 +351,9 @@ import InvoiceTemplate from "./department-components/invoicetemplate/InvoiceTemp
 import FinanceAccounting from "./department-components/financeexel/FinanceAccounting";
 import ChessKidPracticePage from "./pages/parent/ChessKidPracticePage";
 import ParentAllStepLoginPage from "./component/parent-component/ParentAllStepLoginPage";
+import SuperAdminSeeParentPackageTable from "./pages/employee/superadmin/SuperAdminSeeParentPackageTable";
+import SuperAdminGenerateInvoice from "./pages/employee/superadmin/SuperAdminGenerateInvoice";
+import ChessKidPerfomancePage from "./pages/employee/superadmin/ChessKidPerfomancePage";
 
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
@@ -1241,6 +1244,10 @@ function App() {
             element={<SuperadminLeaves />}
           />
           <Route
+            path="/super-admin/department/view-parent-package-details/:enqId"
+            element={<SuperAdminSeeParentPackageTable />}
+          />
+          <Route
             path="/super-admin/department/show-all-leaves"
             element={<SuperAdminShowAllLeaves />}
           />
@@ -1263,6 +1270,10 @@ function App() {
           <Route
             path="/super-admin/department/invoice-table"
             element={<SuperAdminInvoicePage />}
+          />
+          <Route
+            path="/super-admin/department/generate-invoice"
+            element={<SuperAdminGenerateInvoice />}
           />
           <Route
             path="/super-admin/department/get-class-recordings"
@@ -1384,6 +1395,10 @@ function App() {
           <Route
             path="/super-admin/department/chessKids"
             element={<ChessKid />}
+          />
+          <Route
+            path="super-admin/department/chess-kid-performance/:chessKidId"
+            element={<ChessKidPerfomancePage />}
           />
 
           <Route path="/superadminFeedback" element={<SuperadminFeedback />} />

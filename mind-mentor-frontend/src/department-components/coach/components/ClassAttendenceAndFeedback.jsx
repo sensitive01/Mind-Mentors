@@ -9,6 +9,7 @@ import {
   Users,
   UserCheck,
   TrendingUp,
+  AlertCircle,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -26,11 +27,11 @@ const ClassAttendanceAndFeedback = () => {
   // Available levels for students
   const availableLevels = [
     "Absolute Beginner",
-    "Lower Beginner", 
+    "Lower Beginner",
     "Upper Beginner",
     "Lower Intermediate",
     "Upper Intermediate",
-    "Advanced"
+    "Advanced",
   ];
 
   useEffect(() => {
@@ -48,7 +49,8 @@ const ClassAttendanceAndFeedback = () => {
   const [individualFeedback, setIndividualFeedback] = useState({});
   const [studentLevelUpdates, setStudentLevelUpdates] = useState({});
   const [overallClassFeedback, setOverallClassFeedback] = useState("");
-  const [showIndividualFeedbackInput, setShowIndividualFeedbackInput] = useState({});
+  const [showIndividualFeedbackInput, setShowIndividualFeedbackInput] =
+    useState({});
   const [showLevelUpdateInput, setShowLevelUpdateInput] = useState({});
   const [showOverallFeedback, setShowOverallFeedback] = useState(false);
 
@@ -66,11 +68,39 @@ const ClassAttendanceAndFeedback = () => {
     }));
   };
 
+  // Function to check if demo student requirements are met
+  const isDemoStudentComplete = (studentId) => {
+    const hasFeedback = individualFeedback[studentId]?.trim();
+    const hasLevelUpdate = studentLevelUpdates[studentId];
+    return hasFeedback && hasLevelUpdate;
+  };
+
+  // Function to get incomplete demo students
+  const getIncompleteDemoStudents = () => {
+    const demoStudents = classDetails?.demoAssignedKid || [];
+    return demoStudents.filter(
+      (student) => !isDemoStudentComplete(student.kidId)
+    );
+  };
+
   const handleSubmit = async () => {
+    // Check if all demo students have required fields
+    const incompleteDemoStudents = getIncompleteDemoStudents();
+
+    if (incompleteDemoStudents.length > 0) {
+      const studentNames = incompleteDemoStudents
+        .map((s) => s.kidName)
+        .join(", ");
+      toast.error(
+        `Please provide both feedback and level update for demo students: ${studentNames}`
+      );
+      return;
+    }
+
     // Combine selected students and demo students
     const allStudents = [
       ...(classDetails?.selectedStudents || []),
-      ...(classDetails?.demoAssignedKid || [])
+      ...(classDetails?.demoAssignedKid || []),
     ];
 
     const submissionData = allStudents.map((student) => ({
@@ -78,8 +108,12 @@ const ClassAttendanceAndFeedback = () => {
       studentName: student.kidName,
       present: attendance[student.kidId] || false,
       feedback: individualFeedback[student.kidId] || "",
-      levelUpdate: studentLevelUpdates[student.kidId] || null, // Include level update
-      studentType: classDetails?.selectedStudents?.find(s => s.kidId === student.kidId) ? 'regular' : 'demo'
+      levelUpdate: studentLevelUpdates[student.kidId] || null,
+      studentType: classDetails?.selectedStudents?.find(
+        (s) => s.kidId === student.kidId
+      )
+        ? "regular"
+        : "demo",
     }));
 
     // Add overall class feedback to submission
@@ -87,11 +121,11 @@ const ClassAttendanceAndFeedback = () => {
       students: submissionData,
       overallClassFeedback: overallClassFeedback,
       classId: classId,
-      coachId: empId
+      coachId: empId,
     };
 
     console.log("Submission data:", finalSubmissionData);
-    
+
     const response = await addFeedbackAndAttandance(
       empId,
       classId,
@@ -109,128 +143,186 @@ const ClassAttendanceAndFeedback = () => {
   // Get all students (regular + demo)
   const allStudents = [
     ...(classDetails?.selectedStudents || []),
-    ...(classDetails?.demoAssignedKid || [])
+    ...(classDetails?.demoAssignedKid || []),
   ];
 
   const regularStudentsCount = classDetails?.selectedStudents?.length || 0;
   const demoStudentsCount = classDetails?.demoAssignedKid?.length || 0;
 
-  const renderStudentCard = (student, isDemo = false) => (
-    <div
-      key={student.kidId}
-      className={`bg-white p-4 rounded-lg shadow border ${
-        isDemo ? 'border-green-200' : 'border-blue-200'
-      } transition-shadow hover:shadow-md`}
-    >
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex items-center gap-3">
-          <div className={`w-2 h-2 ${isDemo ? 'bg-green-500' : 'bg-blue-500'} rounded-full`}></div>
-          <h4 className="text-lg font-semibold">{student.kidName}</h4>
-          <span className={`text-xs ${
-            isDemo ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
-          } px-2 py-1 rounded-full`}>
-            {isDemo ? 'Demo' : 'Regular'}
-          </span>
-          {student.currentLevel && (
-            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-              Current: {student.currentLevel}
+  const renderStudentCard = (student, isDemo = false) => {
+    const isComplete = isDemo ? isDemoStudentComplete(student.kidId) : true;
+
+    return (
+      <div
+        key={student.kidId}
+        className={`bg-white p-4 rounded-lg shadow border ${
+          isDemo ? "border-green-200" : "border-blue-200"
+        } ${
+          !isComplete ? "ring-2 ring-red-200" : ""
+        } transition-shadow hover:shadow-md`}
+      >
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div
+              className={`w-2 h-2 ${
+                isDemo ? "bg-green-500" : "bg-blue-500"
+              } rounded-full`}
+            ></div>
+            <h4 className="text-lg font-semibold">{student.kidName}</h4>
+            <span
+              className={`text-xs ${
+                isDemo
+                  ? "bg-green-100 text-green-800"
+                  : "bg-blue-100 text-blue-800"
+              } px-2 py-1 rounded-full`}
+            >
+              {isDemo ? "Demo" : "Regular"}
             </span>
-          )}
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          <button
-            onClick={() => toggleAttendance(student.kidId)}
-            className={`px-4 py-2 rounded-md text-white transition-colors ${
-              attendance[student.kidId]
-                ? "bg-green-600 hover:bg-green-700"
-                : "bg-red-600 hover:bg-red-700"
-            }`}
-          >
-            {attendance[student.kidId] ? "Present" : "Absent"}
-          </button>
-          <button
-            onClick={() =>
-              setShowIndividualFeedbackInput((prev) => ({
-                ...prev,
-                [student.kidId]: !prev[student.kidId],
-              }))
-            }
-            className="px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-50 flex items-center gap-2"
-          >
-            <MessageCircle className="w-4 h-4" />
-            Feedback
-          </button>
-          <button
-            onClick={() =>
-              setShowLevelUpdateInput((prev) => ({
-                ...prev,
-                [student.kidId]: !prev[student.kidId],
-              }))
-            }
-            className="px-4 py-2 rounded-md border border-indigo-300 text-indigo-600 hover:bg-indigo-50 flex items-center gap-2"
-          >
-            <TrendingUp className="w-4 h-4" />
-            Update Level
-          </button>
-        </div>
-      </div>
-
-      {/* Individual Feedback Input */}
-      {showIndividualFeedbackInput[student.kidId] && (
-        <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Individual Feedback
-          </label>
-          <textarea
-            className="w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            rows="3"
-            placeholder={`Enter individual feedback for ${student.kidName}...`}
-            value={individualFeedback[student.kidId] || ""}
-            onChange={(e) =>
-              setIndividualFeedback((prev) => ({
-                ...prev,
-                [student.kidId]: e.target.value,
-              }))
-            }
-          />
-        </div>
-      )}
-
-      {/* Level Update Input */}
-      {showLevelUpdateInput[student.kidId] && (
-        <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Update Student Level (Optional)
-          </label>
-          <select
-            className="w-full p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            value={studentLevelUpdates[student.kidId] || ""}
-            onChange={(e) => handleLevelUpdate(student.kidId, e.target.value)}
-          >
-            <option value="">-- Select New Level (Optional) --</option>
-            {availableLevels.map((level) => (
-              <option key={level} value={level}>
-                {level}
-              </option>
-            ))}
-          </select>
-          {studentLevelUpdates[student.kidId] && (
-            <div className="mt-2 p-2 bg-indigo-50 rounded text-sm">
-              <span className="text-indigo-700">
-                Level will be updated to: <strong>{studentLevelUpdates[student.kidId]}</strong>
+            {student.currentLevel && (
+              <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                Current: {student.currentLevel}
               </span>
-              <button
-                onClick={() => handleLevelUpdate(student.kidId, "")}
-                className="ml-2 text-indigo-600 hover:text-indigo-800 underline"
-              >
-                Clear
-              </button>
-            </div>
-          )}
+            )}
+            {isDemo && !isComplete && (
+              <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" />
+                Required
+              </span>
+            )}
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={() => toggleAttendance(student.kidId)}
+              className={`px-4 py-2 rounded-md text-white transition-colors ${
+                attendance[student.kidId]
+                  ? "bg-green-600 hover:bg-green-700"
+                  : "bg-gray-600 hover:bg-gray-700"
+              }`}
+            >
+              {attendance[student.kidId] ? "Present" : "Mark As Present"}
+            </button>
+
+            <button
+              onClick={() =>
+                setShowIndividualFeedbackInput((prev) => ({
+                  ...prev,
+                  [student.kidId]: !prev[student.kidId],
+                }))
+              }
+              className={`px-4 py-2 rounded-md border ${
+                isDemo && !individualFeedback[student.kidId]?.trim()
+                  ? "border-red-300 text-red-600 bg-red-50"
+                  : "border-gray-300 hover:bg-gray-50"
+              } flex items-center gap-2`}
+            >
+              <MessageCircle className="w-4 h-4" />
+              Feedback{isDemo && " *"}
+            </button>
+            <button
+              onClick={() =>
+                setShowLevelUpdateInput((prev) => ({
+                  ...prev,
+                  [student.kidId]: !prev[student.kidId],
+                }))
+              }
+              className={`px-4 py-2 rounded-md border flex items-center gap-2 ${
+                isDemo && !studentLevelUpdates[student.kidId]
+                  ? "border-red-300 text-red-600 bg-red-50"
+                  : "border-indigo-300 text-indigo-600 hover:bg-indigo-50"
+              }`}
+            >
+              <TrendingUp className="w-4 h-4" />
+              Update Level{isDemo && " *"}
+            </button>
+          </div>
         </div>
-      )}
-    </div>
-  );
+
+        {/* Individual Feedback Input */}
+        {showIndividualFeedbackInput[student.kidId] && (
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Individual Feedback{isDemo && " (Required)"}
+              {isDemo && <span className="text-red-500 ml-1">*</span>}
+            </label>
+            <textarea
+              className={`w-full p-2 border rounded-md focus:ring-2 focus:border-transparent ${
+                isDemo && !individualFeedback[student.kidId]?.trim()
+                  ? "border-red-300 focus:ring-red-500"
+                  : "border-gray-300 focus:ring-indigo-500"
+              }`}
+              rows="3"
+              placeholder={`Enter individual feedback for ${
+                student.kidName
+              }...${isDemo ? " (This is mandatory for demo students)" : ""}`}
+              value={individualFeedback[student.kidId] || ""}
+              onChange={(e) =>
+                setIndividualFeedback((prev) => ({
+                  ...prev,
+                  [student.kidId]: e.target.value,
+                }))
+              }
+            />
+            {isDemo && !individualFeedback[student.kidId]?.trim() && (
+              <p className="text-red-500 text-sm mt-1">
+                Feedback is required for demo students
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Level Update Input */}
+        {showLevelUpdateInput[student.kidId] && (
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Update Student Level{isDemo ? " (Required)" : " (Optional)"}
+              {isDemo && <span className="text-red-500 ml-1">*</span>}
+            </label>
+            <select
+              className={`w-full p-2 border rounded-md focus:ring-2 focus:border-transparent ${
+                isDemo && !studentLevelUpdates[student.kidId]
+                  ? "border-red-300 focus:ring-red-500"
+                  : "border-gray-300 focus:ring-indigo-500"
+              }`}
+              value={studentLevelUpdates[student.kidId] || ""}
+              onChange={(e) => handleLevelUpdate(student.kidId, e.target.value)}
+            >
+              <option value="">
+                {isDemo
+                  ? "-- Select New Level (Required) --"
+                  : "-- Select New Level (Optional) --"}
+              </option>
+              {availableLevels.map((level) => (
+                <option key={level} value={level}>
+                  {level}
+                </option>
+              ))}
+            </select>
+            {isDemo && !studentLevelUpdates[student.kidId] && (
+              <p className="text-red-500 text-sm mt-1">
+                Level update is required for demo students
+              </p>
+            )}
+            {studentLevelUpdates[student.kidId] && (
+              <div className="mt-2 p-2 bg-indigo-50 rounded text-sm">
+                <span className="text-indigo-700">
+                  Level will be updated to:{" "}
+                  <strong>{studentLevelUpdates[student.kidId]}</strong>
+                </span>
+                {!isDemo && (
+                  <button
+                    onClick={() => handleLevelUpdate(student.kidId, "")}
+                    className="ml-2 text-indigo-600 hover:text-indigo-800 underline"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="max-w-6xl mx-auto p-6">
@@ -279,15 +371,21 @@ const ClassAttendanceAndFeedback = () => {
             <div className="flex flex-wrap justify-center items-center gap-6">
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-blue-600" />
-                <span className="text-sm font-medium">Regular Students: {regularStudentsCount}</span>
+                <span className="text-sm font-medium">
+                  Regular Students: {regularStudentsCount}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <UserCheck className="w-5 h-5 text-green-600" />
-                <span className="text-sm font-medium">Demo Students: {demoStudentsCount}</span>
+                <span className="text-sm font-medium">
+                  Demo Students: {demoStudentsCount}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-indigo-600" />
-                <span className="text-sm font-medium">Total Students: {allStudents.length}</span>
+                <span className="text-sm font-medium">
+                  Total Students: {allStudents.length}
+                </span>
               </div>
             </div>
           </div>
@@ -295,7 +393,9 @@ const ClassAttendanceAndFeedback = () => {
           {/* Overall Class Feedback Section */}
           <div className="mb-6">
             <div className="flex justify-between items-center mb-3">
-              <h3 className="text-lg font-semibold text-gray-700">Overall Class Feedback</h3>
+              <h3 className="text-lg font-semibold text-gray-700">
+                Overall Class Feedback
+              </h3>
               <button
                 onClick={() => setShowOverallFeedback(!showOverallFeedback)}
                 className="px-4 py-2 rounded-md border border-indigo-300 text-indigo-600 hover:bg-indigo-50 flex items-center gap-2"
@@ -304,7 +404,7 @@ const ClassAttendanceAndFeedback = () => {
                 {showOverallFeedback ? "Hide" : "Add"} Overall Feedback
               </button>
             </div>
-            
+
             {showOverallFeedback && (
               <div className="bg-indigo-50 p-4 rounded-lg">
                 <textarea
@@ -325,7 +425,9 @@ const ClassAttendanceAndFeedback = () => {
                 <Users className="w-5 h-5 text-blue-600" />
                 Regular Students ({regularStudentsCount})
               </h3>
-              {classDetails?.selectedStudents?.map((student) => renderStudentCard(student, false))}
+              {classDetails?.selectedStudents?.map((student) =>
+                renderStudentCard(student, false)
+              )}
             </div>
           )}
 
@@ -335,8 +437,13 @@ const ClassAttendanceAndFeedback = () => {
               <h3 className="text-lg font-semibold text-gray-700 flex items-center gap-2">
                 <UserCheck className="w-5 h-5 text-green-600" />
                 Demo Students ({demoStudentsCount})
+                <span className="text-sm text-red-600 font-normal">
+                  * Feedback & Level Update Required
+                </span>
               </h3>
-              {classDetails?.demoAssignedKid?.map((student) => renderStudentCard(student, true))}
+              {classDetails?.demoAssignedKid?.map((student) =>
+                renderStudentCard(student, true)
+              )}
             </div>
           )}
 
@@ -367,6 +474,7 @@ const ClassAttendanceAndFeedback = () => {
         pauseOnHover
         draggable
         pauseOnFocusLoss
+        style={{ marginTop: "60px" }}
       />
     </div>
   );

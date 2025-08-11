@@ -1,4 +1,6 @@
 const express = require("express");
+const xml2js = require("xml2js");
+
 const multer = require("multer");
 const User = require("../../model/userModel"); // Adjust the path as necessary
 const Employee = require("../../model/employeeModel");
@@ -38,6 +40,7 @@ const wholeClassSchema = require("../../model/wholeClassAssignedModel");
 const demoClassSchema = require("../../model/demoClassModel");
 const ConductedClass = require("../../model/conductedClassSchema");
 const { default: axios } = require("axios");
+const ChessKidPlaying = require("../../model/chesskidplay/chessKidPlayingSchema");
 
 const createUser = async (req, res) => {
   try {
@@ -1864,6 +1867,7 @@ const updateEmployeeData = async (req, res) => {
   try {
     const { empId } = req.params;
     const { formData } = req.body;
+    console.log("Formdata", formData);
 
     if (!empId) {
       return res
@@ -1871,23 +1875,32 @@ const updateEmployeeData = async (req, res) => {
         .json({ success: false, message: "Employee ID is required" });
     }
 
+    const updateFields = {
+      firstName: formData.firstName,
+      email: formData.email,
+      phoneNumber: formData.phoneNumber,
+      address: formData.address,
+      gender: formData.gender,
+      department: formData.department,
+      role: formData.role || "employee",
+      centerName: formData.centerName,
+      centerId: formData.centerId,
+      modes: formData.modes, // fixed name
+      status: formData.status,
+      perHourRate: formData.perHourRate,
+      employmentType: formData.employmentType,
+    };
+
+    // Only set password if it's provided
+    if (formData.password) {
+      // If you hash passwords, hash here before updating
+      updateFields.password = formData.password;
+    }
+
     const updatedEmployee = await Employee.findByIdAndUpdate(
       empId,
-      {
-        firstName: formData.firstName,
-        email: formData.email,
-        phoneNumber: formData.phoneNumber,
-        address: formData.address,
-        gender: formData.gender,
-        department: formData.department,
-        role: formData.role || "employee",
-        centerName: formData.centerName,
-        centerId: formData.centerId,
-        mode: formData.mode || [],
-        status: formData.status || "Active",
-        password: formData.password,
-      },
-      { new: true }
+      { $set: updateFields },
+      { new: true, runValidators: true }
     );
 
     if (!updatedEmployee) {
@@ -3591,7 +3604,8 @@ const cancelDemoClass = async (req, res) => {
     // Step 3: Remove kid from scheduled class
     const classData = await ClassSchedule.findOneAndUpdate(
       { _id: existingDemo.classId },
-      { $pull: { demoAssignedKid: { kidId } } },{ new: true }
+      { $pull: { demoAssignedKid: { kidId } } },
+      { new: true }
     );
 
     console.log("ClassData", classData);
@@ -3890,19 +3904,313 @@ const getMyDetailedAttendance = async (req, res) => {
   }
 };
 
-const getChessRfidCount = async(req,res)=>{
-  try{
-    const response = await axios.get("https://www.chesskid.com/groups/rss/11E7FD5D12F7014280004A78600200C0/3MHqxsgC/7?page=")
-    console.log(response)
+const toInt = (val) => parseInt(val || 0, 10);
 
-  }catch(err){
-    console.log("error in rfic",err)
+const getChessRfidCount = async (req, res) => {
+  try {
+    let page = 0;
+    let hasNext = true;
+    let kidCount = 0;
+    const pageStats = [];
+
+    while (hasNext) {
+      const { data: xml } = await axios.get(
+        `https://www.chesskid.com/groups/rss/11E7FD5D12F7014280004A78600200C0/3MHqxsgC/7?page=${page}`
+      );
+
+      const parsed = await xml2js.parseStringPromise(xml, {
+        explicitArray: false,
+      });
+
+      if (!parsed?.kids?.kid) break;
+
+      let kids = parsed.kids.kid;
+      if (!Array.isArray(kids)) kids = [kids];
+
+      const docs = kids.map((kid) => {
+        kidCount++;
+
+        return {
+          username: kid.username,
+          userId: toInt(kid.userId),
+          firstName: kid.firstName || "",
+          lastName: kid.lastName || "",
+          level: kid.level || "",
+          slowChessRating: toInt(kid.slowChessRating),
+          blitzRating: toInt(kid.blitzRating),
+          puzzleRating: toInt(kid.puzzleRating),
+          rssUrl: kid.rssUrl || "",
+          dateRecorded: new Date(), // ✅ track when this record was inserted
+          last7days: {
+            slowChessStats: {
+              wins: toInt(kid.last7days?.slowChessStats?.wins),
+              draws: toInt(kid.last7days?.slowChessStats?.draws),
+              losses: toInt(kid.last7days?.slowChessStats?.losses),
+              ratingChange: toInt(kid.last7days?.slowChessStats?.ratingChange),
+            },
+            blitzStats: {
+              wins: toInt(kid.last7days?.blitzStats?.wins),
+              draws: toInt(kid.last7days?.blitzStats?.draws),
+              losses: toInt(kid.last7days?.blitzStats?.losses),
+              ratingChange: toInt(kid.last7days?.blitzStats?.ratingChange),
+            },
+            puzzleStats: {
+              correct: toInt(kid.last7days?.puzzleStats?.correct),
+              attempted: toInt(kid.last7days?.puzzleStats?.attempted),
+              ratingChange: toInt(kid.last7days?.puzzleStats?.ratingChange),
+            },
+            lessonCount: toInt(kid.last7days?.lessonCount),
+            workoutCount: toInt(kid.last7days?.workoutCount),
+            articleCount: toInt(kid.last7days?.articleCount),
+            videoCount: toInt(kid.last7days?.videoCount),
+            trophyCount: toInt(kid.last7days?.trophyCount),
+          },
+          alltime: {
+            slowChessStats: {
+              wins: toInt(kid.alltime?.slowChessStats?.wins),
+              draws: toInt(kid.alltime?.slowChessStats?.draws),
+              losses: toInt(kid.alltime?.slowChessStats?.losses),
+              ratingChange: toInt(kid.alltime?.slowChessStats?.ratingChange),
+            },
+            blitzStats: {
+              wins: toInt(kid.alltime?.blitzStats?.wins),
+              draws: toInt(kid.alltime?.blitzStats?.draws),
+              losses: toInt(kid.alltime?.blitzStats?.losses),
+              ratingChange: toInt(kid.alltime?.blitzStats?.ratingChange),
+            },
+            puzzleStats: {
+              correct: toInt(kid.alltime?.puzzleStats?.correct),
+              attempted: toInt(kid.alltime?.puzzleStats?.attempted),
+              ratingChange: toInt(kid.alltime?.puzzleStats?.ratingChange),
+            },
+            lessonCount: toInt(kid.alltime?.lessonCount),
+            workoutCount: toInt(kid.alltime?.workoutCount),
+            articleCount: toInt(kid.alltime?.articleCount),
+            videoCount: toInt(kid.alltime?.videoCount),
+            trophyCount: toInt(kid.alltime?.trophyCount),
+          },
+        };
+      });
+
+      if (docs.length > 0) {
+        await ChessKidPlaying.insertMany(docs); // ✅ always inserts
+      }
+
+      pageStats.push({
+        page,
+        kidsInPage: kids.length,
+        totalSoFar: kidCount,
+      });
+
+      console.log(
+        `Page ${page} processed: ${kids.length} kids, total so far: ${kidCount}`
+      );
+
+      hasNext = Boolean(parsed?.kids?.next);
+      if (hasNext) page++;
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "ChessKid data inserted (new records)",
+      totalKidsProcessed: kidCount,
+      totalPages: pageStats.length,
+      pages: pageStats,
+    });
+  } catch (err) {
+    console.error("Error in ChessKid insert", err);
+    res.status(500).json({ success: false, error: err.message });
   }
-}
+};
 
+const getAllPaidPackageData = async (req, res) => {
+  try {
+    const { enqId } = req.params;
+    const paymentData = await packagePaymentData.find({ enqId: enqId });
 
+    if (!paymentData || paymentData.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No payment data found for this enquiry ID",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Payment data retrieved successfully",
+      data: paymentData,
+    });
+  } catch (err) {
+    console.error("Error fetching paid package data:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching payment data",
+      error: err.message,
+    });
+  }
+};
+
+const updatePackageData = async (req, res) => {
+  try {
+    const { enqId } = req.params;
+    const { packageUpdate } = req.body;
+
+    if (!packageUpdate || !packageUpdate._id) {
+      return res.status(400).json({
+        success: false,
+        message: "Package _id is required for update",
+      });
+    }
+
+    // Update the package
+    const updatedPackage = await packagePaymentData.findOneAndUpdate(
+      { _id: packageUpdate._id, enqId }, // match by both _id and enqId for safety
+      { $set: packageUpdate }, // overwrite fields with incoming data
+      { new: true } // return the updated document
+    );
+
+    if (!updatedPackage) {
+      return res.status(404).json({
+        success: false,
+        message: "Package not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Package updated successfully",
+      data: updatedPackage,
+    });
+  } catch (err) {
+    console.error("Error in updating the package", err);
+    res.status(500).json({
+      success: false,
+      message: "Error in updating the package",
+      error: err.message,
+    });
+  }
+};
+
+const getPhysicalCenterDetails = async (req, res) => {
+  try {
+    const physicalCenters = await PhysicalCenter.find(
+      {},
+      { centerName: 1, address: 1, centerType: 1 }
+    ).lean();
+
+    return res.status(200).json({
+      success: true,
+      data: physicalCenters,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while fetching physical center details",
+    });
+  }
+};
+
+const getKidForInvoiceGeneration = async (req, res) => {
+  try {
+    const kidData = await enquiryData.find(
+      {},
+      {
+        kidFirstName: 1,
+        parentFirstName: 1,
+        contactNumber: 1,
+        kidId: 1,
+        whatsappNumber: 1,
+        programs: 1,
+      }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Kid data fetched successfully",
+      data: kidData,
+    });
+  } catch (err) {
+    console.error("Error fetching kid data:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong while fetching kid data",
+    });
+  }
+};
+
+const getLatestKids = async (req, res) => {
+  try {
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const limit = Math.max(parseInt(req.query.limit) || 10, 1);
+    const skip = (page - 1) * limit;
+
+ 
+    const pipeline = [
+      { $match: { username: { $ne: null } } }, 
+      { $sort: { createdAt: -1 } }, 
+      {
+        $group: {
+          _id: "$username",
+          doc: { $first: "$$ROOT" },
+        },
+      },
+      { $replaceRoot: { newRoot: "$doc" } },
+      { $sort: { createdAt: -1 } },
+      { $skip: skip },
+      { $limit: limit },
+    ];
+
+    const result = await ChessKidPlaying.aggregate(pipeline);
+
+   
+    const totalUniqueKids = await ChessKidPlaying.distinct("username", {
+      username: { $ne: null },
+    });
+
+    res.status(200).json({
+      page,
+      limit,
+      count: result.length,
+      total: totalUniqueKids.length,
+      totalPages: Math.ceil(totalUniqueKids.length / limit),
+      data: result,
+    });
+  } catch (err) {
+    console.error("Error in getLatestKids:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+const getChessKidPerformanceData = async (req, res) => {
+  try {
+    const { chessKidId } = req.params;
+
+    const kidPerformanceData = await ChessKidPlaying.find({
+      username: chessKidId,
+    });
+    console.log("kidPerformanceData", kidPerformanceData);
+
+    if (!kidPerformanceData || kidPerformanceData.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No performance data found for this ChessKid" });
+    }
+
+    res.status(200).json({ data: kidPerformanceData });
+  } catch (err) {
+    console.error("Error in getting the chesskid performance data", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
 
 module.exports = {
+  getChessKidPerformanceData,
+  getLatestKids,
+  getKidForInvoiceGeneration,
+  getPhysicalCenterDetails,
+  updatePackageData,
+  getAllPaidPackageData,
   getChessRfidCount,
   getMyDetailedAttendance,
   superAdminGetConductedClassDetails,

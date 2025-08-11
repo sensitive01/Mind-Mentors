@@ -13,13 +13,15 @@ import {
   ChevronDown,
   Edit,
   MapPin,
+  Monitor,
+  Home,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   getKidSheduleDemoDetails,
   parentBookDemoClassData,
 } from "../../../../api/service/parent/ParentService";
-import { ToastContainer,toast } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
 
 const SheduleDemoClass = () => {
   const navigate = useNavigate();
@@ -44,11 +46,11 @@ const SheduleDemoClass = () => {
 
   const [selectedProgram, setSelectedProgram] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("");
+  const [classType, setClassType] = useState(""); // 'online' or 'offline'
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState(null);
-  const [classType, setClassType] = useState("online"); // 'online' or 'offline'
   const [currentStep, setCurrentStep] = useState(0);
-  const [currentMonth, setCurrentMonth] = useState(new Date(2025, 7)); // July 2025
+  const [currentMonth, setCurrentMonth] = useState(new Date(2025, 7)); // August 2025
   const [isEditing, setIsEditing] = useState(false);
 
   // Check if kid has selected programs
@@ -73,6 +75,25 @@ const SheduleDemoClass = () => {
     ].sort();
   }, [selectedProgram, apiData]);
 
+  // Check available class types for selected program and level
+  const availableClassTypes = useMemo(() => {
+    if (!selectedProgram || !selectedLevel || !apiData?.demoClassData)
+      return [];
+
+    const types = new Set(
+      apiData.demoClassData
+        .filter(
+          (slot) =>
+            slot.program === selectedProgram &&
+            slot.level === selectedLevel &&
+            slot.enrolledKidCount < slot.maximumKidCount
+        )
+        .map((slot) => slot.type)
+    );
+
+    return Array.from(types);
+  }, [selectedProgram, selectedLevel, apiData]);
+
   // Set initial values if kid has selected programs
   useEffect(() => {
     if (hasSelectedPrograms && !isEditing) {
@@ -82,17 +103,23 @@ const SheduleDemoClass = () => {
     }
   }, [apiData, hasSelectedPrograms, isEditing]);
 
-  // Get available dates for selected program and level based on days
+  // Get available dates for selected program, level, and class type based on days
   const availableDates = useMemo(() => {
-    if (!selectedProgram || !selectedLevel || !apiData?.demoClassData)
+    if (
+      !selectedProgram ||
+      !selectedLevel ||
+      !classType ||
+      !apiData?.demoClassData
+    )
       return new Set();
 
-    // Get all unique days for the selected program and level
+    // Get all unique days for the selected program, level, and class type
     const availableDays = apiData.demoClassData
       .filter(
         (slot) =>
           slot.program === selectedProgram &&
           slot.level === selectedLevel &&
+          slot.type === classType &&
           slot.enrolledKidCount < slot.maximumKidCount
       )
       .map((slot) => slot.day); // Use 'day' instead of parsing classDate
@@ -129,7 +156,7 @@ const SheduleDemoClass = () => {
     }
 
     return dates;
-  }, [selectedProgram, selectedLevel, apiData]);
+  }, [selectedProgram, selectedLevel, classType, apiData]);
 
   // Get time slots for selected date and type (online/offline) based on day
   const availableTimeSlots = useMemo(() => {
@@ -137,6 +164,7 @@ const SheduleDemoClass = () => {
       !selectedProgram ||
       !selectedLevel ||
       !selectedDate ||
+      !classType ||
       !apiData?.demoClassData
     )
       return [];
@@ -161,7 +189,7 @@ const SheduleDemoClass = () => {
         const timeB = b.classTime.split(" - ")[0];
         return timeA.localeCompare(timeB);
       });
-  }, [selectedProgram, selectedLevel, selectedDate, apiData, classType]);
+  }, [selectedProgram, selectedLevel, selectedDate, classType, apiData]);
 
   // Calendar helper functions
   const getDaysInMonth = (date) => {
@@ -207,6 +235,7 @@ const SheduleDemoClass = () => {
     setIsEditing(true);
     setSelectedProgram("");
     setSelectedLevel("");
+    setClassType("");
     setSelectedDate(null);
     setSelectedSlot(null);
   };
@@ -245,14 +274,14 @@ const SheduleDemoClass = () => {
 
   const canProceed = () => {
     if (currentStep === 0) return selectedProgram && selectedLevel;
-    if (currentStep === 1) return selectedDate;
+    if (currentStep === 1) return classType && selectedDate;
     if (currentStep === 2) return selectedSlot;
     return false;
   };
 
   const steps = [
     { title: "Choose Program & Level", icon: BookOpen },
-    { title: "Pick Date", icon: Calendar },
+    { title: "Select Mode & Date", icon: Calendar },
     { title: "Choose Time", icon: Clock },
   ];
 
@@ -288,7 +317,7 @@ const SheduleDemoClass = () => {
       const isSelected = isDateSelected(date);
       const isPast = date < new Date().setHours(0, 0, 0, 0);
 
-      // Get day name and count available slots for this day
+      // Get day name and count available slots for this day with selected class type
       const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
       const slotsCount =
         apiData?.demoClassData?.filter(
@@ -296,6 +325,7 @@ const SheduleDemoClass = () => {
             slot.day === dayName &&
             slot.program === selectedProgram &&
             slot.level === selectedLevel &&
+            slot.type === classType &&
             slot.enrolledKidCount < slot.maximumKidCount
         ).length || 0;
 
@@ -526,6 +556,7 @@ const SheduleDemoClass = () => {
                         onChange={(e) => {
                           setSelectedProgram(e.target.value);
                           setSelectedLevel(""); // Reset level when program changes
+                          setClassType(""); // Reset class type
                           setSelectedDate(null);
                           setSelectedSlot(null);
                         }}
@@ -552,6 +583,7 @@ const SheduleDemoClass = () => {
                         value={selectedLevel}
                         onChange={(e) => {
                           setSelectedLevel(e.target.value);
+                          setClassType(""); // Reset class type
                           setSelectedDate(null);
                           setSelectedSlot(null);
                         }}
@@ -606,12 +638,12 @@ const SheduleDemoClass = () => {
             </div>
           )}
 
-          {/* Step 1: Date Selection */}
+          {/* Step 1: Class Mode & Date Selection */}
           {currentStep === 1 && (
             <div>
               <div className="text-center mb-8">
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                  Choose a date for your demo class
+                  Choose class mode and date
                 </h2>
                 <div className="inline-flex items-center bg-blue-50 px-4 py-2 rounded-full">
                   <span className="text-blue-800 font-medium">
@@ -620,18 +652,93 @@ const SheduleDemoClass = () => {
                 </div>
               </div>
 
-              {availableDates.size === 0 ? (
-                <div className="text-center py-12">
-                  <div className="text-6xl mb-4">😔</div>
-                  <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                    No dates available
-                  </h3>
-                  <p className="text-gray-600">
-                    Please try a different program or level combination
-                  </p>
+              {/* Class Type Selection */}
+              <div className="max-w-lg mx-auto mb-8">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4 text-center">
+                  Select Class Mode
+                </h3>
+                <div className="flex justify-center gap-3">
+                  {availableClassTypes.includes("online") && (
+                    <button
+                      onClick={() => {
+                        setClassType("online");
+                        setSelectedDate(null);
+                        setSelectedSlot(null);
+                      }}
+                      className={`px-4 py-3 rounded-lg border-2 transition-all duration-300 flex items-center gap-2 ${
+                        classType === "online"
+                          ? "border-blue-500 bg-blue-50 ring-2 ring-blue-300 ring-offset-1"
+                          : "border-gray-200 hover:border-blue-300 hover:shadow-md"
+                      }`}
+                    >
+                      <Monitor className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm font-medium text-gray-800">
+                        Online
+                      </span>
+                      {classType === "online" && (
+                        <Check className="w-4 h-4 text-blue-600" />
+                      )}
+                    </button>
+                  )}
+
+                  {availableClassTypes.includes("offline") && (
+                    <button
+                      onClick={() => {
+                        setClassType("offline");
+                        setSelectedDate(null);
+                        setSelectedSlot(null);
+                      }}
+                      className={`px-4 py-3 rounded-lg border-2 transition-all duration-300 flex items-center gap-2 ${
+                        classType === "offline"
+                          ? "border-green-500 bg-green-50 ring-2 ring-green-300 ring-offset-1"
+                          : "border-gray-200 hover:border-green-300 hover:shadow-md"
+                      }`}
+                    >
+                      <Home className="w-4 h-4 text-green-600" />
+                      <span className="text-sm font-medium text-gray-800">
+                        Offline
+                      </span>
+                      {classType === "offline" && (
+                        <Check className="w-4 h-4 text-green-600" />
+                      )}
+                    </button>
+                  )}
                 </div>
-              ) : (
-                <div className="max-w-2xl mx-auto">{renderCalendar()}</div>
+
+                {availableClassTypes.length === 0 && (
+                  <div className="text-center py-8">
+                    <div className="text-4xl mb-4">😔</div>
+                    <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                      No class modes available
+                    </h3>
+                    <p className="text-gray-600">
+                      Please try a different program or level combination
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Date Selection - Show only when class type is selected */}
+              {classType && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4 text-center">
+                    Choose a Date
+                  </h3>
+
+                  {availableDates.size === 0 ? (
+                    <div className="text-center py-12">
+                      <div className="text-6xl mb-4">😔</div>
+                      <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                        No dates available for {classType} classes
+                      </h3>
+                      <p className="text-gray-600">
+                        Please try selecting a different class mode
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="max-w-2xl mx-auto">{renderCalendar()}</div>
+                  )}
+                </div>
               )}
             </div>
           )}
@@ -643,40 +750,21 @@ const SheduleDemoClass = () => {
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">
                   Choose your preferred time
                 </h2>
-                <div className="inline-flex items-center bg-purple-50 px-4 py-2 rounded-full">
-                  <span className="text-purple-800 font-medium">
-                    {selectedDate?.toLocaleDateString("en-IN", {
-                      weekday: "long",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </span>
-                </div>
-              </div>
-
-              {/* Class Type Selection */}
-              <div className="flex justify-center mb-8">
-                <div className="bg-white p-2 rounded-xl border border-gray-200 inline-flex">
-                  <button
-                    onClick={() => setClassType("online")}
-                    className={`px-6 py-2 rounded-lg font-medium transition-all ${
-                      classType === "online"
-                        ? "bg-blue-100 text-blue-700 border border-blue-300"
-                        : "text-gray-600 hover:bg-gray-100"
-                    }`}
-                  >
-                    Online Classes
-                  </button>
-                  <button
-                    onClick={() => setClassType("offline")}
-                    className={`px-6 py-2 rounded-lg font-medium transition-all ${
-                      classType === "offline"
-                        ? "bg-green-100 text-green-700 border border-green-300"
-                        : "text-gray-600 hover:bg-gray-100"
-                    }`}
-                  >
-                    Offline Classes
-                  </button>
+                <div className="space-y-2">
+                  <div className="inline-flex items-center bg-purple-50 px-4 py-2 rounded-full">
+                    <span className="text-purple-800 font-medium">
+                      {selectedDate?.toLocaleDateString("en-IN", {
+                        weekday: "long",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </span>
+                  </div>
+                  <div className="inline-flex items-center bg-blue-50 px-4 py-2 rounded-full ml-2">
+                    <span className="text-blue-800 font-medium capitalize">
+                      {classType} Classes
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -686,10 +774,7 @@ const SheduleDemoClass = () => {
                   <h3 className="text-xl font-semibold text-gray-700 mb-2">
                     No {classType} slots available
                   </h3>
-                  <p className="text-gray-600">
-                    Please try a different date or switch to{" "}
-                    {classType === "online" ? "offline" : "online"} classes
-                  </p>
+                  <p className="text-gray-600">Please try a different date</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
@@ -709,6 +794,12 @@ const SheduleDemoClass = () => {
                             <Clock className="w-5 h-5 mr-2 text-purple-600" />
                             <span className="text-lg font-bold">
                               {slot.classTime}
+                            </span>
+                          </div>
+                          <div className="flex items-center text-gray-600 mb-2">
+                            <User className="w-4 h-4 mr-2" />
+                            <span className="text-sm">
+                              Coach: {slot.coachName}
                             </span>
                           </div>
                         </div>
@@ -734,6 +825,12 @@ const SheduleDemoClass = () => {
                           <span className="text-sm">{slot.centerName}</span>
                         </div>
                       )}
+
+                      <div className="mt-3 text-xs text-gray-500">
+                        Available spots:{" "}
+                        {slot.maximumKidCount - slot.enrolledKidCount} of{" "}
+                        {slot.maximumKidCount}
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -762,7 +859,7 @@ const SheduleDemoClass = () => {
                 disabled={!canProceed()}
                 className={`flex items-center px-8 py-3 rounded-lg font-medium transition-all ${
                   canProceed()
-                    ? "bg-primary text-white hover:bg-primary shadow-lg"
+                    ? "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
                     : "bg-gray-200 text-gray-400 cursor-not-allowed"
                 }`}
               >
@@ -775,7 +872,7 @@ const SheduleDemoClass = () => {
                 disabled={!selectedSlot}
                 className={`px-8 py-3 rounded-lg font-medium transition-all ${
                   selectedSlot
-                    ? "bg-primary text-white hover:bg-primary shadow-lg"
+                    ? "bg-green-600 text-white hover:bg-green-700 shadow-lg"
                     : "bg-gray-200 text-gray-400 cursor-not-allowed"
                 }`}
               >
@@ -790,7 +887,7 @@ const SheduleDemoClass = () => {
           <div className="mt-6 bg-green-50 border-2 border-green-200 rounded-xl p-6">
             <div className="flex items-center mb-4">
               <Check className="w-6 h-6 text-green-600 mr-2" />
-              <h3 className="text-lg font-semibold text-primary">
+              <h3 className="text-lg font-semibold text-green-800">
                 Your Demo Class Details
               </h3>
             </div>
@@ -814,11 +911,16 @@ const SheduleDemoClass = () => {
                   {selectedSlot.classTime}
                 </span>
               </div>
-
               <div>
                 <span className="text-gray-600 block">Class Type</span>
+                <span className="font-semibold text-gray-800 capitalize">
+                  {classType}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-600 block">Coach</span>
                 <span className="font-semibold text-gray-800">
-                  {classType === "online" ? "Online" : "Offline"}
+                  {selectedSlot.coachName}
                 </span>
               </div>
               {classType === "offline" && (

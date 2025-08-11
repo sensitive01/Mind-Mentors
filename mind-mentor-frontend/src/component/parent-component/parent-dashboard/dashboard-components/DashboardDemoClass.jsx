@@ -1287,8 +1287,8 @@ const DashboardDemoClass = () => {
                   Great Job!
                 </h4>
                 <p className="text-gray-600 text-sm mb-4">
-                  Your demo class was successfully completed. Ready to continue
-                  your learning journey?
+                  Kid demo class was successfully completed. Ready to continue
+                  Kid learning journey?
                 </p>
               </div>
             </div>

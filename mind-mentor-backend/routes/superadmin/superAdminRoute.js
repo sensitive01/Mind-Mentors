@@ -26,6 +26,10 @@ userRoute.put('/change-the-employee-password/:empId',userController.changeThePas
 
 
 userRoute.get('/get-rfid-count-chess',userController.getChessRfidCount);
+userRoute.get('/get-chess-kid-playing-data-table',userController.getLatestKids);
+userRoute.get('/get-chess-kid-performance-data/:chessKidId',userController.getChessKidPerformanceData);
+
+
 
 
 
@@ -93,10 +97,23 @@ userRoute.put("/response-to-ticket/:ticketId", userController.reponseToTicket);
 userRoute.put("/update-ticket-priority/:ticketId", userController.updateTicketPriority);
 
 userRoute.get("/get-my-detailed-attandance/:empId", userController.getMyDetailedAttendance);
+userRoute.get(
+  "/get-all-paid-package-data/:enqId",
+  userController.getAllPaidPackageData
+);
 
 
 
 
+
+
+
+userRoute.put("/update-paid-package-data/:enqId", userController.updatePackageData);
+userRoute.get("/get-physical-center-data", userController.getPhysicalCenterDetails);
+userRoute.get(
+  "/get-kid-for-invoice-generation",
+  userController.getKidForInvoiceGeneration
+);
 
 
 

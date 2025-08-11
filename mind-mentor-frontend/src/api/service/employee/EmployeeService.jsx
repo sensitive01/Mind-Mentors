@@ -169,7 +169,7 @@ export const fetchAllEnquiries = async () => {
   const response = await operationDeptInstance.get("/enquiry-form");
   return response.data;
 };
-export const updateEnquiry = async (updatedData,empId) => {
+export const updateEnquiry = async (updatedData, empId) => {
   const response = await operationDeptInstance.put(
     `/enquiry-form/${updatedData._id}/${empId}`,
     updatedData
@@ -1023,25 +1023,27 @@ export const getKidSheduleDemoDetailsEmployee = async (kidId) => {
   return response;
 };
 
-export const employeeBookDemoClassData = async (kidId,bookingDetails,empId) => {
-  const response = await userInstance.post(
-    `/book-demo-class-data/${kidId}`,{bookingDetails,empId}
-  );
+export const employeeBookDemoClassData = async (
+  kidId,
+  bookingDetails,
+  empId
+) => {
+  const response = await userInstance.post(`/book-demo-class-data/${kidId}`, {
+    bookingDetails,
+    empId,
+  });
   return response;
 };
 
-export const employeeCancelDemoClass = async (classId,kidId,empId) => {
+export const employeeCancelDemoClass = async (classId, kidId, empId) => {
   const response = await userInstance.delete(
     `/cancel-demo-sheduled-for-kid/${classId}/${kidId}/${empId}`
   );
   return response;
 };
 
-
 export const superAdminGetConductedClass = async () => {
-  const response = await userInstance.get(
-    `/get-conducted-class-details`
-  );
+  const response = await userInstance.get(`/get-conducted-class-details`);
   return response;
 };
 
@@ -1053,8 +1055,43 @@ export const getMyDetailedAttandance = async (empId) => {
 };
 
 export const getRFID = async () => {
+  const response = await userInstance.get(`/get-rfid-count-chess`);
+  return response;
+};
+
+export const getAllPaidPackageData = async (enqId) => {
   const response = await userInstance.get(
-    `/get-rfid-count-chess`
+    `/get-all-paid-package-data/${enqId}`
   );
+  return response;
+};
+
+export const employeeUpdatePackageData = async (enqId, packageUpdate) => {
+  const response = await userInstance.put(
+    `/update-paid-package-data/${enqId}`,
+    { packageUpdate }
+  );
+  return response;
+};
+
+export const getPhysicalCenterData = async () => {
+  const response = await userInstance.get(`/get-physical-center-data`);
+  return response;
+};
+
+export const getKidsForInvoiceGeneration = async () => {
+  const response = await userInstance.get(`/get-kid-for-invoice-generation`);
+  return response;
+};
+
+
+export const getChessPayingKidTable = async (page = 1, limit = 10) => {
+  const response = await userInstance.get(`/get-chess-kid-playing-data-table?page=${page}&limit=${limit}`);
+  return response;
+};
+
+
+export const getChessKidPerformance = async (chessKidId) => {
+  const response = await userInstance.get(`/get-chess-kid-performance-data/${chessKidId}`);
   return response;
 };

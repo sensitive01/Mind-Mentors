@@ -9,19 +9,20 @@ const employeeSchema = new mongoose.Schema(
     department: { type: String },
     role: { type: String, default: "employee" },
     status: { type: String, default: "Active" },
-    phoneNumber: { type: String }, // Changed from Number to String
+    phoneNumber: { type: String },
     address: { type: String },
     gender: { type: String },
     isPasswordChanged: { type: Boolean, default: false },
     centerName: { type: String, default: null },
     centerId: { type: String, default: null },
-    modes: [{ type: String }], // Changed to array
+    modes: [{ type: String }], 
+    perHourRate: { type: Number, default: 0 },
+    employmentType: { type: String, default: null },
   },
   {
     timestamps: true,
   }
 );
-
 
 // Employee Model
 const Employee = mongoose.model("Employee", employeeSchema);

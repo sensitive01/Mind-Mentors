@@ -12,6 +12,7 @@ const { zoomIntegration2 } = require("../../utils/zoomIntegration2");
 const bbbClassModel = require("../../model/bbbClassModel/bbbClassModel");
 const NotesSection = require("../../model/enquiryNoteSection");
 const demoClass = require("../../model/demoClassModel");
+const kidSchema = require("../../model/kidModel");
 
 // Post availabile days for the class
 
@@ -293,16 +294,26 @@ const addFeedBackAndAttendance = async (req, res) => {
           const recNote = `Recommending level upgrade from ${classType.program} with level ${classType.level} to ${student.levelUpdate}`;
 
           const enqData = await operationDeptModel.findOneAndUpdate(
-            { kidId: student.studentId },
+            { kidId: student.studentId, "programs.program": classType.program },
             {
               $set: {
                 recomentedLevel: student.levelUpdate,
-                isLevelPromoteRecomented:true,
+                isLevelPromoteRecomented: true,
                 note: recNote,
                 "scheduleDemo.status": "Conducted",
+                "programs.$.level": student.levelUpdate,
               },
             },
             { new: true, upsert: true }
+          );
+
+          await kidSchema.findOneAndUpdate(
+            {
+              _id: student.studentId,
+              "selectedProgram.program": classType.program,
+            },
+            { $set: { "selectedProgram.$.level": student.levelUpdate } },
+            { new: true }
           );
 
           await enquiryLogs.findByIdAndUpdate(
@@ -348,9 +359,7 @@ const addFeedBackAndAttendance = async (req, res) => {
                 coachId,
                 comment: `Attendance marked as ${
                   student.present ? "Present" : "Absent"
-                }. Feedback: "${
-                  student.feedback || "No feedback provided"
-                }".`,
+                }. Feedback: "${student.feedback || "No feedback provided"}".`,
                 conductedClassId: classId,
                 createdAt: new Date(),
                 employeeName: empData.firstName,

@@ -25,7 +25,9 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import PaymentIcon from "@mui/icons-material/Payment";
 import ReceiptIcon from "@mui/icons-material/Receipt";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import AddIcon from "@mui/icons-material/Add";
 import { jsPDF } from "jspdf";
+import { useNavigate } from "react-router-dom";
 
 const theme = createTheme({
   palette: {
@@ -110,6 +112,7 @@ const Prospects = () => {
   const [loading, setLoading] = useState(true);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -153,6 +156,13 @@ const Prospects = () => {
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
+  };
+
+  const handleGenerateInvoice = () => {
+    // Navigate to the invoice generation page
+    navigate('/super-admin/department/generate-invoice');
+    // Alternative navigation with state if you need to pass data:
+    // navigate('/generate-invoice', { state: { someData: 'value' } });
   };
 
   const getStatusChipProps = (status) => {
@@ -433,10 +443,31 @@ const Prospects = () => {
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ width: "100%", height: "100%", p: 3 }}>
-        <Box sx={{ mb: 3 }}>
+        {/* Header with title and Generate Invoice button */}
+        <Box sx={{ mb: 3, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Typography variant="h5" color="text.primary">
             Invoice Management
           </Typography>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={handleGenerateInvoice}
+            sx={{
+              px: 3,
+              py: 1,
+              fontSize: "0.875rem",
+              fontWeight: 600,
+              boxShadow: "0px 2px 8px rgba(100, 43, 143, 0.24)",
+              "&:hover": {
+                boxShadow: "0px 4px 12px rgba(100, 43, 143, 0.32)",
+                transform: "translateY(-1px)",
+              },
+              transition: "all 0.2s ease-in-out",
+            }}
+          >
+            Generate Invoice
+          </Button>
         </Box>
 
         <Paper
@@ -506,7 +537,7 @@ const Prospects = () => {
         </Paper>
       </Box>
 
-      {/* Invoice Detail Dialog */}
+      {/* Invoice Detail Dialog - keeping the same as original */}
       <Dialog
         open={openDialog}
         onClose={handleCloseDialog}

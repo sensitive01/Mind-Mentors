@@ -127,72 +127,82 @@ const RenderClassList = ({
             </IconText>
           </Box>
 
-          {isLiveTab && classItem.type === "online" && (
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: { xs: "row", sm: "column" },
-                gap: 1,
-                position: { xs: "relative", sm: "absolute" },
-                right: { sm: "16px" },
-                top: { sm: "50%" },
-                transform: { sm: "translateY(-50%)" },
-                justifyContent: "center",
-                width: { xs: "100%", sm: "auto" },
-              }}
-            >
-              <Button
-                variant="contained"
-                color="primary"
-                startIcon={
-                  classItem.coachJoinUrl ? <ExternalLinkIcon /> : <JoinIcon />
-                }
-                onClick={(e) => handleJoinClick(e, classItem)}
-                disabled={!classItem.coachJoinUrl}
+          {isLiveTab &&
+            (classItem.type === "online" || classItem.type === "offline") && (
+              <Box
                 sx={{
-                  flex: { xs: 1, sm: "none" },
-                  whiteSpace: "nowrap",
-                  bgcolor: classItem.coachJoinUrl
-                    ? customColors.primary
-                    : "grey.400",
-                  "&:hover": {
-                    bgcolor: classItem.coachJoinUrl
-                      ? `${customColors.primary}dd`
-                      : "grey.500",
-                  },
-                  "&:disabled": {
-                    bgcolor: "grey.300",
-                    color: "grey.600",
-                  },
+                  display: "flex",
+                  flexDirection: { xs: "row", sm: "column" },
+                  gap: 1,
+                  position: { xs: "relative", sm: "absolute" },
+                  right: { sm: "16px" },
+                  top: { sm: "50%" },
+                  transform: { sm: "translateY(-50%)" },
+                  justifyContent: "center",
+                  width: { xs: "100%", sm: "auto" },
                 }}
-                title={
-                  classItem.coachJoinUrl
-                    ? "Click to join class in new tab"
-                    : "No join link available"
-                }
               >
-                {classItem.coachJoinUrl ? "Join Class" : "No Link"}
-              </Button>
-              <Button
-                variant="outlined"
-                color="primary"
-                startIcon={<AttendanceIcon />}
-                onClick={(e) => handleAttendanceClick(e, classItem)}
-                sx={{
-                  flex: { xs: 1, sm: "none" },
-                  whiteSpace: "nowrap",
-                  borderColor: customColors.primary,
-                  color: customColors.primary,
-                  "&:hover": {
+                {/* Join Class button - Only for online classes */}
+                {classItem.type === "online" && (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    startIcon={
+                      classItem.coachJoinUrl ? (
+                        <ExternalLinkIcon />
+                      ) : (
+                        <JoinIcon />
+                      )
+                    }
+                    onClick={(e) => handleJoinClick(e, classItem)}
+                    disabled={!classItem.coachJoinUrl}
+                    sx={{
+                      flex: { xs: 1, sm: "none" },
+                      whiteSpace: "nowrap",
+                      bgcolor: classItem.coachJoinUrl
+                        ? customColors.primary
+                        : "grey.400",
+                      "&:hover": {
+                        bgcolor: classItem.coachJoinUrl
+                          ? `${customColors.primary}dd`
+                          : "grey.500",
+                      },
+                      "&:disabled": {
+                        bgcolor: "grey.300",
+                        color: "grey.600",
+                      },
+                    }}
+                    title={
+                      classItem.coachJoinUrl
+                        ? "Click to join class in new tab"
+                        : "No join link available"
+                    }
+                  >
+                    {classItem.coachJoinUrl ? "Join Class" : "No Link"}
+                  </Button>
+                )}
+
+                {/* Add Attendance button - For both online and offline classes */}
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  startIcon={<AttendanceIcon />}
+                  onClick={(e) => handleAttendanceClick(e, classItem)}
+                  sx={{
+                    flex: { xs: 1, sm: "none" },
+                    whiteSpace: "nowrap",
                     borderColor: customColors.primary,
-                    bgcolor: `${customColors.primary}11`,
-                  },
-                }}
-              >
-                Add Attendance
-              </Button>
-            </Box>
-          )}
+                    color: customColors.primary,
+                    "&:hover": {
+                      borderColor: customColors.primary,
+                      bgcolor: `${customColors.primary}11`,
+                    },
+                  }}
+                >
+                  Add Attendance
+                </Button>
+              </Box>
+            )}
         </ClassCard>
       ))}
     </>

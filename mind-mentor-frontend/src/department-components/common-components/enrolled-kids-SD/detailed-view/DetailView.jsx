@@ -30,18 +30,18 @@ const DetailCard = ({ title, value, isEmail = false }) => (
     >
       {title}
     </Typography>
-    <Typography 
-      variant="body1" 
-      color="text.primary" 
-      sx={{ 
+    <Typography
+      variant="body1"
+      color="text.primary"
+      sx={{
         lineHeight: 1.6,
         // Handle email overflow
-        wordBreak: isEmail ? 'break-all' : 'normal',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: isEmail ? 'normal' : 'nowrap',
-        fontSize: isEmail ? '0.85rem' : '1rem',
-        maxWidth: '100%'
+        wordBreak: isEmail ? "break-all" : "normal",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: isEmail ? "normal" : "nowrap",
+        fontSize: isEmail ? "0.85rem" : "1rem",
+        maxWidth: "100%",
       }}
       title={isEmail ? value : undefined} // Show full email on hover
     >
@@ -98,16 +98,16 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
   // Helper function to format email for better display
   const formatEmailForDisplay = (email) => {
     if (!email) return "N/A";
-    
+
     const formattedEmail = formatEmail(email);
-    
+
     // If email is too long, truncate intelligently
     if (formattedEmail.length > 30) {
-      const atIndex = formattedEmail.indexOf('@');
+      const atIndex = formattedEmail.indexOf("@");
       if (atIndex > 0) {
         const username = formattedEmail.substring(0, atIndex);
         const domain = formattedEmail.substring(atIndex);
-        
+
         // Show first 10 chars of username + ... + full domain
         if (username.length > 10) {
           return `${username.substring(0, 10)}...${domain}`;
@@ -132,9 +132,9 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                 <DetailCard title="PARENT NAME" value={data.parentName} />
               </Grid>
               <Grid item xs={12} md={3}>
-                <DetailCard 
-                  title="EMAIL" 
-                  value={formatEmailForDisplay(data.email)} 
+                <DetailCard
+                  title="EMAIL"
+                  value={formatEmailForDisplay(data.email)}
                   isEmail={true}
                 />
               </Grid>
@@ -147,7 +147,9 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
               <Grid item xs={12} md={3}>
                 <DetailCard
                   title="CONTACT NUMBER"
-                  value={formatWhatsAppNumber(data?.contactNumber || data?.whatsappNumber)}
+                  value={formatWhatsAppNumber(
+                    data?.contactNumber || data?.whatsappNumber
+                  )}
                 />
               </Grid>
             </Grid>
@@ -207,6 +209,27 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                 />
               </Grid>
 
+              {data.enquiryStatus === "Active" && !data.classAssigned && (
+                <Grid item xs={12} md={3} style={{ overflow: "visible" }}>
+                  <DetailCard
+                    title={"VIEW PACKAGE"}
+                    value={
+                      <div className="flex flex-col gap-3 border-2 border-primary rounded-lg">
+                        <button
+                          onClick={() =>
+                            navigate(
+                              `/${department}/department/view-parent-package-details/${data._id}`
+                            )
+                          }
+                          className="w-full px-2 py-2 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:border-primary/80 hover:text-white transition-all duration-800 text-sm font-medium rounded-md shadow-2xl"
+                        >
+                          View Package
+                        </button>
+                      </div>
+                    }
+                  />
+                </Grid>
+              )}
               {data.enquiryStatus === "Active" && !data.classAssigned && (
                 <Grid item xs={12} md={3} style={{ overflow: "visible" }}>
                   <DetailCard
@@ -317,7 +340,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
           </Grid>
         </Grid>
       </Box>
-      
+
       <EditDialogBox
         showEdit={showEdit}
         onEditClose={onEditClose}

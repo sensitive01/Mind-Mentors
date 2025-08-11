@@ -20,7 +20,7 @@ const operationDeptSchema = new mongoose.Schema(
     email: { type: String },
     relationship: { type: String },
 
-    source: { type: String,default:"MindMentorz Online" },
+    source: { type: String, default: "MindMentorz Online" },
     message: { type: String },
     notes: { type: String, default: "Empty" },
 
@@ -128,6 +128,8 @@ const operationDeptSchema = new mongoose.Schema(
     paymentRenewal: { type: String },
     classAssigned: { type: Boolean, default: false },
     employeeAssisted: { type: String },
+    perHourRate: { type: Number },
+    employmentType: { type: String },
   },
   { timestamps: true }
 );
