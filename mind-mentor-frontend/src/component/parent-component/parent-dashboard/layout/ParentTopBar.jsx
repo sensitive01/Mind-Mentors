@@ -1,16 +1,38 @@
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Menu } from "lucide-react";
+import { Menu, User, LogOut } from "lucide-react";
 import mindmentors from "../../../../images/mindmentorz.png";
 import info from "../../../../images/info_icon.png";
-import logoutIcon from "../../../../images/logout icon.png";
+import account from "../../../../images/boy.png";
 
 const ParentTopBar = ({ onMenuClick }) => {
   const navigate = useNavigate();
-  
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
   const handleLogout = () => {
     localStorage.clear();
     navigate("/");
   };
+
+  const handleProfileClick = () => {
+    navigate("/parent/profile/manage");
+    setIsDropdownOpen(false);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <div className="bg-white shadow-lg h-16">
@@ -46,20 +68,45 @@ const ParentTopBar = ({ onMenuClick }) => {
             />
           </button>
 
-          {/* Logout Button */}
-          <button
-            onClick={handleLogout}
-            className="flex items-center space-x-1 sm:space-x-2 p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors group"
-          >
-            <img
-              src={logoutIcon}
-              alt="Log Out"
-              className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 object-contain"
-            />
-            <span className="hidden sm:block text-xs sm:text-sm lg:text-base font-medium text-gray-700 group-hover:text-gray-900 transition-colors">
-              Logout
-            </span>
-          </button>
+          {/* Profile Dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="relative group flex items-center justify-center p-1 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-full overflow-hidden transform transition-all duration-300 ease-in-out group-hover:scale-110 group-hover:shadow-lg group-hover:ring-2 group-hover:ring-[#642b8f]">
+                <img
+                  src={account}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="w-2.5 h-2.5 bg-green-500 rounded-full absolute bottom-0 right-0 border-2 border-white"></div>
+            </button>
+
+            {/* Dropdown Menu */}
+            {isDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50 py-1">
+                <button
+                  onClick={handleProfileClick}
+                  className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                >
+                  <User size={16} className="mr-3 text-gray-500" />
+                  Profile
+                </button>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setIsDropdownOpen(false);
+                  }}
+                  className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                >
+                  <LogOut size={16} className="mr-3 text-gray-500" />
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

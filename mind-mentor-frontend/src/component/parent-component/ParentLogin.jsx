@@ -1,5 +1,16 @@
 import { useState } from "react";
-import { ArrowRight, ArrowLeft } from "lucide-react";
+import {
+  Box,
+  Typography,
+  Button,
+  IconButton,
+  useTheme,
+  useMediaQuery,
+  Card,
+  CardContent,
+  Avatar,
+} from "@mui/material";
+import { ArrowRight, ArrowLeft, Smartphone } from "lucide-react";
 import { validateForm } from "../../utils/Validation";
 import { ToastContainer, toast } from "react-toastify";
 import PhoneInput from "react-phone-input-2";
@@ -10,6 +21,10 @@ import mindMentorImage from "../../assets/newLogo.png";
 
 const ParentLogin = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.down("md"));
+
   const [mobile, setMobile] = useState("");
   const [country, setCountry] = useState("in");
   const [isCooldown, setIsCooldown] = useState(false);
@@ -58,114 +73,385 @@ const ParentLogin = () => {
   };
 
   const phoneInputStyle = {
-    container: "!w-full",
-    input:
-      "!w-full !h-12 !text-base !pl-12 !pr-4 !border !border-gray-300 !rounded-lg focus:!ring-2 focus:!ring-[rgb(177,21,177)] focus:!border-[rgb(177,21,177)] !transition-colors",
-    button: "!h-12 !bg-transparent !border-r !border-gray-300 !rounded-l-lg",
-    dropdown: "!bg-white !shadow-lg !rounded-lg !border !border-gray-200 !mt-1",
-    search: "!mx-2 !my-2 !px-3 !py-2 !border !border-gray-300 !rounded-md",
+    container: "!w-full !block",
+    input: isMobile
+      ? "!w-full !h-14 !text-base !pl-14 !pr-4 !border-2 !border-gray-200 !rounded-lg !bg-white focus:!ring-0 focus:!border-[#642b8f] !transition-all !duration-300 !outline-none !box-border"
+      : "!w-full !h-16 !text-lg !pl-16 !pr-5 !border-2 !border-gray-200 !rounded-lg !bg-white focus:!ring-0 focus:!border-[#642b8f] !transition-all !duration-300 !outline-none !box-border",
+    button: isMobile
+      ? "!h-14 !bg-transparent !border-0 !border-r-2 !border-r-gray-200 !rounded-l-lg !px-3 !flex !items-center !justify-center !absolute !left-0 !top-0 !z-10"
+      : "!h-16 !bg-transparent !border-0 !border-r-2 !border-r-gray-200 !rounded-l-lg !px-4 !flex !items-center !justify-center !absolute !left-0 !top-0 !z-10",
+    dropdown:
+      "!bg-white !shadow-xl !rounded-lg !border-2 !border-gray-200 !mt-1 !z-[1000] !min-w-[350px] !w-[400px] !max-h-[250px] !overflow-y-auto !left-0",
+    search:
+      "!w-full !mx-0 !my-0 !px-4 !py-3 !border-0 !border-b !border-b-gray-200 !rounded-none !text-base !h-12 !bg-gray-50 !box-border",
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-1 sm:p-4 md:p-6 lg:p-8">
-      {/* Main Container with margins on all sides */}
-      <div className="max-w-7xl mx-auto bg-white rounded-lg sm:rounded-xl md:rounded-2xl shadow-lg overflow-hidden h-[calc(100vh-0.5rem)] sm:h-[calc(100vh-2rem)] md:h-[calc(100vh-3rem)] lg:h-[calc(100vh-4rem)]">
-        <div className="flex flex-col lg:flex-row h-full">
-          {/* Left Side - Logo Section */}
-          <div className="bg-[#642b8f] text-white w-full lg:w-2/5 flex flex-col justify-between h-[35vh] sm:h-1/2 lg:h-full px-4 py-4 sm:px-6 sm:py-8 lg:px-8 lg:py-12">
-            <div className="flex-grow flex flex-col justify-center items-center lg:items-start text-center lg:text-left">
-              <h2 className="text-base sm:text-2xl md:text-3xl lg:text-4xl font-bold leading-tight mb-2 sm:mb-6">
-                Welcome to
-              </h2>
-              <img
-                src={mindMentorImage}
-                alt="Mind Mentorz Logo"
-                className="w-full max-w-[160px] sm:max-w-xs md:max-w-sm lg:max-w-[80%] h-auto object-contain"
-              />
-            </div>
-            <div className="flex justify-center lg:justify-start items-center w-full">
-              <button
-                onClick={() => navigate("/")}
-                className="flex items-center text-xs sm:text-sm hover:underline transition-all duration-300 hover:opacity-80"
+    <Box
+      sx={{
+        width: "100vw",
+        height: "100vh",
+        background: "#642b8f",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+      }}
+    >
+      {/* Header */}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          p: { xs: 2, sm: 3 },
+          minHeight: { xs: "64px", sm: "72px" },
+        }}
+      >
+        {/* Logo */}
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <img
+            src={mindMentorImage}
+            alt="Mind Mentorz Logo"
+            style={{
+              height: isMobile ? "28px" : "36px",
+              width: "auto",
+              filter: "brightness(0) invert(1)",
+            }}
+          />
+        </Box>
+
+        {/* Back Button */}
+        <IconButton
+          onClick={() => navigate("/")}
+          sx={{
+            backgroundColor: "rgba(255,255,255,0.1)",
+            color: "white",
+            border: "1px solid rgba(255,255,255,0.2)",
+            width: { xs: 40, sm: 44 },
+            height: { xs: 40, sm: 44 },
+            "&:hover": {
+              backgroundColor: "rgba(255,255,255,0.2)",
+            },
+          }}
+        >
+          <ArrowLeft size={isMobile ? 18 : 20} />
+        </IconButton>
+      </Box>
+
+      {/* Main Content */}
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          px: { xs: 2, sm: 4 },
+          pb: { xs: 2, sm: 4 },
+        }}
+      >
+        {/* Main Card */}
+        <Card
+          elevation={0}
+          sx={{
+            width: "100%",
+            maxWidth: { xs: "100%", sm: "500px", md: "550px", lg: "600px" },
+            backgroundColor: "white",
+            borderRadius: { xs: 2, sm: 3 },
+            boxShadow: "0 10px 40px rgba(0, 0, 0, 0.2)",
+          }}
+        >
+          <CardContent
+            sx={{
+              p: { xs: 4, sm: 5, md: 6 },
+              textAlign: "center",
+              "&:last-child": { pb: { xs: 4, sm: 5, md: 6 } },
+            }}
+          >
+            {/* Mobile Avatar */}
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                mb: { xs: 3, sm: 4 },
+              }}
+            >
+              <Avatar
+                sx={{
+                  width: { xs: 80, sm: 100, md: 120 },
+                  height: { xs: 80, sm: 100, md: 120 },
+                  backgroundColor: "#642b8f",
+                  position: "relative",
+                }}
               >
-                <ArrowLeft size={12} className="mr-1 sm:mr-2" />
-                Back to site
-              </button>
-            </div>
-          </div>
+                <Smartphone
+                  size={isMobile ? 32 : isTablet ? 40 : 48}
+                  style={{ color: "white" }}
+                />
 
-          {/* Right Side - Login Form Section */}
-          <div className="w-full lg:w-3/5 flex items-center justify-center flex-grow lg:h-full p-3 sm:p-6 md:p-8 lg:p-12">
-            <div className="w-full max-w-md mx-auto">
-              <div className="flex flex-col items-center mb-4 sm:mb-8">
-                <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-primary mb-1 sm:mb-3">
-                  Parents Login
-                </h2>
-                <p className="text-sm sm:text-lg text-black font-bold text-center">
-                  Login to continue
-                </p>
-              </div>
-
-              <form
-                onSubmit={handleSubmit}
-                className="space-y-3 sm:space-y-6 w-full"
-              >
-                <div className="space-y-1 sm:space-y-2">
-                  <label
-                    htmlFor="mobile"
-                    className="block text-xs sm:text-sm font-medium text-gray-700"
-                  >
-                    Enter Your WhatsApp Number
-                  </label>
-                  <div className="relative">
-                    <PhoneInput
-                      country={country}
-                      value={mobile}
-                      onChange={(value, countryData) => {
-                        setMobile(value);
-                        setCountry(countryData.countryCode);
-                      }}
-                      inputProps={{
-                        name: "mobile",
-                        required: true,
-                        autoFocus: true,
-                      }}
-                      containerClass={phoneInputStyle.container}
-                      inputClass={phoneInputStyle.input}
-                      buttonClass={phoneInputStyle.button}
-                      dropdownClass={phoneInputStyle.dropdown}
-                      searchClass={phoneInputStyle.search}
-                      enableSearch={true}
-                      countryCodeEditable={false}
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  className={`w-full bg-primary text-white py-2.5 sm:py-3 px-4 rounded-lg border-b-4 hover:border-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-300 text-sm sm:text-base font-medium flex items-center justify-center
-                     ${isCooldown ? "opacity-50 cursor-not-allowed" : ""}`}
-                  disabled={isCooldown}
+                {/* WhatsApp Badge */}
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: -4,
+                    right: -4,
+                    width: { xs: 24, sm: 28, md: 32 },
+                    height: { xs: 24, sm: 28, md: 32 },
+                    backgroundColor: "#25D366",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: "2px solid white",
+                  }}
                 >
-                  Send OTP <ArrowRight size={14} className="ml-2" />
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
+                  <Typography
+                    sx={{
+                      color: "white",
+                      fontWeight: "bold",
+                      fontSize: { xs: "10px", sm: "11px", md: "12px" },
+                    }}
+                  >
+                    W
+                  </Typography>
+                </Box>
+              </Avatar>
+            </Box>
+
+            {/* Welcome Text */}
+            <Typography
+              variant="h5"
+              sx={{
+                color: "#2c3e50",
+                fontWeight: 700,
+                mb: 1,
+                fontSize: { xs: "1.25rem", sm: "1.5rem" },
+              }}
+            >
+              Welcome Parent!
+            </Typography>
+
+            <Typography
+              variant="body2"
+              sx={{
+                color: "#7f8c8d",
+                mb: { xs: 3, sm: 4 },
+                fontSize: { xs: "0.85rem", sm: "0.95rem" },
+                lineHeight: 1.4,
+                px: { xs: 1, sm: 2 },
+              }}
+            >
+              Enter your WhatsApp number to get started with your child's
+              learning journey
+            </Typography>
+
+            {/* Form */}
+            <Box component="form" onSubmit={handleSubmit}>
+              {/* Phone Input Label */}
+              <Typography
+                variant="body2"
+                sx={{
+                  color: "#34495e",
+                  fontWeight: 600,
+                  mb: 1.5,
+                  textAlign: "left",
+                  fontSize: { xs: "0.85rem", sm: "0.9rem" },
+                }}
+              >
+                WhatsApp Number
+              </Typography>
+
+              {/* Phone Input */}
+              <Box
+                sx={{ mb: { xs: 2.5, sm: 3 }, position: "relative", zIndex: 1 }}
+              >
+                <Box
+                  sx={{
+                    width: "100%",
+                    "& .react-tel-input": {
+                      width: "100% !important",
+                      display: "block !important",
+                    },
+                    "& .react-tel-input .form-control": {
+                      width: "100% !important",
+                      borderRadius: "8px",
+                      boxSizing: "border-box",
+                    },
+                    "& .react-tel-input .flag-dropdown": {
+                      borderRadius: "8px 0 0 8px",
+                      position: "absolute",
+                      zIndex: 1,
+                    },
+                    "& .react-tel-input .selected-flag": {
+                      width: "auto",
+                      minWidth: "52px",
+                    },
+                    "& .react-tel-input .country-list": {
+                      width: "400px !important",
+                      minWidth: "350px !important",
+                      borderRadius: "8px",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                      left: "0 !important",
+                      right: "auto !important",
+                      maxHeight: "250px !important",
+                      overflowY: "auto !important",
+                    },
+                    "& .react-tel-input .country-list .country": {
+                      padding: "12px 16px !important",
+                      fontSize: "15px !important",
+                      display: "flex !important",
+                      alignItems: "center !important",
+                      gap: "12px !important",
+                      whiteSpace: "nowrap !important",
+                      overflow: "visible !important",
+                      textOverflow: "unset !important",
+                    },
+                    "& .react-tel-input .country-list .country .flag": {
+                      marginRight: "12px !important",
+                      flexShrink: 0,
+                    },
+                    "& .react-tel-input .country-list .country .country-name": {
+                      flex: 1,
+                      minWidth: "200px !important",
+                      overflow: "visible !important",
+                      textOverflow: "unset !important",
+                      whiteSpace: "nowrap !important",
+                    },
+                    "& .react-tel-input .country-list .country .dial-code": {
+                      marginLeft: "auto !important",
+                      fontSize: "14px !important",
+                      color: "#666 !important",
+                      flexShrink: 0,
+                    },
+                    "& .react-tel-input .country-list .country:hover": {
+                      backgroundColor: "#f8f9fa !important",
+                    },
+                    "& .react-tel-input .country-list .search": {
+                      margin: "0 !important",
+                      padding: "12px 16px !important",
+                      borderRadius: "0 !important",
+                      borderBottom: "1px solid #e9ecef !important",
+                      backgroundColor: "#f8f9fa !important",
+                      width: "100% !important",
+                      boxSizing: "border-box !important",
+                      fontSize: "15px !important",
+                    },
+                    // Mobile responsive dropdown
+                    "@media (max-width: 600px)": {
+                      "& .react-tel-input .country-list": {
+                        width: "320px !important",
+                        minWidth: "300px !important",
+                        left: "0 !important",
+                        right: "auto !important",
+                      },
+                    },
+                  }}
+                >
+                  <PhoneInput
+                    country={country}
+                    value={mobile}
+                    onChange={(value, countryData) => {
+                      setMobile(value);
+                      setCountry(countryData.countryCode);
+                    }}
+                    inputProps={{
+                      name: "mobile",
+                      required: true,
+                      autoFocus: true,
+                    }}
+                    containerClass={phoneInputStyle.container}
+                    inputClass={phoneInputStyle.input}
+                    buttonClass={phoneInputStyle.button}
+                    dropdownClass={phoneInputStyle.dropdown}
+                    searchClass={phoneInputStyle.search}
+                    enableSearch={true}
+                    countryCodeEditable={false}
+                    preferredCountries={["in", "us", "gb", "ae"]}
+                    searchPlaceholder="Search countries..."
+                  />
+                </Box>
+              </Box>
+
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                variant="contained"
+                fullWidth
+                disabled={isCooldown}
+                sx={{
+                  backgroundColor: "#642b8f",
+                  py: { xs: 1.5, sm: 1.75 },
+                  fontSize: { xs: "0.95rem", sm: "1rem" },
+                  fontWeight: 600,
+                  borderRadius: 2,
+                  textTransform: "none",
+                  boxShadow: "none",
+                  border: "none",
+                  color: "white",
+                  mb: { xs: 2.5, sm: 3 },
+                  "&:hover": {
+                    backgroundColor: "#512166",
+                  },
+                  "&:disabled": {
+                    backgroundColor: "#bdc3c7",
+                    color: "white",
+                  },
+                }}
+                endIcon={!isCooldown && <ArrowRight size={18} />}
+              >
+                {isCooldown ? "Sending OTP..." : "Continue"}
+              </Button>
+
+              {/* Terms and Conditions */}
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "#95a5a6",
+                  fontSize: { xs: "0.75rem", sm: "0.8rem" },
+                  lineHeight: 1.3,
+                  display: "block",
+                }}
+              >
+                By continuing, you agree to our{" "}
+                <Typography
+                  component="span"
+                  sx={{
+                    color: "#642b8f",
+                    textDecoration: "underline",
+                    cursor: "pointer",
+                    fontWeight: 600,
+                  }}
+                >
+                  Terms & Conditions
+                </Typography>{" "}
+                and{" "}
+                <Typography
+                  component="span"
+                  sx={{
+                    color: "#642b8f",
+                    textDecoration: "underline",
+                    cursor: "pointer",
+                    fontWeight: 600,
+                  }}
+                >
+                  Privacy Policy
+                </Typography>
+              </Typography>
+            </Box>
+          </CardContent>
+        </Card>
+      </Box>
 
       <ToastContainer
-        position="top-right"
+        position={isMobile ? "top-center" : "top-right"}
         autoClose={5000}
         hideProgressBar={false}
         closeOnClick
         pauseOnHover
         draggable
         pauseOnFocusLoss
-        className="mt-16"
+        toastClassName="!text-sm !rounded-lg"
       />
-    </div>
+    </Box>
   );
 };
 

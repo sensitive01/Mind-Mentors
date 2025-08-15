@@ -665,3 +665,15 @@ export const getChessKidUserName = async () => {
     return err;
   }
 };
+
+
+export const getEnrollementStageSteps = async (kidId) => {
+  try {
+    const response = await parentInstance.get(
+      `/parent/get-entrollment-stage-status/${kidId}`
+    );
+    return response;
+  } catch (err) {
+    return err;
+  }
+};

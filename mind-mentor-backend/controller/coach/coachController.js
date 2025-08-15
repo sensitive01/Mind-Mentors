@@ -280,6 +280,7 @@ const addFeedBackAndAttendance = async (req, res) => {
 
                 "remainingClass.online": -1,
                 "remainingClass.both": -1,
+
               },
             }
           );
@@ -302,6 +303,7 @@ const addFeedBackAndAttendance = async (req, res) => {
                 note: recNote,
                 "scheduleDemo.status": "Conducted",
                 "programs.$.level": student.levelUpdate,
+                isDemoAttended:true
               },
             },
             { new: true, upsert: true }

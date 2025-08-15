@@ -130,6 +130,17 @@ const operationDeptSchema = new mongoose.Schema(
     employeeAssisted: { type: String },
     perHourRate: { type: Number },
     employmentType: { type: String },
+    
+    isParentNameCompleted: { type: Boolean, default: false },
+    isFirstKidAdded:{type:Boolean,default:false},
+    isProgramSelected:{type:Boolean,default:false},
+    isDemoSheduled:{type:Boolean,default:false},
+    isDemoAttended:{type:Boolean,default:false},
+    isPackageSelected:{type:Boolean,default:false},
+    isClassAssigned:{type:Boolean,default:false},
+    isEnrollmementStepCompleted:{type:Boolean,default:false}
+
+
   },
   { timestamps: true }
 );

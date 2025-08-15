@@ -1,23 +1,31 @@
 import { useContext, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import {
+  Box,
+  Typography,
+  Button,
+  IconButton,
+  useTheme,
+  useMediaQuery,
+  Card,
+  CardContent,
+  TextField,
+  Checkbox,
+  FormControlLabel,
+  Grid,
+  Stepper,
+  Step,
+  StepLabel,
+  Container,
+} from "@mui/material";
 import PhoneInput from "react-phone-input-2";
-import { ArrowRight, ArrowLeft } from "lucide-react";
+import { ArrowRight, ArrowLeft, UserPlus } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import { StepperContext } from "../completion-status-bar/StepperContext";
-import Stepper from "../completion-status-bar/Stepper";
 import { useDispatch, useSelector } from "react-redux";
 import { setFormData } from "../../store/regDataParentKidsSlice";
 import { registerKidData } from "../../api/service/parent/ParentService";
 import mindMentorImage from "../../assets/newLogo.png";
-
-const phoneInputStyle = {
-  container: "!w-full",
-  input:
-    "!w-full !h-12 !text-base !pl-12 !pr-4 !border !border-gray-300 !rounded-lg focus:!ring-2 focus:!ring-[rgb(177,21,177)] !transition-colors",
-  button: "!h-12 !bg-transparent !border-r  !rounded-l-lg",
-  dropdown: "!bg-white !shadow-lg !rounded-lg !border !border-gray-300 !mt-1",
-  search: "!mx-2 !my-2 !px-3 !py-2 !border !border-gray-300 !rounded-md",
-};
 
 const ParentRegistration = () => {
   const navigate = useNavigate();
@@ -27,6 +35,10 @@ const ParentRegistration = () => {
   const { currentStep, nextStep } = useContext(StepperContext);
   const regFormData = useSelector((state) => state.formData);
 
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.down("md"));
+
   // Initialize form state from Redux
   const [formState, setFormState] = useState({
     mobile: phoneNumber || regFormData.mobile || "",
@@ -34,12 +46,14 @@ const ParentRegistration = () => {
     name: regFormData.name || "",
     childName: regFormData.childName || "",
     isMobileWhatsapp: regFormData.isMobileWhatsapp || true,
-    enqId: state.data.enqId,
-    parentId: state.data.parentId,
+    enqId: state?.data?.enqId || "",
+    parentId: state?.data?.parentId || "",
   });
 
   const [country, setCountry] = useState("in");
   const [isCooldown, setIsCooldown] = useState(false);
+
+  const steps = ["Parent Registration", "Kids Registration", "Enrollment"];
 
   // Handle form field changes
   const handleFieldChange = (field, value) => {
@@ -109,201 +123,476 @@ const ParentRegistration = () => {
     navigate("/parent/registration");
   };
 
+  const phoneInputStyle = {
+    container: "!w-full !relative",
+    input: isMobile
+      ? "!w-full !h-12 !text-sm !pl-12 !pr-3 !border-2 !border-gray-200 !rounded-lg !bg-white focus:!ring-0 focus:!border-[#642b8f] !transition-all !duration-300 !outline-none !box-border"
+      : "!w-full !h-14 !text-base !pl-14 !pr-4 !border-2 !border-gray-200 !rounded-lg !bg-white focus:!ring-0 focus:!border-[#642b8f] !transition-all !duration-300 !outline-none !box-border",
+    button: isMobile
+      ? "!h-12 !bg-transparent !border-0 !border-r-2 !border-r-gray-200 !rounded-l-lg !px-2 !flex !items-center !justify-center !absolute !left-0 !top-0 !z-10"
+      : "!h-14 !bg-transparent !border-0 !border-r-2 !border-r-gray-200 !rounded-l-lg !px-3 !flex !items-center !justify-center !absolute !left-0 !top-0 !z-10",
+    dropdown:
+      "!bg-white !shadow-lg !rounded-lg !border-2 !border-gray-200 !mt-1 !z-[1000] !min-w-[300px] !w-[350px] !max-h-[200px] !overflow-y-auto !left-0",
+    search:
+      "!w-full !mx-0 !my-0 !px-3 !py-2 !border-0 !border-b !border-b-gray-200 !rounded-none !text-sm !h-10 !bg-gray-50 !box-border",
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 p-1 xs:p-2 sm:p-4 md:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto bg-white rounded-lg sm:rounded-xl md:rounded-2xl shadow-lg overflow-hidden h-[calc(100vh-0.5rem)] xs:h-[calc(100vh-1rem)] sm:h-[calc(100vh-2rem)] md:h-[calc(100vh-3rem)] lg:h-[calc(100vh-4rem)]">
-        <div className="flex flex-col lg:flex-row h-full">
-          <div className="bg-[#642b8f] text-white w-full lg:w-2/5 flex flex-col justify-between h-[30vh] xs:h-[32vh] sm:h-[40vh] md:h-1/2 lg:h-full px-3 py-3 xs:px-4 xs:py-4 sm:px-6 sm:py-6 md:px-6 md:py-8 lg:px-8 lg:py-12">
-            <div className="flex-grow flex flex-col justify-center items-center lg:items-start text-center lg:text-left">
-              <h2 className="text-sm xs:text-base sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold leading-tight mb-1 xs:mb-2 sm:mb-4 md:mb-6">
-                Welcome to
-              </h2>
-              <img
-                src={mindMentorImage}
-                alt="Mind Mentorz Logo"
-                className="w-full max-w-[120px] xs:max-w-[140px] sm:max-w-[180px] md:max-w-sm lg:max-w-[80%] h-auto object-contain"
-              />
-            </div>
-            <div className="flex justify-center lg:justify-start items-center w-full mt-2 xs:mt-3 sm:mt-4">
-              <button
-                onClick={() => navigate(-1)}
-                className="flex items-center text-xs xs:text-xs sm:text-sm hover:underline transition-all duration-300 hover:opacity-80"
+    <Box
+      sx={{
+        width: "100vw",
+        height: "100vh",
+        background: "#642b8f",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+      }}
+    >
+      {/* Header */}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          p: { xs: 2, sm: 3 },
+          minHeight: { xs: "64px", sm: "72px" },
+        }}
+      >
+        {/* Logo */}
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <img
+            src={mindMentorImage}
+            alt="Mind Mentorz Logo"
+            style={{
+              height: isMobile ? "28px" : "36px",
+              width: "auto",
+              filter: "brightness(0) invert(1)",
+            }}
+          />
+        </Box>
+
+        {/* Back Button */}
+        <IconButton
+          onClick={() => navigate(-1)}
+          sx={{
+            backgroundColor: "rgba(255,255,255,0.1)",
+            color: "white",
+            border: "1px solid rgba(255,255,255,0.2)",
+            width: { xs: 40, sm: 44 },
+            height: { xs: 40, sm: 44 },
+            "&:hover": {
+              backgroundColor: "rgba(255,255,255,0.2)",
+            },
+          }}
+        >
+          <ArrowLeft size={isMobile ? 18 : 20} />
+        </IconButton>
+      </Box>
+
+      {/* Main Content */}
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "center",
+          px: { xs: 2, sm: 4 },
+          py: { xs: 1, sm: 2 },
+          overflow: "auto",
+          "&::-webkit-scrollbar": {
+            width: "8px",
+          },
+          "&::-webkit-scrollbar-track": {
+            background: "rgba(255,255,255,0.1)",
+            borderRadius: "4px",
+          },
+          "&::-webkit-scrollbar-thumb": {
+            background: "rgba(255,255,255,0.3)",
+            borderRadius: "4px",
+          },
+          "&::-webkit-scrollbar-thumb:hover": {
+            background: "rgba(255,255,255,0.5)",
+          },
+        }}
+      >
+        {/* Main Card */}
+        <Card
+          elevation={0}
+          sx={{
+            width: "100%",
+            maxWidth: { xs: "100%", sm: "600px", md: "700px", lg: "800px" },
+            minHeight: "auto",
+            backgroundColor: "white",
+            borderRadius: { xs: 2, sm: 3 },
+            boxShadow: "0 10px 40px rgba(0, 0, 0, 0.2)",
+            my: { xs: 1, sm: 2 },
+          }}
+        >
+          <CardContent
+            sx={{
+              p: { xs: 3, sm: 4, md: 5 },
+            }}
+          >
+            {/* Registration Avatar */}
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                mb: { xs: 2, sm: 3 },
+              }}
+            >
+              <Box
+                sx={{
+                  width: { xs: 60, sm: 70, md: 80 },
+                  height: { xs: 60, sm: 70, md: 80 },
+                  backgroundColor: "#642b8f",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
               >
-                <ArrowLeft size={14} className="mr-1 xs:mr-1 sm:mr-2" />
-                Back to previous
-              </button>
-            </div>
-          </div>
+                <UserPlus
+                  size={isMobile ? 24 : isTablet ? 28 : 32}
+                  style={{ color: "white" }}
+                />
+              </Box>
+            </Box>
 
-          <div className="w-full lg:w-3/5 flex flex-col h-full">
-            <div className="px-2 xs:px-3 sm:px-4 md:px-6 lg:px-8 pt-2 xs:pt-3 sm:pt-4 pb-2 xs:pb-3 sm:pb-4 border-b border-gray-100 flex-shrink-0">
-              <Stepper />
-            </div>
+            {/* Stepper */}
+            <Box sx={{ mb: { xs: 2, sm: 3 } }}>
+              <Stepper activeStep={currentStep - 1} alternativeLabel>
+                {steps.map((label) => (
+                  <Step key={label}>
+                    <StepLabel
+                      sx={{
+                        "& .MuiStepLabel-label": {
+                          fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                          fontWeight: 500,
+                        },
+                        "& .MuiStepIcon-root": {
+                          color: "#e0e0e0",
+                          fontSize: { xs: "1.2rem", sm: "1.5rem" },
+                        },
+                        "& .MuiStepIcon-root.Mui-active": {
+                          color: "#642b8f",
+                        },
+                        "& .MuiStepIcon-root.Mui-completed": {
+                          color: "#642b8f",
+                        },
+                      }}
+                    >
+                      {label}
+                    </StepLabel>
+                  </Step>
+                ))}
+              </Stepper>
+            </Box>
 
-            <div className="flex-1 flex flex-col justify-center px-2 xs:px-3 sm:px-4 md:px-6 lg:px-8 py-2 xs:py-3 sm:py-4">
-              <div className="w-full max-w-3xl mx-auto">
-                <div className="text-center mb-3 xs:mb-4 sm:mb-6">
-                  <h2 className="text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-primary mb-1 xs:mb-2">
-                    Update More Details to your Profile
-                  </h2>
-                  <p className="text-xs xs:text-sm text-black">
-                    The Details given will be kept confidential and will not be used
-                    for any marketing purposes
-                  </p>
-                </div>
+            {/* Header Text */}
+            <Typography
+              variant="h5"
+              sx={{
+                color: "#2c3e50",
+                fontWeight: 700,
+                mb: 1,
+                fontSize: { xs: "1.1rem", sm: "1.3rem", md: "1.5rem" },
+                textAlign: "center",
+              }}
+            >
+              Update More Details to your Profile
+            </Typography>
 
-                <form
-                  onSubmit={handleSubmit}
-                  className="space-y-3 xs:space-y-4 sm:space-y-5 border border-primary rounded-lg p-3 xs:p-4 sm:p-5 md:p-6"
-                  noValidate
-                >
-                  <div className="space-y-1">
-                    <div className="flex items-start mb-1 xs:mb-2">
-                      <input
-                        id="isMobileWhatsapp"
-                        type="checkbox"
+            <Typography
+              variant="body2"
+              sx={{
+                color: "#7f8c8d",
+                mb: { xs: 2, sm: 3 },
+                fontSize: { xs: "0.8rem", sm: "0.9rem" },
+                textAlign: "center",
+                lineHeight: 1.4,
+              }}
+            >
+              The Details given will be kept confidential and will not be used
+              for any marketing purposes
+            </Typography>
+
+            {/* Form Container - No Internal Scroll */}
+            <Box>
+              <Box component="form" onSubmit={handleSubmit}>
+                {/* Phone Number Section */}
+                <Box sx={{ mb: 3 }}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
                         checked={formState.isMobileWhatsapp}
                         onChange={handleCheckboxChange}
-                        className="mt-0.5 h-3 w-3 xs:h-4 xs:w-4 text-purple-600 rounded"
-                        aria-label="Is Phone Number same as WhatsApp number"
+                        sx={{
+                          color: "#642b8f",
+                          "&.Mui-checked": {
+                            color: "#642b8f",
+                          },
+                        }}
                       />
-                      <label
-                        htmlFor="isMobileWhatsapp"
-                        className="ml-2 text-xs xs:text-sm font-medium text-primary"
+                    }
+                    label={
+                      <Typography
+                        sx={{
+                          fontSize: { xs: "0.85rem", sm: "0.9rem" },
+                          color: "#642b8f",
+                          fontWeight: 600,
+                        }}
                       >
                         Is Phone Number same as WhatsApp number
-                      </label>
-                    </div>
+                      </Typography>
+                    }
+                    sx={{ mb: 1 }}
+                  />
 
-                    <div className="relative">
-                      <PhoneInput
-                        country={country}
-                        value={formState.mobile}
-                        onChange={handleMobileChange}
-                        inputProps={{
-                          name: "mobile",
-                          required: true,
-                          autoFocus: true,
-                          disabled: formState.isMobileWhatsapp,
-                          placeholder: formState.isMobileWhatsapp
-                            ? ""
-                            : "Enter your number",
-                        }}
-                        containerClass={phoneInputStyle.container}
-                        inputClass={phoneInputStyle.input}
-                        buttonClass={phoneInputStyle.button}
-                        dropdownClass={phoneInputStyle.dropdown}
-                        searchClass={phoneInputStyle.search}
-                        enableSearch={true}
-                        countryCodeEditable={!formState.isMobileWhatsapp}
-                        aria-label="Phone number input"
-                      />
-                    </div>
-
-                    <p className="text-xs text-primary">
-                      Will also be used for class notifications and to avoid calls
-                    </p>
-                  </div>
-
-                  <div className="space-y-1">
-                    <input
-                      type="email"
-                      value={formState.email}
-                      onChange={(e) => handleFieldChange("email", e.target.value)}
-                      className="w-full p-2 xs:p-2.5 sm:p-3 border border-gray-300 rounded-md text-xs xs:text-sm sm:text-base"
-                      placeholder="Enter your email ID"
-                      aria-label="Email input"
+                  <Box sx={{ position: "relative", zIndex: 1 }}>
+                    <PhoneInput
+                      country={country}
+                      value={formState.mobile}
+                      onChange={handleMobileChange}
+                      inputProps={{
+                        name: "mobile",
+                        required: true,
+                        disabled: formState.isMobileWhatsapp,
+                        placeholder: formState.isMobileWhatsapp
+                          ? ""
+                          : "Enter your number",
+                      }}
+                      containerClass={phoneInputStyle.container}
+                      inputClass={phoneInputStyle.input}
+                      buttonClass={phoneInputStyle.button}
+                      dropdownClass={phoneInputStyle.dropdown}
+                      searchClass={phoneInputStyle.search}
+                      enableSearch={true}
+                      countryCodeEditable={!formState.isMobileWhatsapp}
                     />
+                  </Box>
 
-                    <p className="text-xs text-primary">
-                      Will be used for sending payment invoices
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 xs:gap-3 sm:gap-4">
-                    <div className="space-y-1">
-                      <input
-                        type="text"
-                        value={formState.name}
-                        onChange={(e) => handleFieldChange("name", e.target.value)}
-                        className="w-full p-2 xs:p-2.5 sm:p-3 border border-gray-300 rounded-md text-xs xs:text-sm sm:text-base"
-                        placeholder="Enter your name"
-                        aria-label="Name input"
-                      />
-
-                      <p className="text-xs text-primary">
-                        Guardian's name / Invoice name
-                      </p>
-                    </div>
-                    <div className="space-y-1">
-                      <input
-                        type="text"
-                        value={formState.childName}
-                        onChange={(e) =>
-                          handleFieldChange("childName", e.target.value)
-                        }
-                        className="w-full p-2 xs:p-2.5 sm:p-3 border border-gray-300 rounded-md text-xs xs:text-sm sm:text-base"
-                        placeholder="Enter your child name"
-                        aria-label="Child name input"
-                      />
-
-                      <p className="text-xs text-primary">Child Name</p>
-                    </div>
-                  </div>
-                </form>
-
-                {/* Action Buttons */}
-                <div className="flex w-full space-x-1 xs:space-x-2 sm:space-x-3 mt-3 xs:mt-4 sm:mt-6">
-                  <button
-                    type="button"
-                    onClick={handleBack}
-                    className="bg-primary w-1/4 py-2 xs:py-2.5 sm:py-3 px-1 xs:px-2 sm:px-4 text-white font-medium rounded-md transition duration-300 flex items-center justify-center border-b-4 hover:border-secondary text-xs xs:text-sm"
+                  <Typography
+                    sx={{ fontSize: "0.75rem", color: "#642b8f", mt: 0.5 }}
                   >
-                    <ArrowLeft size={12} className="mr-1" />
-                    <span className=" xs:inline">Back</span>
-                  </button>
+                    Will also be used for class notifications and to avoid calls
+                  </Typography>
+                </Box>
 
-                  <button
-                    type="button"
-                    onClick={handleSkipDashboard}
-                    className={`bg-primary w-1/2 py-2 xs:py-2.5 sm:py-3 px-1 xs:px-2 sm:px-4 text-white font-medium rounded-md transition duration-300 flex items-center justify-center border-b-4 hover:border-secondary text-xs xs:text-sm ${
-                      isCooldown ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                    disabled={isCooldown}
+                {/* Email Section */}
+                <Box sx={{ mb: 3 }}>
+                  <TextField
+                    type="email"
+                    value={formState.email}
+                    onChange={(e) => handleFieldChange("email", e.target.value)}
+                    placeholder="Enter your email ID"
+                    fullWidth
+                    required
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 2,
+                        "& fieldset": {
+                          borderColor: "#e0e0e0",
+                          borderWidth: "2px",
+                        },
+                        "&:hover fieldset": {
+                          borderColor: "#642b8f",
+                        },
+                        "&.Mui-focused fieldset": {
+                          borderColor: "#642b8f",
+                        },
+                      },
+                      "& .MuiInputBase-input": {
+                        fontSize: { xs: "0.9rem", sm: "1rem" },
+                        py: { xs: 1.5, sm: 2 },
+                      },
+                    }}
+                  />
+                  <Typography
+                    sx={{ fontSize: "0.75rem", color: "#642b8f", mt: 0.5 }}
                   >
-                    Skip to Dashboard
-                  </button>
+                    Will be used for sending payment invoices
+                  </Typography>
+                </Box>
 
-                  <button
-                    type="submit"
-                    onClick={handleSubmit}
-                    className={`bg-primary w-1/4 py-2 xs:py-2.5 sm:py-3 px-1 xs:px-2 sm:px-4 text-white font-medium rounded-md transition duration-300 flex items-center justify-center border-b-4 hover:border-secondary text-xs xs:text-sm ${
-                      isCooldown ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                    disabled={isCooldown}
-                  >
-                    <span className=" xs:inline">Next</span>
-                    <ArrowRight size={12} className="ml-1" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+                {/* Name Fields */}
+                <Grid container spacing={2} sx={{ mb: 3 }}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      type="text"
+                      value={formState.name}
+                      onChange={(e) =>
+                        handleFieldChange("name", e.target.value)
+                      }
+                      placeholder="Enter your name"
+                      fullWidth
+                      required
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: 2,
+                          "& fieldset": {
+                            borderColor: "#e0e0e0",
+                            borderWidth: "2px",
+                          },
+                          "&:hover fieldset": {
+                            borderColor: "#642b8f",
+                          },
+                          "&.Mui-focused fieldset": {
+                            borderColor: "#642b8f",
+                          },
+                        },
+                        "& .MuiInputBase-input": {
+                          fontSize: { xs: "0.9rem", sm: "1rem" },
+                          py: { xs: 1.5, sm: 2 },
+                        },
+                      }}
+                    />
+                    <Typography
+                      sx={{ fontSize: "0.75rem", color: "#642b8f", mt: 0.5 }}
+                    >
+                      Guardian's name / Invoice name
+                    </Typography>
+                  </Grid>
+
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      type="text"
+                      value={formState.childName}
+                      onChange={(e) =>
+                        handleFieldChange("childName", e.target.value)
+                      }
+                      placeholder="Enter your child name"
+                      fullWidth
+                      required
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: 2,
+                          "& fieldset": {
+                            borderColor: "#e0e0e0",
+                            borderWidth: "2px",
+                          },
+                          "&:hover fieldset": {
+                            borderColor: "#642b8f",
+                          },
+                          "&.Mui-focused fieldset": {
+                            borderColor: "#642b8f",
+                          },
+                        },
+                        "& .MuiInputBase-input": {
+                          fontSize: { xs: "0.9rem", sm: "1rem" },
+                          py: { xs: 1.5, sm: 2 },
+                        },
+                      }}
+                    />
+                    <Typography
+                      sx={{ fontSize: "0.75rem", color: "#642b8f", mt: 0.5 }}
+                    >
+                      Child Name
+                    </Typography>
+                  </Grid>
+                </Grid>
+              </Box>
+            </Box>
+
+            {/* Action Buttons */}
+            <Box
+              sx={{
+                display: "flex",
+                gap: { xs: 1, sm: 1.5 },
+                mt: { xs: 2, sm: 3 },
+              }}
+            >
+              <Button
+                onClick={handleBack}
+                variant="contained"
+                sx={{
+                  backgroundColor: "#642b8f",
+                  flex: "0 0 auto",
+                  minWidth: { xs: "60px", sm: "80px" },
+                  py: { xs: 1.25, sm: 1.5 },
+                  fontSize: { xs: "0.8rem", sm: "0.9rem" },
+                  fontWeight: 600,
+                  borderRadius: 2,
+                  textTransform: "none",
+                  "&:hover": {
+                    backgroundColor: "#512166",
+                  },
+                }}
+                startIcon={<ArrowLeft size={16} />}
+              >
+                Back
+              </Button>
+
+              <Button
+                onClick={handleSkipDashboard}
+                variant="outlined"
+                disabled={isCooldown}
+                sx={{
+                  borderColor: "#642b8f",
+                  color: "#642b8f",
+                  flex: 1,
+                  py: { xs: 1.25, sm: 1.5 },
+                  fontSize: { xs: "0.8rem", sm: "0.9rem" },
+                  fontWeight: 600,
+                  borderRadius: 2,
+                  textTransform: "none",
+                  borderWidth: "2px",
+                  "&:hover": {
+                    backgroundColor: "#642b8f",
+                    color: "white",
+                    borderColor: "#642b8f",
+                    borderWidth: "2px",
+                  },
+                  "&:disabled": {
+                    borderColor: "#bdc3c7",
+                    color: "#bdc3c7",
+                  },
+                }}
+              >
+                Skip to Dashboard
+              </Button>
+
+              <Button
+                onClick={handleSubmit}
+                variant="contained"
+                disabled={isCooldown}
+                sx={{
+                  backgroundColor: "#642b8f",
+                  flex: "0 0 auto",
+                  minWidth: { xs: "60px", sm: "80px" },
+                  py: { xs: 1.25, sm: 1.5 },
+                  fontSize: { xs: "0.8rem", sm: "0.9rem" },
+                  fontWeight: 600,
+                  borderRadius: 2,
+                  textTransform: "none",
+                  "&:hover": {
+                    backgroundColor: "#512166",
+                  },
+                  "&:disabled": {
+                    backgroundColor: "#bdc3c7",
+                    color: "white",
+                  },
+                }}
+                endIcon={<ArrowRight size={16} />}
+              >
+                Next
+              </Button>
+            </Box>
+          </CardContent>
+        </Card>
+      </Box>
 
       <ToastContainer
-        position="top-right"
+        position={isMobile ? "top-center" : "top-right"}
         autoClose={5000}
         hideProgressBar={false}
         closeOnClick
         pauseOnHover
         draggable
         pauseOnFocusLoss
-        className="mt-12 xs:mt-14 sm:mt-16"
-        toastClassName="text-xs xs:text-sm"
+        toastClassName="!text-sm !rounded-lg"
       />
-    </div>
+    </Box>
   );
 };
 

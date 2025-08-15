@@ -1,12 +1,29 @@
 import { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import {
+  Box,
+  Typography,
+  Button,
+  IconButton,
+  useTheme,
+  useMediaQuery,
+  Card,
+  CardContent,
+  TextField,
+  Grid,
+  Stepper,
+  Step,
+  StepLabel,
+  MenuItem,
+  CircularProgress,
+} from "@mui/material";
+import { ArrowRight, ArrowLeft, Users, Baby } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import { parentKidsRegistration } from "../../api/service/parent/ParentService";
-import LeftLogoBar from "./parent-dashboard/layout/LeftLogoBar";
 import { StepperContext } from "../completion-status-bar/StepperContext";
-import Stepper from "../completion-status-bar/Stepper";
 import { useDispatch, useSelector } from "react-redux";
 import { setFormData } from "../../store/regDataParentKidsSlice";
+import mindMentorImage from "../../assets/newLogo.png";
 
 const ParentKidsRegistration = () => {
   const dispatch = useDispatch();
@@ -15,6 +32,10 @@ const ParentKidsRegistration = () => {
   const { nextStep, previousStep } = useContext(StepperContext);
   const { state } = location;
   const regFormData = useSelector((state) => state.formData);
+  
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
 
   const [formData, setFormDatas] = useState({
     isMobileWhatsapp: regFormData?.isMobileWhatsapp,
@@ -33,6 +54,9 @@ const ParentKidsRegistration = () => {
 
   const [isCooldown, setIsCooldown] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+
+  const steps = ['Parent Registration', 'Kids Registration', 'Enrollment'];
+  const currentStep = 2; // Kids Registration is step 2
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -120,11 +144,7 @@ const ParentKidsRegistration = () => {
         toast.success(result?.data?.message);
         localStorage.setItem("parentId", formData.parentId);
 
-        // nextStep();
-
         setTimeout(() => {
-          // navigate("/parent/kids/demo", { state: result?.data?.data });
-
           navigate("/parent/dashboard");
         }, 2000);
       }
@@ -159,183 +179,585 @@ const ParentKidsRegistration = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-1 xs:p-2 sm:p-4 md:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto bg-white rounded-lg sm:rounded-xl md:rounded-2xl shadow-lg overflow-hidden h-[calc(100vh-0.5rem)] xs:h-[calc(100vh-1rem)] sm:h-[calc(100vh-2rem)] md:h-[calc(100vh-3rem)] lg:h-[calc(100vh-4rem)] flex flex-col lg:flex-row">
-        <LeftLogoBar />
+    <Box
+      sx={{
+        width: '100vw',
+        height: '100vh',
+        background: '#642b8f',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Header */}
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          p: { xs: 2, sm: 3 },
+          minHeight: { xs: '64px', sm: '72px' },
+        }}
+      >
+        {/* Logo */}
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <img
+            src={mindMentorImage}
+            alt="Mind Mentorz Logo"
+            style={{
+              height: isMobile ? '28px' : '36px',
+              width: 'auto',
+              filter: 'brightness(0) invert(1)',
+            }}
+          />
+        </Box>
 
-        <div className="lg:w-3/5 w-full p-4 xs:p-6 sm:p-8 md:p-10 lg:p-12 overflow-y-auto max-h-full flex flex-col">
-          {/* Sticky Stepper */}
-          <div className="sticky top-0 z-10 bg-white pb-4">
-            <Stepper />
-          </div>
+        {/* Back Button */}
+        <IconButton
+          onClick={() => {
+            previousStep();
+            navigate(-1);
+          }}
+          sx={{
+            backgroundColor: 'rgba(255,255,255,0.1)',
+            color: 'white',
+            border: '1px solid rgba(255,255,255,0.2)',
+            width: { xs: 40, sm: 44 },
+            height: { xs: 40, sm: 44 },
+            '&:hover': {
+              backgroundColor: 'rgba(255,255,255,0.2)',
+            },
+          }}
+        >
+          <ArrowLeft size={isMobile ? 18 : 20} />
+        </IconButton>
+      </Box>
 
-          {/* Scrollable Form Section */}
-          <div className="w-full flex-grow overflow-y-auto">
-            <h2 className="text-2xl font-bold text-primary mb-2 text-center">
+      {/* Main Content */}
+      <Box
+        sx={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'center',
+          px: { xs: 2, sm: 4 },
+          py: { xs: 1, sm: 2 },
+          overflow: 'auto',
+          '&::-webkit-scrollbar': {
+            width: '8px',
+          },
+          '&::-webkit-scrollbar-track': {
+            background: 'rgba(255,255,255,0.1)',
+            borderRadius: '4px',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: 'rgba(255,255,255,0.3)',
+            borderRadius: '4px',
+          },
+          '&::-webkit-scrollbar-thumb:hover': {
+            background: 'rgba(255,255,255,0.5)',
+          },
+        }}
+      >
+        {/* Main Card */}
+        <Card
+          elevation={0}
+          sx={{
+            width: '100%',
+            maxWidth: { xs: '100%', sm: '600px', md: '750px', lg: '850px' },
+            minHeight: 'auto',
+            backgroundColor: 'white',
+            borderRadius: { xs: 2, sm: 3 },
+            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)',
+            my: { xs: 1, sm: 2 },
+          }}
+        >
+          <CardContent
+            sx={{
+              p: { xs: 3, sm: 4, md: 5 },
+            }}
+          >
+            {/* Kids Registration Avatar */}
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                mb: { xs: 2, sm: 3 },
+              }}
+            >
+              <Box
+                sx={{
+                  width: { xs: 60, sm: 70, md: 80 },
+                  height: { xs: 60, sm: 70, md: 80 },
+                  backgroundColor: '#642b8f',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Baby size={isMobile ? 24 : isTablet ? 28 : 32} style={{ color: 'white' }} />
+              </Box>
+            </Box>
+
+            {/* Stepper */}
+            <Box sx={{ mb: { xs: 2, sm: 3 } }}>
+              <Stepper activeStep={currentStep - 1} alternativeLabel>
+                {steps.map((label) => (
+                  <Step key={label}>
+                    <StepLabel
+                      sx={{
+                        '& .MuiStepLabel-label': {
+                          fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                          fontWeight: 500,
+                        },
+                        '& .MuiStepIcon-root': {
+                          color: '#e0e0e0',
+                          fontSize: { xs: '1.2rem', sm: '1.5rem' },
+                        },
+                        '& .MuiStepIcon-root.Mui-active': {
+                          color: '#642b8f',
+                        },
+                        '& .MuiStepIcon-root.Mui-completed': {
+                          color: '#642b8f',
+                        },
+                      }}
+                    >
+                      {label}
+                    </StepLabel>
+                  </Step>
+                ))}
+              </Stepper>
+            </Box>
+
+            {/* Header Text */}
+            <Typography
+              variant="h5"
+              sx={{
+                color: '#2c3e50',
+                fontWeight: 700,
+                mb: { xs: 2, sm: 3 },
+                fontSize: { xs: '1.1rem', sm: '1.3rem', md: '1.5rem' },
+                textAlign: 'center',
+              }}
+            >
               Student Registration Form
-            </h2>
+            </Typography>
 
-            <form onSubmit={handleSubmit} className="space-y-4 pr-2">
-              {/* Personal Info */}
-              <div className="p-4 rounded-lg shadow-md bg-white border border-primary mb-4">
-                <h3 className="text-lg font-semibold text-primary mb-3">
-                  Personal Information
-                </h3>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+            {/* Form Container */}
+            <Box component="form" onSubmit={handleSubmit}>
+              {/* Personal Information Section */}
+              <Card
+                sx={{
+                  mb: 3,
+                  border: '2px solid #642b8f',
+                  borderRadius: 2,
+                  boxShadow: '0 2px 8px rgba(100, 43, 143, 0.1)',
+                }}
+              >
+                <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      color: '#642b8f',
+                      fontWeight: 600,
+                      mb: 2,
+                      fontSize: { xs: '1rem', sm: '1.1rem' },
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                    }}
+                  >
+                    <Users size={20} />
+                    Personal Information
+                  </Typography>
+
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={4}>
+                      <Typography
+                        sx={{
+                          fontSize: '0.9rem',
+                          fontWeight: 600,
+                          color: '#2c3e50',
+                          mb: 1,
+                        }}
+                      >
                         Kids Name
-                      </label>
-                      <input
-                        type="text"
+                      </Typography>
+                      <TextField
                         name="kidsName"
                         value={formData.kidsName || state?.childName}
                         onChange={handleChange}
-                        className="w-full p-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                         placeholder="Kids Name"
+                        fullWidth
+                        required
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: 2,
+                            '& fieldset': {
+                              borderColor: '#e0e0e0',
+                              borderWidth: '2px',
+                            },
+                            '&:hover fieldset': {
+                              borderColor: '#642b8f',
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: '#642b8f',
+                            },
+                          },
+                          '& .MuiInputBase-input': {
+                            fontSize: { xs: '0.9rem', sm: '1rem' },
+                            py: { xs: 1.5, sm: 2 },
+                          },
+                        }}
                       />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                    </Grid>
+
+                    <Grid item xs={12} sm={4}>
+                      <Typography
+                        sx={{
+                          fontSize: '0.9rem',
+                          fontWeight: 600,
+                          color: '#2c3e50',
+                          mb: 1,
+                        }}
+                      >
                         Age
-                      </label>
-                      <input
+                      </Typography>
+                      <TextField
                         type="number"
                         name="age"
                         value={formData.age}
                         onChange={handleChange}
                         placeholder="Enter age"
-                        className="w-full p-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
-                        min={1}
+                        fullWidth
+                        required
+                        inputProps={{ min: 1 }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: 2,
+                            '& fieldset': {
+                              borderColor: '#e0e0e0',
+                              borderWidth: '2px',
+                            },
+                            '&:hover fieldset': {
+                              borderColor: '#642b8f',
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: '#642b8f',
+                            },
+                          },
+                          '& .MuiInputBase-input': {
+                            fontSize: { xs: '0.9rem', sm: '1rem' },
+                            py: { xs: 1.5, sm: 2 },
+                          },
+                        }}
                       />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                    </Grid>
+
+                    <Grid item xs={12} sm={4}>
+                      <Typography
+                        sx={{
+                          fontSize: '0.9rem',
+                          fontWeight: 600,
+                          color: '#2c3e50',
+                          mb: 1,
+                        }}
+                      >
                         Gender
-                      </label>
-                      <select
+                      </Typography>
+                      <TextField
+                        select
                         name="gender"
                         value={formData.gender}
                         onChange={handleChange}
-                        className="w-full p-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                        fullWidth
+                        required
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: 2,
+                            '& fieldset': {
+                              borderColor: '#e0e0e0',
+                              borderWidth: '2px',
+                            },
+                            '&:hover fieldset': {
+                              borderColor: '#642b8f',
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: '#642b8f',
+                            },
+                          },
+                          '& .MuiInputBase-input': {
+                            fontSize: { xs: '0.9rem', sm: '1rem' },
+                            py: { xs: 1.5, sm: 2 },
+                          },
+                        }}
                       >
-                        <option value="">Select Gender</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                        <option value="other">Other</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                        <MenuItem value="">Select Gender</MenuItem>
+                        <MenuItem value="male">Male</MenuItem>
+                        <MenuItem value="female">Female</MenuItem>
+                        <MenuItem value="other">Other</MenuItem>
+                      </TextField>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
 
-              {/* Location Info */}
-              <div className="bg-white border border-primary p-4 rounded-lg shadow-sm mb-4">
-                <h3 className="text-lg font-semibold text-primary mb-4">
-                  Location Information
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Pincode *
-                    </label>
-                    <input
-                      type="text"
-                      name="pincode"
-                      value={formData.pincode}
-                      onChange={handlePincodeChange}
-                      placeholder="Enter 6-digit pincode"
-                      className="w-full p-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
-                      maxLength={6}
-                      pattern="[0-9]{6}"
-                    />
-                    {isLoadingLocation && (
-                      <p className="text-sm text-blue-600 mt-1">
-                        Fetching location...
-                      </p>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+              {/* Location Information Section */}
+              <Card
+                sx={{
+                  mb: 3,
+                  border: '2px solid #642b8f',
+                  borderRadius: 2,
+                  boxShadow: '0 2px 8px rgba(100, 43, 143, 0.1)',
+                }}
+              >
+                <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      color: '#642b8f',
+                      fontWeight: 600,
+                      mb: 2,
+                      fontSize: { xs: '1rem', sm: '1.1rem' },
+                    }}
+                  >
+                    Location Information
+                  </Typography>
+
+                  <Grid container spacing={2}>
+                    <Grid item xs={12}>
+                      <Typography
+                        sx={{
+                          fontSize: '0.9rem',
+                          fontWeight: 600,
+                          color: '#2c3e50',
+                          mb: 1,
+                        }}
+                      >
+                        Pincode *
+                      </Typography>
+                      <TextField
+                        name="pincode"
+                        value={formData.pincode}
+                        onChange={handlePincodeChange}
+                        placeholder="Enter 6-digit pincode"
+                        fullWidth
+                        required
+                        inputProps={{
+                          maxLength: 6,
+                          pattern: "[0-9]{6}",
+                        }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: 2,
+                            '& fieldset': {
+                              borderColor: '#e0e0e0',
+                              borderWidth: '2px',
+                            },
+                            '&:hover fieldset': {
+                              borderColor: '#642b8f',
+                            },
+                            '&.Mui-focused fieldset': {
+                              borderColor: '#642b8f',
+                            },
+                          },
+                          '& .MuiInputBase-input': {
+                            fontSize: { xs: '0.9rem', sm: '1rem' },
+                            py: { xs: 1.5, sm: 2 },
+                          },
+                        }}
+                      />
+                      {isLoadingLocation && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                          <CircularProgress size={16} sx={{ mr: 1, color: '#642b8f' }} />
+                          <Typography sx={{ fontSize: '0.85rem', color: '#642b8f' }}>
+                            Fetching location...
+                          </Typography>
+                        </Box>
+                      )}
+                    </Grid>
+
+                    <Grid item xs={12} sm={6}>
+                      <Typography
+                        sx={{
+                          fontSize: '0.9rem',
+                          fontWeight: 600,
+                          color: '#2c3e50',
+                          mb: 1,
+                        }}
+                      >
                         City
-                      </label>
-                      <input
-                        type="text"
+                      </Typography>
+                      <TextField
                         name="city"
                         value={formData.city}
-                        readOnly
                         placeholder="City will be auto-filled"
-                        className="w-full p-3 text-sm border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed"
+                        fullWidth
+                        InputProps={{
+                          readOnly: true,
+                        }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: 2,
+                            backgroundColor: '#f5f5f5',
+                            '& fieldset': {
+                              borderColor: '#e0e0e0',
+                              borderWidth: '2px',
+                            },
+                          },
+                          '& .MuiInputBase-input': {
+                            fontSize: { xs: '0.9rem', sm: '1rem' },
+                            py: { xs: 1.5, sm: 2 },
+                            cursor: 'not-allowed',
+                          },
+                        }}
                       />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                    </Grid>
+
+                    <Grid item xs={12} sm={6}>
+                      <Typography
+                        sx={{
+                          fontSize: '0.9rem',
+                          fontWeight: 600,
+                          color: '#2c3e50',
+                          mb: 1,
+                        }}
+                      >
                         State
-                      </label>
-                      <input
-                        type="text"
+                      </Typography>
+                      <TextField
                         name="state"
                         value={formData.state}
-                        readOnly
                         placeholder="State will be auto-filled"
-                        className="w-full p-3 text-sm border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed"
+                        fullWidth
+                        InputProps={{
+                          readOnly: true,
+                        }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: 2,
+                            backgroundColor: '#f5f5f5',
+                            '& fieldset': {
+                              borderColor: '#e0e0e0',
+                              borderWidth: '2px',
+                            },
+                          },
+                          '& .MuiInputBase-input': {
+                            fontSize: { xs: '0.9rem', sm: '1rem' },
+                            py: { xs: 1.5, sm: 2 },
+                            cursor: 'not-allowed',
+                          },
+                        }}
                       />
-                    </div>
-                  </div>
-                </div>
-              </div>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
 
-              {/* Buttons */}
-              <div className="flex justify-between gap-4 mt-6">
-                <button
+              {/* Action Buttons */}
+              <Box
+                sx={{
+                  display: 'flex',
+                  gap: { xs: 1, sm: 1.5 },
+                  mt: { xs: 2, sm: 3 },
+                }}
+              >
+                <Button
                   onClick={() => {
                     previousStep();
                     navigate(-1);
                   }}
-                  type="button"
-                  className="w-1/4 bg-primary text-white py-3 px-4 rounded-md border-b-4 hover:border-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition duration-300 flex items-center justify-center"
+                  variant="contained"
+                  sx={{
+                    backgroundColor: '#642b8f',
+                    flex: '0 0 auto',
+                    minWidth: { xs: '70px', sm: '90px' },
+                    py: { xs: 1.25, sm: 1.5 },
+                    fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                    fontWeight: 600,
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    '&:hover': {
+                      backgroundColor: '#512166',
+                    },
+                  }}
+                  startIcon={<ArrowLeft size={16} />}
                 >
-                  ← Back
-                </button>
+                  Back
+                </Button>
 
-                <button
-                  type="button"
-                  className={`w-1/2 bg-primary text-white py-3 px-4 rounded-md border-b-4 hover:border-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-300 ${
-                    isCooldown ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
+                <Button
                   onClick={handleSkipDashboard}
+                  variant="outlined"
                   disabled={isCooldown}
+                  sx={{
+                    borderColor: '#642b8f',
+                    color: '#642b8f',
+                    flex: 1,
+                    py: { xs: 1.25, sm: 1.5 },
+                    fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                    fontWeight: 600,
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    borderWidth: '2px',
+                    '&:hover': {
+                      backgroundColor: '#642b8f',
+                      color: 'white',
+                      borderColor: '#642b8f',
+                      borderWidth: '2px',
+                    },
+                    '&:disabled': {
+                      borderColor: '#bdc3c7',
+                      color: '#bdc3c7',
+                    },
+                  }}
                 >
                   Skip to Dashboard
-                </button>
+                </Button>
 
-                <button
+                <Button
                   type="submit"
-                  className={`w-1/4 bg-primary text-white py-3 px-4 rounded-md border-b-4 hover:border-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-300 ${
-                    isCooldown ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
+                  variant="contained"
                   disabled={isCooldown}
+                  sx={{
+                    backgroundColor: '#642b8f',
+                    flex: '0 0 auto',
+                    minWidth: { xs: '70px', sm: '90px' },
+                    py: { xs: 1.25, sm: 1.5 },
+                    fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                    fontWeight: 600,
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    '&:hover': {
+                      backgroundColor: '#512166',
+                    },
+                    '&:disabled': {
+                      backgroundColor: '#bdc3c7',
+                      color: 'white',
+                    },
+                  }}
+                  endIcon={<ArrowRight size={16} />}
                 >
-                  Submit →
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
+                  Submit
+                </Button>
+              </Box>
+            </Box>
+          </CardContent>
+        </Card>
+      </Box>
 
       <ToastContainer
-        position="top-right"
+        position={isMobile ? "top-center" : "top-right"}
         autoClose={5000}
         hideProgressBar={false}
         closeOnClick
         pauseOnHover
         draggable
         pauseOnFocusLoss
+        toastClassName="!text-sm !rounded-lg"
       />
-    </div>
+    </Box>
   );
 };
 

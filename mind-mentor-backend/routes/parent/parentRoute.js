@@ -4,6 +4,7 @@ const parentController =require("../../controller/parent/parentController")
 
 
 
+parentRoute.get("/get-entrollment-stage-status/:kidId",parentController.getEnrollmentStatusStage)
 
 parentRoute.get("/get-kids-data/:id",parentController.getKidsDataList)
 parentRoute.get("/manage-child-login/:id",parentController.getChildData)
@@ -50,6 +51,7 @@ parentRoute.get("/get-chess-kid-usernames",parentController.getChessKidUserName)
 
 parentRoute.post("/login",parentController.parentLogin)
 parentRoute.post("/verify-otp",parentController.parentVerifyOtp)
+parentRoute.post("/parent-save-kid-name",parentController.parentSaveKidData)
 parentRoute.post("/parent-kids-registration",parentController.parentStudentRegistration)
 
 parentRoute.post("/parent-book-demo-class",parentController.parentBookDemoClass)
@@ -63,7 +65,6 @@ parentRoute.post("/save-kid-availability/:kidId",parentController.saveKidAvailab
 parentRoute.post("/save-payment-information-data/:parentId",parentController.savePaymentData)
 parentRoute.post("/send-selected-package/:parentId",parentController.parentSelectThePackage)
 parentRoute.post("/parent-add-new-kid-data/:parentId",parentController.parentAddNewKidData)
-parentRoute.post("/parent-save-kid-name",parentController.parentSaveKidData)
 parentRoute.post("/create-ticket-for-parent",parentController.createTicketForParent)
 parentRoute.put("/update-ticket-chats/:ticketId",parentController.updateSupportChats)
 parentRoute.post("/send-referal-data/:parentId",parentController.sendReferalData)

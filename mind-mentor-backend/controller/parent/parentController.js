@@ -1408,6 +1408,7 @@ const savePaymentData = async (req, res) => {
           isNewUser: false,
           enquiryType: "cold",
           enquiryField: "prospects",
+          isPackageSelected: true,
         },
       }),
     ]);
@@ -1944,6 +1945,7 @@ const parentSelectThePackage = async (req, res) => {
           paymentStatus: "Success",
           isNewUser: false,
           enquiryField: "prospects",
+          isPackageSelected: true,
           // Update total class count
           "programs.$.totalClassCount.online": finalData.onlineClasses || 0,
           "programs.$.totalClassCount.offline": finalData.offlineClasses || 0,
@@ -2075,7 +2077,6 @@ const parentSelectThePackage = async (req, res) => {
 //       { _id: finalData.kidId },
 //       { $set: { status: "Active" } }
 //     );
-
 
 //     // Update operationDept counts at top level (NOT inside programs)
 //      await operationDeptModel.findOneAndUpdate(
@@ -2260,7 +2261,7 @@ const parentSelectThePackage = async (req, res) => {
 //           userType: "kid",
 //           club: "MAIN MindMentorz",
 //           username: chessUsername,
-//           password: "Aswinraj@123456", 
+//           password: "Aswinraj@123456",
 //           email: kidData.whatsappNumber
 //             ? `${kidData.whatsappNumber}@mindmentorz.com`
 //             : `kid_${kidData._id}@mindmentorz.com`, // fallback email
@@ -2423,6 +2424,7 @@ const parentAddNewKidData = async (req, res) => {
         existingEnquiry.kidsGender = formData.gender;
         existingEnquiry.kidId = savedKid._id;
         existingEnquiry.email = formData.email;
+        existingEnquiry.isFirstKidAdded = true;
 
         await existingEnquiry.save();
 
@@ -2572,6 +2574,8 @@ const parentSaveKidData = async (req, res) => {
           kidId: existingKid._id,
           parentFirstName: formData.name,
           email: formData.email,
+          isParentNameCompleted: true,
+          isFirstKidAdded: true,
         },
       },
       { new: true }
@@ -3180,7 +3184,7 @@ const updateMyName = async (req, res) => {
           { whatsappNumber: parentData.parentMobile },
         ],
       },
-      { parentFirstName: newFirstName },
+      { parentFirstName: newFirstName, isParentNameCompleted: true },
       { new: true }
     );
 
@@ -3301,6 +3305,8 @@ const parentBookDemoClassData = async (req, res) => {
             "programs.0.program": bookingDetails.program,
             "programs.0.level": bookingDetails.level,
             enquiryField: "prospects",
+            isProgramSelected: true,
+            isDemoSheduled: true,
           },
         }
       );
@@ -3359,6 +3365,8 @@ const parentBookDemoClassData = async (req, res) => {
             "programs.0.program": bookingDetails.program,
             "programs.0.level": bookingDetails.level,
             enquiryField: "prospects",
+            isProgramSelected: true,
+            isDemoSheduled: true,
           },
         },
         { upsert: true }
@@ -3607,6 +3615,8 @@ const parentAssignWholeClass = async (req, res) => {
 
     await newClassSelection.save();
     enqData.classAssigned = true;
+    enqData.isEnrollmementStepCompleted = true;
+
     await enqData.save();
 
     await classPaymentModel.findOneAndUpdate(
@@ -3776,7 +3786,52 @@ const getChessKidUserName = async (req, res) => {
   }
 };
 
+const getEnrollmentStatusStage = async (req, res) => {
+  try {
+    const { kidId } = req.params;
+
+    if (!kidId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "kidId is required" });
+    }
+
+    const kidEnqCompletionData = await operationDeptModel.findOne(
+      { kidId: kidId },
+      {
+        isParentNameCompleted: 1,
+        isFirstKidAdded: 1,
+        isProgramSelected: 1,
+        isDemoSheduled: 1,
+        isDemoAttended: 1,
+        isPackageSelected: 1,
+        isClassAssigned: 1,
+        isEnrollmementStepCompleted: 1,
+      }
+    );
+
+    if (!kidEnqCompletionData) {
+      return res
+        .status(404)
+        .json({ success: false, message: "No record found for this kidId" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: kidEnqCompletionData,
+    });
+  } catch (err) {
+    console.error("Error fetching enrollment status:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
 module.exports = {
+  getEnrollmentStatusStage,
   getChessKidUserName,
   parentResumeTheClass,
   parentPauseTheClass,
