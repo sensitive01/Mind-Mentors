@@ -88,7 +88,7 @@ const columns = (
               color: "#00FF00",
               padding: "8px",
               "&:hover": {
-                backgroundColor: '#FFFFFF ',
+                backgroundColor: "#FFFFFF ",
               },
             }}
           >
@@ -122,7 +122,7 @@ const columns = (
               color: "#00FF00",
               padding: "8px",
               "&:hover": {
-                backgroundColor: '#FFFFFF',
+                backgroundColor: "#FFFFFF",
               },
             }}
           >
@@ -142,31 +142,31 @@ const columns = (
         )}
       </Box>
     ),
-}
-  
-  ,
+  },
 
   {
-    field: "programs",
+    field: "program", // <-- match the data key
     renderHeader: () => <strong>Programs</strong>,
-
     width: 150,
-    renderCell: (params) => (
-      <Box in={true}>
-        {params.value.map((prog, index) => (
-          <Chip
-            key={index}
-            label={`${prog.program} (${prog.level})`}
-            size="small"
-            sx={{
-              bgcolor: alpha(theme.palette.primary.main, 0.1),
-              color: theme.palette.primary.main,
-              marginRight: 1,
-            }}
-          />
-        ))}
-      </Box>
-    ),
+    renderCell: (params) => {
+      const programs = params.value || []; 
+      return (
+        <Box>
+          {programs.map((prog, index) => (
+            <Chip
+              key={index}
+              label={`${prog.program} (${prog.level})`}
+              size="small"
+              sx={{
+                bgcolor: alpha(theme.palette.primary.main, 0.1),
+                color: theme.palette.primary.main,
+                marginRight: 1,
+              }}
+            />
+          ))}
+        </Box>
+      );
+    },
   },
 
   {

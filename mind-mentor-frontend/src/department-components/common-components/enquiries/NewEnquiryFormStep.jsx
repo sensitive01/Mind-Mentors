@@ -317,7 +317,7 @@ const NewEnquiryFormStep = () => {
         setEnquiryId(response.data.id);
       } else {
         await operationDeptInstance.put(
-          `/enquiry-form/${enquiryId}`,
+          `/enquiry-form/${enquiryId}/${empId}`,
           completeFormData
         );
       }

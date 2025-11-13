@@ -13,7 +13,7 @@ const parentSchema = new mongoose.Schema(
       trim: true,
     },
     parentMobile: {
-      type: Number,
+      type: String,
       // unique: true,
       trim: true,
     },

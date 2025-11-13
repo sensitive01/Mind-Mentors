@@ -23,20 +23,46 @@ const PhysicalCenter = require("../../model/physicalcenter/physicalCenterShema")
 
 const getAllActiveEnquiries = async (req, res) => {
   try {
-    const enquiries = await operationDeptModel.find({
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit) || 15, 1), 100);
+    const skip = (page - 1) * limit;
+
+    // Get total count of all active enquiries
+    const total = await operationDeptModel.countDocuments({
       enquiryField: "prospects",
-      enquiryStatus: "Active",
+      enquiryStatus: "Active"
     });
 
+    // Fetch paginated active enquiries
+    const enquiries = await operationDeptModel.find({
+      enquiryField: "prospects",
+      enquiryStatus: "Active"
+    })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    // Format dates
+    const formatDate = (date) => {
+      if (!date) return "N/A";
+      return new Date(date).toLocaleString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    };
+
+    // Additional processing for each enquiry
     const customizedEnquiries = await Promise.all(
       enquiries.map(async (enquiry) => {
-        const parentName = `${enquiry.parentFirstName || ""} ${
-          enquiry.parentLastName || ""
-        }`.trim();
-        const kidName = `${enquiry.kidFirstName || ""} ${
-          enquiry.kidLastName || ""
-        }`.trim();
+        const parentName = `${enquiry.parentFirstName || ""} ${enquiry.parentLastName || ""}`.trim();
+        const kidName = `${enquiry.kidFirstName || ""} ${enquiry.kidLastName || ""}`.trim();
 
+        // Get latest action from logs if needed
         let latestAction = null;
         if (enquiry.logs) {
           const lastLog = await enquiryLogs.findOne({ _id: enquiry.logs });
@@ -48,45 +74,49 @@ const getAllActiveEnquiries = async (req, res) => {
           }
         }
 
-        let lastNoteAction = null;
+        // Get last note if needed
+        let lastNote = null;
         const noteSection = await NotesSection.findOne(
           { enqId: enquiry._id },
           { notes: 1, createdOn: 1 }
-        );
+        ).sort({ createdOn: -1 });
+
         if (noteSection?.notes?.length) {
-          // Assuming notes are in chronological order
-          lastNoteAction = noteSection.notes[noteSection.notes.length - 1];
+          lastNote = noteSection.notes[noteSection.notes.length - 1];
         }
 
-        const formatDate = (date) => {
-          if (!date) return null;
-          const d = new Date(date);
-          const day = String(d.getDate()).padStart(2, "0");
-          const month = String(d.getMonth() + 1).padStart(2, "0");
-          const year = d.getFullYear();
-          return `${day}-${month}-${year}`;
-        };
-
-        const createdAt = formatDate(enquiry.createdAt);
-        const updatedAt = formatDate(enquiry.updatedAt);
-
         return {
-          ...enquiry.toObject(),
+          ...enquiry,
           parentName,
           kidName,
           latestAction,
-          lastNoteAction: lastNoteAction?.disposition || "None",
-          createdOn: lastNoteAction?.createdOn || "createdOn",
-          createdAt,
-          updatedAt,
+          lastNote: lastNote?.disposition || "None",
+          formattedCreatedAt: formatDate(enquiry.createdAt),
+          formattedUpdatedAt: formatDate(enquiry.updatedAt),
+          lastNoteDate: formatDate(lastNote?.createdOn)
         };
       })
     );
 
-    res.status(200).json(customizedEnquiries);
+    // Calculate total pages
+    const totalPages = Math.ceil(total / limit);
+
+    res.status(200).json({
+      success: true,
+      data: customizedEnquiries,
+      total,
+      page,
+      limit,
+      totalPages
+    });
+
   } catch (error) {
-    console.log("Error", error);
-    res.status(500).json({ message: "Error fetching data" });
+    console.error("Error in getAllActiveEnquiries:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching active enquiries",
+      error: error.message
+    });
   }
 };
 
@@ -325,11 +355,11 @@ const getCoachAvailableDays = async (req, res) => {
         coachInfo: coachInfo || null,
         centerInfo: centerInfo
           ? {
-              centerId: centerInfo._id,
-              centerType: centerInfo.centerType,
-              businessHours: centerInfo.businessHours,
-              programLevels: centerInfo.programLevels,
-            }
+            centerId: centerInfo._id,
+            centerType: centerInfo.centerType,
+            businessHours: centerInfo.businessHours,
+            programLevels: centerInfo.programLevels,
+          }
           : null,
       };
     });
@@ -919,12 +949,12 @@ const displaySelectedClass = async (req, res) => {
         ...session.toObject(),
         ...(matchedClass
           ? {
-              classTime: matchedClass.classTime,
-              coachName: matchedClass.coachName,
-              program: matchedClass.program,
-              level: matchedClass.level,
-              centerName: matchedClass.centerName,
-            }
+            classTime: matchedClass.classTime,
+            coachName: matchedClass.coachName,
+            program: matchedClass.program,
+            level: matchedClass.level,
+            centerName: matchedClass.centerName,
+          }
           : {}),
       };
     });
@@ -1042,8 +1072,8 @@ const pauseTheClassTemporary = async (req, res) => {
       {
         $push: {
           logs: {
-            employeeName: empData?.firstName||"Parent",
-            department: empData?.department||"NA",
+            employeeName: empData?.firstName || "Parent",
+            department: empData?.department || "NA",
             comment: `Due to ${pauseRemarks}, the classes are paused from ${formattedStartDate} to ${formattedEndDate}.`,
             action: "",
           },
@@ -1070,7 +1100,7 @@ const pauseTheClassTemporary = async (req, res) => {
 
 const resumeTheClassBack = async (req, res) => {
   try {
-    const { enqId, classId,empId } = req.params;
+    const { enqId, classId, empId } = req.params;
     const { updatedData, pauseRemarks } = req.body;
     const empData = await Employee.findOne(
       { _id: empId },
@@ -1092,13 +1122,13 @@ const resumeTheClassBack = async (req, res) => {
       return res.status(404).json({ message: "Class not found" });
     }
 
-     await enquiryLogs.updateOne(
+    await enquiryLogs.updateOne(
       { enqId: enqId },
       {
         $push: {
           logs: {
-            employeeName: empData?.firstName||"Parent",
-            department: empData?.department||"NA",
+            employeeName: empData?.firstName || "Parent",
+            department: empData?.department || "NA",
             comment: `The paused classes are resumed `,
             action: "",
           },

@@ -26,6 +26,14 @@ const offlineClassPackage = require("../../../model/class/offlineClassPackage");
 const hybridClassPackage = require("../../../model/class/hybridClassPackage");
 const kitPackages = require("../../../model/class/kitPrice");
 
+const relBtwKidParent = require("../../../model/kimsdatabase/relBtwParentKid");
+const kimsParentDataBase = require("../../../model/kimsdatabase/basicParentDataKIMS");
+const kimsKidsDataBase = require("../../../model/kimsdatabase/basicStudentsDb");
+const kidProgramDataBase = require("../../../model/kimsdatabase/kidProgramRelation");
+const programDataBase = require("../../../model/kimsdatabase/programDataKims");
+const enrollmentCenterKidRelationLink = require("../../../model/kimsdatabase/relBtwAlottedKids");
+const { default: mongoose } = require("mongoose");
+
 const registerEmployee = async (req, res) => {
   try {
     // Extract employee details from the request body
@@ -179,9 +187,8 @@ const enquiryFormData = async (req, res) => {
           employeeName: empData.firstName,
           department: empData.department,
           comment: "Enquiry form submission",
-          action: `Enquiry form submitted by ${empData.firstName} in ${
-            empData.department
-          } on ${new Date().toLocaleString()}`,
+          action: `Enquiry form submitted by ${empData.firstName} in ${empData.department
+            } on ${new Date().toLocaleString()}`,
           createdAt: new Date(),
         },
       ],
@@ -229,170 +236,6 @@ const updateEnquiryDetails = async (req, res) => {
     res.status(500).json({ message: "Internal server error", error: err });
   }
 };
-
-// const updateProspectData = async (req, res) => {
-//   try {
-//     console.log("..........................................");
-//     console.log("Prospects");
-//     const formattedDateTime = new Intl.DateTimeFormat("en-US", {
-//       dateStyle: "medium",
-//       timeStyle: "short",
-//     }).format(new Date());
-
-//     const { id } = req.params;
-//     const { empId } = req.body;
-
-//     const empData = await Employee.findOne(
-//       { _id: empId },
-//       { firstName: 1, department: 1 }
-//     );
-//     if (!empData) {
-//       return res.status(404).json({ message: "Employee not found" });
-//     }
-//     console.log("Employee Data", empData);
-
-//     const enquiryData = await OperationDept.findOne({ _id: id });
-//     if (!enquiryData) {
-//       return res.status(404).json({ message: "Enquiry data not found" });
-//     }
-//     console.log("Enquiry Data", enquiryData);
-
-//     console.log("..........................................");
-
-//     // 1. Handle Parent Registration
-//     let parentData = await parentSchema.findOne({
-//       parentMobile: enquiryData.whatsappNumber,
-//     });
-
-//     // If Parent doesn't exist, create a new one
-//     if (!parentData) {
-//       parentData = new parentSchema({
-//         parentName: enquiryData.parentFirstName,
-//         parentEmail: enquiryData.email,
-//         parentMobile: enquiryData.whatsappNumber,
-//         kids: [],
-//         type: "new",
-//         status: "Active",
-//       });
-
-//       await parentData.save();
-//     }
-//     console.log("parent data after move to prospects", parentData);
-
-//     // 2. Handle Kid Registration
-//     const chessId = generateChessId();
-//     const kidPin = generateOTP();
-
-//     // Create new Kid
-//     const newKid = new kidSchema({
-//       enqId: id,
-//       kidsName: enquiryData.kidFirstName,
-//       age: enquiryData.kidsAge,
-//       gender: enquiryData.kidsGender,
-//       schoolName: enquiryData.schoolName,
-//       address: enquiryData.address,
-//       pincode: enquiryData.pincode,
-//       parentId: parentData._id,
-//       selectedProgram: enquiryData.programs || "",
-//       chessId,
-//       kidPin,
-//     });
-
-//     await newKid.save();
-//     console.log("kids data after move to prospects", parentData);
-
-//     parentData.kids.push({ kidId: newKid._id });
-//     await parentData.save();
-
-//     enquiryData.kidId = newKid._id;
-//     await enquiryData.save();
-
-//     // 4. Update the Log in the Log Database
-//     if (enquiryData.logs) {
-//       console.log("insode the logs");
-//       const logUpdate = {
-//         employeeId: empId,
-//         employeeName: empData.firstName,
-//         action: `Enuiry data is moved to prospects by ${empData.firstName} in ${empData.department} department on ${formattedDateTime}`,
-
-//         updatedAt: new Date(),
-//       };
-
-//       const newLogs = await enquiryLogs.findByIdAndUpdate(
-//         { _id: enquiryData.logs },
-//         {
-//           $push: { logs: logUpdate },
-//         },
-//         { new: true }
-//       );
-
-//       console.log("new log updated", newLogs);
-//     }
-
-//     // 5. Create Log Entries for the Action
-//     const logs = [
-//       {
-//         employeeId: empId,
-//         employeeName: empData.firstName,
-
-//         action: `Enquiry moved to prospects by ${
-//           empData.name
-//         } on ${new Date().toLocaleString()}`,
-//         createdAt: new Date(),
-//       },
-//     ];
-
-//     if (parentData._id) {
-//       logs.push({
-//         employeeId: empId,
-//         employeeName: empData.firstName,
-//         comments: `Registered new parent with ID: ${parentData._id}`,
-//         action: "Parent Registration",
-//         createdAt: new Date(),
-//       });
-//     }
-
-//     if (newKid._id) {
-//       logs.push({
-//         employeeId: empId,
-//         employeeName: empData.firstName,
-//         comments: `Registered new kid with ID: ${newKid._id}`,
-//         action: "Kid Registration",
-//         createdAt: new Date(),
-//       });
-//     }
-
-//     // 6. Update the OperationDept Entry
-//     const updatedEntry = await OperationDept.findByIdAndUpdate(
-//       { _id: id },
-//       {
-//         $set: { enquiryField: "prospects" },
-//       },
-//       { new: true }
-//     );
-
-//     if (!updatedEntry) {
-//       return res.status(404).json({ message: "Prospect data not found" });
-//     }
-
-//     console.log("updatedEntry", updatedEntry);
-
-//     // Return Success Response
-//     res.status(200).json({
-//       success: true,
-//       message: "Prospect data updated successfully and moved to prospects",
-//       data: updatedEntry,
-//       parentData: parentData,
-//       kidData: newKid,
-//     });
-//   } catch (error) {
-//     console.error("Error updating prospect data", error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Failed to update prospect data. Please try again later.",
-//     });
-//   }
-// };
 
 const updateProspectData = async (req, res) => {
   try {
@@ -633,9 +476,8 @@ const moveBackToEnquiry = async (req, res) => {
         employeeId: empId,
         employeeName: empData.firstName,
 
-        action: `Enquiry moved to prospects by ${
-          empData.name
-        } on ${new Date().toLocaleString()}`,
+        action: `Enquiry moved to prospects by ${empData.name
+          } on ${new Date().toLocaleString()}`,
         createdAt: new Date(),
       },
     ];
@@ -670,10 +512,11 @@ const moveBackToEnquiry = async (req, res) => {
   }
 };
 
-// Get All Enquiries
 // const getAllEnquiries = async (req, res) => {
 //   try {
-//     const enquiries = await OperationDept.find({ enquiryField: "enquiryList" });
+//     const enquiries = await OperationDept.find({
+//       enquiryField: "enquiryList",
+//     }).sort({ createdAt: -1 });
 
 //     const customizedEnquiries = await Promise.all(
 //       enquiries.map(async (enquiry) => {
@@ -684,52 +527,53 @@ const moveBackToEnquiry = async (req, res) => {
 //           enquiry.kidLastName || ""
 //         }`.trim();
 
+//         // Get latest action from logs
 //         let latestAction = null;
 //         if (enquiry.logs) {
 //           const lastLog = await enquiryLogs.findOne({ _id: enquiry.logs });
-
-//           const sortedLogs = lastLog.logs.sort(
-//             (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-//           );
-//           latestAction = sortedLogs[0].action;
+//           if (lastLog?.logs?.length) {
+//             const sortedLogs = lastLog.logs.sort(
+//               (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+//             );
+//             latestAction = sortedLogs[0]?.action || null;
+//           }
 //         }
 
-//         let lastNoteAction = await NotesSection.findOne(
+//         // Get last note disposition
+//         let lastNoteAction = null;
+//         const noteSection = await NotesSection.findOne(
 //           { enqId: enquiry._id },
-//           { "notes.disposition": 1 }
+//           { notes: 1, createdOn: 1 }
 //         );
-//         console.log(".........................................")
-//         console.log("lastNoteAction==>", lastNoteAction);
-//         console.log(".........................................")
-
-//         if (lastNoteAction) {
-//           const sortedLogs = lastNoteAction.notes.sort(
-//             (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-//           );
-//           lastNoteAction = sortedLogs[sortedLogs.length-1];
+//         if (noteSection?.notes?.length) {
+//           lastNoteAction = noteSection.notes[noteSection.notes.length - 1];
 //         }
-//         console.log("lastNoteAction",lastNoteAction)
 
+//         // ✅ Format date in IST
 //         const formatDate = (date) => {
-//           if (!date) return null;
-//           const d = new Date(date);
-//           const day = String(d.getDate()).padStart(2, "0");
-//           const month = String(d.getMonth() + 1).padStart(2, "0");
-//           const year = d.getFullYear();
-//           return `${day}-${month}-${year}`;
+//           if (!date) return "N/A";
+//           return new Date(date).toLocaleString("en-IN", {
+//             timeZone: "Asia/Kolkata",
+//             day: "2-digit",
+//             month: "2-digit",
+//             year: "numeric",
+//             hour: "2-digit",
+//             minute: "2-digit",
+//             hour12: true,
+//           });
 //         };
 
 //         const createdAt = formatDate(enquiry.createdAt);
-//         const updatedAt = formatDate(enquiry.updatedAt);
+//         const createdOn = formatDate(lastNoteAction?.createdOn);
 
 //         return {
 //           ...enquiry.toObject(),
 //           parentName,
 //           kidName,
 //           latestAction,
-
+//           lastNoteAction: lastNoteAction?.disposition || "None",
+//           createdOn,
 //           createdAt,
-//           updatedAt,
 //         };
 //       })
 //     );
@@ -743,151 +587,127 @@ const moveBackToEnquiry = async (req, res) => {
 
 const getAllEnquiries = async (req, res) => {
   try {
+    const page = Math.max(parseInt(req.query.page) || 1, 1); // Ensure page is at least 1
+    const limit = Math.min(Math.max(parseInt(req.query.limit) || 15, 1), 100); // Default 15, max 100
+    const skip = (page - 1) * limit;
+
+    // 1️⃣ Get total count of all enquiries
+    const total = await OperationDept.countDocuments({
+      enquiryField: "enquiryList"
+    });
+
+    // 2️⃣ Fetch paginated enquiries
     const enquiries = await OperationDept.find({
-      enquiryField: "enquiryList",
-    }).sort({ createdAt: -1 });
+      enquiryField: "enquiryList"
+    })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(); // Convert to plain JavaScript objects
 
-    const customizedEnquiries = await Promise.all(
-      enquiries.map(async (enquiry) => {
-        const parentName = `${enquiry.parentFirstName || ""} ${
-          enquiry.parentLastName || ""
-        }`.trim();
-        const kidName = `${enquiry.kidFirstName || ""} ${
-          enquiry.kidLastName || ""
-        }`.trim();
+    // Format dates
+    const formatDate = (date) => {
+      if (!date) return "N/A";
+      return new Date(date).toLocaleString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    };
 
-        // Get latest action from logs
-        let latestAction = null;
-        if (enquiry.logs) {
-          const lastLog = await enquiryLogs.findOne({ _id: enquiry.logs });
-          if (lastLog?.logs?.length) {
-            const sortedLogs = lastLog.logs.sort(
-              (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-            );
-            latestAction = sortedLogs[0]?.action || null;
-          }
-        }
+    // Format the response data
+    const formattedEnquiries = enquiries.map(enquiry => ({
+      ...enquiry,
+      formattedCreatedAt: formatDate(enquiry.createdAt),
+      formattedUpdatedAt: formatDate(enquiry.updatedAt)
+    }));
 
-        // Get last note disposition
-        let lastNoteAction = null;
-        const noteSection = await NotesSection.findOne(
-          { enqId: enquiry._id },
-          { notes: 1, createdOn: 1 }
-        );
-        if (noteSection?.notes?.length) {
-          lastNoteAction = noteSection.notes[noteSection.notes.length - 1];
-        }
+    // Calculate total pages
+    const totalPages = Math.ceil(total / limit);
 
-        // ✅ Format date in IST
-        const formatDate = (date) => {
-          if (!date) return "N/A";
-          return new Date(date).toLocaleString("en-IN", {
-            timeZone: "Asia/Kolkata",
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: true,
-          });
-        };
+    res.status(200).json({
+      success: true,
+      data: formattedEnquiries,
+      total,
+      page,
+      limit,
+      totalPages
+    });
 
-        const createdAt = formatDate(enquiry.createdAt);
-        const createdOn = formatDate(lastNoteAction?.createdOn);
-
-        return {
-          ...enquiry.toObject(),
-          parentName,
-          kidName,
-          latestAction,
-          lastNoteAction: lastNoteAction?.disposition || "None",
-          createdOn,
-          createdAt,
-        };
-      })
-    );
-
-    res.status(200).json(customizedEnquiries);
   } catch (error) {
-    console.log("Error", error);
-    res.status(500).json({ message: "Error fetching data" });
+    console.error("Error in getAllEnquiries:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching enquiries",
+      error: error.message
+    });
   }
 };
 
 const getProspectsData = async (req, res) => {
   try {
-    const enquiries = await OperationDept.find({
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit) || 15, 1), 100);
+    const skip = (page - 1) * limit;
+
+    // Get total count of all prospects
+    const total = await OperationDept.countDocuments({
       enquiryField: "prospects",
-      paymentStatus: "Pending",
-    }).sort({ createdAt: -1 });
-    console.log("enquiries", enquiries);
+      paymentStatus: "Pending"
+    });
 
-    const customizedEnquiries = await Promise.all(
-      enquiries.map(async (enquiry) => {
-        const parentName = `${enquiry.parentFirstName || ""} ${
-          enquiry.parentLastName || ""
-        }`.trim();
-        const kidName = `${enquiry.kidFirstName || ""} ${
-          enquiry.kidLastName || ""
-        }`.trim();
+    // Fetch paginated prospects
+    const prospects = await OperationDept.find({
+      enquiryField: "prospects",
+      paymentStatus: "Pending"
+    })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
 
-        // Get latest action from logs
-        let latestAction = null;
-        if (enquiry.logs) {
-          const lastLog = await enquiryLogs.findOne({ _id: enquiry.logs });
-          if (lastLog?.logs?.length) {
-            const sortedLogs = lastLog.logs.sort(
-              (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-            );
-            latestAction = sortedLogs[0]?.action || null;
-          }
-        }
+    // Format dates
+    const formatDate = (date) => {
+      if (!date) return "N/A";
+      return new Date(date).toLocaleString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    };
 
-        // Get last note action
-        let lastNoteAction = null;
-        const noteSection = await NotesSection.findOne(
-          { enqId: enquiry._id },
-          { notes: 1, createdOn: 1 }
-        );
-        if (noteSection?.notes?.length) {
-          lastNoteAction = noteSection.notes[noteSection.notes.length - 1];
-        }
+    // Format the response data
+    const formattedProspects = prospects.map(prospect => ({
+      ...prospect,
+      formattedCreatedAt: formatDate(prospect.createdAt),
+      formattedUpdatedAt: formatDate(prospect.updatedAt)
+    }));
 
-        // ✅ IST Date formatting function
-        const formatDate = (date) => {
-          if (!date) return "N/A";
-          return new Date(date).toLocaleString("en-IN", {
-            timeZone: "Asia/Kolkata",
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: true,
-          });
-        };
+    // Calculate total pages
+    const totalPages = Math.ceil(total / limit);
 
-        const createdAt = formatDate(enquiry.createdAt);
-        const updatedAt = formatDate(enquiry.updatedAt);
-        const createdOn = formatDate(lastNoteAction?.createdOn);
+    res.status(200).json({
+      success: true,
+      data: formattedProspects,
+      total,
+      page,
+      limit,
+      totalPages
+    });
 
-        return {
-          ...enquiry.toObject(),
-          parentName,
-          kidName,
-          latestAction,
-          lastNoteAction: lastNoteAction?.disposition || "None",
-          createdOn,
-          createdAt,
-          updatedAt,
-        };
-      })
-    );
-
-    res.status(200).json(customizedEnquiries);
   } catch (error) {
-    console.log("Error", error);
-    res.status(500).json({ message: "Error fetching data" });
+    console.error("Error in getProspectsData:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching prospects data",
+      error: error.message
+    });
   }
 };
 
@@ -2392,9 +2212,8 @@ const updateTask = async (req, res) => {
     await ActivityLog.create({
       taskId: updatedTask._id,
       action: "UPDATE",
-      details: `Task updated by ${
-        updatingEmployee.firstName
-      }  Changes: ${JSON.stringify(req.body)}`,
+      details: `Task updated by ${updatingEmployee.firstName
+        }  Changes: ${JSON.stringify(req.body)}`,
       performedBy: empId,
       performedByName: `${updatingEmployee.firstName}`,
     });

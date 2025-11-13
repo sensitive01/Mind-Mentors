@@ -99,6 +99,11 @@ const Prospects = () => {
 
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [rowCount, setRowCount] = useState(0);
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 15, // Default to 15 records per page
+  });
   const [confirmDialog, setConfirmDialog] = useState({
     open: false,
     studentName: "",
@@ -111,38 +116,35 @@ const Prospects = () => {
     phoneNumber: null,
   });
 
+  const loadEnquiries = async (page, pageSize) => {
+    try {
+      setLoading(true);
+      const { data, total } = await fechAllActiveEnrolledEnquiry(page + 1, pageSize);
+      
+      const rowsWithSlNo = data.map((item, index) => ({
+        ...item,
+        slNo: (page * pageSize) + index + 1, // Calculate serial number based on pagination
+      }));
+
+      setRows(rowsWithSlNo);
+      setRowCount(total || 0);
+    } catch (err) {
+      console.error("Failed to fetch Active Enquiries:", err);
+      toast.error("Failed to load active enquiries. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load data when component mounts and when pagination changes
   useEffect(() => {
-    const loadLeaves = async () => {
-      try {
-        const data = await fechAllActiveEnrolledEnquiry();
-        console.log(data);
+    loadEnquiries(paginationModel.page, paginationModel.pageSize);
+  }, [paginationModel.page, paginationModel.pageSize]);
 
-        // Add serial numbers to rows
-        const rowsWithSlNo = data.map((item, index) => ({
-          ...item,
-          slNo: index + 1, // Serial number starts at 1
-        }));
-
-        setRows(rowsWithSlNo);
-      } catch (err) {
-        console.log("Failed to fetch Enquiries. Please try again later.", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadLeaves();
-  }, []);
-
-  // In Prospects.jsx
   const [viewDialog, setViewDialog] = useState({
     open: false,
     rowData: null,
     showEdit: false,
-  });
-  const [paginationModel, setPaginationModel] = useState({
-    page: 0,
-    pageSize: 5,
   });
 
   const handleStatusToggle = async (id) => {
@@ -296,13 +298,16 @@ const Prospects = () => {
                   theme,
                   handleStatusToggle,
                   handleShowLogs,
-                  handleShowStatus,
                   handleMessage
                 )}
+                paginationMode="server"
+                rowCount={rowCount}
                 paginationModel={paginationModel}
                 onPaginationModelChange={setPaginationModel}
                 pageSizeOptions={[15, 30, 50]}
+                pagination
                 disableRowSelectionOnClick
+                loading={loading}
                 // editMode="row"
                 getRowId={(row) => row._id}
                 onRowClick={(params) => {

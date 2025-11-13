@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
   Eye,
   TrendingUp,
@@ -9,82 +9,209 @@ import {
   ChevronLeft,
   ChevronRight,
   Users,
+  Loader2,
+  AlertCircle,
+  RefreshCw
 } from "lucide-react";
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import {
   getChessPayingKidTable,
   getRFID,
 } from "../../../api/service/employee/EmployeeService";
 import { useNavigate } from "react-router-dom";
 
-
-
 const ChessKidButton = () => {
   const navigate = useNavigate();
   const [count, setCount] = useState(null);
   const [loadingRFID, setLoadingRFID] = useState(false);
   const [error, setError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   const [studentsData, setStudentsData] = useState([]);
   const [totalStudents, setTotalStudents] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [loadingTable, setLoadingTable] = useState(false);
+  const [loadingTable, setLoadingTable] = useState(true);
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [isPageChanging, setIsPageChanging] = useState(false);
+  const [dataCache, setDataCache] = useState({});
 
-  const studentsPerPage = 10;
+  const studentsPerPage = 50; // Reduced from 100 to 50 for better performance
+  const MAX_RETRIES = 3;
 
-  /** Fetch paginated students when currentPage changes */
-  useEffect(() => {
-    const fetchStudentsData = async () => {
+  /** Fetch paginated students when currentPage or retryCount changes */
+  const fetchStudentsData = useCallback(async () => {
+    // Return cached data if available
+    if (dataCache[currentPage]) {
+      const cachedData = dataCache[currentPage];
+      setStudentsData(cachedData.data);
+      setTotalStudents(cachedData.total);
+      setTotalPages(cachedData.totalPages);
+      setRetryCount(0);
+      if (isInitialLoad) setIsInitialLoad(false);
+      return;
+    }
+
+    if (!isInitialLoad) {
       setLoadingTable(true);
-      setError(null);
+      setIsPageChanging(true);
+    }
+    setError(null);
 
-      try {
-        const res = await getChessPayingKidTable(currentPage, studentsPerPage);
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // Reduced timeout to 10s
 
-        if (res.status === 200) {
-          setStudentsData(res.data.data);
-          setTotalStudents(res.data.total);
-          setTotalPages(Math.ceil(res.data.total / studentsPerPage));
-        }
-      } catch (err) {
-        console.error("Error fetching students:", err);
-        setError(err.message);
-      } finally {
-        setLoadingTable(false);
+      // Add timestamp to prevent caching
+      const timestamp = new Date().getTime();
+      const res = await getChessPayingKidTable(currentPage, studentsPerPage, { 
+        signal: controller.signal,
+        params: { _t: timestamp }
+      });
+      clearTimeout(timeoutId);
+
+      if (res.status === 200) {
+        const responseData = res.data;
+        const totalPages = Math.ceil(responseData.total / studentsPerPage);
+        
+        // Update cache
+        setDataCache(prev => ({
+          ...prev,
+          [currentPage]: {
+            data: responseData.data,
+            total: responseData.total,
+            totalPages
+          }
+        }));
+
+        setStudentsData(responseData.data);
+        setTotalStudents(responseData.total);
+        setTotalPages(totalPages);
+        setRetryCount(0);
+        if (isInitialLoad) setIsInitialLoad(false);
       }
-    };
+    } catch (err) {
+      console.error("Error fetching students:", err);
+      
+      // Don't show error if it's an abort
+      if (err.name === 'AbortError') {
+        toast.info('Request timed out. Please try again.');
+        return;
+      }
+      
+      if (retryCount < MAX_RETRIES) {
+        const delay = Math.min(1000 * Math.pow(2, retryCount), 5000); // Reduced max delay to 5s
+        toast.warn(`Attempt ${retryCount + 1} failed. Retrying in ${delay/1000}s...`, {
+          autoClose: delay,
+          pauseOnHover: false
+        });
+        
+        setTimeout(() => {
+          setRetryCount(prev => prev + 1);
+        }, delay);
+      } else {
+        setError({
+          message: 'Failed to load data. Please try again.',
+          details: err.message
+        });
+        toast.error('Failed to load data. Please check your connection and try again.');
+      }
+    } finally {
+      setLoadingTable(false);
+      setIsPageChanging(false);
+    }
+  }, [currentPage, retryCount, isInitialLoad, studentsPerPage]);
 
+  useEffect(() => {
     fetchStudentsData();
-  }, [currentPage]);
+  }, [fetchStudentsData]);
 
-  /** Fetch RFID statistics */
-  const fetchCount = async () => {
+  // Auto-refresh data every 5 minutes
+  useEffect(() => {
+    if (isInitialLoad) return;
+    
+    const refreshInterval = setInterval(() => {
+      if (!loadingTable && document.visibilityState === 'visible') {
+        fetchStudentsData();
+      }
+    }, 5 * 60 * 1000); // 5 minutes
+
+    return () => clearInterval(refreshInterval);
+  }, [fetchStudentsData, isInitialLoad, loadingTable]);
+
+  /** Fetch RFID statistics with retry logic */
+  const fetchCount = async (retry = 0) => {
     setLoadingRFID(true);
     setError(null);
 
     try {
       const res = await getRFID();
-      if (res.status === 200) setCount(res.data);
+      if (res.status === 200) {
+        setCount(res.data);
+        return true;
+      }
+      throw new Error('Failed to fetch RFID data');
     } catch (err) {
-      console.error("Error:", err);
-      setError(err.message);
+      console.error("Error fetching RFID data:", err);
+      
+      if (retry < MAX_RETRIES) {
+        const delay = Math.min(1000 * Math.pow(2, retry), 5000);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return fetchCount(retry + 1);
+      }
+      
+      setError(prev => ({
+        ...prev,
+        rfidError: 'Failed to load RFID statistics. Please try again later.'
+      }));
+      return false;
     } finally {
       setLoadingRFID(false);
     }
   };
 
-  /** Pagination numbers */
+  /** Pagination numbers with ellipsis - optimized for 100 items per page */
   const getPageNumbers = () => {
     const pageNumbers = [];
-    const maxVisible = 5;
-    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-    let end = Math.min(totalPages, start + maxVisible - 1);
-
-    if (end - start + 1 < maxVisible) {
-      start = Math.max(1, end - maxVisible + 1);
+    const maxVisible = 5; // Show max 5 page numbers at a time
+    
+    // Always show first page
+    pageNumbers.push(1);
+    
+    // Calculate start and end of the middle section
+    let start = Math.max(2, currentPage - 1);
+    let end = Math.min(totalPages - 1, currentPage + 1);
+    
+    // Adjust if we're near the start or end
+    if (currentPage <= 3) {
+      end = Math.min(4, totalPages - 1);
+    } else if (currentPage >= totalPages - 2) {
+      start = Math.max(2, totalPages - 3);
     }
-
-    for (let i = start; i <= end; i++) pageNumbers.push(i);
+    
+    // Add ellipsis after first page if needed
+    if (start > 2) {
+      pageNumbers.push('...');
+    }
+    
+    // Add middle pages
+    for (let i = start; i <= end; i++) {
+      if (i > 1 && i < totalPages) {
+        pageNumbers.push(i);
+      }
+    }
+    
+    // Add ellipsis before last page if needed
+    if (end < totalPages - 1) {
+      pageNumbers.push('...');
+    }
+    
+    // Always show last page if there is more than one page
+    if (totalPages > 1) {
+      pageNumbers.push(totalPages);
+    }
+    
     return pageNumbers;
   };
 
@@ -117,21 +244,72 @@ const ChessKidButton = () => {
     }
   };
 
+  const handleRetry = () => {
+    setError(null);
+    setRetryCount(0);
+    fetchStudentsData();
+  };
+
+  const renderLoadingState = useMemo(() => {
+    return () => (
+      <div className="flex flex-col items-center justify-center py-12">
+        <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" />
+        <p className="text-gray-600">
+          {isPageChanging ? 'Loading next page...' : 'Loading student data...'}
+        </p>
+        <p className="text-sm text-gray-500 mt-2">Loading {studentsPerPage} records...</p>
+      </div>
+    );
+  }, [isPageChanging, studentsPerPage]);
+
+  const renderErrorState = () => (
+    <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
+      <div className="flex">
+        <div className="flex-shrink-0">
+          <AlertCircle className="h-5 w-5 text-red-400" />
+        </div>
+        <div className="ml-3">
+          <p className="text-sm text-red-700">
+            {error?.message || 'An error occurred while loading data.'}
+          </p>
+          <div className="mt-2">
+            <button
+              onClick={handleRetry}
+              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            >
+              <RefreshCw className="mr-1.5 h-3 w-3" />
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Chess Students Dashboard
-          </h1>
-          <p className="text-gray-600">
-            Monitor student performance and statistics
-          </p>
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                Chess Students Dashboard
+              </h1>
+              <p className="text-gray-600 text-sm sm:text-base">
+                Monitor student performance and statistics
+              </p>
+            </div>
+            <div className="text-sm text-gray-500">
+              Showing {studentsData.length} of {totalStudents} students
+            </div>
+          </div>
+          
+          {error && renderErrorState()}
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
           {/* Total Students Card */}
           <div className="bg-white rounded-xl shadow-sm border p-6">
             <div className="flex items-center justify-between">
@@ -250,7 +428,7 @@ const ChessKidButton = () => {
         )}
 
         {/* Students Table */}
-        <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+        <div id="students-table" className="bg-white rounded-xl shadow-sm border overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-xl font-semibold text-gray-900">
               Chess Students ({totalStudents} total)
@@ -258,9 +436,10 @@ const ChessKidButton = () => {
           </div>
 
           {loadingTable ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-600 border-t-transparent"></div>
-              <span className="ml-3 text-gray-600">Loading students...</span>
+            renderLoadingState()
+          ) : error && !studentsData.length ? (
+            <div className="col-span-4">
+              {renderErrorState()}
             </div>
           ) : (
             <>

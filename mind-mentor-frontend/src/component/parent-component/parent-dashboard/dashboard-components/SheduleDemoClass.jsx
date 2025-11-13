@@ -28,6 +28,7 @@ const SheduleDemoClass = () => {
   const { id } = useParams();
   const [apiData, setApiData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,17 +47,16 @@ const SheduleDemoClass = () => {
 
   const [selectedProgram, setSelectedProgram] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("");
-  const [classType, setClassType] = useState(""); // 'online' or 'offline'
+  const [classType, setClassType] = useState("");
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
-  const [currentMonth, setCurrentMonth] = useState(new Date(2025, 7)); // August 2025
+
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   const [isEditing, setIsEditing] = useState(false);
 
-  // Check if kid has selected programs
   const hasSelectedPrograms = apiData?.kidData?.selectedProgram?.length > 0;
 
-  // Extract programs and levels from demoClassData
   const programs = useMemo(() => {
     if (!apiData?.demoClassData) return [];
     return [
@@ -75,7 +75,6 @@ const SheduleDemoClass = () => {
     ].sort();
   }, [selectedProgram, apiData]);
 
-  // Check available class types for selected program and level
   const availableClassTypes = useMemo(() => {
     if (!selectedProgram || !selectedLevel || !apiData?.demoClassData)
       return [];
@@ -94,7 +93,6 @@ const SheduleDemoClass = () => {
     return Array.from(types);
   }, [selectedProgram, selectedLevel, apiData]);
 
-  // Set initial values if kid has selected programs
   useEffect(() => {
     if (hasSelectedPrograms && !isEditing) {
       const firstProgram = apiData.kidData.selectedProgram[0];
@@ -103,7 +101,16 @@ const SheduleDemoClass = () => {
     }
   }, [apiData, hasSelectedPrograms, isEditing]);
 
-  // Get available dates for selected program, level, and class type based on days
+  useEffect(() => {
+    if (availableClassTypes.length > 0 && !classType) {
+      if (availableClassTypes.includes("online")) {
+        setClassType("online");
+      } else if (availableClassTypes.includes("offline")) {
+        setClassType("offline");
+      }
+    }
+  }, [availableClassTypes, classType]);
+
   const availableDates = useMemo(() => {
     if (
       !selectedProgram ||
@@ -113,7 +120,6 @@ const SheduleDemoClass = () => {
     )
       return new Set();
 
-    // Get all unique days for the selected program, level, and class type
     const availableDays = apiData.demoClassData
       .filter(
         (slot) =>
@@ -122,25 +128,13 @@ const SheduleDemoClass = () => {
           slot.type === classType &&
           slot.enrolledKidCount < slot.maximumKidCount
       )
-      .map((slot) => slot.day); // Use 'day' instead of parsing classDate
+      .map((slot) => slot.day);
 
     const uniqueDays = [...new Set(availableDays)];
 
-    // Generate dates for the current month and next few months based on available days
     const dates = new Set();
     const today = new Date();
-    const endDate = new Date(today.getFullYear(), today.getMonth() + 3, 0); // 3 months ahead
-
-    // Map day names to numbers (Sunday = 0, Monday = 1, etc.)
-    const dayNameToNumber = {
-      Sunday: 0,
-      Monday: 1,
-      Tuesday: 2,
-      Wednesday: 3,
-      Thursday: 4,
-      Friday: 5,
-      Saturday: 6,
-    };
+    const endDate = new Date(today.getFullYear(), today.getMonth() + 3, 0);
 
     for (
       let date = new Date(today);
@@ -149,7 +143,6 @@ const SheduleDemoClass = () => {
     ) {
       const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
 
-      // Check if this day is available and the date is not in the past
       if (uniqueDays.includes(dayName) && date >= today.setHours(0, 0, 0, 0)) {
         dates.add(new Date(date).toDateString());
       }
@@ -158,7 +151,6 @@ const SheduleDemoClass = () => {
     return dates;
   }, [selectedProgram, selectedLevel, classType, apiData]);
 
-  // Get time slots for selected date and type (online/offline) based on day
   const availableTimeSlots = useMemo(() => {
     if (
       !selectedProgram ||
@@ -169,7 +161,6 @@ const SheduleDemoClass = () => {
     )
       return [];
 
-    // Get the day name from selected date
     const selectedDayName = selectedDate.toLocaleDateString("en-US", {
       weekday: "long",
     });
@@ -179,19 +170,17 @@ const SheduleDemoClass = () => {
         (slot) =>
           slot.program === selectedProgram &&
           slot.level === selectedLevel &&
-          slot.day === selectedDayName && // Match by day name instead of exact date
+          slot.day === selectedDayName &&
           slot.enrolledKidCount < slot.maximumKidCount &&
           slot.type === classType
       )
       .sort((a, b) => {
-        // Sort by time
         const timeA = a.classTime.split(" - ")[0];
         const timeB = b.classTime.split(" - ")[0];
         return timeA.localeCompare(timeB);
       });
   }, [selectedProgram, selectedLevel, selectedDate, classType, apiData]);
 
-  // Calendar helper functions
   const getDaysInMonth = (date) => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
   };
@@ -215,12 +204,37 @@ const SheduleDemoClass = () => {
   const handleDateSelect = (date) => {
     if (isDateAvailable(date)) {
       setSelectedDate(date);
-      setSelectedSlot(null); // Reset slot selection when date changes
+      setSelectedSlot(null);
     }
   };
 
-  const handleNext = () => {
-    if (currentStep < 2) {
+  const handleNext = async () => {
+    if (currentStep === 0) {
+      try {
+        setIsProcessing(true);
+
+        console.log("programLevelData")
+
+        const programLevelData = {
+          program: selectedProgram,
+          level: selectedLevel,
+        };
+
+        const response = await parentBookDemoClassData(id, programLevelData);
+
+        if (response.status === 201) {
+          setCurrentStep(currentStep + 1);
+          toast.success("Program and level saved successfully!");
+        } else {
+          toast.error("Failed to save program and level. Please try again.");
+        }
+      } catch (error) {
+        console.error("Error saving program and level:", error);
+        toast.error("An error occurred while saving. Please try again.");
+      } finally {
+        setIsProcessing(false);
+      }
+    } else if (currentStep < 2) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -266,7 +280,7 @@ const SheduleDemoClass = () => {
       if (response.status === 201) {
         toast.success(response.data.message);
         setTimeout(() => {
-          navigate(`/parent/kid/attendance/${id}`);
+          navigate(`/parent/kid/demo-class/${id}`);
         }, 1500);
       }
     }
@@ -657,7 +671,7 @@ const SheduleDemoClass = () => {
                 <h3 className="text-lg font-semibold text-gray-800 mb-4 text-center">
                   Select Class Mode
                 </h3>
-                <div className="flex justify-center gap-3">
+                <div className="flex justify-center gap-4">
                   {availableClassTypes.includes("online") && (
                     <button
                       onClick={() => {
@@ -665,18 +679,35 @@ const SheduleDemoClass = () => {
                         setSelectedDate(null);
                         setSelectedSlot(null);
                       }}
-                      className={`px-4 py-3 rounded-lg border-2 transition-all duration-300 flex items-center gap-2 ${
+                      className={`px-6 py-4 rounded-xl border-2 transition-all duration-300 flex flex-col items-center gap-3 min-w-[140px] shadow-md hover:shadow-lg ${
                         classType === "online"
-                          ? "border-blue-500 bg-blue-50 ring-2 ring-blue-300 ring-offset-1"
-                          : "border-gray-200 hover:border-blue-300 hover:shadow-md"
+                          ? "border-blue-500 bg-blue-50 ring-4 ring-blue-200 shadow-xl transform scale-105"
+                          : "border-gray-200 hover:border-blue-300 bg-white"
                       }`}
                     >
-                      <Monitor className="w-4 h-4 text-blue-600" />
-                      <span className="text-sm font-medium text-gray-800">
-                        Online
-                      </span>
+                      <div
+                        className={`p-3 rounded-full ${
+                          classType === "online" ? "bg-blue-100" : "bg-gray-100"
+                        }`}
+                      >
+                        <Monitor
+                          className={`w-6 h-6 ${
+                            classType === "online"
+                              ? "text-blue-600"
+                              : "text-gray-600"
+                          }`}
+                        />
+                      </div>
+                      <div className="text-center">
+                        <div className="font-semibold text-gray-800">
+                          Online
+                        </div>
+                        <div className="text-xs text-gray-600 mt-1">
+                          Learn from home
+                        </div>
+                      </div>
                       {classType === "online" && (
-                        <Check className="w-4 h-4 text-blue-600" />
+                        <Check className="w-5 h-5 text-blue-600 absolute top-2 right-2" />
                       )}
                     </button>
                   )}
@@ -688,18 +719,37 @@ const SheduleDemoClass = () => {
                         setSelectedDate(null);
                         setSelectedSlot(null);
                       }}
-                      className={`px-4 py-3 rounded-lg border-2 transition-all duration-300 flex items-center gap-2 ${
+                      className={`px-6 py-4 rounded-xl border-2 transition-all duration-300 flex flex-col items-center gap-3 min-w-[140px] shadow-md hover:shadow-lg relative ${
                         classType === "offline"
-                          ? "border-green-500 bg-green-50 ring-2 ring-green-300 ring-offset-1"
-                          : "border-gray-200 hover:border-green-300 hover:shadow-md"
+                          ? "border-green-500 bg-green-50 ring-4 ring-green-200 shadow-xl transform scale-105"
+                          : "border-gray-200 hover:border-green-300 bg-white"
                       }`}
                     >
-                      <Home className="w-4 h-4 text-green-600" />
-                      <span className="text-sm font-medium text-gray-800">
-                        Offline
-                      </span>
+                      <div
+                        className={`p-3 rounded-full ${
+                          classType === "offline"
+                            ? "bg-green-100"
+                            : "bg-gray-100"
+                        }`}
+                      >
+                        <Home
+                          className={`w-6 h-6 ${
+                            classType === "offline"
+                              ? "text-green-600"
+                              : "text-gray-600"
+                          }`}
+                        />
+                      </div>
+                      <div className="text-center">
+                        <div className="font-semibold text-gray-800">
+                          Offline
+                        </div>
+                        <div className="text-xs text-gray-600 mt-1">
+                          Visit center
+                        </div>
+                      </div>
                       {classType === "offline" && (
-                        <Check className="w-4 h-4 text-green-600" />
+                        <Check className="w-5 h-5 text-green-600 absolute top-2 right-2" />
                       )}
                     </button>
                   )}
@@ -777,64 +827,128 @@ const SheduleDemoClass = () => {
                   <p className="text-gray-600">Please try a different date</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
                   {availableTimeSlots.map((slot) => (
                     <button
                       key={slot._id}
                       onClick={() => setSelectedSlot(slot)}
-                      className={`p-6 rounded-xl border-2 transition-all duration-300 text-left ${
+                      className={`group relative p-6 rounded-2xl border-3 transition-all duration-300 text-left transform hover:scale-102 cursor-pointer ${
                         selectedSlot?._id === slot._id
-                          ? "border-purple-500 bg-purple-50 shadow-lg ring-2 ring-purple-300 ring-offset-2"
-                          : "border-gray-200 hover:border-purple-300 hover:shadow-md"
+                          ? "border-purple-500 bg-gradient-to-br from-purple-50 to-purple-100 shadow-2xl ring-4 ring-purple-200 ring-opacity-50 scale-105"
+                          : "border-gray-300 bg-white hover:border-purple-400 hover:shadow-xl hover:bg-gradient-to-br hover:from-white hover:to-purple-25 shadow-md"
                       }`}
+                      style={{
+                        boxShadow:
+                          selectedSlot?._id === slot._id
+                            ? "0 20px 40px rgba(147, 51, 234, 0.2), 0 8px 16px rgba(147, 51, 234, 0.15)"
+                            : "0 8px 25px rgba(0, 0, 0, 0.1), 0 4px 10px rgba(0, 0, 0, 0.05)",
+                      }}
                     >
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <div className="flex items-center text-gray-800 mb-2">
-                            <Clock className="w-5 h-5 mr-2 text-purple-600" />
-                            <span className="text-lg font-bold">
-                              {slot.classTime}
-                            </span>
-                          </div>
-                          <div className="flex items-center text-gray-600 mb-2">
-                            <User className="w-4 h-4 mr-2" />
-                            <span className="text-sm">
-                              Coach: {slot.coachName}
-                            </span>
-                          </div>
-                        </div>
-                        {selectedSlot?._id === slot._id && (
-                          <div className="bg-purple-100 text-purple-800 p-1 rounded-full flex items-center gap-2">
-                            <span
-                              className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                slot.type === "online"
-                                  ? "bg-blue-100 text-blue-800"
-                                  : "bg-green-100 text-green-800"
-                              }`}
-                            >
-                              {slot.type}
-                            </span>
-                            <Check className="w-4 h-4" />
-                          </div>
-                        )}
-                      </div>
-
-                      {slot.type === "offline" && (
-                        <div className="mt-3 flex items-center text-gray-700">
-                          <MapPin className="w-4 h-4 mr-2" />
-                          <span className="text-sm">{slot.centerName}</span>
+                      {/* Selection Indicator */}
+                      {selectedSlot?._id === slot._id && (
+                        <div className="absolute -top-2 -right-2 bg-purple-500 text-white rounded-full p-2 shadow-lg">
+                          <Check className="w-4 h-4" />
                         </div>
                       )}
 
-                      <div className="mt-3 text-xs text-gray-500">
-                        Available spots:{" "}
-                        {slot.maximumKidCount - slot.enrolledKidCount} of{" "}
-                        {slot.maximumKidCount}
+                      {/* Hover Pulse Effect */}
+                      <div
+                        className={`absolute inset-0 rounded-2xl transition-opacity duration-300 ${
+                          selectedSlot?._id === slot._id
+                            ? "opacity-0"
+                            : "opacity-0 group-hover:opacity-20"
+                        } bg-gradient-to-r from-purple-400 to-blue-400`}
+                      ></div>
+
+                      <div className="relative z-10">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <div className="flex items-center text-gray-800 mb-3">
+                              <div
+                                className={`p-2 rounded-full mr-3 ${
+                                  selectedSlot?._id === slot._id
+                                    ? "bg-purple-200"
+                                    : "bg-gray-100 group-hover:bg-purple-100"
+                                }`}
+                              >
+                                <Clock
+                                  className={`w-5 h-5 ${
+                                    selectedSlot?._id === slot._id
+                                      ? "text-purple-700"
+                                      : "text-gray-600 group-hover:text-purple-600"
+                                  }`}
+                                />
+                              </div>
+                              <span className="text-xl font-bold">
+                                {slot.classTime}
+                              </span>
+                            </div>
+                            <div className="flex items-center text-gray-600 mb-2 ml-2">
+                              <User className="w-4 h-4 mr-2" />
+                              <span className="text-sm font-medium">
+                                Coach: {slot.coachName}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col items-end gap-2">
+                            <span
+                              className={`px-3 py-1 rounded-full text-xs font-semibold border ${
+                                slot.type === "online"
+                                  ? "bg-blue-100 text-blue-800 border-blue-200"
+                                  : "bg-green-100 text-green-800 border-green-200"
+                              }`}
+                            >
+                              {slot.type.toUpperCase()}
+                            </span>
+                          </div>
+                        </div>
+
+                        {slot.type === "offline" && (
+                          <div className="mt-3 flex items-center text-gray-700 ml-2">
+                            <MapPin className="w-4 h-4 mr-2 text-green-600" />
+                            <span className="text-sm font-medium">
+                              {slot.centerName}
+                            </span>
+                          </div>
+                        )}
+
+                        <div className="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between">
+                          <div className="text-xs text-gray-500 font-medium">
+                            Available:{" "}
+                            {slot.maximumKidCount - slot.enrolledKidCount} of{" "}
+                            {slot.maximumKidCount} spots
+                          </div>
+                          {selectedSlot?._id === slot._id ? (
+                            <div className="flex items-center text-purple-600 font-bold text-sm">
+                              <Check className="w-4 h-4 mr-1" />
+                              SELECTED
+                            </div>
+                          ) : (
+                            <div className="text-xs text-gray-400 group-hover:text-purple-500 font-medium transition-colors">
+                              Click to select
+                            </div>
+                          )}
+                        </div>
                       </div>
+
+                      {/* Bottom accent line */}
+                      <div
+                        className={`absolute bottom-0 left-0 right-0 h-1 rounded-b-2xl transition-all duration-300 ${
+                          selectedSlot?._id === slot._id
+                            ? "bg-gradient-to-r from-purple-500 to-blue-500"
+                            : "bg-gray-200 group-hover:bg-gradient-to-r group-hover:from-purple-300 group-hover:to-blue-300"
+                        }`}
+                      ></div>
                     </button>
                   ))}
                 </div>
               )}
+
+              {/* Instruction text */}
+              <div className="text-center mt-6 text-gray-500 text-sm">
+                💡 Click on any time slot card above to select it
+              </div>
             </div>
           )}
 
@@ -856,15 +970,24 @@ const SheduleDemoClass = () => {
             {currentStep < 2 ? (
               <button
                 onClick={handleNext}
-                disabled={!canProceed()}
+                disabled={!canProceed() || isProcessing}
                 className={`flex items-center px-8 py-3 rounded-lg font-medium transition-all ${
-                  canProceed()
+                  canProceed() && !isProcessing
                     ? "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
                     : "bg-gray-200 text-gray-400 cursor-not-allowed"
                 }`}
               >
-                Continue
-                <ArrowRight className="w-4 h-4 ml-2" />
+                {isProcessing && currentStep === 0 ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    Continue
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </>
+                )}
               </button>
             ) : (
               <button

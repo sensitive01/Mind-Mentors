@@ -102,6 +102,11 @@ const Prospects = () => {
 
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [rowCount, setRowCount] = useState(0);
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0, // MUI DataGrid uses 0-based page index
+    pageSize: 15, // 15 records per page
+  });
   const [whatsappDialog, setWhatsappDialog] = useState({
     open: false,
     phoneNumber: null,
@@ -114,43 +119,41 @@ const Prospects = () => {
   const [isTaskOverlayOpen, setIsTaskOverlayOpen] = useState(false);
   const [enqId, setEnqId] = useState();
 
+  const loadProspects = async (page, pageSize) => {
+    try {
+      setLoading(true);
+      const { data, total } = await fetchProspectsEnquiries(page + 1, pageSize);
+      
+      const rowsWithSlNo = data.map((item, index) => ({
+        ...item,
+        slNo: (page * pageSize) + index + 1, // Calculate serial number based on pagination
+        id: item.source + "_" + (item.kidId || item.ID || ((page * pageSize) + index)),
+      }));
+
+      setRows(rowsWithSlNo);
+      setRowCount(total || 0);
+    } catch (err) {
+      console.error("Failed to fetch Prospects:", err);
+      toast.error("Failed to load prospects. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load data when component mounts and when pagination changes
   useEffect(() => {
-    const loadLeaves = async () => {
-      try {
-        const data = await fetchProspectsEnquiries();
-        console.log(data);
+    loadProspects(paginationModel.page, paginationModel.pageSize);
+  }, [paginationModel.page, paginationModel.pageSize]);
 
-        // Add serial numbers to rows
-        const rowsWithSlNo = data.map((item, index) => ({
-          ...item,
-          slNo: index + 1, // Serial number starts at 1
-        }));
-
-        setRows(rowsWithSlNo);
-      } catch (err) {
-        console.log("Failed to fetch Enquiries. Please try again later.", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadLeaves();
-  }, []);
-
-  // In Prospects.jsx
   const [viewDialog, setViewDialog] = useState({
     open: false,
     rowData: null,
     showEdit: false,
   });
-  const [paginationModel, setPaginationModel] = useState({
-    page: 0,
-    pageSize: 5,
-  });
   const handleMessage = (phoneNumber) => {
     setWhatsappDialog({
       open: true,
-      phoneNumber
+      phoneNumber,
     });
   };
 
@@ -237,79 +240,76 @@ const Prospects = () => {
     console.log("Handle logs ", id);
     navigate(`/${department}/department/show-complete-status-logs/${id}`);
   };
-    const WhatsAppDialog = ({ open, phoneNumber, onClose }) => {
-      if (!phoneNumber) return null;
-      
-      const widgetUrl = `${import.meta.env.VITE_MSGKART_MESSAGE_WIDGET}&subId=${phoneNumber}`;
-      
-      return (
-        <Slide 
-          direction="left" 
-          in={open} 
-          mountOnEnter 
-          unmountOnExit
+  const WhatsAppDialog = ({ open, phoneNumber, onClose }) => {
+    if (!phoneNumber) return null;
+
+    const widgetUrl = `${
+      import.meta.env.VITE_MSGKART_MESSAGE_WIDGET
+    }&subId=${phoneNumber}`;
+
+    return (
+      <Slide direction="left" in={open} mountOnEnter unmountOnExit>
+        <Paper
+          elevation={8}
+          sx={{
+            position: "fixed",
+            right: 2,
+            top: "12%",
+            transform: "translateY(-50%)",
+            width: "580px",
+            height: "550px",
+            zIndex: 1300,
+            display: "flex",
+            flexDirection: "column",
+            borderRadius: "12px 0 0 12px",
+            overflow: "hidden",
+            boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
+          }}
         >
-          <Paper
-            elevation={8}
+          <Box
             sx={{
-              position: 'fixed',
-              right: 2, 
-              top: '12%',
-              transform: 'translateY(-50%)',
-              width: "580px",
-              height: '550px', 
-              zIndex: 1300,
-              display: 'flex',
-              flexDirection: 'column',
-              borderRadius: '12px 0 0 12px',
-              overflow: 'hidden',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              background: "linear-gradient(#642b8f, #aa88be)",
+              color: "white",
+              padding: "12px 16px",
+              minHeight: "56px",
+              boxSizing: "border-box",
+              m: 0,
             }}
           >
-            <Box sx={{ 
-              display: 'flex', 
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              background: 'linear-gradient(#642b8f, #aa88be)',
-              color: 'white',
-              padding: '12px 16px',
-              minHeight: '56px',
-              boxSizing: 'border-box',
-              m: 0
-            }}>
-              <Typography variant="h6" sx={{ fontWeight: 500 }}>
-                WhatsApp Chat
-              </Typography>
-              <IconButton 
-                onClick={onClose}
-                sx={{ color: 'white' }}
-                size="small"
-              >
-                <X size={20} />
-              </IconButton>
-            </Box>
-            <Box sx={{ 
+            <Typography variant="h6" sx={{ fontWeight: 500 }}>
+              WhatsApp Chat
+            </Typography>
+            <IconButton onClick={onClose} sx={{ color: "white" }} size="small">
+              <X size={20} />
+            </IconButton>
+          </Box>
+          <Box
+            sx={{
               p: 0,
-              height: 'calc(100% - 56px)', 
-              overflow: 'hidden' 
-            }}>
-              <iframe
-                src={widgetUrl}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  border: 'none',
-                  display: 'block'
-                }}
-                frameBorder="0"
-                allowFullScreen
-                title="WhatsApp Chat"
-              />
-            </Box>
-          </Paper>
-        </Slide>
-      );
-    };
+              height: "calc(100% - 56px)",
+              overflow: "hidden",
+            }}
+          >
+            <iframe
+              src={widgetUrl}
+              style={{
+                width: "100%",
+                height: "100%",
+                border: "none",
+                display: "block",
+              }}
+              frameBorder="0"
+              allowFullScreen
+              title="WhatsApp Chat"
+            />
+          </Box>
+        </Paper>
+      </Slide>
+    );
+  };
 
   return (
     <>
@@ -336,12 +336,16 @@ const Prospects = () => {
                   handleShowStatus,
                   handleMessage
                 )}
+                paginationMode="server"
+                rowCount={rowCount}
                 paginationModel={paginationModel}
                 onPaginationModelChange={setPaginationModel}
                 pageSizeOptions={[15, 30, 50]}
+                pagination
                 disableRowSelectionOnClick
+                loading={loading}
                 // editMode="row"
-                getRowId={(row) => row._id}
+                getRowId={(row) => row._id || row.id}
                 onRowClick={(params) => {
                   setViewDialog({ open: true, rowData: params.row });
                 }}
@@ -356,7 +360,7 @@ const Prospects = () => {
                   },
                 }}
                 sx={{
-                  height: 500,
+                  height: 900,
                   border: "none",
                   "& .MuiDataGrid-cell:focus": {
                     outline: "none",
@@ -607,10 +611,10 @@ const Prospects = () => {
         />
       </TaskAssignmentOverlay>
       <WhatsAppDialog
-      open={whatsappDialog.open}
-      phoneNumber={whatsappDialog.phoneNumber}
-      onClose={() => setWhatsappDialog({ open: false, phoneNumber: null })}
-    />
+        open={whatsappDialog.open}
+        phoneNumber={whatsappDialog.phoneNumber}
+        onClose={() => setWhatsappDialog({ open: false, phoneNumber: null })}
+      />
     </>
   );
 };

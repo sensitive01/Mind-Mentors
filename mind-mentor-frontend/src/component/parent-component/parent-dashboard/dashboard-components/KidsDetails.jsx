@@ -16,7 +16,7 @@ const KidsDetails = ({ kids }) => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-purple-50">
+    <div className="bg-gradient-to-br from-gray-50 via-white to-purple-50">
       {/* Add the CSS animation styles */}
       <style jsx>{`
         @keyframes moving-line {
@@ -195,7 +195,7 @@ const KidsDetails = ({ kids }) => {
             ))}
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow-lg p-6 text-center max-w-lg mx-auto">
+          <div className="bg-white rounded-lg shadow-lg p-6 text-center max-w-lg mx-auto mt-8">
             <div className="bg-purple-100 w-12 h-12 rounded-full mx-auto mb-4 flex items-center justify-center group hover:scale-110 transition-transform duration-300">
               <UserPlus className="w-6 h-6 text-primary group-hover:rotate-12 transition-transform" />
             </div>

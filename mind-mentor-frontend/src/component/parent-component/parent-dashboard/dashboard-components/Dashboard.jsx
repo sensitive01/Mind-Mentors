@@ -29,31 +29,31 @@ const NameUpdateModal = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl p-6 max-w-md w-full">
-        <h2 className="text-2xl font-bold text-slate-800 mb-4">
+      <div className="bg-white rounded-xl p-4 sm:p-6 max-w-md w-full mx-4">
+        <h2 className="text-xl sm:text-2xl font-bold text-slate-800 mb-3 sm:mb-4">
           Update Your Name
         </h2>
-        <p className="text-slate-600 mb-4">
+        <p className="text-sm sm:text-base text-slate-600 mb-4">
           Please enter your name to personalize your experience.
         </p>
         <input
           type="text"
           value={newParentName}
           onChange={(e) => setNewParentName(e.target.value)}
-          className="w-full px-4 py-2 border border-slate-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm sm:text-base"
           placeholder="Enter your name"
           autoFocus
         />
-        <div className="flex justify-end gap-3">
+        <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
           <button
             onClick={() => setIsDefaultName(false)}
-            className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+            className="w-full sm:w-auto px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors text-sm sm:text-base"
           >
             Cancel
           </button>
           <button
             onClick={handleNameSubmit}
-            className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors disabled:opacity-50"
+            className="w-full sm:w-auto px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors disabled:opacity-50 text-sm sm:text-base"
             disabled={nameUpdateLoading || !newParentName.trim()}
           >
             {nameUpdateLoading ? "Updating..." : "Submit"}
@@ -97,7 +97,6 @@ const ParentDashboard = () => {
     const todayDay = today.getDay();
     let daysUntilTarget = targetDay - todayDay;
 
-    // If the target day is today or has passed this week, get next week's occurrence
     if (daysUntilTarget <= 0) {
       daysUntilTarget += 7;
     }
@@ -118,12 +117,7 @@ const ParentDashboard = () => {
     const fetchEnrollmentStageData = async () => {
       try {
         let kidId = null;
-        // if (!kidId) {
-        //   setShowEnrollmentStage(false);
-        //   return;
-        // }
 
-        // If children data exists and we have a selected child, get the kid ID
         if (childrenData.length > 0 && selectedChild < childrenData.length) {
           kidId = childrenData[selectedChild].id;
         }
@@ -132,7 +126,6 @@ const ParentDashboard = () => {
 
         if (response.status === 200) {
           setEnrollmentStageData(response.data.data);
-          // Show enrollment stage if overall is false
           setShowEnrollmentStage(
             !response.data.data.isEnrollmementStepCompleted
           );
@@ -143,7 +136,7 @@ const ParentDashboard = () => {
     };
 
     fetchEnrollmentStageData();
-  }, [childrenData, selectedChild]); // Depend on childrenData and selectedChild
+  }, [childrenData, selectedChild]);
 
   // Function to format demo class info
   const formatDemoClassInfo = (demoClass) => {
@@ -163,13 +156,10 @@ const ParentDashboard = () => {
   const getNextClassText = (kid) => {
     const { enquiryStatus, demoStatus, demoClass, demoAssigned } = kid;
 
-    // For active students - prioritize demoAssigned for demo classes, then regular class schedule
     if (enquiryStatus === "Active") {
-      // If there's a demoAssigned and it's not "NA", use it (for demo classes)
       if (demoAssigned && demoAssigned !== "NA") {
         return demoAssigned;
       }
-      // Otherwise use demo class info if available
       if (demoClass) {
         const demoClassInfo = formatDemoClassInfo(demoClass);
         return demoClassInfo?.displayText || "Check schedule for next class";
@@ -177,7 +167,6 @@ const ParentDashboard = () => {
       return "Check schedule for next class";
     }
 
-    // For scheduled demos - prioritize demoAssigned if available
     if (demoStatus === "Scheduled") {
       if (demoAssigned && demoAssigned !== "NA") {
         return demoAssigned;
@@ -189,12 +178,10 @@ const ParentDashboard = () => {
       return "Demo class scheduled";
     }
 
-    // For conducted demos
     if (demoStatus === "Conducted" && enquiryStatus === "Pending") {
       return "Complete enrollment to schedule next class";
     }
 
-    // For pending demos
     if (demoStatus === "Pending") {
       return "Not scheduled yet";
     }
@@ -227,28 +214,23 @@ const ParentDashboard = () => {
 
         if (response.status === 200) {
           const transformedData = response.data.kidData.map((kid) => {
-            // Get the first program (if exists)
             const program =
               kid.selectedProgram && kid.selectedProgram.length > 0
                 ? kid.selectedProgram[0]
                 : { program: "Not selected", level: "Not assigned" };
 
-            // Determine demo status
             const demoStatus = kid.scheduleDemo?.status || "Pending";
             const enquiryStatus = kid.enquiryStatus || "Pending";
 
-            // Format demo class info if available
             const demoClassInfo = kid?.demoClass
               ? formatDemoClassInfo(kid?.demoClass)
               : null;
 
-            // Create stats and attendance based on enquiry status
             let stats = {};
             let attendance = {};
             let recentAchievements = [];
 
             if (enquiryStatus === "Active") {
-              // Use REAL attendance data from API for active students
               const totalClasses = kid.totalClassCount?.both || 0;
               const attendedClasses = kid.attendedClass?.both || 0;
               const absentClasses = kid.absentClass?.both || 0;
@@ -256,13 +238,11 @@ const ParentDashboard = () => {
               const canceledClasses = kid.canceledClass?.both || 0;
               const pausedClasses = kid.pausedClass?.both || 0;
 
-              // Calculate attendance percentage
               const attendancePercentage =
                 totalClasses > 0
                   ? Math.round((attendedClasses / totalClasses) * 100)
                   : 0;
 
-              // Real attendance object
               attendance = {
                 total: totalClasses,
                 attended: attendedClasses,
@@ -274,7 +254,6 @@ const ParentDashboard = () => {
                 nextClass: getNextClassText(kid),
               };
 
-              // Enhanced stats calculation based on progress
               const progressPercentage =
                 totalClasses > 0
                   ? Math.round((attendedClasses / totalClasses) * 100)
@@ -282,17 +261,17 @@ const ParentDashboard = () => {
 
               stats = {
                 level: program.level || "Beginner",
-                progress: Math.min(progressPercentage, 100), // Cap at 100%
-                streak: Math.min(attendedClasses, 15), // Approximate streak based on attended classes
+                progress: Math.min(progressPercentage, 100),
+                streak: Math.min(attendedClasses, 15),
                 totalGames:
-                  program.program === "Chess" ? attendedClasses * 2 : 0, // Estimate games per class
+                  program.program === "Chess" ? attendedClasses * 2 : 0,
                 wins:
                   program.program === "Chess"
                     ? Math.floor(attendedClasses * 1.5)
                     : 0,
                 avgTime: program.program === "Rubik's Cube" ? "1:35" : "",
                 bestTime: program.program === "Rubik's Cube" ? "1:15" : "",
-                timeSpent: `${Math.round(attendedClasses * 1.5)}h`, // Estimate 1.5 hours per class
+                timeSpent: `${Math.round(attendedClasses * 1.5)}h`,
                 nextMilestone:
                   remainingClasses > 0
                     ? `Complete ${remainingClasses} more classes`
@@ -301,7 +280,6 @@ const ParentDashboard = () => {
                     : "Master advanced algorithms",
               };
 
-              // Dynamic achievements based on real data
               recentAchievements = [];
 
               if (attendedClasses > 0) {
@@ -349,7 +327,6 @@ const ParentDashboard = () => {
                 });
               }
 
-              // Ensure we have at least one achievement
               if (recentAchievements.length === 0) {
                 recentAchievements.push({
                   title: "Learning Journey Started!",
@@ -362,7 +339,6 @@ const ParentDashboard = () => {
               demoStatus === "Conducted" &&
               enquiryStatus === "Pending"
             ) {
-              // Demo conducted but not enrolled - show demo results
               stats = {
                 level: program.level || "Beginner",
                 progress: 35,
@@ -402,7 +378,6 @@ const ParentDashboard = () => {
                 },
               ];
             } else if (demoStatus === "Scheduled") {
-              // Limited data for scheduled demos
               stats = {
                 level: program.level || "Beginner",
                 progress: 0,
@@ -425,7 +400,6 @@ const ParentDashboard = () => {
                 },
               ];
             } else {
-              // Minimal data for pending demos
               stats = {
                 level: "Not started",
                 progress: 0,
@@ -450,11 +424,10 @@ const ParentDashboard = () => {
               demoStatus,
               enquiryStatus,
               demoClassInfo,
-              demoAssigned: kid.demoAssigned, // Add demoAssigned to the transformed data
+              demoAssigned: kid.demoAssigned,
               attendance,
               stats,
               recentAchievements,
-              // Add raw data for reference
               rawClassData: {
                 totalClassCount: kid.totalClassCount,
                 attendedClass: kid.attendedClass,
@@ -486,7 +459,6 @@ const ParentDashboard = () => {
     navigate("/parent/add-kid/true");
   };
 
-  // Navigation handlers for the icon buttons
   const handleNavigateToDemo = (kidId) => {
     navigate(`/parent/kid/demo-class-shedule/${kidId}`);
   };
@@ -513,7 +485,6 @@ const ParentDashboard = () => {
     navigate(`/parent/kid/demo-class-shedule/${kidId}`);
   };
 
-  // NEW: Handle enrollment navigation
   const handleEnrollNow = (kidId) => {
     navigate(`/parent-package-selection/${kidId}`);
   };
@@ -523,16 +494,18 @@ const ParentDashboard = () => {
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-4 md:p-6 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading dashboard...</p>
+          <p className="text-slate-600 text-sm sm:text-base">
+            Loading dashboard...
+          </p>
         </div>
       </div>
     );
   }
 
-  // If no children data after loading, show empty state
+  // Empty state - no children added yet
   if (childrenData.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-4 md:p-6">
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-4 sm:p-6 lg:p-8">
         <NameUpdateModal
           showNameModal={isDefaultName}
           setIsDefaultName={setIsDefaultName}
@@ -544,32 +517,43 @@ const ParentDashboard = () => {
 
         {/* Show Enrollment Steps when overall is false - even without kids */}
         {showEnrollmentStage && (
-          <div className="mb-4">
+          <div className="mb-6 lg:mb-8">
             <EnrollmentCompletionStage enrollmentData={enrollmentStageData} />
           </div>
         )}
 
-        {/* Add Kid Section at the bottom - centered */}
-        <div className="flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-lg p-6 text-center max-w-lg mx-auto">
-            <div className="bg-purple-100 w-12 h-12 rounded-full mx-auto mb-4 flex items-center justify-center group hover:scale-110 transition-transform duration-300">
-              <UserPlus className="w-6 h-6 text-primary group-hover:rotate-12 transition-transform" />
+        {/* Empty State Card */}
+        <div className="max-w-md mx-auto">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8 text-center">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+              <UserPlus className="w-8 h-8 sm:w-10 sm:h-10 text-purple-600" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
+
+            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-slate-800 mb-3 sm:mb-4">
               Begin Your Child's Journey
             </h3>
-            <p className="text-gray-600 mb-4 text-sm max-w-md mx-auto">
+
+            <p className="text-sm sm:text-base text-slate-600 mb-6 sm:mb-8 leading-relaxed">
               Transform your child's potential into mastery. Start their chess
               adventure today.
             </p>
+
             <button
               onClick={() => navigate("/parent/add-kid/true")}
-              className="inline-flex items-center px-4 py-2 rounded-lg bg-gradient-to-r from-primary to-primary hover:from-primary hover:to-primary text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 group"
+              className="w-full bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-semibold py-3 sm:py-4 px-6 rounded-lg transition-all duration-200 flex items-center justify-center gap-3 group transform hover:scale-[1.02] active:scale-[0.98] text-sm sm:text-base"
             >
-              <UserPlus className="w-4 h-4 mr-2 group-hover:rotate-12 transition-transform" />
-              Add Your Champion
-              <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+              <UserPlus className="w-5 h-5 sm:w-6 sm:h-6" />
+              <span>Add Your Champion</span>
+              <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 group-hover:translate-x-1 transition-transform duration-200" />
             </button>
+
+            {/* Additional encouragement */}
+            <div className="mt-6 pt-6 border-t border-slate-100">
+              <p className="text-xs sm:text-sm text-slate-500">
+                Join thousands of parents who've unlocked their child's
+                potential
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -579,8 +563,8 @@ const ParentDashboard = () => {
   const selectedChildData = childrenData[selectedChild];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-4 md:p-6">
-      {/* Header Section */}
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 p-4 sm:p-6 lg:p-8">
+      {/* Name Update Modal */}
       <NameUpdateModal
         showNameModal={isDefaultName}
         setIsDefaultName={setIsDefaultName}
@@ -590,6 +574,7 @@ const ParentDashboard = () => {
         nameUpdateLoading={nameUpdateLoading}
       />
 
+      {/* Dashboard Cards Section */}
       <DashboardCards
         childrenData={childrenData}
         setSelectedChild={setSelectedChild}
@@ -602,27 +587,32 @@ const ParentDashboard = () => {
 
       {/* Show Enrollment Steps when overall is false */}
       {showEnrollmentStage && (
-        <div className="mb-4">
-          <EnrollmentCompletionStage enrollmentData={enrollmentStageData} />
+        <div className="mb-6 lg:mb-8">
+          <EnrollmentCompletionStage
+            enrollmentData={enrollmentStageData}
+            kidId={selectedChildData?.id}
+          />
         </div>
       )}
 
       {/* Conditional Main Content based on Status */}
-      {selectedChildData.enquiryStatus === "Active" ? (
-        <ActiveStudentDashboard childData={selectedChildData} />
-      ) : selectedChildData.demoStatus === "Conducted" &&
-        selectedChildData.enquiryStatus === "Pending" ? (
-        <DemoConductedEnrollmentView
-          childData={selectedChildData}
-          handleEnrollNow={handleEnrollNow}
-        />
-      ) : selectedChildData.demoStatus === "Pending" ? (
-        <DemoPendingView childData={selectedChildData} navigate={navigate} />
-      ) : selectedChildData.demoStatus === "Scheduled" ? (
-        <DemoScheduledView childData={selectedChildData} />
-      ) : (
-        <CompleteDashboardView childData={selectedChildData} />
-      )}
+      <div className="space-y-6">
+        {selectedChildData.enquiryStatus === "Active" ? (
+          <ActiveStudentDashboard childData={selectedChildData} />
+        ) : selectedChildData.demoStatus === "Conducted" &&
+          selectedChildData.enquiryStatus === "Pending" ? (
+          <DemoConductedEnrollmentView
+            childData={selectedChildData}
+            handleEnrollNow={handleEnrollNow}
+          />
+        ) : selectedChildData.demoStatus === "Pending" ? (
+          <DemoPendingView childData={selectedChildData} navigate={navigate} />
+        ) : selectedChildData.demoStatus === "Scheduled" ? (
+          <DemoScheduledView childData={selectedChildData} />
+        ) : (
+          <CompleteDashboardView childData={selectedChildData} />
+        )}
+      </div>
     </div>
   );
 };

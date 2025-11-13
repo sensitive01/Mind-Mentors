@@ -81,9 +81,23 @@ export const deleteCoachAvailability = async (id) => {
   return response;
 };
 
-export const fechAllActiveEnrolledEnquiry = async () => {
-  const response = await serviceInstance.get(`/service/get-active-enquiry-data`);
-  return response.data;
+/**
+ * Fetches paginated active enrolled enquiries
+ * @param {number} page - Page number (starts from 1)
+ * @param {number} limit - Number of records per page (default: 15)
+ * @returns {Promise} Paginated response with data and total count
+ */
+export const fechAllActiveEnrolledEnquiry = async (page = 1, limit = 15) => {
+  const response = await serviceInstance.get(
+    `/service/get-active-enquiry-data?page=${page}&limit=${limit}`
+  );
+  return {
+    data: response.data.data || [],
+    total: response.data.total || 0,
+    page: response.data.page || page,
+    limit: response.data.limit || limit,
+    totalPages: response.data.totalPages || Math.ceil((response.data.total || 0) / limit)
+  };
 };
 
 export const getActiveKidData = async (enqId) => {

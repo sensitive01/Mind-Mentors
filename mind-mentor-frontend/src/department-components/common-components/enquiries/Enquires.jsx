@@ -102,6 +102,11 @@ const Enquiries = () => {
   const department = localStorage.getItem("department");
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0, // MUI DataGrid uses 0-based page index
+    pageSize: 15, // 15 records per page
+  });
+  const [rowCount, setRowCount] = useState(0);
   const [confirmDialog, setConfirmDialog] = useState({
     open: false,
     studentName: "",
@@ -114,36 +119,37 @@ const Enquiries = () => {
   const [isTaskOverlayOpen, setIsTaskOverlayOpen] = useState(false);
   const [enqId, setEnqId] = useState();
 
+  const loadEnquiries = async (page, pageSize) => {
+    try {
+      setLoading(true);
+      // MUI DataGrid uses 0-based page index, but our API uses 1-based
+      const { data, total } = await fetchAllEnquiries(page + 1, pageSize);
+      
+      const rowsWithSlNo = data.map((item, index) => ({
+        ...item,
+        slNo: (page) * pageSize + index + 1,
+        id: item.source + "_" + (item.kidId || item.ID || ((page) * pageSize + index)),
+      }));
+
+      setRows(rowsWithSlNo);
+      setRowCount(total);
+    } catch (err) {
+      console.error("Failed to fetch Enquiries:", err);
+      toast.error("Failed to load enquiries. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load data when component mounts and when pagination changes
   useEffect(() => {
-    const loadLeaves = async () => {
-      try {
-        const data = await fetchAllEnquiries();
-        console.log(data);
-
-        const rowsWithSlNo = data.map((item, index) => ({
-          ...item,
-          slNo: index + 1, // Serial number starts at 1
-        }));
-
-        setRows(rowsWithSlNo);
-      } catch (err) {
-        console.log("Failed to fetch Enquiries. Please try again later.", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadLeaves();
-  }, []);
+    loadEnquiries(paginationModel.page, paginationModel.pageSize);
+  }, [paginationModel.page, paginationModel.pageSize]);
 
   const [viewDialog, setViewDialog] = useState({
     open: false,
     rowData: null,
     showEdit: false,
-  });
-  const [paginationModel, setPaginationModel] = useState({
-    page: 0,
-    pageSize: 5,
   });
 
   const handleStatusToggle = async (id) => {
@@ -242,10 +248,8 @@ const Enquiries = () => {
   const WhatsAppDialog = ({ open, phoneNumber, onClose }) => {
     if (!phoneNumber) return null;
 
-    const widgetUrl = `${
-      import.meta.env.VITE_MSGKART_MESSAGE_WIDGET
-    }&subId=${phoneNumber}`;
-    
+    const widgetUrl = `${import.meta.env.VITE_MSGKART_MESSAGE_WIDGET
+      }&subId=${phoneNumber}`;
 
     return (
       <Slide direction="left" in={open} mountOnEnter unmountOnExit>
@@ -257,7 +261,7 @@ const Enquiries = () => {
             top: "12%",
             transform: "translateY(-50%)",
             width: "580px",
-            height: "550px",
+            height: "750px",
             zIndex: 1300,
             display: "flex",
             flexDirection: "column",
@@ -321,7 +325,7 @@ const Enquiries = () => {
               p: 3,
               backgroundColor: "background.paper",
               borderRadius: 3,
-              height: 650,
+              height: 850,
               boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.05)",
             }}
           >
@@ -340,12 +344,16 @@ const Enquiries = () => {
                 handleShowStatus,
                 handleMessage
               )}
+              paginationMode="server"
+              rowCount={rowCount}
               paginationModel={paginationModel}
-              onPaginationModelChange={setPaginationModel}
+              onPaginationModelChange={(newPaginationModel) => {
+                setPaginationModel(newPaginationModel);
+              }}
               pageSizeOptions={[15, 30, 50]}
+              pagination
               disableRowSelectionOnClick
-              // editMode="row"
-              getRowId={(row) => row._id}
+              getRowId={(row) => row._id || row.id}
               onRowClick={(params) => {
                 setViewDialog({ open: true, rowData: params.row });
               }}
@@ -353,6 +361,7 @@ const Enquiries = () => {
               processRowUpdate={handleProcessRowUpdate}
               onProcessRowUpdateError={handleProcessRowUpdateError}
               slots={{ toolbar: GridToolbar }}
+              loading={loading}
               slotProps={{
                 toolbar: {
                   showQuickFilter: true,
@@ -360,7 +369,7 @@ const Enquiries = () => {
                 },
               }}
               sx={{
-                height: 500,
+                height: 900,
                 border: "none",
                 "& .MuiDataGrid-cell:focus": {
                   outline: "none",
@@ -541,130 +550,6 @@ const Enquiries = () => {
         draggable
         pauseOnFocusLoss
       />
-      <Dialog
-        open={viewDialog.open}
-        onClose={() => {
-          setViewDialog({
-            open: false,
-            rowData: null,
-            showEdit: false,
-          });
-        }}
-        maxWidth="md"
-        fullWidth
-        TransitionComponent={Slide}
-        TransitionProps={{ direction: "up" }}
-      >
-        <DialogTitle
-          sx={{
-            background: "linear-gradient(#642b8f, #aa88be)",
-            color: "#ffffff",
-            fontWeight: 600,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: "16px",
-          }}
-        >
-          <div>Student Details</div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outlined"
-              startIcon={<Edit size={18} />}
-              onClick={() => {
-                if (viewDialog.rowData) {
-                  setViewDialog((prev) => ({
-                    ...prev,
-                    showEdit: true,
-                  }));
-                }
-              }}
-              sx={{
-                borderColor: "#ffffff",
-                color: "#ffffff",
-                px: 3,
-                py: 1,
-                borderRadius: "20px",
-                fontWeight: 600,
-                textTransform: "none",
-                backgroundColor: "transparent",
-                "&:hover": {
-                  backgroundColor: "#ffdb99",
-                  borderColor: "#ff9f00",
-                  color: "#ff9f00",
-                  boxShadow: "0 4px 8px rgba(255, 158, 51, 0.3)",
-                },
-              }}
-            >
-              Edit
-            </Button>
-
-            <Button
-              variant="outlined"
-              startIcon={<ClipboardList size={18} />}
-              onClick={() => {
-                if (viewDialog.rowData) {
-                  setIsTaskOverlayOpen(true);
-                  setEnqId(viewDialog.rowData._id);
-                }
-              }}
-              sx={{
-                borderColor: "#ffffff",
-                color: "#ffffff",
-                px: 3,
-                py: 1,
-                borderRadius: "20px",
-                fontWeight: 600,
-                textTransform: "none",
-                backgroundColor: "transparent",
-                "&:hover": {
-                  backgroundColor: "#a5d6a7",
-                  borderColor: "#2e7d32",
-                  color: "#2e7d32",
-                  boxShadow: "0 4px 8px rgba(46, 125, 50, 0.3)",
-                },
-              }}
-            >
-              Assign Task
-            </Button>
-            <IconButton
-              onClick={() => setViewDialog({ open: false, rowData: null })}
-              sx={{
-                color: "#ff4444",
-                "&:hover": {
-                  backgroundColor: "rgba(255, 68, 68, 0.1)",
-                },
-              }}
-            >
-              <X size={24} />
-            </IconButton>
-          </div>
-        </DialogTitle>
-
-        <Divider />
-
-        <DialogContent>
-          <DetailView
-            data={viewDialog.rowData || {}}
-            showEdit={viewDialog.showEdit}
-            onEditClose={() =>
-              setViewDialog((prev) => ({ ...prev, showEdit: false }))
-            }
-            onEditSave={(updatedData) => {
-              setRows((prevRows) =>
-                prevRows.map((row) =>
-                  row._id === updatedData._id ? updatedData : row
-                )
-              );
-              setViewDialog((prev) => ({
-                ...prev,
-                rowData: updatedData,
-                showEdit: false,
-              }));
-            }}
-          />
-        </DialogContent>
-      </Dialog>
       <Dialog
         open={confirmDialog.open}
         onClose={() =>

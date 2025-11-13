@@ -4,7 +4,7 @@ const kidSchema = new mongoose.Schema(
   {
     chessId: {
       type: String,
-      unique: true,
+    
     },
     kidPin: {
       type: Number,

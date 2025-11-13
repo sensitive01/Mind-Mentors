@@ -325,7 +325,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
           <Grid item xs={12}>
             <SectionTitle>Program Details</SectionTitle>
             <Grid container spacing={3}>
-              {displayData?.programs?.map((program, index) => (
+              {displayData?.program?.map((program, index) => (
                 <Grid item xs={12} md={4} key={index}>
                   <DetailCard
                     title={`PROGRAM ${index + 1}`}

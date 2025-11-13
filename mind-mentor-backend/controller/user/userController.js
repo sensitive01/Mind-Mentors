@@ -2418,9 +2418,8 @@ const saveOnlineClassPackage = async (req, res) => {
     const savedPackages = await Promise.all(
       onlinePackage.map(async (pkg) => {
         const newOnlineClass = new OnlineClass({
-          packageName: `Online ${pkg.classUpTo} ${
-            pkg.time.charAt(0).toUpperCase() + pkg.time.slice(1)
-          } Classes`,
+          packageName: `Online ${pkg.classUpTo} ${pkg.time.charAt(0).toUpperCase() + pkg.time.slice(1)
+            } Classes`,
           classUpTo: Number(pkg.classUpTo),
           classStartFrom: Number(pkg.classStartFrom),
           oneClassPrice: Number(pkg.amount) / Number(pkg.classUpTo),
@@ -2487,9 +2486,8 @@ const submitPhysicalCenterClassPrice = async (req, res) => {
 
       const parsedAmount = parseFloat(amount);
       const programName = getProgramNameById(program);
-      const packageName = `Offline ${parsedClassesUpTo} ${
-        time === "day" ? "Day" : "Night"
-      } Class`;
+      const packageName = `Offline ${parsedClassesUpTo} ${time === "day" ? "Day" : "Night"
+        } Class`;
 
       const newEntry = {
         centerId,
@@ -2622,9 +2620,8 @@ const submitHybridClassPrice = async (req, res) => {
       const parsedAmount = parseFloat(amount);
       const oneClassPrice = parsedAmount / parsedClasses;
       const programName = getProgramNameById(program);
-      const packageName = `Hybrid ${parsedClasses} ${
-        time === "day" ? "Day" : "Night"
-      } Class`;
+      const packageName = `Hybrid ${parsedClasses} ${time === "day" ? "Day" : "Night"
+        } Class`;
 
       const newEntry = {
         centerId,
@@ -4141,46 +4138,48 @@ const getKidForInvoiceGeneration = async (req, res) => {
 
 const getLatestKids = async (req, res) => {
   try {
-    const page = Math.max(parseInt(req.query.page) || 1, 1);
-    const limit = Math.max(parseInt(req.query.limit) || 10, 1);
-    const skip = (page - 1) * limit;
+    const limit = 50;
 
- 
-    const pipeline = [
-      { $match: { username: { $ne: null } } }, 
-      { $sort: { createdAt: -1 } }, 
-      {
-        $group: {
-          _id: "$username",
-          doc: { $first: "$$ROOT" },
-        },
-      },
-      { $replaceRoot: { newRoot: "$doc" } },
-      { $sort: { createdAt: -1 } },
-      { $skip: skip },
-      { $limit: limit },
-    ];
-
-    const result = await ChessKidPlaying.aggregate(pipeline);
-
-   
-    const totalUniqueKids = await ChessKidPlaying.distinct("username", {
-      username: { $ne: null },
+    // First, get distinct usernames and count
+    const usernames = await ChessKidPlaying.distinct("username", {
+      username: { $ne: null, $exists: true }
     });
+    const totalKids = usernames.length;
+
+    // Then get the latest record for each username
+    const latestRecords = await Promise.all(
+      usernames.map(username =>
+        ChessKidPlaying.findOne({ username })
+          .sort({ createdAt: -1 })
+          .lean()
+          .exec()
+      )
+    );
+
+    // Filter out any nulls and sort by rating
+    const sortedKids = latestRecords
+      .filter(record => record !== null)
+      .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+      .slice(0, limit);
 
     res.status(200).json({
-      page,
-      limit,
-      count: result.length,
-      total: totalUniqueKids.length,
-      totalPages: Math.ceil(totalUniqueKids.length / limit),
-      data: result,
+      success: true,
+      count: sortedKids.length,
+      total: totalKids,  // Total number of distinct kids
+      data: sortedKids,
     });
   } catch (err) {
     console.error("Error in getLatestKids:", err);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({
+      success: false,
+      error: "Internal server error",
+      message: err.message
+    });
   }
 };
+
+
+
 
 const getChessKidPerformanceData = async (req, res) => {
   try {

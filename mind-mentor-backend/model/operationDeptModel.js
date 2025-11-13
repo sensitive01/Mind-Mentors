@@ -27,6 +27,7 @@ const operationDeptSchema = new mongoose.Schema(
     kidFirstName: { type: String },
     kidLastName: { type: String },
     kidId: { type: String },
+    kidRollNo: { type: String },
     kidsGender: { type: String },
     kidsAge: { type: Number },
     city: { type: String },
@@ -68,7 +69,6 @@ const operationDeptSchema = new mongoose.Schema(
     },
     // -----------------------------------
 
-    isEnquiryNew: { type: Boolean, default: true },
     schoolName: { type: String },
     address: { type: String },
     schoolPincode: { type: String },
@@ -77,21 +77,21 @@ const operationDeptSchema = new mongoose.Schema(
     enquiryType: { type: String, enum: ["warm", "cold"], default: "warm" },
     enquiryStage: { type: String },
     recomentedLevel: { type: String },
-    isLevelPromoteRecomented: { type: Boolean, default: false },
-    ischessKidIdAssigned: { type: Boolean, default: false },
     chessKidName: { type: String },
-
+    
+    stageTag: { type: String },
+    
     enquiryStatus: {
       type: String,
       default: "Pending",
     },
-
+    
     disposition: {
       type: String,
       enum: ["RnR", "Call Back", "None", "Connected"],
       default: "None",
     },
-
+    
     enquiryField: { type: String, default: "enquiryList" },
     scheduleDemo: {
       status: {
@@ -101,7 +101,8 @@ const operationDeptSchema = new mongoose.Schema(
       },
       sheduledDay: { type: String },
     },
-
+    dateOfJoining: { type: Date },
+    
     referral: [
       {
         referredTo: { type: String },
@@ -112,33 +113,51 @@ const operationDeptSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Log",
     },
-    isNewUser: { type: Boolean, default: true },
-
+    oldLogs:{type:String},
+    
     paymentData: [
       {
         type: String,
       },
     ],
-
+    
     paymentStatus: {
       type: String,
       enum: ["Pending", "Success", "Requested", "Processing"],
       default: "Pending",
     },
     paymentRenewal: { type: String },
-    classAssigned: { type: Boolean, default: false },
     employeeAssisted: { type: String },
     perHourRate: { type: Number },
     employmentType: { type: String },
+
+    chessKidGoldEnabledDateAndTime:{type:String},
+    chessKidGoldExperationDateAndTime:{type:String},
+    chessKidGoldDeactivationDateAndTime:{type:String},
+    reasonForDeactivation:{type:String},
+    lastInteractionDateandTime:{type:String},
     
+    
+    
+    classAssigned: { type: Boolean, default: false },
+    isNewUser: { type: Boolean, default: true },
     isParentNameCompleted: { type: Boolean, default: false },
-    isFirstKidAdded:{type:Boolean,default:false},
-    isProgramSelected:{type:Boolean,default:false},
-    isDemoSheduled:{type:Boolean,default:false},
-    isDemoAttended:{type:Boolean,default:false},
-    isPackageSelected:{type:Boolean,default:false},
-    isClassAssigned:{type:Boolean,default:false},
-    isEnrollmementStepCompleted:{type:Boolean,default:false}
+    isLevelPromoteRecomented: { type: Boolean, default: false },
+    ischessKidIdAssigned: { type: Boolean, default: false },
+    isFirstKidAdded: { type: Boolean, default: false },
+    isProgramSelected: { type: Boolean, default: false },
+    isDemoSheduled: { type: Boolean, default: false },
+    isDemoAttended: { type: Boolean, default: false },
+    isPackageSelected: { type: Boolean, default: false },
+    isClassAssigned: { type: Boolean, default: false },
+    isEnrollmementStepCompleted: { type: Boolean, default: false },
+    isProfileActive: { type: Boolean, default: false },
+    isEnquiryNew: { type: Boolean, default: true },
+    isProfilePaused:{type:Boolean,default:false},
+    isChessKidGoldTaken:{type:Boolean,default:false},
+
+
+    totalRenewalCount: { type: Number }
 
 
   },

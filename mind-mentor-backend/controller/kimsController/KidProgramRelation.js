@@ -1,0 +1,81 @@
+const mongoose = require("mongoose");
+const xlsx = require("xlsx");
+const path = require("path");
+const RelKidProgram = require("../../model/kimsdatabase/kidProgramRelation");
+
+const importRelKidProgramExcelWithReport = async () => {
+  try {
+    await mongoose.connect(
+      `mongodb+srv://MindMentorz:3jQhR36LMPNNznsN@cluster0.f5db1.mongodb.net/mindmentors`,
+      { useNewUrlParser: true, useUnifiedTopology: true }
+    );
+
+    console.log("✅ Connected to MongoDB");
+
+    const filePath = path.join(
+      __dirname,
+      "../../../../kimsdata/opt#Programs#Kids.csv" // <-- your file path
+    );
+    const workbook = xlsx.readFile(filePath);
+    const sheetName = workbook.SheetNames[0];
+
+    const jsonData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], {
+      raw: false,
+      defval: null,
+    });
+
+    if (!jsonData.length) {
+      console.log("⚠️ Excel file is empty");
+      return;
+    }
+
+    console.log(`📦 Found ${jsonData.length} rows in Excel`);
+
+    const formattedData = jsonData.map((row, index) => ({
+      __row: index + 2,
+      KidID: row.RECORD_LINK_ID_Base ? String(row.RECORD_LINK_ID_Base) : null,
+      ProgramID: row.RECORD_LINK_ID_Ref ? String(row.RECORD_LINK_ID_Ref) : null,
+    }));
+
+    let insertedCount = 0;
+    let failedCount = 0;
+    let errorDetails = [];
+
+    try {
+      const insertedDocs = await RelKidProgram.insertMany(formattedData, {
+        ordered: false,
+      });
+      insertedCount = insertedDocs.length;
+    } catch (err) {
+      if (err.writeErrors && err.writeErrors.length > 0) {
+        failedCount = err.writeErrors.length;
+        errorDetails = err.writeErrors.map((we) => ({
+          row: formattedData[we.index].__row,
+          KidID: formattedData[we.index].KidID,
+          ProgramID: formattedData[we.index].ProgramID,
+          reason: we.errmsg || we.err.message,
+        }));
+        insertedCount = err.result.result.nInserted;
+      } else {
+        throw err;
+      }
+    }
+
+    console.log("📊 Migration Report:");
+    console.log(`   Total Rows   : ${jsonData.length}`);
+    console.log(`   Inserted     : ${insertedCount}`);
+    console.log(`   Failed       : ${failedCount}`);
+
+    if (failedCount > 0) {
+      console.log("   ❌ Failures:");
+      console.table(errorDetails);
+    }
+  } catch (error) {
+    console.error("❌ Fatal Import Error:", error);
+  } finally {
+    await mongoose.connection.close();
+    console.log("🔌 MongoDB connection closed");
+  }
+};
+
+importRelKidProgramExcelWithReport();

@@ -165,9 +165,23 @@ export const createEnquiry = async (formData) => {
   const response = await operationDeptInstance.post("/enquiry-form", formData);
   return response.data;
 };
-export const fetchAllEnquiries = async () => {
-  const response = await operationDeptInstance.get("/enquiry-form");
-  return response.data;
+/**
+ * Fetches paginated enquiries
+ * @param {number} page - Page number (starts from 1)
+ * @param {number} limit - Number of records per page (default: 15)
+ * @returns {Promise} Paginated response with data and total count
+ */
+export const fetchAllEnquiries = async (page = 1, limit = 15) => {
+  const response = await operationDeptInstance.get(
+    `/enquiry-form?page=${page}&limit=${limit}`
+  );
+  return {
+    data: response.data.data || [],
+    total: response.data.total || 0,
+    page: response.data.page || page,
+    limit: response.data.limit || limit,
+    totalPages: response.data.totalPages || Math.ceil((response.data.total || 0) / limit)
+  };
 };
 export const updateEnquiry = async (updatedData, empId) => {
   const response = await operationDeptInstance.put(
@@ -472,9 +486,23 @@ export const attandaceData = async (empId) => {
   return response.data;
 };
 
-export const fetchProspectsEnquiries = async () => {
-  const response = await operationDeptInstance.get(`/get-prospects-data`);
-  return response.data;
+/**
+ * Fetches paginated prospects data
+ * @param {number} page - Page number (starts from 1)
+ * @param {number} limit - Number of records per page (default: 15)
+ * @returns {Promise} Paginated response with data and total count
+ */
+export const fetchProspectsEnquiries = async (page = 1, limit = 15) => {
+  const response = await operationDeptInstance.get(
+    `/get-prospects-data?page=${page}&limit=${limit}`
+  );
+  return {
+    data: response.data.data || [],
+    total: response.data.total || 0,
+    page: response.data.page || page,
+    limit: response.data.limit || limit,
+    totalPages: response.data.totalPages || Math.ceil((response.data.total || 0) / limit)
+  };
 };
 
 export const getProspectsStudents = async () => {

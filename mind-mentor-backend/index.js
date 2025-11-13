@@ -20,6 +20,7 @@ const bbRouteSample = require("./routes/bbRoute/bigBlueButtonSample");
 const bbbClassRouting = require("./routes/bbbClassRouting/bbbClassLinks");
 const bbbClassRoutingNew = require("./routes/bbbClassRouting/bbMMClassLink");
 const hostingerRoutingClass = require("./routes/bbbClassRouting/hostingerBB");
+const kimsDataRoutes = require("./routes/kimsRoutes/kimsRoute")
 
 // ✅ Import socket setup function
 const { initSocket } = require("./utils/socket");
@@ -98,6 +99,11 @@ app.use("/sample/meeting", bbRouteSample);
 app.use("/api/class", bbbClassRouting); // DO
 app.use("/api/class-new", bbbClassRoutingNew); // AWS
 app.use("/api/new-class", hostingerRoutingClass); // Hostinger
+
+
+app.use("/kims",kimsDataRoutes)
+
+
 
 // ✅ Serve frontend build
 app.use(express.static(path.join(__dirname, "dist")));

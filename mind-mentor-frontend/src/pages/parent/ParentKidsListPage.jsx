@@ -11,6 +11,7 @@ import { gettingKidsData } from "../../api/service/parent/ParentService";
 const ParentKidsDetailsPage = () => {
   const [loading, setLoading] = useState(true);
   const [kids, setKids] = useState([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -40,6 +41,25 @@ const ParentKidsDetailsPage = () => {
     if (parentId) fetchKidsData();
   }, [parentId]);
 
+  const handleMenuClick = () => {
+    setSidebarOpen(true);
+  };
+
+  const handleSidebarClose = () => {
+    setSidebarOpen(false);
+  };
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const handleBack = () => navigate(-1);
 
   return (
@@ -50,25 +70,45 @@ const ParentKidsDetailsPage = () => {
         </div>
       ) : (
         <>
-          <Sidebar />
-          <div className="flex-1 flex flex-col h-full bg-gray-100 overflow-hidden">
-            <Topbar />
-            <div className="flex-1 overflow-y-auto bg-gray-100 mt-5">
-              <div className="p-4">
-                {/* Back Button */}
-                <button
-                  onClick={handleBack}
-                  className="flex items-center bg-gray-100 text-blue-600 hover:text-blue-800 mb-4 transition-colors duration-200"
-                >
-                  <ArrowLeft className="w-5 h-5 mr-2" />
-                  Back
-                </button>
+          {/* Sidebar - Responsive */}
+          <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} />
 
-                {/* Kids Data */}
-                <KidsDetails kids={kids} />
+          {/* Main Content Area - FIXED */}
+          <div className="flex-1 flex flex-col min-w-0">
+            {/* Top Bar */}
+            <div className="h-12 sm:h-16 bg-white shadow-md flex-shrink-0 z-10">
+              <Topbar onMenuClick={handleMenuClick} />
+            </div>
+
+            {/* Main Content - REMOVED overflow-hidden */}
+            <div className="flex-1 bg-gray-100">
+              <div className="w-full h-full">
+                {/* Back Button */}
+                <div className="p-3 sm:p-4 bg-white border-b">
+                  <button
+                    onClick={handleBack}
+                    className="flex items-center text-blue-600 hover:text-blue-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-lg p-2 -ml-2"
+                  >
+                    <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
+                    <span className="text-sm sm:text-base font-medium">Back</span>
+                  </button>
+                </div>
+
+                {/* Kids Details - FULL WIDTH */}
+                <div className="p-3 sm:p-4">
+                  <KidsDetails kids={kids} />
+                </div>
               </div>
             </div>
           </div>
+
+          {/* Mobile Sidebar Overlay */}
+          {sidebarOpen && (
+            <div
+              className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+              onClick={handleSidebarClose}
+            />
+          )}
         </>
       )}
     </div>

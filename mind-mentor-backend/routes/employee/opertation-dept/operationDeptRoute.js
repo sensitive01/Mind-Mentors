@@ -61,12 +61,6 @@ operationRoute.post("/make-a-call-to-parent", operationController.makeaCallToPar
 operationRoute.post("/save-employee-attance-data/:empId", operationController.createAttendance);
 
 
-
-
-
-
-
-
 operationRoute.put("/enquiry-form/:enqId/step/:step", operationController.updateEnquiryDetails);
 operationRoute.put("/move-to-prospects/:id", operationController.updateProspectData);
 operationRoute.put("/move-to-enquiry/:id", operationController.moveBackToEnquiry);
@@ -80,13 +74,7 @@ operationRoute.put("/cancel-demo-class-for-a-kid/:enqId/:classId/:empId", operat
 operationRoute.put("/reshedule-demo-class-for-a-kid/:classId/:empId", operationController.rescheduleDemoClass);
 
 
-
-
-
 operationRoute.delete("/enquiry-form/:id", operationController.deleteEnquiry);
-
-
-
 
 
 operationRoute.post("/register",operationController.registerEmployee)
@@ -102,23 +90,8 @@ operationRoute.put("/tasks/:id/status", operationController.updateTaskStatus);
 operationRoute.put("/tasks/notes/:id", operationController.addNotesToTasks);
 
 
-
-
 operationRoute.delete("/leaves-form/:id", operationController.deleteLeave);
 operationRoute.delete("/tasks/:id", operationController.deleteTask);
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 module.exports = operationRoute;
