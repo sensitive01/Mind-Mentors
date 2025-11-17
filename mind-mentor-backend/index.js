@@ -49,6 +49,7 @@ const allowedOrigins = [
   "http://3.104.84.126:3000",
   "https://aswinraj.online",
   "https://bbb.mindmentorz.in",
+  "http://app.mindmentorz.in"
 ];
 
 const corsOptions = {
