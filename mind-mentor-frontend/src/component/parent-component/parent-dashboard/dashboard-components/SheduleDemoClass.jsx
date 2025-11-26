@@ -52,7 +52,10 @@ const SheduleDemoClass = () => {
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
 
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [currentMonth, setCurrentMonth] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1); // Set to first day of current month
+  });
   const [isEditing, setIsEditing] = useState(false);
 
   const hasSelectedPrograms = apiData?.kidData?.selectedProgram?.length > 0;
@@ -348,15 +351,14 @@ const SheduleDemoClass = () => {
           key={day}
           onClick={() => handleDateSelect(date)}
           disabled={!isAvailable || isPast}
-          className={`p-3 text-center rounded-lg transition-all duration-200 ${
-            isSelected
+          className={`p-3 text-center rounded-lg transition-all duration-200 ${isSelected
               ? "bg-blue-600 text-white shadow-lg transform scale-110"
               : isAvailable && !isPast
-              ? "bg-green-100 text-primary hover:bg-green-200 border-2 border-green-300"
-              : isPast
-              ? "text-gray-300 cursor-not-allowed"
-              : "text-gray-400 cursor-not-allowed"
-          }`}
+                ? "bg-green-100 text-primary hover:bg-green-200 border-2 border-green-300"
+                : isPast
+                  ? "text-gray-300 cursor-not-allowed"
+                  : "text-gray-400 cursor-not-allowed"
+            }`}
         >
           <div className="font-medium">{day}</div>
           {isAvailable && !isPast && slotsCount > 0 && (
@@ -489,13 +491,12 @@ const SheduleDemoClass = () => {
               return (
                 <React.Fragment key={index}>
                   <div
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-full transition-all whitespace-nowrap ${
-                      isActive
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-full transition-all whitespace-nowrap ${isActive
                         ? "bg-blue-600 text-white"
                         : isCompleted
-                        ? "bg-green-600 text-white"
-                        : "bg-white text-gray-500"
-                    }`}
+                          ? "bg-green-600 text-white"
+                          : "bg-white text-gray-500"
+                      }`}
                   >
                     {isCompleted ? (
                       <Check className="w-4 h-4" />
@@ -602,11 +603,10 @@ const SheduleDemoClass = () => {
                           setSelectedSlot(null);
                         }}
                         disabled={!selectedProgram}
-                        className={`w-full px-4 py-3 border-2 rounded-lg appearance-none bg-white focus:border-green-500 focus:outline-none transition-colors ${
-                          !selectedProgram
+                        className={`w-full px-4 py-3 border-2 rounded-lg appearance-none bg-white focus:border-green-500 focus:outline-none transition-colors ${!selectedProgram
                             ? "border-gray-200 text-gray-400 cursor-not-allowed"
                             : "border-gray-200 text-gray-800"
-                        }`}
+                          }`}
                       >
                         <option value="">
                           {!selectedProgram
@@ -679,23 +679,20 @@ const SheduleDemoClass = () => {
                         setSelectedDate(null);
                         setSelectedSlot(null);
                       }}
-                      className={`px-6 py-4 rounded-xl border-2 transition-all duration-300 flex flex-col items-center gap-3 min-w-[140px] shadow-md hover:shadow-lg ${
-                        classType === "online"
+                      className={`px-6 py-4 rounded-xl border-2 transition-all duration-300 flex flex-col items-center gap-3 min-w-[140px] shadow-md hover:shadow-lg ${classType === "online"
                           ? "border-blue-500 bg-blue-50 ring-4 ring-blue-200 shadow-xl transform scale-105"
                           : "border-gray-200 hover:border-blue-300 bg-white"
-                      }`}
+                        }`}
                     >
                       <div
-                        className={`p-3 rounded-full ${
-                          classType === "online" ? "bg-blue-100" : "bg-gray-100"
-                        }`}
+                        className={`p-3 rounded-full ${classType === "online" ? "bg-blue-100" : "bg-gray-100"
+                          }`}
                       >
                         <Monitor
-                          className={`w-6 h-6 ${
-                            classType === "online"
+                          className={`w-6 h-6 ${classType === "online"
                               ? "text-blue-600"
                               : "text-gray-600"
-                          }`}
+                            }`}
                         />
                       </div>
                       <div className="text-center">
@@ -719,25 +716,22 @@ const SheduleDemoClass = () => {
                         setSelectedDate(null);
                         setSelectedSlot(null);
                       }}
-                      className={`px-6 py-4 rounded-xl border-2 transition-all duration-300 flex flex-col items-center gap-3 min-w-[140px] shadow-md hover:shadow-lg relative ${
-                        classType === "offline"
+                      className={`px-6 py-4 rounded-xl border-2 transition-all duration-300 flex flex-col items-center gap-3 min-w-[140px] shadow-md hover:shadow-lg relative ${classType === "offline"
                           ? "border-green-500 bg-green-50 ring-4 ring-green-200 shadow-xl transform scale-105"
                           : "border-gray-200 hover:border-green-300 bg-white"
-                      }`}
+                        }`}
                     >
                       <div
-                        className={`p-3 rounded-full ${
-                          classType === "offline"
+                        className={`p-3 rounded-full ${classType === "offline"
                             ? "bg-green-100"
                             : "bg-gray-100"
-                        }`}
+                          }`}
                       >
                         <Home
-                          className={`w-6 h-6 ${
-                            classType === "offline"
+                          className={`w-6 h-6 ${classType === "offline"
                               ? "text-green-600"
                               : "text-gray-600"
-                          }`}
+                            }`}
                         />
                       </div>
                       <div className="text-center">
@@ -832,11 +826,10 @@ const SheduleDemoClass = () => {
                     <button
                       key={slot._id}
                       onClick={() => setSelectedSlot(slot)}
-                      className={`group relative p-6 rounded-2xl border-3 transition-all duration-300 text-left transform hover:scale-102 cursor-pointer ${
-                        selectedSlot?._id === slot._id
+                      className={`group relative p-6 rounded-2xl border-3 transition-all duration-300 text-left transform hover:scale-102 cursor-pointer ${selectedSlot?._id === slot._id
                           ? "border-purple-500 bg-gradient-to-br from-purple-50 to-purple-100 shadow-2xl ring-4 ring-purple-200 ring-opacity-50 scale-105"
                           : "border-gray-300 bg-white hover:border-purple-400 hover:shadow-xl hover:bg-gradient-to-br hover:from-white hover:to-purple-25 shadow-md"
-                      }`}
+                        }`}
                       style={{
                         boxShadow:
                           selectedSlot?._id === slot._id
@@ -853,11 +846,10 @@ const SheduleDemoClass = () => {
 
                       {/* Hover Pulse Effect */}
                       <div
-                        className={`absolute inset-0 rounded-2xl transition-opacity duration-300 ${
-                          selectedSlot?._id === slot._id
+                        className={`absolute inset-0 rounded-2xl transition-opacity duration-300 ${selectedSlot?._id === slot._id
                             ? "opacity-0"
                             : "opacity-0 group-hover:opacity-20"
-                        } bg-gradient-to-r from-purple-400 to-blue-400`}
+                          } bg-gradient-to-r from-purple-400 to-blue-400`}
                       ></div>
 
                       <div className="relative z-10">
@@ -865,18 +857,16 @@ const SheduleDemoClass = () => {
                           <div>
                             <div className="flex items-center text-gray-800 mb-3">
                               <div
-                                className={`p-2 rounded-full mr-3 ${
-                                  selectedSlot?._id === slot._id
+                                className={`p-2 rounded-full mr-3 ${selectedSlot?._id === slot._id
                                     ? "bg-purple-200"
                                     : "bg-gray-100 group-hover:bg-purple-100"
-                                }`}
+                                  }`}
                               >
                                 <Clock
-                                  className={`w-5 h-5 ${
-                                    selectedSlot?._id === slot._id
+                                  className={`w-5 h-5 ${selectedSlot?._id === slot._id
                                       ? "text-purple-700"
                                       : "text-gray-600 group-hover:text-purple-600"
-                                  }`}
+                                    }`}
                                 />
                               </div>
                               <span className="text-xl font-bold">
@@ -893,11 +883,10 @@ const SheduleDemoClass = () => {
 
                           <div className="flex flex-col items-end gap-2">
                             <span
-                              className={`px-3 py-1 rounded-full text-xs font-semibold border ${
-                                slot.type === "online"
+                              className={`px-3 py-1 rounded-full text-xs font-semibold border ${slot.type === "online"
                                   ? "bg-blue-100 text-blue-800 border-blue-200"
                                   : "bg-green-100 text-green-800 border-green-200"
-                              }`}
+                                }`}
                             >
                               {slot.type.toUpperCase()}
                             </span>
@@ -934,11 +923,10 @@ const SheduleDemoClass = () => {
 
                       {/* Bottom accent line */}
                       <div
-                        className={`absolute bottom-0 left-0 right-0 h-1 rounded-b-2xl transition-all duration-300 ${
-                          selectedSlot?._id === slot._id
+                        className={`absolute bottom-0 left-0 right-0 h-1 rounded-b-2xl transition-all duration-300 ${selectedSlot?._id === slot._id
                             ? "bg-gradient-to-r from-purple-500 to-blue-500"
                             : "bg-gray-200 group-hover:bg-gradient-to-r group-hover:from-purple-300 group-hover:to-blue-300"
-                        }`}
+                          }`}
                       ></div>
                     </button>
                   ))}
@@ -957,11 +945,10 @@ const SheduleDemoClass = () => {
             <button
               onClick={handleBack}
               disabled={currentStep === 0}
-              className={`flex items-center px-6 py-3 rounded-lg font-medium transition-all ${
-                currentStep === 0
+              className={`flex items-center px-6 py-3 rounded-lg font-medium transition-all ${currentStep === 0
                   ? "text-gray-400 cursor-not-allowed"
                   : "text-gray-600 hover:bg-gray-100"
-              }`}
+                }`}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
@@ -971,11 +958,10 @@ const SheduleDemoClass = () => {
               <button
                 onClick={handleNext}
                 disabled={!canProceed() || isProcessing}
-                className={`flex items-center px-8 py-3 rounded-lg font-medium transition-all ${
-                  canProceed() && !isProcessing
+                className={`flex items-center px-8 py-3 rounded-lg font-medium transition-all ${canProceed() && !isProcessing
                     ? "bg-blue-600 text-white hover:bg-blue-700 shadow-lg"
                     : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                }`}
+                  }`}
               >
                 {isProcessing && currentStep === 0 ? (
                   <>
@@ -993,11 +979,10 @@ const SheduleDemoClass = () => {
               <button
                 onClick={handleBookDemo}
                 disabled={!selectedSlot}
-                className={`px-8 py-3 rounded-lg font-medium transition-all ${
-                  selectedSlot
+                className={`px-8 py-3 rounded-lg font-medium transition-all ${selectedSlot
                     ? "bg-green-600 text-white hover:bg-green-700 shadow-lg"
                     : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                }`}
+                  }`}
               >
                 Book Free Demo Class
               </button>

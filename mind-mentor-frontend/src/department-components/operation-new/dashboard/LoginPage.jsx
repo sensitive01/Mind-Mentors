@@ -1,4 +1,4 @@
-import { ArrowLeft, ChevronDown } from "lucide-react";
+import { ArrowLeft, ChevronDown, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -15,6 +15,7 @@ const KidsLoginPage = () => {
   const [language, setLanguage] = useState("English");
   const [theme, setTheme] = useState("sky");
   const [step, setStep] = useState(1);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const themes = {
@@ -82,7 +83,7 @@ const KidsLoginPage = () => {
             navigate("/");
         }
 
-        setTimeout(() => {}, 1500);
+        setTimeout(() => { }, 1500);
       } else {
         toast.error("Invalid password. Please try again.");
       }
@@ -181,15 +182,24 @@ const KidsLoginPage = () => {
                   </button>
                 </div>
 
-                <input
-                  type="password"
-                  id="password"
-                  className="w-full max-w-lg px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
-                  placeholder="12345678"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    id="password"
+                    className="w-full max-w-lg px-4 py-3 pr-12 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    placeholder="12345678"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
 
                 <div className="flex justify-between mt-4">
                   <button

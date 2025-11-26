@@ -3481,7 +3481,10 @@ const getSuperAdminDashboardData = async (req, res) => {
       enquiryField: "prospects",
       paymentStatus: { $ne: "Success" },
     });
-    const activeKids = await enquiryData.find({ paymentStatus: "Success" });
+    const activeKids = await enquiryData.find({
+      enquiryField: "prospects",
+      enquiryStatus: "Active"
+    });
     const employeeData = await Employee.find();
     const physicalCenter = await PhysicalCenter.find();
 

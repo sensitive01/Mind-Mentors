@@ -24,7 +24,7 @@ import {
   getKidSheduleDemoDetailsEmployee,
   // cancelDemoClass,
 } from "../../../api/service/employee/EmployeeService";
-import { ToastContainer,toast } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
 
 const SheduleDemoClass = () => {
   const empId = localStorage.getItem("empId")
@@ -43,7 +43,10 @@ const SheduleDemoClass = () => {
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [classType, setClassType] = useState("online");
   const [currentStep, setCurrentStep] = useState(0);
-  const [currentMonth, setCurrentMonth] = useState(new Date(2025, 7)); // July 2025
+  const [currentMonth, setCurrentMonth] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1); // Set to first day of current month
+  });
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
@@ -353,15 +356,14 @@ const SheduleDemoClass = () => {
           key={day}
           onClick={() => handleDateSelect(date)}
           disabled={!isAvailable || isPast}
-          className={`p-3 text-center rounded-lg transition-all duration-200 ${
-            isSelected
+          className={`p-3 text-center rounded-lg transition-all duration-200 ${isSelected
               ? "bg-blue-600 text-white shadow-lg transform scale-110"
               : isAvailable && !isPast
-              ? "bg-green-100 text-primary hover:bg-green-200 border-2 border-green-300"
-              : isPast
-              ? "text-gray-300 cursor-not-allowed"
-              : "text-gray-400 cursor-not-allowed"
-          }`}
+                ? "bg-green-100 text-primary hover:bg-green-200 border-2 border-green-300"
+                : isPast
+                  ? "text-gray-300 cursor-not-allowed"
+                  : "text-gray-400 cursor-not-allowed"
+            }`}
         >
           <div className="font-medium">{day}</div>
           {isAvailable && !isPast && slotsCount > 0 && (
@@ -571,13 +573,12 @@ const SheduleDemoClass = () => {
                   return (
                     <React.Fragment key={index}>
                       <div
-                        className={`flex items-center space-x-2 px-3 py-2 rounded-full transition-all whitespace-nowrap ${
-                          isActive
+                        className={`flex items-center space-x-2 px-3 py-2 rounded-full transition-all whitespace-nowrap ${isActive
                             ? "bg-blue-600 text-white"
                             : isCompleted
-                            ? "bg-green-600 text-white"
-                            : "bg-white text-gray-500"
-                        }`}
+                              ? "bg-green-600 text-white"
+                              : "bg-white text-gray-500"
+                          }`}
                       >
                         {isCompleted ? (
                           <Check className="w-4 h-4" />
@@ -686,11 +687,10 @@ const SheduleDemoClass = () => {
                               setSelectedSlot(null);
                             }}
                             disabled={!selectedProgram}
-                            className={`w-full px-4 py-3 border-2 rounded-lg appearance-none bg-white focus:border-green-500 focus:outline-none transition-colors ${
-                              !selectedProgram
+                            className={`w-full px-4 py-3 border-2 rounded-lg appearance-none bg-white focus:border-green-500 focus:outline-none transition-colors ${!selectedProgram
                                 ? "border-gray-200 text-gray-400 cursor-not-allowed"
                                 : "border-gray-200 text-gray-800"
-                            }`}
+                              }`}
                           >
                             <option value="">
                               {!selectedProgram
@@ -789,21 +789,19 @@ const SheduleDemoClass = () => {
                     <div className="bg-white p-2 rounded-xl border border-gray-200 inline-flex">
                       <button
                         onClick={() => setClassType("online")}
-                        className={`px-6 py-2 rounded-lg font-medium transition-all ${
-                          classType === "online"
+                        className={`px-6 py-2 rounded-lg font-medium transition-all ${classType === "online"
                             ? "bg-blue-100 text-blue-700 border border-blue-300"
                             : "text-gray-600 hover:bg-gray-100"
-                        }`}
+                          }`}
                       >
                         Online Classes
                       </button>
                       <button
                         onClick={() => setClassType("offline")}
-                        className={`px-6 py-2 rounded-lg font-medium transition-all ${
-                          classType === "offline"
+                        className={`px-6 py-2 rounded-lg font-medium transition-all ${classType === "offline"
                             ? "bg-green-100 text-green-700 border border-green-300"
                             : "text-gray-600 hover:bg-gray-100"
-                        }`}
+                          }`}
                       >
                         Offline Classes
                       </button>
@@ -827,11 +825,10 @@ const SheduleDemoClass = () => {
                         <button
                           key={slot._id}
                           onClick={() => setSelectedSlot(slot)}
-                          className={`p-6 rounded-xl border-2 transition-all duration-300 text-left ${
-                            selectedSlot?._id === slot._id
+                          className={`p-6 rounded-xl border-2 transition-all duration-300 text-left ${selectedSlot?._id === slot._id
                               ? "border-purple-500 bg-purple-50 shadow-lg ring-2 ring-purple-300 ring-offset-2"
                               : "border-gray-200 hover:border-purple-300 hover:shadow-md"
-                          }`}
+                            }`}
                         >
                           <div className="flex justify-between items-start mb-4">
                             <div>
@@ -845,11 +842,10 @@ const SheduleDemoClass = () => {
                             {selectedSlot?._id === slot._id && (
                               <div className="bg-purple-100 text-purple-800 p-1 rounded-full flex items-center gap-2">
                                 <span
-                                  className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                    slot.type === "online"
+                                  className={`px-3 py-1 rounded-full text-sm font-medium ${slot.type === "online"
                                       ? "bg-blue-100 text-blue-800"
                                       : "bg-green-100 text-green-800"
-                                  }`}
+                                    }`}
                                 >
                                   {slot.type}
                                 </span>
@@ -876,11 +872,10 @@ const SheduleDemoClass = () => {
                 <button
                   onClick={handleBack}
                   disabled={currentStep === 0}
-                  className={`flex items-center px-6 py-3 rounded-lg font-medium transition-all ${
-                    currentStep === 0
+                  className={`flex items-center px-6 py-3 rounded-lg font-medium transition-all ${currentStep === 0
                       ? "text-gray-400 cursor-not-allowed"
                       : "text-gray-600 hover:bg-gray-100"
-                  }`}
+                    }`}
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back
@@ -890,11 +885,10 @@ const SheduleDemoClass = () => {
                   <button
                     onClick={handleNext}
                     disabled={!canProceed()}
-                    className={`flex items-center px-8 py-3 rounded-lg font-medium transition-all ${
-                      canProceed()
+                    className={`flex items-center px-8 py-3 rounded-lg font-medium transition-all ${canProceed()
                         ? "bg-primary text-white hover:bg-primary shadow-lg"
                         : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    }`}
+                      }`}
                   >
                     Continue
                     <ArrowRight className="w-4 h-4 ml-2" />
@@ -903,11 +897,10 @@ const SheduleDemoClass = () => {
                   <button
                     onClick={handleBookDemo}
                     disabled={!selectedSlot}
-                    className={`px-8 py-3 rounded-lg font-medium transition-all ${
-                      selectedSlot
+                    className={`px-8 py-3 rounded-lg font-medium transition-all ${selectedSlot
                         ? "bg-primary text-white hover:bg-primary shadow-lg"
                         : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    }`}
+                      }`}
                   >
                     {demoDetails ? "Reschedule Demo" : "Book Free Demo Class"}
                   </button>
@@ -968,15 +961,15 @@ const SheduleDemoClass = () => {
         )}
       </div>
       <ToastContainer
-              position="top-right"
-              autoClose={5000}
-              hideProgressBar={false}
-              closeOnClick
-              pauseOnHover
-              draggable
-              pauseOnFocusLoss
-              style={{ marginTop: "60px" }}
-            />
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        closeOnClick
+        pauseOnHover
+        draggable
+        pauseOnFocusLoss
+        style={{ marginTop: "60px" }}
+      />
     </div>
   );
 };

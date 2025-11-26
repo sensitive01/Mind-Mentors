@@ -25,7 +25,7 @@ const kimsDataRoutes = require("./routes/kimsRoutes/kimsRoute")
 // ✅ Import socket setup function
 const { initSocket } = require("./utils/socket");
 
-const PORT = 3000;
+const PORT = 3001;
 const app = express();
 const server = http.createServer(app); // Create HTTP server for Socket.IO
 
@@ -41,13 +41,10 @@ app.use(express.json());
 // ✅ CORS
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://mind-mentors.vercel.app",
-  "https://mind-mentors-vt11.vercel.app",
   "https://live.mindmentorz.in",
   "https://3.104.84.126:3000",
   "http://localhost:3000",
   "http://3.104.84.126:3000",
-  "https://aswinraj.online",
   "https://bbb.mindmentorz.in",
   "http://app.mindmentorz.in",
   "https://app.mindmentorz.in",

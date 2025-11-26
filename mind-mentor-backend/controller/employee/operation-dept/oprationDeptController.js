@@ -126,7 +126,7 @@ const operationEmailVerification = async (req, res) => {
 // Password Verification
 const operationPasswordVerification = async (req, res) => {
   try {
-    console.log("Welcome to verify operation dept password", req.body);
+
 
     const { password, email } = req.body;
 
