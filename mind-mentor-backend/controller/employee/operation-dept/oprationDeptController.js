@@ -179,6 +179,24 @@ const enquiryFormData = async (req, res) => {
 
     const newEntry = await OperationDept.create(formData);
 
+    let parentExist = await Parent.findOne({ parentMobile: formData.whatsappNumber });
+
+    if (!parentExist) {
+      // CREATE new parent
+      parentExist = await Parent.create({
+        parentName: formData.parentFirstName,
+        parentMobile: formData.contactNumber,
+        whatsappNumber: formData.whatsappNumber,
+        parentEmail: formData.email,
+      });
+    } else {
+      // UPDATE existing parent
+      parentExist.parentName = formData.parentFirstName;
+      parentExist.parentEmail = formData.email;
+      parentExist.whatsappNumber = formData.whatsappNumber;
+      await parentExist.save();
+    }
+
     const logEntry = {
       enqId: newEntry._id,
       logs: [

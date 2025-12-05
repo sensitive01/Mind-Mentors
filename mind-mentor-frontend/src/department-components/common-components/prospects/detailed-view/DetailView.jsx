@@ -1,7 +1,9 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useState } from "react";
-import { Box, Grid, Typography, Tooltip } from "@mui/material";
+import { Box, Grid, Typography, Tooltip, IconButton, Drawer, Divider } from "@mui/material";
 import { alpha } from "@mui/material/styles";
+import { X, List } from "lucide-react";
+import EnqRelatedTask from "./EnqRelatedTask";
 import {
   fetchThePhysicalCenters,
   getAllProgrameDataEnquiry,
@@ -109,13 +111,59 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
 
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [formData, setFormData] = useState(data);
-  const [currentData, setCurrentData] = useState(data); // Track current display data
+  const [currentData, setCurrentData] = useState(data);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [physicalCenter, setPhysicalCenter] = useState([]);
   const [programsData, setProgramsData] = useState([]);
 
   const [verifyPaymentDialogOpen, setIsVerifyPaymentDialogOpen] =
     useState(false);
+
+  // State for task assignment
+  const [isTaskDrawerOpen, setIsTaskDrawerOpen] = useState(false);
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
+  const [position, setPosition] = useState({ x: window.innerWidth - 450, y: 100 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+
+  // Drag handlers for the task dialog
+  const handleMouseDown = (e) => {
+    // Don't start dragging if clicking on buttons or interactive elements
+    if (e.target.closest('button') || e.target.closest('input')) {
+      return;
+    }
+    setIsDragging(true);
+    setDragOffset({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y
+    });
+    e.preventDefault();
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (isDragging) {
+        setPosition({
+          x: e.clientX - dragOffset.x,
+          y: e.clientY - dragOffset.y
+        });
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragOffset]);
 
   // Helper functions for name handling
   const getCombinedName = (firstName, lastName) => {
@@ -151,7 +199,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
   useEffect(() => {
     console.log("DetailView - Data prop changed:", data);
     setFormData(data);
-    setCurrentData(data); // Update current display data when data prop changes
+    setCurrentData(data);
   }, [data]);
 
   useEffect(() => {
@@ -167,7 +215,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
 
   const handleCloseEdit = () => {
     setIsEditOpen(false);
-    onEditClose(); // Call the parent's onEditClose
+    onEditClose();
   };
 
   const handleInputChange = (field, value) => {
@@ -188,13 +236,10 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
       if (response.status === 200) {
         console.log("DetailView - Response data:", response.data);
 
-        // Create updated data with the form data as priority
-        // This ensures that what user edited is what gets displayed
         const updatedData = {
-          ...currentData, // Keep existing data as fallback
-          ...formData, // Use the form data that user actually edited
-          ...response.data, // Override with any server-specific data
-          // Ensure name fields are preserved from formData
+          ...currentData,
+          ...formData,
+          ...response.data,
           parentName:
             formData.parentName ||
             response.data?.parentName ||
@@ -229,9 +274,8 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
           getDisplayKidName(updatedData)
         );
 
-        // Update both current display data and call parent callback
         setCurrentData(updatedData);
-        setFormData(updatedData); // Also update formData to stay in sync
+        setFormData(updatedData);
         onEditSave(updatedData);
       }
     } catch (error) {
@@ -252,14 +296,13 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
 
   if (!data) return null;
 
-  // Use currentData for display to show updated values
   const displayData = currentData;
   console.log("DetailView - Display data:", displayData);
 
   return (
-    <Box sx={{ position: "relative" }}>
-      {/* Content */}
-      <Box>
+    <Box sx={{ position: 'relative', height: '100%' }}>
+      {/* Main Content */}
+      <Box sx={{ height: '100%', overflowY: 'auto', p: 3 }}>
         <Grid container spacing={4}>
           {/* Parent Information */}
           <Grid item xs={12}>
@@ -325,7 +368,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
           <Grid item xs={12}>
             <SectionTitle>Program Details</SectionTitle>
             <Grid container spacing={3}>
-              {displayData?.program?.map((program, index) => (
+              {displayData?.programs?.map((program, index) => (
                 <Grid item xs={12} md={4} key={index}>
                   <DetailCard
                     title={`PROGRAM ${index + 1}`}
@@ -339,8 +382,8 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
             <Grid item xs={12} md={3} style={{ overflow: "visible" }}>
               <div
                 style={{
-                  backgroundColor: "#FFF4E5", // light orange highlight
-                  border: "1px solid #FFA726", // orange border
+                  backgroundColor: "#FFF4E5",
+                  border: "1px solid #FFA726",
                   borderRadius: "8px",
                   padding: "10px",
                 }}
@@ -403,7 +446,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                         : "DEMO CLASS ACTIONS"
                     }
                     value={
-                      <div className="flex flex-col gap-3  rounded-lg">
+                      <div className="flex flex-col gap-3 rounded-lg">
                         {displayData?.scheduleDemo?.status === "Pending" ? (
                           <button
                             onClick={() =>
@@ -423,7 +466,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                                   `/${department}/department/schedule-demo-class-list-individually/${displayData?._id}/true`
                                 )
                               }
-                              className="w-full px-2 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:text-white  hover:border-primary/80 transition-all duration-200 text-sm font-medium rounded-md shadow-sm"
+                              className="w-full px-2 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:text-white hover:border-primary/80 transition-all duration-200 text-sm font-medium rounded-md shadow-sm"
                             >
                               View Demo
                             </button>
@@ -437,39 +480,39 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
 
               {(displayData?.paymentStatus === "Pending" ||
                 displayData?.paymentStatus === "Success") && (
-                <Grid item xs={12} md={3} style={{ overflow: "visible" }}>
-                  <DetailCard
-                    title={
-                      displayData?.paymentStatus === "Pending"
-                        ? "CHOOSE CLASS PACKAGE"
-                        : "VIEW PAYMENT"
-                    }
-                    value={
-                      <div className="flex flex-col gap-1 w-full">
-                        {displayData?.paymentStatus === "Pending" ? (
-                          <button
-                            onClick={() => setIsPaymentDialogOpen(true)}
-                            className="w-full px-2 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:text-white hover:border-primary/80 transition-all duration-200 text-sm font-medium rounded-md shadow-sm"
-                          >
-                            Choose class package
-                          </button>
-                        ) : (
-                          <>
+                  <Grid item xs={12} md={3} style={{ overflow: "visible" }}>
+                    <DetailCard
+                      title={
+                        displayData?.paymentStatus === "Pending"
+                          ? "CHOOSE CLASS PACKAGE"
+                          : "VIEW PAYMENT"
+                      }
+                      value={
+                        <div className="flex flex-col gap-1 w-full">
+                          {displayData?.paymentStatus === "Pending" ? (
                             <button
-                              onClick={() =>
-                                handleGetPaymentId(displayData?._id)
-                              }
+                              onClick={() => setIsPaymentDialogOpen(true)}
                               className="w-full px-2 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:text-white hover:border-primary/80 transition-all duration-200 text-sm font-medium rounded-md shadow-sm"
                             >
-                              View Payment
+                              Choose class package
                             </button>
-                          </>
-                        )}
-                      </div>
-                    }
-                  />
-                </Grid>
-              )}
+                          ) : (
+                            <>
+                              <button
+                                onClick={() =>
+                                  handleGetPaymentId(displayData?._id)
+                                }
+                                className="w-full px-2 py-1 bg-white text-black border-2 border-primary hover:bg-primary/80 hover:text-white hover:border-primary/80 transition-all duration-200 text-sm font-medium rounded-md shadow-sm"
+                              >
+                                View Payment
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      }
+                    />
+                  </Grid>
+                )}
             </Grid>
           </Grid>
 
@@ -558,28 +601,147 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
             </Grid>
           </Grid>
         </Grid>
+
+        {/* Assign Task Button */}
+        <Box sx={{ position: 'fixed', bottom: 24, right: 24, zIndex: 1000 }}>
+          <button
+            onClick={() => setIsTaskDialogOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg shadow-lg hover:bg-primary-dark transition-colors"
+          >
+            <List size={18} />
+            Assign Tasks
+          </button>
+        </Box>
+
+        <EditDialogBox
+          showEdit={showEdit}
+          onEditClose={handleCloseEdit}
+          formData={formData}
+          handleInputChange={handleInputChange}
+          handleSave={handleSave}
+        />
+
+        <PaymentDialog
+          open={isPaymentDialogOpen}
+          onClose={() => setIsPaymentDialogOpen(false)}
+          data={displayData}
+          enqId={formData?._id}
+        />
+
+        <PaymentVerification
+          data={displayData?.paymentLink}
+          open={verifyPaymentDialogOpen}
+          onCancel={() => setIsVerifyPaymentDialogOpen(false)}
+          physicalCenter={physicalCenter}
+        />
       </Box>
-      <EditDialogBox
-        showEdit={showEdit}
-        onEditClose={handleCloseEdit}
-        formData={formData}
-        handleInputChange={handleInputChange}
-        handleSave={handleSave}
-      />
 
-      <PaymentDialog
-        open={isPaymentDialogOpen}
-        onClose={() => setIsPaymentDialogOpen(false)}
-        data={displayData}
-        enqId={formData?._id}
-      />
+      {/* Draggable Task Dialog */}
+      {isTaskDialogOpen && (
+        <Box
+          className="draggable-dialog"
+          sx={{
+            position: 'fixed',
+            top: position.y,
+            left: position.x,
+            width: '850px',
+            maxWidth: '90vw',
+            height: '85vh',
+            maxHeight: '850px',
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+            zIndex: 1400,
+            display: 'flex',
+            flexDirection: 'column',
+            border: '1px solid #e0e0e0',
+            overflow: 'hidden',
+          }}
+        >
+          {/* Drag handle with buttons */}
+          <Box
+            className="drag-handle"
+            onMouseDown={handleMouseDown}
+            sx={{
+              padding: '14px 20px',
+              cursor: 'move',
+              backgroundColor: '#f8f9fa',
+              borderBottom: '2px solid #e0e0e0',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              userSelect: 'none',
+              '&:active': {
+                cursor: 'grabbing'
+              }
+            }}
+          >
+            <Typography variant="h6" sx={{ fontWeight: 600, color: '#2c3e50', fontSize: '1.1rem' }}>
+              Assign New Task
+            </Typography>
 
-      <PaymentVerification
-        data={displayData?.paymentLink}
-        open={verifyPaymentDialogOpen}
-        onCancel={() => setIsVerifyPaymentDialogOpen(false)}
-        physicalCenter={physicalCenter}
-      />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/${department}/department/list-task-assigned-me`);
+                }}
+                onMouseDown={(e) => e.stopPropagation()}
+                className="flex items-center gap-2 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium shadow-sm"
+                style={{ cursor: 'pointer' }}
+              >
+                <List size={16} />
+                View All Tasks
+              </button>
+
+              <IconButton
+                onClick={() => setIsTaskDialogOpen(false)}
+                onMouseDown={(e) => e.stopPropagation()}
+                size="small"
+                sx={{
+                  color: '#6c757d',
+                  '&:hover': {
+                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                    color: '#e74c3c'
+                  }
+                }}
+              >
+                <X size={20} />
+              </IconButton>
+            </Box>
+          </Box>
+
+          <Divider sx={{ m: 0 }} />
+
+          <Box sx={{
+            p: 3,
+            flex: 1,
+            overflow: 'auto',
+            backgroundColor: '#fafbfc',
+            '&::-webkit-scrollbar': {
+              width: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: '#f1f1f1',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: '#c1c1c1',
+              borderRadius: '4px',
+            },
+            '&::-webkit-scrollbar-thumb:hover': {
+              background: '#a8a8a8',
+            }
+          }}>
+            <EnqRelatedTask
+              id={displayData?._id}
+              onClose={() => {
+                setIsTaskDialogOpen(false);
+                setIsTaskDrawerOpen(false);
+              }}
+            />
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 };

@@ -215,6 +215,11 @@ export const getAttandanceReport = async () => {
   return response;
 };
 
+export const getPendingInvoiceData = async () => {
+  const response = await userInstance.get("/get-pending-invoice-data");
+  return response;
+};
+
 export const getInvoiceData = async () => {
   const response = await userInstance.get("/get-invoice-data");
   return response;
@@ -981,6 +986,11 @@ export const getPaymetDetails = async (paymentId) => {
 
 export const updatePaymentStatus = async (data) => {
   const response = await userInstance.post(`/update-payment-details`, { data });
+  return response;
+};
+
+export const updatePaymentVerification = async (data) => {
+  const response = await userInstance.put(`/update-payment-verifivation-details`, { data });
   return response;
 };
 

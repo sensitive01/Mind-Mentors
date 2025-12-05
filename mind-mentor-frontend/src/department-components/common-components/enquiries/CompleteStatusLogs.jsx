@@ -57,7 +57,7 @@ const CompleteStatusLogs = () => {
           const notes = response.data.data.notes;
           const notesData = notes.map((note, index) => ({
             id: index,
-            serialNumber: index+1,
+            serialNumber: index + 1,
             createdAt: note.createdOn,
             enquiryStatus: note.enquiryStatus || "N/A",
             disposition: note.disposition || "N/A",
@@ -459,9 +459,17 @@ const CompleteStatusLogs = () => {
                   }
                   label="Enquiry Stage"
                 >
-                  <MenuItem value="Pending">Pending</MenuItem>
-                  <MenuItem value="Qualified Lead">Qualified Lead</MenuItem>
-                  <MenuItem value="Unqualified Lead">Unqualified Lead</MenuItem>
+                  <MenuItem value="New Enquiry">New Enquiry</MenuItem>
+                  <MenuItem value="Contacted">Contacted</MenuItem>
+                  <MenuItem value="Interested">Interested</MenuItem>
+                  <MenuItem value="Demo Scheduled">Demo Scheduled</MenuItem>
+                  <MenuItem value="Demo Attended">Demo Attended</MenuItem>
+                  <MenuItem value="Follow-up Required">Follow-up Required</MenuItem>
+                  <MenuItem value="Converted to Prospect">Converted to Prospect</MenuItem>
+                  <MenuItem value="Not Reachable">Not Reachable</MenuItem>
+                  <MenuItem value="Not Interested">Not Interested</MenuItem>
+                  <MenuItem value="Closed - Lost">Closed - Lost</MenuItem>
+
                 </Select>
               </FormControl>
 
@@ -483,7 +491,7 @@ const CompleteStatusLogs = () => {
                 </Select>
               </FormControl>
 
-   
+
 
               <TextField
                 label="Note"

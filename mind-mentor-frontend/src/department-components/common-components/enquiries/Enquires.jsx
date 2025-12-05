@@ -19,7 +19,7 @@ import {
 import { alpha } from "@mui/material/styles";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import columns from "./Columns";
 
 import {
@@ -27,8 +27,7 @@ import {
   moveToProspects,
   updateEnquiryStatus,
 } from "../../../api/service/employee/EmployeeService";
-import toast from "react-hot-toast";
-import { ToastContainer } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
 import DetailView from "./detailed-view/DetailView";
 import { ClipboardList, Edit, X } from "lucide-react";
 import TaskAssignmentOverlay from "../prospects/detailed-view/SlideDialog";
@@ -97,14 +96,17 @@ const theme = createTheme({
 });
 
 const Enquiries = () => {
+  const [searchParams] = useSearchParams();
+  const selectedId = searchParams.get("selected");
+
   const navigate = useNavigate();
   const empId = localStorage.getItem("empId");
   const department = localStorage.getItem("department");
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [paginationModel, setPaginationModel] = useState({
-    page: 0, // MUI DataGrid uses 0-based page index
-    pageSize: 15, // 15 records per page
+    page: 0,
+    pageSize: 15,
   });
   const [rowCount, setRowCount] = useState(0);
   const [confirmDialog, setConfirmDialog] = useState({
@@ -122,13 +124,15 @@ const Enquiries = () => {
   const loadEnquiries = async (page, pageSize) => {
     try {
       setLoading(true);
-      // MUI DataGrid uses 0-based page index, but our API uses 1-based
       const { data, total } = await fetchAllEnquiries(page + 1, pageSize);
-      
+
       const rowsWithSlNo = data.map((item, index) => ({
         ...item,
-        slNo: (page) * pageSize + index + 1,
-        id: item.source + "_" + (item.kidId || item.ID || ((page) * pageSize + index)),
+        slNo: page * pageSize + index + 1,
+        id:
+          item.source +
+          "_" +
+          (item.kidId || item.ID || page * pageSize + index),
       }));
 
       setRows(rowsWithSlNo);
@@ -141,10 +145,22 @@ const Enquiries = () => {
     }
   };
 
-  // Load data when component mounts and when pagination changes
   useEffect(() => {
     loadEnquiries(paginationModel.page, paginationModel.pageSize);
   }, [paginationModel.page, paginationModel.pageSize]);
+
+  useEffect(() => {
+    if (selectedId) {
+      // Automatically scroll the selected row into view
+      setTimeout(() => {
+        const row = document.querySelector(`[data-id='${selectedId}']`);
+        if (row) {
+          row.scrollIntoView({ behavior: "smooth", block: "center" });
+          row.style.backgroundColor = "#e8ddff"; // highlight color
+        }
+      }, 300);
+    }
+  }, [selectedId, rows]);
 
   const [viewDialog, setViewDialog] = useState({
     open: false,
@@ -195,12 +211,45 @@ const Enquiries = () => {
   };
 
   const handleMoveProspects = async (id) => {
-    console.log("clicked", id);
-
     const student = rows.find((row) => row._id === id);
-    console.log("clicked 2", student);
     if (!student) return;
 
+    const missingFields = [];
+
+    // Check required fields
+    if (!student.parentFirstName?.trim()) missingFields.push("Parent Name");
+    if (!student.kidFirstName?.trim()) missingFields.push("Kid Name");
+    if (!student.whatsappNumber?.trim()) missingFields.push("WhatsApp Number");
+    if (!student.contactNumber?.trim()) missingFields.push("Contact Number");
+
+    // Check programs - note: using 'programs' (plural) to match the column rendering
+    const programs = student.programs || student.program || [];
+
+    if (!Array.isArray(programs) || programs.length === 0) {
+      missingFields.push("Program");
+    } else {
+      programs.forEach((p, index) => {
+        if (!p.program?.trim()) missingFields.push(`Program ${index + 1} Name`);
+        if (!p.level?.trim()) missingFields.push(`Program ${index + 1} Level`);
+      });
+    }
+
+    // Show error if any fields are missing
+    if (missingFields.length > 0) {
+      toast.error(
+        `Please fill the required fields before moving to Prospects. Missing: ${missingFields.join(", ")}`,
+        {
+          duration: 5000,
+          style: {
+            background: '#ef4444',
+            color: '#fff',
+          },
+        }
+      );
+      return;
+    }
+
+    // All validations passed, show confirmation dialog
     setConfirmDialog({
       open: true,
       studentName: student.kidFirstName,
@@ -208,14 +257,14 @@ const Enquiries = () => {
         try {
           const response = await moveToProspects(id, empId);
           if (response.status === 200 || response.success) {
-            // Update the local state to reflect the change
             setRows(rows.filter((row) => row._id !== id));
-
             toast.success(
               `Successfully moved ${student.kidFirstName} to prospects`
             );
           } else {
-            toast.error(`Failed to move ${student.kidFirstName} to prospects`);
+            toast.error(
+              `Failed to move ${student.kidFirstName} to prospects`
+            );
           }
         } catch (error) {
           console.error("Error moving to prospects:", error);
@@ -228,6 +277,7 @@ const Enquiries = () => {
       },
     });
   };
+
 
   const handleShowLogs = (id) => {
     console.log("Handle logs ", id);
@@ -248,8 +298,7 @@ const Enquiries = () => {
   const WhatsAppDialog = ({ open, phoneNumber, onClose }) => {
     if (!phoneNumber) return null;
 
-    const widgetUrl = `${import.meta.env.VITE_MSGKART_MESSAGE_WIDGET
-      }&subId=${phoneNumber}`;
+    const widgetUrl = `${import.meta.env.VITE_MSGKART_MESSAGE_WIDGET}&subId=${phoneNumber}`;
 
     return (
       <Slide direction="left" in={open} mountOnEnter unmountOnExit>
@@ -374,7 +423,6 @@ const Enquiries = () => {
                 "& .MuiDataGrid-cell:focus": {
                   outline: "none",
                 },
-                // Enhanced row hover effects
                 "& .MuiDataGrid-row": {
                   transition: "all 0.2s ease-in-out",
                   cursor: "pointer",
@@ -384,7 +432,6 @@ const Enquiries = () => {
                     boxShadow: "0 4px 8px rgba(100, 43, 143, 0.1)",
                   },
                 },
-                // Enhanced cell hover effects
                 "& .MuiDataGrid-cell": {
                   transition: "background-color 0.2s ease",
                   borderBottom: "1px solid rgba(100, 43, 143, 0.1)",
@@ -393,44 +440,34 @@ const Enquiries = () => {
                     backgroundColor: alpha("#642b8f", 0.12),
                   },
                 },
-                // Header styling
                 "& .MuiDataGrid-columnHeader": {
                   backgroundColor: "#642b8f",
                   color: "white",
                   fontWeight: 600,
                   "&:hover": {
-                    backgroundColor: "#7b3ca8", // Slightly lighter shade for hover
+                    backgroundColor: "#7b3ca8",
                   },
                 },
-                // Selected row styling
                 "& .MuiDataGrid-row.Mui-selected": {
                   backgroundColor: alpha("#642b8f", 0.15),
                   "&:hover": {
                     backgroundColor: alpha("#642b8f", 0.2),
                   },
                 },
-                // Footer styling
                 "& .MuiDataGrid-footerContainer": {
                   display: "flex",
                   justifyContent: "flex-end",
                   borderTop: "1px solid rgba(100, 43, 143, 0.1)",
                 },
-                // Column separator styling
                 "& .MuiDataGrid-columnSeparator": {
                   color: alpha("#642b8f", 0.2),
                 },
-                // Checkbox styling
                 "& .MuiCheckbox-root.Mui-checked": {
                   color: "#642b8f",
                 },
                 "& .MuiDataGrid-columnHeader .MuiCheckbox-root": {
                   color: "#FFFFFF",
                 },
-                // Cell border styling
-                // "& .MuiDataGrid-cell": {
-                //   borderBottom: "1px solid rgba(100, 43, 143, 0.1)",
-                // },
-                // Additional responsive hover effects
                 "@media (hover: hover)": {
                   "& .MuiDataGrid-row:hover": {
                     backgroundColor: alpha("#642b8f", 0.08),
@@ -549,7 +586,9 @@ const Enquiries = () => {
         pauseOnHover
         draggable
         pauseOnFocusLoss
+        style={{ marginTop: "50px" }}
       />
+
       <Dialog
         open={confirmDialog.open}
         onClose={() =>

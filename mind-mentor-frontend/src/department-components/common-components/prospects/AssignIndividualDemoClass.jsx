@@ -293,7 +293,8 @@ const SheduleDemoClass = () => {
       if (response.status === 201) {
         toast.success(response.data.message);
         setTimeout(() => {
-          navigate(`/${department}/department/enrollment-data`);
+        navigate(`/${department}/department/enrollment-data?tab=prospects`);
+
         }, 1500);
       }
     }

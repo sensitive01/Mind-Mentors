@@ -93,6 +93,11 @@ const parentLogin = async (req, res) => {
   try {
     const rawMobile = req.body.mobile;
     const mobile = rawMobile.replace(/^\+/, "");
+
+    console.log("mobile",mobile)
+
+
+    
     const otp = generateOTP();
 
     req.app.locals.otp = otp;
@@ -116,7 +121,9 @@ const parentLogin = async (req, res) => {
           type: parentExist?.type,
         },
       });
-    } else {
+    } 
+    
+    else {
       const newParent = new parentModel({ parentMobile: mobile });
       await newParent.save();
 

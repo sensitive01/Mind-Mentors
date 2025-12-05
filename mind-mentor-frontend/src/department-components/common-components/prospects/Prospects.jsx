@@ -19,7 +19,7 @@ import {
 import { alpha } from "@mui/material/styles";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import columns from "./Columns";
 
 import {
@@ -96,6 +96,8 @@ const theme = createTheme({
 });
 
 const Prospects = () => {
+  const [searchParams] = useSearchParams();
+  const selectedId = searchParams.get("selected");
   const navigate = useNavigate();
   const empId = localStorage.getItem("empId");
   const department = localStorage.getItem("department");
@@ -123,7 +125,7 @@ const Prospects = () => {
     try {
       setLoading(true);
       const { data, total } = await fetchProspectsEnquiries(page + 1, pageSize);
-      
+
       const rowsWithSlNo = data.map((item, index) => ({
         ...item,
         slNo: (page * pageSize) + index + 1, // Calculate serial number based on pagination
@@ -139,6 +141,18 @@ const Prospects = () => {
       setLoading(false);
     }
   };
+  useEffect(() => {
+    if (selectedId) {
+      // Automatically scroll the selected row into view
+      setTimeout(() => {
+        const row = document.querySelector(`[data-id='${selectedId}']`);
+        if (row) {
+          row.scrollIntoView({ behavior: "smooth", block: "center" });
+          row.style.backgroundColor = "#e8ddff"; // highlight color
+        }
+      }, 300);
+    }
+  }, [selectedId, rows]);
 
   // Load data when component mounts and when pagination changes
   useEffect(() => {
@@ -243,9 +257,8 @@ const Prospects = () => {
   const WhatsAppDialog = ({ open, phoneNumber, onClose }) => {
     if (!phoneNumber) return null;
 
-    const widgetUrl = `${
-      import.meta.env.VITE_MSGKART_MESSAGE_WIDGET
-    }&subId=${phoneNumber}`;
+    const widgetUrl = `${import.meta.env.VITE_MSGKART_MESSAGE_WIDGET
+      }&subId=${phoneNumber}`;
 
     return (
       <Slide direction="left" in={open} mountOnEnter unmountOnExit>
@@ -491,34 +504,7 @@ const Prospects = () => {
                       Edit
                     </Button>
 
-                    <Button
-                      variant="outlined"
-                      startIcon={<ClipboardList size={18} />}
-                      onClick={() => {
-                        if (viewDialog.rowData) {
-                          setIsTaskOverlayOpen(true);
-                          setEnqId(viewDialog.rowData._id);
-                        }
-                      }}
-                      sx={{
-                        borderColor: "#ffffff",
-                        color: "#ffffff",
-                        px: 3,
-                        py: 1,
-                        borderRadius: "20px",
-                        fontWeight: 600,
-                        textTransform: "none",
-                        backgroundColor: "transparent",
-                        "&:hover": {
-                          backgroundColor: "#a5d6a7",
-                          borderColor: "#2e7d32",
-                          color: "#2e7d32",
-                          boxShadow: "0 4px 8px rgba(46, 125, 50, 0.3)",
-                        },
-                      }}
-                    >
-                      Assign Task
-                    </Button>
+
                     <IconButton
                       onClick={() =>
                         setViewDialog({ open: false, rowData: null })

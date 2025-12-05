@@ -1,19 +1,44 @@
 import React, { useState, useEffect } from "react";
-import { Button, TextField, InputAdornment, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Chip, IconButton, Typography } from "@mui/material";
+import {
+  Button,
+  TextField,
+  InputAdornment,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Chip,
+  IconButton,
+  Typography,
+} from "@mui/material";
 import { Search, Clear, Visibility } from "@mui/icons-material";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Prospect from "../prospects/Prospects";
 import Enquiry from "../enquiries/Enquires";
 import ActiveKids from "../../../department-components/common-components/enrolled-kids-SD/ActiveEnquiry";
 
 const EnquiryProspectTab = () => {
-  const [activeTab, setActiveTab] = useState("enquiry");
+  const [searchParams] = useSearchParams();
+  const tab = searchParams.get("tab");
+  const enquiryStatus = searchParams.get("enquiryStatus");
+
+  // ✅ Default active tab based on URL
+  const [activeTab, setActiveTab] = useState(() => {
+    if (enquiryStatus === "Active") return "activeKids";
+    return tab || "enquiry";
+  });
+
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+  const navigate = useNavigate();
+
   const department = localStorage.getItem("department");
 
-  // Function to search across all components
+  // 🔍 UNIVERSAL SEARCH API
   const performUniversalSearch = async (query) => {
     if (!query.trim()) {
       setSearchResults([]);
@@ -22,104 +47,28 @@ const EnquiryProspectTab = () => {
     }
 
     setIsSearching(true);
-    
+
     try {
-      const results = [];
-      
-      // Search in Enquiry component
-      // You'll need to expose a search function from your Enquiry component
-      const enquiryResults = await searchInEnquiry(query);
-      if (enquiryResults.length > 0) {
-        results.push(...enquiryResults.map(item => ({ ...item, source: 'Leads' })));
-      }
-
-      // Search in Prospects component
-      const prospectResults = await searchInProspects(query);
-      if (prospectResults.length > 0) {
-        results.push(...prospectResults.map(item => ({ ...item, source: 'Prospects' })));
-      }
-
-      // Search in ActiveKids component
-      const activeKidsResults = await searchInActiveKids(query);
-      if (activeKidsResults.length > 0) {
-        results.push(...activeKidsResults.map(item => ({ ...item, source: 'Active Kids' })));
-      }
-
-      setSearchResults(results);
+      const response = await fetch(
+        `http://localhost:3001/global-search/global-search?q=${query}`
+      );
+      const data = await response.json();
+      setSearchResults(data.data || []);
     } catch (error) {
-      console.error('Search error:', error);
+      console.error("Global search failed:", error);
       setSearchResults([]);
+    } finally {
+      setIsSearching(false);
     }
   };
 
-  // These functions should call the search methods from your actual components
-  const searchInEnquiry = async (query) => {
-    // Example: If your Enquiry component has a search method
-    // return await EnquiryComponent.searchKids(query);
-    
-    // Mock implementation - replace with actual API call
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // Mock data - replace with actual search logic
-        const mockEnquiryData = [
-          { id: 1, name: "John Doe", phone: "123-456-7890", email: "john@example.com", course: "Math", status: "New Lead", date: "2024-01-15" }
-        ];
-        const filtered = mockEnquiryData.filter(item => 
-          item.name.toLowerCase().includes(query.toLowerCase()) ||
-          item.phone.includes(query) ||
-          item.email.toLowerCase().includes(query.toLowerCase())
-        );
-        resolve(filtered);
-      }, 300);
-    });
-  };
-
-  const searchInProspects = async (query) => {
-    // Mock implementation - replace with actual search logic
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const mockProspectData = [
-          { id: 2, name: "Jane Smith", phone: "098-765-4321", email: "jane@example.com", course: "Science", status: "Hot Prospect", date: "2024-01-14" }
-        ];
-        const filtered = mockProspectData.filter(item => 
-          item.name.toLowerCase().includes(query.toLowerCase()) ||
-          item.phone.includes(query) ||
-          item.email.toLowerCase().includes(query.toLowerCase())
-        );
-        resolve(filtered);
-      }, 300);
-    });
-  };
-
-  const searchInActiveKids = async (query) => {
-    // Mock implementation - replace with actual search logic
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const mockActiveKidsData = [
-          { id: 3, name: "Tommy Brown", phone: "777-888-9999", email: "tommy@example.com", course: "Art", status: "Active", date: "2024-01-11" }
-        ];
-        const filtered = mockActiveKidsData.filter(item => 
-          item.name.toLowerCase().includes(query.toLowerCase()) ||
-          item.phone.includes(query) ||
-          item.email.toLowerCase().includes(query.toLowerCase())
-        );
-        resolve(filtered);
-      }, 300);
-    });
-  };
-
-  // Handle search input change with debouncing
+  // ⏳ DEBOUNCE SEARCH
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
+    const delay = setTimeout(() => {
       performUniversalSearch(searchQuery);
     }, 500);
-
-    return () => clearTimeout(timeoutId);
+    return () => clearTimeout(delay);
   }, [searchQuery]);
-
-  const handleSearchChange = (event) => {
-    setSearchQuery(event.target.value);
-  };
 
   const clearSearch = () => {
     setSearchQuery("");
@@ -127,35 +76,69 @@ const EnquiryProspectTab = () => {
     setIsSearching(false);
   };
 
-  const getStatusChipColor = (status, source) => {
+  // 🎨 STATUS CHIP COLORS
+  const getStatusChipColor = (status) => {
+    if (!status) return "default";
+
     switch (status.toLowerCase()) {
-      case 'new lead':
-        return 'primary';
-      case 'contacted':
-        return 'info';
-      case 'hot prospect':
-        return 'error';
-      case 'warm prospect':
-        return 'warning';
-      case 'active':
-        return 'success';
+      case "active":
+        return "success";
+      case "pending":
+        return "warning";
+      case "closed":
+        return "error";
       default:
-        return 'default';
+        return "info";
     }
   };
 
+  const handleView = (kid) => {
+    // Hide search results
+    setSearchQuery("");
+    setSearchResults([]);
+    setIsSearching(false);
+
+    let targetTab = "enquiry";
+
+    // 1️⃣ ACTIVE KIDS
+    if (kid.enquiryField === "prospects" && kid.enquiryStatus === "Active") {
+      targetTab = "activeKids";
+    }
+
+    // 2️⃣ PROSPECTS
+    else if (kid.enquiryField === "prospects") {
+      targetTab = "prospects";
+    }
+
+    // 3️⃣ ENQUIRY
+    else if (kid.enquiryField === "enquiryList") {
+      targetTab = "enquiry";
+    }
+
+    setActiveTab(targetTab);
+
+    navigate(`?tab=${targetTab}&selected=${kid._id}`);
+  };
+
+
+
+
+
+
+
+
   return (
     <div className="w-full h-full bg-gray-100 rounded-lg shadow-sm">
-      {/* Header Section with Search */}
+      {/* HEADER */}
       <div className="px-6 py-4 border-b bg-white rounded-t-lg">
-        {/* Search Bar */}
+        {/* SEARCH BAR */}
         <div className="mb-4">
           <TextField
             fullWidth
             variant="outlined"
-            placeholder="Search for kids by name, phone, or email..."
+            placeholder="Search by Parent / Kid / Phone / ID"
             value={searchQuery}
-            onChange={handleSearchChange}
+            onChange={(e) => setSearchQuery(e.target.value)}
             size="small"
             InputProps={{
               startAdornment: (
@@ -171,143 +154,88 @@ const EnquiryProspectTab = () => {
                 </InputAdornment>
               ),
             }}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                backgroundColor: 'white',
-                '&:hover .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#642b8f',
-                },
-                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#642b8f',
-                },
-              },
-            }}
           />
         </div>
 
-        {/* Tabs and Button */}
+        {/* TABS */}
         <div className="flex justify-between items-center">
-          <div className="flex space-x-4">
-            {/* Leads */}
-            <button
-              className={`py-2 px-4 font-medium transition-colors relative ${
-                activeTab === "enquiry"
-                  ? "text-[#642b8f]"
-                  : "text-gray-600 hover:text-[#642b8f]"
-              }`}
-              onClick={() => setActiveTab("enquiry")}
-            >
-              Leads
-              {activeTab === "enquiry" && (
-                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#642b8f]" />
-              )}
-            </button>
-
-            {/* Prospects */}
-            <button
-              className={`py-2 px-4 font-medium transition-colors relative ${
-                activeTab === "prospects"
-                  ? "text-[#642b8f]"
-                  : "text-gray-600 hover:text-[#642b8f]"
-              }`}
-              onClick={() => setActiveTab("prospects")}
-            >
-              Prospects
-              {activeTab === "prospects" && (
-                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#642b8f]" />
-              )}
-            </button>
-
-            {/* Active Kids */}
-            <button
-              className={`py-2 px-4 font-medium transition-colors relative ${
-                activeTab === "activeKids"
-                  ? "text-[#642b8f]"
-                  : "text-gray-600 hover:text-[#642b8f]"
-              }`}
-              onClick={() => setActiveTab("activeKids")}
-            >
-              Active Kids
-              {activeTab === "activeKids" && (
-                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#642b8f]" />
-              )}
-            </button>
+          <div className="flex gap-4">
+            {["enquiry", "prospects", "activeKids"].map((tabName, i) => (
+              <button
+                key={i}
+                onClick={() => setActiveTab(tabName)}
+                className={`py-2 px-4 font-medium ${activeTab === tabName
+                  ? "text-purple-700 border-b-2 border-purple-700"
+                  : "text-gray-600"
+                  }`}
+              >
+                {tabName === "enquiry"
+                  ? "Leads"
+                  : tabName === "prospects"
+                    ? "Prospects"
+                    : "Active Kids"}
+              </button>
+            ))}
           </div>
 
-          {/* New Enquiry Button */}
           <Button
             variant="contained"
-            sx={{
-              backgroundColor: "#642b8f",
-              "&:hover": {
-                backgroundColor: "#4a1d6e",
-                color: "#f8a213",
-              },
-            }}
+            sx={{ backgroundColor: "#642b8f" }}
             component={Link}
             to={`/${department}/department/enquiry-form`}
           >
-            + New Enquiry Form
+            + New Enquiry
           </Button>
         </div>
       </div>
 
-      {/* Content Section */}
+      {/* CONTENT */}
       <div className="p-2">
-        {/* Show search results if searching */}
+        {/* 🔍 SEARCH RESULTS */}
         {searchQuery && (
           <div className="mb-4">
-            <Typography variant="h6" className="mb-3 text-gray-700">
+            <Typography variant="h6" className="mb-3">
               Search Results {isSearching && "(Searching...)"}
             </Typography>
-            
+
             {searchResults.length > 0 ? (
-              <TableContainer component={Paper} className="shadow-md">
+              <TableContainer component={Paper}>
                 <Table>
                   <TableHead>
-                    <TableRow className="bg-gray-50">
-                      <TableCell className="font-semibold">Name</TableCell>
-                      <TableCell className="font-semibold">Phone</TableCell>
-                      <TableCell className="font-semibold">Email</TableCell>
-                      <TableCell className="font-semibold">Course</TableCell>
-                      <TableCell className="font-semibold">Status</TableCell>
-                      <TableCell className="font-semibold">Source</TableCell>
-                      <TableCell className="font-semibold">Date</TableCell>
-                      <TableCell className="font-semibold">Actions</TableCell>
+                    <TableRow>
+                      <TableCell>Parent</TableCell>
+                      <TableCell>Kid</TableCell>
+                      <TableCell>Phone</TableCell>
+                      <TableCell>Type</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell>Source</TableCell>
+                      <TableCell>Date</TableCell>
+                      <TableCell></TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {searchResults.map((kid, index) => (
-                      <TableRow key={`${kid.source}-${kid.id || index}`} className="hover:bg-gray-50">
-                        <TableCell className="font-medium">{kid.name}</TableCell>
-                        <TableCell>{kid.phone}</TableCell>
-                        <TableCell>{kid.email}</TableCell>
-                        <TableCell>{kid.course}</TableCell>
+                    {searchResults.map((kid) => (
+                      <TableRow key={kid._id}>
+                        <TableCell>{kid.parentName}</TableCell>
+                        <TableCell>{kid.kidName}</TableCell>
+                        <TableCell>{kid.whatsappNumber}</TableCell>
+                        <TableCell>{kid.enquiryField}</TableCell>
                         <TableCell>
                           <Chip
-                            label={kid.status}
-                            color={getStatusChipColor(kid.status, kid.source)}
-                            size="small"
-                            variant="outlined"
+                            label={kid.enquiryStatus || "Enquiry"}
+                            color={getStatusChipColor(kid.enquiryStatus)}
                           />
                         </TableCell>
                         <TableCell>
                           <Chip
-                            label={kid.source}
+                            label={kid.enquiryField}
                             size="small"
-                            sx={{ backgroundColor: '#642b8f', color: 'white' }}
+                            sx={{ bgcolor: "#642b8f", color: "white" }}
                           />
                         </TableCell>
-                        <TableCell>{new Date(kid.date).toLocaleDateString()}</TableCell>
+                        <TableCell>{kid.formattedCreatedAt}</TableCell>
                         <TableCell>
-                          <IconButton
-                            size="small"
-                            color="primary"
-                            onClick={() => {
-                              // Handle view details action
-                              console.log('View details for:', kid);
-                            }}
-                          >
+                          <IconButton onClick={() => handleView(kid)}>
                             <Visibility />
                           </IconButton>
                         </TableCell>
@@ -316,23 +244,21 @@ const EnquiryProspectTab = () => {
                   </TableBody>
                 </Table>
               </TableContainer>
-            ) : !isSearching && (
-              <Paper className="p-8 text-center">
-                <Typography variant="body1" className="text-gray-500">
-                  No results found for "{searchQuery}"
-                </Typography>
-              </Paper>
+            ) : (
+              !isSearching && (
+                <Paper className="p-6 text-center">No results found</Paper>
+              )
             )}
           </div>
         )}
 
-        {/* Show normal tab content when not searching */}
+        {/* DEFAULT TABS */}
         {!searchQuery && (
-          <div>
+          <>
             {activeTab === "enquiry" && <Enquiry />}
             {activeTab === "prospects" && <Prospect />}
             {activeTab === "activeKids" && <ActiveKids />}
-          </div>
+          </>
         )}
       </div>
     </div>

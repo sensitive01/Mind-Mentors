@@ -13,6 +13,7 @@ import {
   ChevronDown,
   Edit3,
   PlusCircle,
+  ArrowLeft,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -178,9 +179,8 @@ export default function DisplaySelectedClass() {
 
       return {
         ...cancelledSession,
-        sessionId: `${
-          cancelledSession.sessionId || cancelledSession._id
-        }-replacement-${Date.now()}`,
+        sessionId: `${cancelledSession.sessionId || cancelledSession._id
+          }-replacement-${Date.now()}`,
         sessionNumber: Math.max(...data.map((s) => s.sessionNumber || 1)) + 1,
         classDate: formatDateForAPI(newDate),
         formattedDate: formatDate(newDate),
@@ -216,10 +216,10 @@ export default function DisplaySelectedClass() {
         );
         const pauseEndDateOnly = selectedPauseEndDate
           ? new Date(
-              selectedPauseEndDate.getFullYear(),
-              selectedPauseEndDate.getMonth(),
-              selectedPauseEndDate.getDate()
-            )
+            selectedPauseEndDate.getFullYear(),
+            selectedPauseEndDate.getMonth(),
+            selectedPauseEndDate.getDate()
+          )
           : null;
 
         // If both from and to dates are provided
@@ -286,7 +286,7 @@ export default function DisplaySelectedClass() {
         updatedData.filter((session) => session.status === "scheduled")
       );
 
-      const response = await resumeTheClass(enqId, updatedData, classId,empId);
+      const response = await resumeTheClass(enqId, updatedData, classId, empId);
 
       setData(updatedData);
       setIsPaused(false);
@@ -347,7 +347,7 @@ export default function DisplaySelectedClass() {
     console.log("Updated data after cancellation:", sortedData);
 
     try {
-      const response = await resumeTheClass(enqId, sortedData, classId,empId);
+      const response = await resumeTheClass(enqId, sortedData, classId, empId);
       console.log("Resume class API response:", response);
 
       setData(sortedData);
@@ -376,13 +376,13 @@ export default function DisplaySelectedClass() {
 
         return sessionId === selectedId
           ? {
-              ...session,
-              ...selectedTimeSlot,
-              classDate: formatDateForAPI(selectedDate),
-              formattedDate: formatDate(selectedDate),
-              day: getDayName(selectedDate),
-              status: "rescheduled",
-            }
+            ...session,
+            ...selectedTimeSlot,
+            classDate: formatDateForAPI(selectedDate),
+            formattedDate: formatDate(selectedDate),
+            day: getDayName(selectedDate),
+            status: "rescheduled",
+          }
           : session;
       });
 
@@ -398,7 +398,7 @@ export default function DisplaySelectedClass() {
       console.log("Updated data after reschedule:", updatedData);
 
       try {
-        const response = await resumeTheClass(enqId, updatedData, classId,empId);
+        const response = await resumeTheClass(enqId, updatedData, classId, empId);
         console.log("Resume class API response:", response);
 
         // Update state
@@ -472,9 +472,8 @@ export default function DisplaySelectedClass() {
       >
         {/* Status Indicator Bar */}
         <div
-          className={`absolute top-0 left-0 right-0 h-1 rounded-t-xl ${
-            session.type === "online" ? "bg-blue-500" : "bg-green-500"
-          }`}
+          className={`absolute top-0 left-0 right-0 h-1 rounded-t-xl ${session.type === "online" ? "bg-blue-500" : "bg-green-500"
+            }`}
         />
 
         <div className="p-5">
@@ -485,11 +484,10 @@ export default function DisplaySelectedClass() {
                 Session {session.sessionNumber || "N/A"}
               </span>
               <span
-                className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                  session.type === "online"
-                    ? "bg-blue-100 text-blue-700"
-                    : "bg-green-100 text-green-700"
-                }`}
+                className={`px-3 py-1 text-xs font-semibold rounded-full ${session.type === "online"
+                  ? "bg-blue-100 text-blue-700"
+                  : "bg-green-100 text-green-700"
+                  }`}
               >
                 {session.type === "online" ? "Online" : "Offline"}
               </span>
@@ -577,6 +575,14 @@ export default function DisplaySelectedClass() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto p-6">
+        <button
+          onClick={() => navigate("/super-admin/department/enrollment-data?tab=prospects&enquiryStatus=Active")}
+          className="flex items-center text-gray-600 hover:text-gray-800 mb-6 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5 mr-1" />
+          <span>Back</span>
+        </button>
+
         {/* Header Section */}
         <div className="bg-white rounded-xl shadow-sm mb-6 p-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-6">
@@ -723,9 +729,8 @@ export default function DisplaySelectedClass() {
         title="Session Action"
       >
         <p className="text-gray-600 mb-6">
-          {`What would you like to do with Session ${
-            selectedSession?.sessionNumber || "N/A"
-          }?`}
+          {`What would you like to do with Session ${selectedSession?.sessionNumber || "N/A"
+            }?`}
         </p>
         <div className="flex gap-4">
           <button
@@ -803,8 +808,8 @@ export default function DisplaySelectedClass() {
                 {!selectedDate
                   ? "Please select a date first"
                   : availableClassesForReschedule.length === 0
-                  ? `No classes available on ${getDayName(selectedDate)}`
-                  : "Select Class"}
+                    ? `No classes available on ${getDayName(selectedDate)}`
+                    : "Select Class"}
               </option>
               {availableClassesForReschedule.map((classItem) => (
                 <option key={classItem._id} value={classItem._id}>

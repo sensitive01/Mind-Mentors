@@ -2,6 +2,7 @@ import EnquiryProspectTab from "../../../department-components/common-components
 import Sidebar from "../../../department-components/operation-new/layout/Sidebar";
 import Topbar from './../../../component/parent-component/parent-dashboard/layout/Topbar';
 const EnquiryProspectsTabPage = () => {
+  
   return (
     <div className="flex h-screen w-screen overflow-hidden">
       <div className="z-30 flex-shrink-0">

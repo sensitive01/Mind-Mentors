@@ -354,6 +354,7 @@ import ParentAllStepLoginPage from "./component/parent-component/ParentAllStepLo
 import SuperAdminSeeParentPackageTable from "./pages/employee/superadmin/SuperAdminSeeParentPackageTable";
 import SuperAdminGenerateInvoice from "./pages/employee/superadmin/SuperAdminGenerateInvoice";
 import ChessKidPerfomancePage from "./pages/employee/superadmin/ChessKidPerfomancePage";
+import VerifyPendingInvoicePage from "./pages/employee/superadmin/package/VerifyPendingInvoicePage";
 
 // import CoachZoomMeeting from "./pages/employee/coach/CoachZoomMeeting";
 
@@ -1264,9 +1265,14 @@ function App() {
             element={<SuperAdminPackageTableList />}
           />
           <Route
+            path="/super-admin/department/pending-invoice"
+            element={<VerifyPendingInvoicePage />}
+          />
+          <Route
             path="/super-admin/department/payment-details/:encodedData"
             element={<PaymentVerificationPage />}
           />
+
           <Route
             path="/super-admin/department/invoice-table"
             element={<SuperAdminInvoicePage />}

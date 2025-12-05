@@ -186,6 +186,7 @@ userRoute.get(
 
 
 userRoute.get('/get-invoice-data', userController.getInvoiceData);
+userRoute.get('/get-pending-invoice-data', userController.getPendingInvoiceData);
 userRoute.get(
   "/get-enquiry-related-all-kid-data/:enqId",
   userController.getEnquiryRelatedAllKidData
@@ -217,6 +218,10 @@ userRoute.get(
 );
 
 
+userRoute.put(
+  "/update-payment-verifivation-details",
+  userController.updatePaymentVerificationDetails
+);
 
 
 

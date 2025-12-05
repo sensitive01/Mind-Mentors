@@ -1,20 +1,12 @@
 import { useState, useEffect } from "react";
-import {
-  ChevronDown,
-  ChevronUp,
-  X,
-  Users,
-  Building,
-  FileText,
-  CalendarClock,
-} from "lucide-react";
+import { ChevronDown, ChevronUp, X, Users, Building } from "lucide-react";
 import {
   assignTaskForSpecificKid,
   createTasks,
 } from "../../../../api/service/employee/EmployeeService";
 
-const EnqRelatedTask = ({id}) => {
-  console.log("enq Related task",id)
+const EnqRelatedTask = ({ id }) => {
+  console.log("enq Related task", id);
   const empId = localStorage.getItem("empId");
   const department = localStorage.getItem("department");
 
@@ -27,7 +19,6 @@ const EnqRelatedTask = ({id}) => {
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [departments, setDepartments] = useState([]);
-
 
   const [formData, setFormData] = useState({
     task: "",
@@ -137,6 +128,7 @@ const EnqRelatedTask = ({id}) => {
         assignedBy: empId || "",
       });
       setSelectedUsers([]);
+      setSelectedDepartments([]);
     } catch (error) {
       console.error("Error creating tasks:", error);
       setSubmissionStatus({
@@ -188,207 +180,218 @@ const EnqRelatedTask = ({id}) => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen p-6 flex items-center justify-center">
-        <div className="animate-pulse text-primary">Loading...</div>
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-pulse text-purple-600 text-lg">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-    {/* Main Container - Set to screen height */}
-    <div className="max-w-7xl mx-auto px-4 h-screen py-4">
-      {/* Header and Content Container - Set to full height with flex */}
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden flex flex-col h-full">
-        {/* Header Section - Fixed height */}
-        <div className="bg-gradient-to-r from-primary to-purple-500 p-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h2 className="text-3xl font-bold text-white">Task Assignment</h2>
-              <p className="text-purple-100">
-                Create and manage tasks for your team members
-              </p>
-            </div>
-            <button
-              onClick={() => (window.location.href = `/${department}/department/list-task-assigned-me`)}
-              className="bg-white text-primary px-6 py-3 rounded-xl hover:bg-purple-50 transition-all duration-200 font-medium shadow-sm"
-            >
-              View Tasks
-            </button>
-          </div>
+    <div className="max-w-6xl mx-auto h-[calc(100vh-100px)] flex flex-col">
+      {/* Status Message */}
+      {submissionStatus.submitted && (
+        <div
+          className={`mb-4 p-3 rounded-lg text-center text-sm font-medium ${submissionStatus.message.includes("Successfully")
+              ? "bg-green-50 text-green-700 border border-green-200"
+              : "bg-red-50 text-red-700 border border-red-200"
+            }`}
+        >
+          {submissionStatus.message}
         </div>
-  
-        {/* Form Content Area - Scrollable */}
-        <div className="flex-1 overflow-y-auto p-4">
-          {/* Status Message */}
-          {submissionStatus.submitted && (
-            <div
-              className={`mb-4 p-3 rounded-lg text-center ${
-                submissionStatus.message.includes("Successfully")
-                  ? "bg-green-50 text-green-700 border border-green-200"
-                  : "bg-red-50 text-red-700 border border-red-200"
-              }`}
-            >
-              {submissionStatus.message}
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 flex-1 overflow-hidden">
+        {/* Student Info Card */}
+        {kidsInfo && (
+          <div className="lg:col-span-1 bg-gradient-to-br from-purple-50 to-white rounded-xl shadow-sm p-5 border border-purple-100 h-fit">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-md">
+                <span className="text-white font-bold text-xl">
+                  {kidsInfo.kidFirstName?.[0]?.toUpperCase()}
+                </span>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 text-lg">
+                  {kidsInfo.kidFirstName}
+                </h3>
+                <p className="text-sm text-purple-600 font-medium">Student</p>
+              </div>
             </div>
-          )}
-  
-          <div className="grid grid-cols-12 gap-4 h-full">
-            {/* Left Sidebar - Student Info */}
-            <div className="col-span-12 md:col-span-3">
-              {kidsInfo && (
-                <div className="bg-white rounded-lg shadow-sm p-4 sticky top-0">
-                  <h3 className="text-primary font-semibold mb-3">Student Information</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-sm text-gray-500">Name</label>
-                      <p className="font-medium">{kidsInfo.kidFirstName}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm text-gray-500">Program & Level</label>
-                      <div className="space-y-1">
-                        {kidsInfo.programs.map((programInfo, index) => (
-                          <p className="font-medium" key={programInfo._id || index}>
-                            {programInfo.program} - {programInfo.level}
+
+            <div className="space-y-3">
+              <div className="p-3 bg-white rounded-lg border border-purple-100">
+                <p className="text-xs font-semibold text-purple-600 mb-2 uppercase tracking-wide">
+                  Enrolled Programs
+                </p>
+                <div className="space-y-2">
+                  {kidsInfo.programs?.length > 0 ? (
+                    kidsInfo.programs.map((program, index) => (
+                      <div
+                        key={index}
+                        className="flex items-start gap-2 p-2 bg-purple-50 rounded-md"
+                      >
+                        <div className="w-2 h-2 rounded-full bg-purple-500 mt-1.5 flex-shrink-0"></div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-gray-800 truncate">
+                            {program.program}
                           </p>
-                        ))}
+                          <p className="text-xs text-purple-600">{program.level}</p>
+                        </div>
                       </div>
-                    </div>
-                  </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500 italic">No programs assigned</p>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
-  
-            {/* Main Form Area */}
-            <div className="col-span-12 md:col-span-9">
-              <div className="bg-white rounded-lg shadow-sm p-4">
-                <form onSubmit={handleSubmit} className="space-y-4">
+          </div>
+        )}
+
+        {/* Task Form */}
+        <div className="lg:col-span-3 flex flex-col h-full">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex-1 flex flex-col">
+            <div className="p-5 flex-1 overflow-y-auto">
+              <form onSubmit={handleSubmit} id="taskForm" className="space-y-5">
+                <div className="space-y-5">
                   {/* Task Description */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Task Description
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Task Description <span className="text-red-500">*</span>
                     </label>
                     <textarea
                       name="task"
                       value={formData.task}
                       onChange={handleInputChange}
-                      rows={3}
-                      className="w-full p-2 rounded-lg border border-gray-300 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 resize-none"
-                      placeholder="Enter detailed task description..."
+                      rows={4}
+                      className="w-full p-3 text-sm rounded-lg border border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all resize-none"
+                      placeholder="Describe the task in detail..."
+                      required
                     />
                   </div>
-  
-                  {/* DateTime */}
+
+                  {/* Due Date & Time */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Due Date & Time
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Due Date & Time <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="datetime-local"
                       name="taskDateTime"
                       value={formData.taskDateTime}
                       onChange={handleInputChange}
-                      className="w-full p-2 rounded-lg border border-gray-300 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                      className="w-full md:w-2/3 p-2.5 text-sm rounded-lg border border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+                      required
                     />
                   </div>
-  
+
                   {/* Assignment Section */}
-                  <div className="grid grid-cols-12 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Department Selection */}
-                    <div className="col-span-12 md:col-span-6">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Select Departments
                       </label>
-  
+
                       {/* Selected Departments Tags */}
                       {selectedDepartments.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mb-2 p-2 bg-gray-50 rounded-lg min-h-8 max-h-24 overflow-y-auto">
+                        <div className="flex flex-wrap gap-2 mb-2 p-2.5 bg-purple-50 rounded-lg border border-purple-100 max-h-24 overflow-y-auto">
                           {selectedDepartments.map((dept) => (
                             <div
                               key={dept}
-                              className="bg-white px-2 py-1 rounded flex items-center gap-1 text-sm border"
+                              className="bg-white px-2.5 py-1.5 rounded-md flex items-center gap-2 text-sm border border-purple-200 shadow-sm"
                             >
-                              <Building size={12} />
-                              <span>{dept}</span>
+                              <Building size={14} className="text-purple-600" />
+                              <span className="font-medium text-gray-700">{dept}</span>
                               <button
                                 type="button"
                                 onClick={() => removeDepartment(dept)}
-                                className="text-gray-500 hover:text-red-500"
+                                className="text-gray-400 hover:text-red-500 transition-colors ml-1"
                               >
-                                <X size={12} />
+                                <X size={14} />
                               </button>
                             </div>
                           ))}
                         </div>
                       )}
-  
+
                       {/* Department Dropdown */}
                       <div className="relative">
                         <div
-                          className="w-full p-2 rounded-lg border border-gray-300 flex justify-between items-center cursor-pointer"
+                          className="w-full p-2.5 rounded-lg border border-gray-300 flex justify-between items-center cursor-pointer hover:border-purple-400 transition-colors bg-white"
                           onClick={() => setIsDeptDropdownOpen(!isDeptDropdownOpen)}
                         >
-                          <span className="text-gray-500 text-sm">Select departments...</span>
-                          {isDeptDropdownOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                          <span className="text-gray-500 text-sm">
+                            {selectedDepartments.length > 0
+                              ? `${selectedDepartments.length} selected`
+                              : "Select departments..."}
+                          </span>
+                          {isDeptDropdownOpen ? (
+                            <ChevronUp size={18} className="text-gray-400" />
+                          ) : (
+                            <ChevronDown size={18} className="text-gray-400" />
+                          )}
                         </div>
-  
+
                         {isDeptDropdownOpen && (
                           <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                             {departments.map((dept) => (
                               <div
                                 key={dept}
-                                className="flex items-center p-2 hover:bg-gray-50 cursor-pointer"
+                                className="flex items-center p-2.5 hover:bg-purple-50 cursor-pointer transition-colors"
                                 onClick={() => handleDepartmentSelection(dept)}
                               >
                                 <input
                                   type="checkbox"
                                   checked={selectedDepartments.includes(dept)}
-                                  onChange={() => {}}
-                                  className="w-4 h-4 rounded border-gray-300 text-purple-600"
+                                  onChange={() => { }}
+                                  className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
                                 />
-                                <label className="ml-2 text-sm">{dept}</label>
+                                <label className="ml-2.5 text-sm font-medium text-gray-700 cursor-pointer">
+                                  {dept}
+                                </label>
                               </div>
                             ))}
                           </div>
                         )}
                       </div>
                     </div>
-  
+
                     {/* User Selection */}
-                    <div className="col-span-12 md:col-span-6">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Select Users
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Select Users <span className="text-red-500">*</span>
                       </label>
-  
+
                       {/* Selected Users Tags */}
                       {selectedUsers.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mb-2 p-2 bg-gray-50 rounded-lg min-h-8 max-h-24 overflow-y-auto">
+                        <div className="flex flex-wrap gap-2 mb-2 p-2.5 bg-purple-50 rounded-lg border border-purple-100 max-h-24 overflow-y-auto">
                           {selectedUsers.map((email) => {
                             const user = employeesData.find((emp) => emp.email === email);
                             return (
                               <div
                                 key={email}
-                                className="bg-white px-2 py-1 rounded flex items-center gap-1 text-sm border"
+                                className="bg-white px-2.5 py-1.5 rounded-md flex items-center gap-2 text-sm border border-purple-200 shadow-sm"
                               >
-                                <Users size={12} />
-                                <span>{user?.firstName}</span>
+                                <Users size={14} className="text-purple-600" />
+                                <span className="font-medium text-gray-700">{user?.firstName}</span>
                                 <button
                                   type="button"
                                   onClick={() => removeUser(email)}
-                                  className="text-gray-500 hover:text-red-500"
+                                  className="text-gray-400 hover:text-red-500 transition-colors ml-1"
                                 >
-                                  <X size={12} />
+                                  <X size={14} />
                                 </button>
                               </div>
                             );
                           })}
                         </div>
                       )}
-  
+
                       {/* User Dropdown */}
                       <div className="relative">
                         <div
-                          className="w-full p-2 rounded-lg border border-gray-300 flex justify-between items-center cursor-pointer"
+                          className="w-full p-2.5 rounded-lg border border-gray-300 flex justify-between items-center cursor-pointer hover:border-purple-400 transition-colors bg-white"
                           onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
                         >
                           <input
@@ -397,74 +400,89 @@ const EnqRelatedTask = ({id}) => {
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             onClick={(e) => e.stopPropagation()}
-                            className="outline-none text-sm w-full"
+                            className="outline-none text-sm w-full text-gray-700 placeholder-gray-400"
                           />
-                          {isUserDropdownOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                          {isUserDropdownOpen ? (
+                            <ChevronUp size={18} className="text-gray-400 flex-shrink-0" />
+                          ) : (
+                            <ChevronDown size={18} className="text-gray-400 flex-shrink-0" />
+                          )}
                         </div>
-  
+
                         {isUserDropdownOpen && (
                           <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                            {filteredEmployees.map((employee) => (
-                              <div
-                                key={employee._id}
-                                className="flex items-center p-2 hover:bg-gray-50 cursor-pointer"
-                                onClick={() => handleUserSelection(employee.email)}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={selectedUsers.includes(employee.email)}
-                                  onChange={() => {}}
-                                  className="w-4 h-4 rounded border-gray-300 text-purple-600"
-                                />
-                                <label className="ml-2">
-                                  <span className="block text-sm font-medium">
-                                    {employee.firstName}
-                                  </span>
-                                  <span className="block text-xs text-gray-500">
-                                    {employee.department}
-                                  </span>
-                                </label>
+                            {filteredEmployees.length > 0 ? (
+                              filteredEmployees.map((employee) => (
+                                <div
+                                  key={employee._id}
+                                  className="flex items-center p-2.5 hover:bg-purple-50 cursor-pointer transition-colors"
+                                  onClick={() => handleUserSelection(employee.email)}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedUsers.includes(employee.email)}
+                                    onChange={() => { }}
+                                    className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                                  />
+                                  <label className="ml-2.5 cursor-pointer flex-1">
+                                    <span className="block text-sm font-medium text-gray-800">
+                                      {employee.firstName}
+                                    </span>
+                                    <span className="block text-xs text-purple-600">
+                                      {employee.department}
+                                    </span>
+                                  </label>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="p-3 text-center text-sm text-gray-500">
+                                No users found
                               </div>
-                            ))}
+                            )}
                           </div>
                         )}
                       </div>
                     </div>
                   </div>
-  
-                  {/* Action Buttons */}
-                  <div className="flex justify-end gap-3 pt-4">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFormData({
-                          task: "",
-                          taskDateTime: "",
-                          assignedBy: empId || "",
-                        });
-                        setSelectedUsers([]);
-                        setSelectedDepartments([]);
-                        setSubmissionStatus({ submitted: false, message: "" });
-                      }}
-                      className="px-4 py-2 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50 text-sm"
-                    >
-                      Reset
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm"
-                    >
-                      Assign Task
-                    </button>
-                  </div>
-                </form>
+
+                  {/* Form ID for the submit button outside the form */}
+                  <input type="hidden" form="taskForm" />
+                </div>
+              </form>
+            </div>
+
+            {/* Action Buttons - Moved outside the scrollable area */}
+            <div className="border-t border-gray-200 p-4 bg-gray-50">
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData({
+                      task: "",
+                      taskDateTime: "",
+                      assignedBy: empId || "",
+                    });
+                    setSelectedUsers([]);
+                    setSelectedDepartments([]);
+                    setSubmissionStatus({ submitted: false, message: "" });
+                  }}
+                  className="px-5 py-2 border-2 border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50 text-sm font-semibold transition-colors"
+                >
+                  Reset
+                </button>
+                <button
+                  type="submit"
+                  form="taskForm"
+                  className="px-5 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-semibold transition-colors shadow-sm"
+                >
+                  Assign Task
+                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
   );
 };
 

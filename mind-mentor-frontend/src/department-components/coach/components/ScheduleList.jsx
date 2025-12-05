@@ -10,19 +10,30 @@ import {
   Paper,
   Badge,
   Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  TextField,
 } from "@mui/material";
 import {
   PlayCircleOutline as LiveIcon,
   ScheduleOutlined as UpcomingIcon,
+  Close as CloseIcon,
 } from "@mui/icons-material";
 import {
   getMyClassData,
   getSuperAdminAllClassData,
+  
 } from "../../../api/service/employee/coachService";
 import { customColors, theme } from "../Layout/customStyle";
 import RenderClassList from "./shedule-components/RenderClassList";
 import UpcomingClasses from "./shedule-components/UpcommingClasses";
 import ClassDetailsModal from "./shedule-components/ClassDetailModel";
+import { toast } from "react-toastify";
+import IconButton from "@mui/material/IconButton";
+import { generateClassMeetingLink } from "../../../api/service/employee/EmployeeService";
 
 const TabPanel = ({ children, value, index, ...other }) => (
   <Box
@@ -69,6 +80,15 @@ const ScheduleKanban = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [currentTab, setCurrentTab] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  // Meeting link creation states
+  const [meetingDialogOpen, setMeetingDialogOpen] = useState(false);
+  const [meetingFormData, setMeetingFormData] = useState({
+    className: "",
+    coachName: "",
+  });
+  const [selectedClassForMeeting, setSelectedClassForMeeting] = useState(null);
+  const [creatingMeeting, setCreatingMeeting] = useState(false);
 
   // Initialize localStorage values safely
   useEffect(() => {
@@ -282,6 +302,75 @@ const ScheduleKanban = () => {
     setSelectedDay(null);
   };
 
+  // Meeting link creation handlers
+  const handleCreateMeetingClick = (e, classInfo) => {
+    e.stopPropagation();
+    
+    setMeetingFormData({
+      className: "MindMentorz Online",
+      coachName: classInfo.coachName || "",
+    });
+    setSelectedClassForMeeting(classInfo._id);
+    setMeetingDialogOpen(true);
+  };
+
+  const handleCloseMeetingDialog = () => {
+    setMeetingDialogOpen(false);
+    setMeetingFormData({
+      className: "",
+      coachName: "",
+    });
+    setSelectedClassForMeeting(null);
+  };
+
+  const handleCreateMeeting = async () => {
+    if (!selectedClassForMeeting || !meetingFormData.className || !meetingFormData.coachName) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    try {
+      setCreatingMeeting(true);
+      
+      const response = await generateClassMeetingLink(
+        selectedClassForMeeting,
+        meetingFormData.className,
+        meetingFormData.coachName
+      );
+
+      if (response?.data) {
+        // Update the class in state with the new meeting links
+        const updatedClassData = {
+          meetingLinkCreated: true,
+          coachJoinUrl: response.data.joinCoachUrl,
+          kidJoinUrl: response.data.joinKidUrl,
+        };
+
+        // Update live classes state
+        setLiveClasses((prevClasses) =>
+          prevClasses.map((classItem) =>
+            classItem._id === selectedClassForMeeting
+              ? { ...classItem, ...updatedClassData }
+              : classItem
+          )
+        );
+
+        // Also update selected class if modal is open
+        if (selectedClass?._id === selectedClassForMeeting) {
+          setSelectedClass((prev) => ({ ...prev, ...updatedClassData }));
+        }
+
+        toast.success("Meeting link created successfully!");
+        handleCloseMeetingDialog();
+      }
+    } catch (error) {
+      console.error("Error creating meeting link:", error);
+      toast.error(error?.response?.data?.message || "Failed to create meeting link");
+    } finally {
+      setCreatingMeeting(false);
+    }
+  };
+
   if (!department || !empId) {
     return (
       <Box
@@ -457,6 +546,7 @@ const ScheduleKanban = () => {
                       <RenderClassList
                         classes={liveClasses}
                         handleCardClick={handleCardClick}
+                        handleCreateMeeting={handleCreateMeetingClick}
                         isLiveTab
                       />
                     </Box>
@@ -520,6 +610,87 @@ const ScheduleKanban = () => {
           selectedClass={selectedClass}
           selectedDay={selectedDay}
         />
+
+        {/* Meeting Link Creation Dialog */}
+        <Dialog
+          open={meetingDialogOpen}
+          onClose={handleCloseMeetingDialog}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              backgroundColor: customColors.primary,
+              color: "white",
+            }}
+          >
+            <Typography variant="h6" fontWeight="bold">
+              Create Meeting Link
+            </Typography>
+            <IconButton
+              onClick={handleCloseMeetingDialog}
+              sx={{ color: "white" }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+
+          <DialogContent sx={{ mt: 2 }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+              <TextField
+                label="Class Name"
+                value={meetingFormData.className}
+                onChange={(e) =>
+                  setMeetingFormData({
+                    ...meetingFormData,
+                    className: e.target.value,
+                  })
+                }
+                fullWidth
+                variant="outlined"
+              />
+
+              <TextField
+                label="Coach Name"
+                value={meetingFormData.coachName}
+                onChange={(e) =>
+                  setMeetingFormData({
+                    ...meetingFormData,
+                    coachName: e.target.value,
+                  })
+                }
+                fullWidth
+                variant="outlined"
+              />
+            </Box>
+          </DialogContent>
+
+          <DialogActions sx={{ p: 2.5 }}>
+            <Button
+              onClick={handleCloseMeetingDialog}
+              variant="outlined"
+              color="inherit"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateMeeting}
+              variant="contained"
+              disabled={creatingMeeting}
+              sx={{
+                backgroundColor: customColors.primary,
+                "&:hover": {
+                  backgroundColor: customColors.secondary,
+                },
+              }}
+            >
+              {creatingMeeting ? "Creating..." : "Create Meeting"}
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         {/* Add pulse animation for live indicator */}
         <style jsx>{`

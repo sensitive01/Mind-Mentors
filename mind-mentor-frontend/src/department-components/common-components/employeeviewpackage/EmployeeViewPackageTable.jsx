@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
   Paper,
@@ -31,6 +31,7 @@ import {
   Person,
   School,
   LocationOn,
+  ArrowBack,
 } from "@mui/icons-material";
 import {
   employeeUpdatePackageData,
@@ -86,6 +87,7 @@ const theme = createTheme({
 });
 
 const EmployeeViewPackageTable = () => {
+  const navigate = useNavigate();
   const { enqId } = useParams();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -288,8 +290,8 @@ const EmployeeViewPackageTable = () => {
             params.value === "online"
               ? "info"
               : params.value === "offline"
-              ? "success"
-              : "warning"
+                ? "success"
+                : "warning"
           }
           size="small"
           variant="outlined"
@@ -329,10 +331,10 @@ const EmployeeViewPackageTable = () => {
             params.value === "Success"
               ? "success"
               : params.value === "Pending"
-              ? "warning"
-              : params.value === "Failed"
-              ? "error"
-              : "default"
+                ? "warning"
+                : params.value === "Failed"
+                  ? "error"
+                  : "default"
           }
           size="small"
         />
@@ -473,8 +475,8 @@ const EmployeeViewPackageTable = () => {
                           packageData.classMode === "online"
                             ? "info"
                             : packageData.classMode === "offline"
-                            ? "success"
-                            : "warning"
+                              ? "success"
+                              : "warning"
                         }
                         size="small"
                       />
@@ -482,15 +484,15 @@ const EmployeeViewPackageTable = () => {
                     {(packageData.classMode === "offline" ||
                       packageData.classMode === "hybrid" ||
                       packageData.classMode === "online") && (
-                      <Grid item xs={12} md={6}>
-                        <Typography variant="subtitle2" color="textSecondary">
-                          Center
-                        </Typography>
-                        <Typography variant="body1" gutterBottom>
-                          {getCenterName(packageData.centerId)}
-                        </Typography>
-                      </Grid>
-                    )}
+                        <Grid item xs={12} md={6}>
+                          <Typography variant="subtitle2" color="textSecondary">
+                            Center
+                          </Typography>
+                          <Typography variant="body1" gutterBottom>
+                            {getCenterName(packageData.centerId)}
+                          </Typography>
+                        </Grid>
+                      )}
                   </Grid>
                 </CardContent>
               </Card>
@@ -579,8 +581,8 @@ const EmployeeViewPackageTable = () => {
                           packageData.paymentStatus === "Success"
                             ? "success"
                             : packageData.paymentStatus === "Pending"
-                            ? "warning"
-                            : "error"
+                              ? "warning"
+                              : "error"
                         }
                         size="small"
                       />
@@ -664,9 +666,8 @@ const EmployeeViewPackageTable = () => {
               updatedData.centerName = offlineCenter.centerName;
             }
           } else if (value === "hybrid") {
-            updatedData.selectedPackage = `Custom hybrid Package (${
-              updatedData.timePreference || "day"
-            })`;
+            updatedData.selectedPackage = `Custom hybrid Package (${updatedData.timePreference || "day"
+              })`;
             // Set to first offline center if available (hybrid needs physical location)
             const offlineCenter = centers.find(
               (center) => center.centerType === "offline"
@@ -822,46 +823,46 @@ const EmployeeViewPackageTable = () => {
             {/* Conditional rendering based on class mode */}
             {(localPackageData.classMode === "online" ||
               localPackageData.classMode === "hybrid") && (
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label="Online Classes"
-                  type="number"
-                  value={localPackageData.onlineClasses || ""}
-                  onChange={(e) =>
-                    handleChange("onlineClasses", parseInt(e.target.value) || 0)
-                  }
-                  fullWidth
-                  margin="normal"
-                  required
-                  InputProps={{
-                    inputProps: { min: 0 },
-                  }}
-                />
-              </Grid>
-            )}
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    label="Online Classes"
+                    type="number"
+                    value={localPackageData.onlineClasses || ""}
+                    onChange={(e) =>
+                      handleChange("onlineClasses", parseInt(e.target.value) || 0)
+                    }
+                    fullWidth
+                    margin="normal"
+                    required
+                    InputProps={{
+                      inputProps: { min: 0 },
+                    }}
+                  />
+                </Grid>
+              )}
 
             {(localPackageData.classMode === "offline" ||
               localPackageData.classMode === "hybrid") && (
-              <Grid item xs={12} md={6}>
-                <TextField
-                  label="Offline Classes"
-                  type="number"
-                  value={localPackageData.offlineClasses || ""}
-                  onChange={(e) =>
-                    handleChange(
-                      "offlineClasses",
-                      parseInt(e.target.value) || 0
-                    )
-                  }
-                  fullWidth
-                  margin="normal"
-                  required
-                  InputProps={{
-                    inputProps: { min: 0 },
-                  }}
-                />
-              </Grid>
-            )}
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    label="Offline Classes"
+                    type="number"
+                    value={localPackageData.offlineClasses || ""}
+                    onChange={(e) =>
+                      handleChange(
+                        "offlineClasses",
+                        parseInt(e.target.value) || 0
+                      )
+                    }
+                    fullWidth
+                    margin="normal"
+                    required
+                    InputProps={{
+                      inputProps: { min: 0 },
+                    }}
+                  />
+                </Grid>
+              )}
           </Grid>
         </DialogContent>
         <DialogActions>
@@ -883,7 +884,15 @@ const EmployeeViewPackageTable = () => {
 
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ width: "100%", height: "100%", p: 3 }}>
+      <Box sx={{ p: 3 }}>
+        <Button
+          startIcon={<ArrowBack />}
+          onClick={() => navigate(-1)}
+          sx={{ mb: 2 }}
+          variant="outlined"
+        >
+          Back
+        </Button>
         <Paper
           elevation={0}
           sx={{

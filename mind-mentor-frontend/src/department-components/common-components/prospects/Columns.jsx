@@ -188,11 +188,12 @@ const columns = (
 
     // The rest of your columns remain the same
     {
-      field: "program", // <-- match the data key
+      field: "programs",
       renderHeader: () => <strong>Programs</strong>,
       width: 150,
       renderCell: (params) => {
-        const programs = params.value || [];
+        const programs = params.row.programs || [];
+
         return (
           <Box>
             {programs.map((prog, index) => (
@@ -386,11 +387,10 @@ const columns = (
             }}
             disabled={isWarmStatus} // Disable the button if the status is "warm"
             className={`px-4 py-1 text-sm font-medium text-white rounded-md transition-all duration-300 ease-in-out border-2 border-transparent
-                        ${
-                          isWarmStatus
-                            ? "bg-gray-400 cursor-not-allowed"
-                            : "bg-primary hover:bg-primary hover:text-white hover:border-primary hover:border-2"
-                        }`}
+                        ${isWarmStatus
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-primary hover:bg-primary hover:text-white hover:border-primary hover:border-2"
+              }`}
           >
             {"Move to Enquiry"}
           </button>

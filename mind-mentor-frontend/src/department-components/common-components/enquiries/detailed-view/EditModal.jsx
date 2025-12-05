@@ -1,4 +1,3 @@
-import { TextFields } from "@mui/icons-material";
 import {
   Dialog,
   DialogActions,
@@ -9,11 +8,17 @@ import {
   InputLabel,
   MenuItem,
   TextField,
+  Box,
+  Grid,
+  Typography,
+  Card,
+  Button,
 } from "@mui/material";
-import { Button, Card, Select, Typography } from "antd";
-import { Box, Grid, Plus, Trash2 } from "lucide-react";
-import React, { useEffect } from "react";
+import { alpha } from "@mui/material/styles";
+import { Plus, Trash2 } from "lucide-react";
+import React from "react";
 import PhoneInput from "react-phone-input-2";
+import { Select } from "@mui/material";
 
 const EditModal = ({
   formData,
@@ -23,7 +28,6 @@ const EditModal = ({
   programsData,
   handleProgramChange,
   availablePrograms,
-  availableLevels,
   handleSave,
   selectedCenter,
   handleCenterChange,
@@ -109,30 +113,6 @@ const EditModal = ({
             />
           </Grid>
 
-          {/* Separate Parent Name Fields */}
-          {/* <Grid item xs={12} md={3}>
-            <TextField
-              fullWidth
-              label="First Name"
-              value={formData.parentFirstName || ""}
-              onChange={(e) =>
-                handleNameInputChange("parentFirstName", e.target.value)
-              }
-              placeholder="First name"
-            />
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <TextField
-              fullWidth
-              label="Last Name"
-              value={formData.parentLastName || ""}
-              onChange={(e) =>
-                handleNameInputChange("parentLastName", e.target.value)
-              }
-              placeholder="Last name"
-            />
-          </Grid> */}
-
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
@@ -217,30 +197,6 @@ const EditModal = ({
             />
           </Grid>
 
-          {/* Separate Kid Name Fields */}
-          <Grid item xs={12} md={3}>
-            <TextField
-              fullWidth
-              label="First Name"
-              value={formData.kidFirstName || ""}
-              onChange={(e) =>
-                handleNameInputChange("kidFirstName", e.target.value)
-              }
-              placeholder="First name"
-            />
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <TextField
-              fullWidth
-              label="Last Name"
-              value={formData.kidLastName || ""}
-              onChange={(e) =>
-                handleNameInputChange("kidLastName", e.target.value)
-              }
-              placeholder="Last name"
-            />
-          </Grid>
-
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
@@ -311,7 +267,7 @@ const EditModal = ({
                 label="Select Center"
               >
                 <MenuItem value="">
-                  <em>None</em>
+                  <em>All Centers</em>
                 </MenuItem>
                 {programsData.map((center) => (
                   <MenuItem key={center._id} value={center._id}>
@@ -324,6 +280,7 @@ const EditModal = ({
         </Grid>
       </Grid>
 
+      {/* PROGRAMS SECTION - FIXED */}
       <Grid item xs={12}>
         <Box
           sx={{
@@ -346,248 +303,145 @@ const EditModal = ({
                 ...(formData.programs || []),
                 { program: "", level: "" },
               ];
-              handleNameInputChange("programs", updatedPrograms);
+              handleInputChange("programs", updatedPrograms);
             }}
           >
             Add Program
           </Button>
         </Box>
 
-        {formData.programs?.map((program, index) => (
-          <Card key={index} sx={{ mb: 2, p: 2 }}>
-            <Grid container spacing={2} alignItems="center">
-              <Grid item xs={12} md={4}>
-                <FormControl fullWidth>
-                  <InputLabel
-                    id={`program-select-label-${index}`}
-                    sx={{ backgroundColor: "white", px: 0.5 }}
-                  >
-                    Program Name
-                  </InputLabel>
-                  <Select
-                    labelId={`program-select-label-${index}`}
-                    value={program.program || ""}
-                    onChange={(e) => handleProgramChange(e.target.value, index)}
-                    label="Program Name"
-                  >
-                    {availablePrograms.map((prog, progIndex) => (
-                      <MenuItem key={progIndex} value={prog.program}>
-                        {prog.program}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <FormControl fullWidth>
-                  <InputLabel
-                    id={`level-select-label-${index}`}
-                    sx={{ backgroundColor: "white", px: 0.5 }}
-                  >
-                    Level
-                  </InputLabel>
-                  <Select
-                    labelId={`level-select-label-${index}`}
-                    value={program.level || ""}
-                    onChange={(e) => {
-                      const updatedPrograms = [...formData.programs];
-                      updatedPrograms[index].level = e.target.value;
-                      handleNameInputChange("programs", updatedPrograms);
-                    }}
-                    label="Level"
-                    disabled={!program.program}
-                  >
-                    {availableLevels.map((level, levelIndex) => (
-                      <MenuItem key={levelIndex} value={level}>
-                        {level}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} md={2}>
-                <IconButton
-                  color="error"
-                  onClick={() => {
-                    const updatedPrograms = formData.programs.filter(
-                      (_, i) => i !== index
-                    );
-                    handleNameInputChange("programs", updatedPrograms);
-                  }}
-                >
-                  <Trash2 size={20} />
-                </IconButton>
-              </Grid>
-            </Grid>
-          </Card>
-        ))}
+        {/* Show message if no programs data loaded */}
+        {programsData.length === 0 && (
+          <Box
+            sx={{
+              p: 3,
+              borderRadius: 2,
+              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
+              textAlign: "center",
+              mb: 2,
+            }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              Loading programs...
+            </Typography>
+          </Box>
+        )}
+
+        {/* Show existing programs or empty state */}
+        {formData.programs && formData.programs.length > 0 ? (
+          formData.programs.map((program, index) => {
+            // Find current program data to get available levels
+            let currentProgramData = availablePrograms.find(
+              (p) => p.program === program.program
+            );
+
+            // If not found in availablePrograms, search all centers
+            if (!currentProgramData && programsData.length > 0) {
+              for (const center of programsData) {
+                currentProgramData = center.programLevels?.find(
+                  (p) => p.program === program.program
+                );
+                if (currentProgramData) break;
+              }
+            }
+
+            const levelsForCurrentProgram = currentProgramData?.levels || [];
+
+            return (
+              <Card key={index} sx={{ mb: 2, p: 2 }}>
+                <Grid container spacing={2} alignItems="center">
+                  <Grid item xs={12} md={4}>
+                    <FormControl fullWidth>
+                      <InputLabel
+                        id={`program-select-label-${index}`}
+                        sx={{ backgroundColor: "white", px: 0.5 }}
+                      >
+                        Program Name
+                      </InputLabel>
+                      <Select
+                        labelId={`program-select-label-${index}`}
+                        value={program.program || ""}
+                        onChange={(e) =>
+                          handleProgramChange(e.target.value, index)
+                        }
+                        label="Program Name"
+                        disabled={availablePrograms.length === 0}
+                      >
+                        {availablePrograms.length > 0 ? (
+                          availablePrograms.map((prog, progIndex) => (
+                            <MenuItem key={progIndex} value={prog.program}>
+                              {prog.program}
+                            </MenuItem>
+                          ))
+                        ) : (
+                          <MenuItem value="">No programs available</MenuItem>
+                        )}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <FormControl fullWidth>
+                      <InputLabel
+                        id={`level-select-label-${index}`}
+                        sx={{ backgroundColor: "white", px: 0.5 }}
+                      >
+                        Level
+                      </InputLabel>
+                      <Select
+                        labelId={`level-select-label-${index}`}
+                        value={program.level || ""}
+                        onChange={(e) => {
+                          const updatedPrograms = [...formData.programs];
+                          updatedPrograms[index].level = e.target.value;
+                          handleInputChange("programs", updatedPrograms);
+                        }}
+                        label="Level"
+                        disabled={!program.program || levelsForCurrentProgram.length === 0}
+                      >
+                        {levelsForCurrentProgram.length > 0 ? (
+                          levelsForCurrentProgram.map((level, levelIndex) => (
+                            <MenuItem key={levelIndex} value={level}>
+                              {level}
+                            </MenuItem>
+                          ))
+                        ) : (
+                          <MenuItem value="">No levels available</MenuItem>
+                        )}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12} md={2}>
+                    <IconButton
+                      color="error"
+                      onClick={() => {
+                        const updatedPrograms = formData.programs.filter(
+                          (_, i) => i !== index
+                        );
+                        handleInputChange("programs", updatedPrograms);
+                      }}
+                    >
+                      <Trash2 size={20} />
+                    </IconButton>
+                  </Grid>
+                </Grid>
+              </Card>
+            );
+          })
+        ) : (
+          <Box
+            sx={{
+              p: 3,
+              borderRadius: 2,
+              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
+              textAlign: "center",
+            }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              No programs added yet. Click "Add Program" to get started.
+            </Typography>
+          </Box>
+        )}
       </Grid>
-
-      <Grid item xs={12}>
-        <Typography variant="subtitle1" sx={{ mb: 2, mt: 2, fontWeight: 600 }}>
-          Status Information
-        </Typography>
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth variant="outlined">
-              <InputLabel
-                id="enquiry-field-label"
-                sx={{ backgroundColor: "white", px: 0.5 }}
-              >
-                Enquiry Field
-              </InputLabel>
-              <Select
-                labelId="enquiry-field-label"
-                value={formData.enquiryField || ""}
-                onChange={(e) =>
-                  handleNameInputChange("enquiryField", e.target.value)
-                }
-                label="Enquiry Field"
-              >
-                <MenuItem value="enquiryList">Enquiry List</MenuItem>
-                <MenuItem value="prospects">Prospects</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth variant="outlined">
-              <InputLabel
-                id="payment"
-                sx={{ backgroundColor: "white", px: 0.5 }}
-              >
-                Payment Status
-              </InputLabel>
-              <Select
-                value={formData.payment || formData.paymentStatus || ""}
-                onChange={(e) => {
-                  handleNameInputChange("payment", e.target.value);
-                  handleNameInputChange("paymentStatus", e.target.value);
-                }}
-                label="Payment"
-                disabled
-              >
-                <MenuItem value="Pending">Pending</MenuItem>
-                <MenuItem value="Paid">Mark as Paid</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth>
-              <InputLabel
-                id="source"
-                sx={{ backgroundColor: "white", px: 0.5 }}
-              >
-                Source
-              </InputLabel>
-              <Select
-                value={formData.source || ""}
-                onChange={(e) =>
-                  handleNameInputChange("source", e.target.value)
-                }
-              >
-                <MenuItem value="">-Select-</MenuItem>
-                <MenuItem value="website">Website</MenuItem>
-                <MenuItem value="web_form">Web Form</MenuItem>
-                <MenuItem value="justdial">JustDial</MenuItem>
-                <MenuItem value="whatsapp">WhatsApp</MenuItem>
-                <MenuItem value="phone_call">Phone Call</MenuItem>
-                <MenuItem value="centre_walkin">Centre Walk-in</MenuItem>
-                <MenuItem value="referral">Referral</MenuItem>
-                <MenuItem value="social">Social Media</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth>
-              <InputLabel
-                id="disposition"
-                sx={{ backgroundColor: "white", px: 0.5 }}
-              >
-                Disposition
-              </InputLabel>
-              <Select
-                value={formData.disposition || ""}
-                onChange={(e) =>
-                  handleNameInputChange("disposition", e.target.value)
-                }
-              >
-                <MenuItem value="RnR">RnR</MenuItem>
-                <MenuItem value="Call Back">Call Back</MenuItem>
-                <MenuItem value="None">None</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth>
-              <InputLabel
-                id="demo-shedule"
-                sx={{ backgroundColor: "white", px: 0.5 }}
-              >
-                Demo Schedule
-              </InputLabel>
-              <Select
-                value={formData.scheduleDemo?.status || ""}
-                onChange={(e) =>
-                  handleNameInputChange("scheduleDemo", {
-                    ...formData.scheduleDemo,
-                    status: e.target.value,
-                  })
-                }
-              >
-                <MenuItem value="Scheduled">Scheduled</MenuItem>
-                <MenuItem value="Completed">Completed</MenuItem>
-                <MenuItem value="Cancelled">Cancelled</MenuItem>
-                <MenuItem value="Pending">Pending</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth>
-              <InputLabel
-                id="enrollment-status"
-                sx={{ backgroundColor: "white", px: 0.5 }}
-              >
-                Enrollment Status
-              </InputLabel>
-              <Select
-                value={formData.enquiryStatus || ""}
-                onChange={(e) =>
-                  handleNameInputChange("enquiryStatus", e.target.value)
-                }
-              >
-                <MenuItem value="Pending">Pending</MenuItem>
-                <MenuItem value="Qualified Lead">Qualified Lead</MenuItem>
-                <MenuItem value="Unqualified Lead">Unqualified Lead</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth>
-              <InputLabel
-                id="enquiry-type"
-                sx={{ backgroundColor: "white", px: 0.5 }}
-              >
-                Enquiry Type
-              </InputLabel>
-              <Select
-                value={formData.enquiryType || ""}
-                onChange={(e) =>
-                  handleNameInputChange("enquiryType", e.target.value)
-                }
-              >
-                <MenuItem value="warm">Warm</MenuItem>
-                <MenuItem value="cold">Cold</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-        </Grid>
-      </Grid>
-
       <Grid item xs={12}>
         <Typography variant="subtitle1" sx={{ mb: 2, mt: 2, fontWeight: 600 }}>
           Remarks & Notes
@@ -602,7 +456,6 @@ const EditModal = ({
               value={formData.message || formData.notes || ""}
               onChange={(e) => {
                 handleNameInputChange("message", e.target.value);
-                handleNameInputChange("notes", e.target.value);
               }}
             />
           </Grid>

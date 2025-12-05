@@ -178,7 +178,7 @@ const PaymentDecode = () => {
     try {
       // Update payment status in your backend
       const response = await updatePaymentStatus({
-        paymentId:encodedData,
+        paymentId: encodedData,
         status: "Success",
         amount: paymentData.totalAmount,
         transactionId: razorpayPaymentId,
@@ -251,8 +251,7 @@ const PaymentDecode = () => {
         setSnackbarSeverity("info");
 
         const response = await fetch(
-          `https://api.cloudinary.com/v1_1/${
-            import.meta.env.VITE_APP_CLOUDINARY_CLOUD_NAME
+          `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_APP_CLOUDINARY_CLOUD_NAME
           }/upload`,
           {
             method: "POST",
@@ -291,6 +290,7 @@ const PaymentDecode = () => {
         return;
       }
 
+      // Set status to processing immediately in the UI
       setPaymentStatus("processing");
       setUpdateDialogOpen(false);
 
@@ -298,12 +298,12 @@ const PaymentDecode = () => {
       const updateData = {
         kidId: paymentData.kidId,
         packageId: paymentData.packageId,
-        status: "Processing",
+        status: "Processing",  // Make sure this matches your backend's expected status
         amount: paymentData.totalAmount,
         transactionId: transactionDetails.transactionId,
         paymentMode: transactionDetails.paymentMode,
         remarks: transactionDetails.remarks,
-        paymentId:encodedData,
+        paymentId: encodedData,
         empId
       };
 
@@ -312,14 +312,12 @@ const PaymentDecode = () => {
         updateData.documentUrl = fileUploadData.secure_url;
       }
 
-      console.log("Manual payment update data:", updateData,fileUploadData.url);
-
       // Call your API to update status with transaction details
       const response = await updatePaymentStatus(updateData);
 
       if (response?.status === 200) {
-        setPaymentStatus("completed");
-        showSnackbar("Payment status updated successfully!", "success");
+        // Keep the status as "processing" instead of changing to "completed"
+        showSnackbar("Payment status updated to Processing!", "success");
 
         // Reset form
         setTransactionDetails({
@@ -545,7 +543,7 @@ const PaymentDecode = () => {
       border: "#A5D6A7",
       icon: <CheckCircleOutlineIcon fontSize="small" sx={{ mr: 0.5 }} />,
     },
-    
+
   };
 
   return (

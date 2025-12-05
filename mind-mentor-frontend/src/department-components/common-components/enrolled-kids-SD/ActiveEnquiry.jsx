@@ -19,7 +19,7 @@ import {
 import { alpha } from "@mui/material/styles";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import columns from "./Columns";
 
 import DetailView from "./detailed-view/DetailView";
@@ -93,6 +93,8 @@ const theme = createTheme({
 });
 
 const Prospects = () => {
+  const [searchParams] = useSearchParams();
+  const selectedId = searchParams.get("selected");
   const navigate = useNavigate();
   const empId = localStorage.getItem("empId");
   const department = localStorage.getItem("department");
@@ -120,7 +122,7 @@ const Prospects = () => {
     try {
       setLoading(true);
       const { data, total } = await fechAllActiveEnrolledEnquiry(page + 1, pageSize);
-      
+
       const rowsWithSlNo = data.map((item, index) => ({
         ...item,
         slNo: (page * pageSize) + index + 1, // Calculate serial number based on pagination
@@ -140,6 +142,18 @@ const Prospects = () => {
   useEffect(() => {
     loadEnquiries(paginationModel.page, paginationModel.pageSize);
   }, [paginationModel.page, paginationModel.pageSize]);
+  useEffect(() => {
+    if (selectedId) {
+      // Automatically scroll the selected row into view
+      setTimeout(() => {
+        const row = document.querySelector(`[data-id='${selectedId}']`);
+        if (row) {
+          row.scrollIntoView({ behavior: "smooth", block: "center" });
+          row.style.backgroundColor = "#e8ddff"; // highlight color
+        }
+      }, 300);
+    }
+  }, [selectedId, rows]);
 
   const [viewDialog, setViewDialog] = useState({
     open: false,
@@ -209,9 +223,8 @@ const Prospects = () => {
   const WhatsAppDialog = ({ open, phoneNumber, onClose }) => {
     if (!phoneNumber) return null;
 
-    const widgetUrl = `${
-      import.meta.env.VITE_MSGKART_MESSAGE_WIDGET
-    }&customerNumber=${phoneNumber}`;
+    const widgetUrl = `${import.meta.env.VITE_MSGKART_MESSAGE_WIDGET
+      }&customerNumber=${phoneNumber}`;
 
     return (
       <Slide direction="left" in={open} mountOnEnter unmountOnExit>
@@ -324,7 +337,7 @@ const Prospects = () => {
                   },
                 }}
                 sx={{
-                  height: 500,
+                  height: 700,
                   border: "none",
                   "& .MuiDataGrid-cell:focus": {
                     outline: "none",

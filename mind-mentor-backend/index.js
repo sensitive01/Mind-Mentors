@@ -24,6 +24,7 @@ const kimsDataRoutes = require("./routes/kimsRoutes/kimsRoute")
 
 // ✅ Import socket setup function
 const { initSocket } = require("./utils/socket");
+const globalSerchRouter = require("./routes/employee/opertation-dept/globalSearchRoute");
 
 const PORT = 3001;
 const app = express();
@@ -98,6 +99,10 @@ app.use("/sample/meeting", bbRouteSample);
 app.use("/api/class", bbbClassRouting); // DO
 app.use("/api/class-new", bbbClassRoutingNew); // AWS
 app.use("/api/new-class", hostingerRoutingClass); // Hostinger
+
+app.use("/global-search", globalSerchRouter);
+
+
 
 
 app.use("/kims",kimsDataRoutes)

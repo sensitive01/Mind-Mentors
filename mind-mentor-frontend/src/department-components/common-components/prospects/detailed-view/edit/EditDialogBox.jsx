@@ -12,6 +12,8 @@ const EditDialogBox = ({
   handleInputChange,
   handleSave,
 }) => {
+
+  console.log(formData)
   const [programsData, setProgramsData] = useState([]);
   const [selectedCenter, setSelectedCenter] = useState("");
   const [availablePrograms, setAvailablePrograms] = useState([]);
@@ -259,7 +261,7 @@ const EditDialogBox = ({
                   <input
                     type="text"
                     className="w-full p-2 border rounded-lg focus:ring-1 focus:ring-purple-500"
-                    value={formData?.parentName || ""}
+                    value={formData?.parentName || `${formData?.parentFirstName || ''} ${formData?.parentLastName || ''}`.trim()}
                     onChange={(e) => handleParentNameChange(e.target.value)}
                     placeholder="Enter parent's full name"
                   />
@@ -341,7 +343,7 @@ const EditDialogBox = ({
                   <input
                     type="text"
                     className="w-full p-2 border rounded-lg focus:ring-1 focus:ring-purple-500"
-                    value={formData?.kidName || ""}
+                    value={formData?.kidName || `${formData?.kidFirstName || ''} ${formData?.kidLastName || ''}`.trim()}
                     onChange={(e) => handleKidNameChange(e.target.value)}
                     placeholder="Enter kid's full name"
                   />
@@ -542,141 +544,8 @@ const EditDialogBox = ({
               </div>
             </div>
 
-            {/* Status Information */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Status Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Enquiry Field
-                  </label>
-                  <select
-                    className="w-full p-2 border rounded-lg focus:ring-1 focus:ring-purple-500"
-                    value={formData?.enquiryField || ""}
-                    onChange={(e) =>
-                      handleInputChange("enquiryField", e.target.value)
-                    }
-                  >
-                    <option value="">Select Enquiry Field</option>
-                    <option value="enquiryList">Enquiry List</option>
-                    <option value="prospects">Prospects</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Payment Status
-                  </label>
-                  <select
-                    className="w-full p-2 border rounded-lg focus:ring-1 focus:ring-purple-500"
-                    value={formData?.paymentStatus || ""}
-                    onChange={(e) =>
-                      handleInputChange("paymentStatus", e.target.value)
-                    }
-                  >
-                    <option value="">Select Payment Status</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Success">Success</option>
-                    <option value="Failed">Failed</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Source
-                  </label>
-                  <select
-                    className="w-full p-2 border rounded-lg focus:ring-1 focus:ring-purple-500"
-                    value={formData?.source || ""}
-                    onChange={(e) =>
-                      handleInputChange("source", e.target.value)
-                    }
-                  >
-                    <option value="">Select Source</option>
-                    <option value="website">Website</option>
-                    <option value="referral">Referral</option>
-                    <option value="social">Social Media</option>
-                    <option value="phone">Phone</option>
-                    <option value="email">Email</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Disposition
-                  </label>
-                  <select
-                    className="w-full p-2 border rounded-lg focus:ring-1 focus:ring-purple-500"
-                    value={formData?.disposition || ""}
-                    onChange={(e) =>
-                      handleInputChange("disposition", e.target.value)
-                    }
-                  >
-                    <option value="">Select Disposition</option>
-                    <option value="RnR">RnR</option>
-                    <option value="Call Back">Call Back</option>
-                    <option value="None">None</option>
-                    <option value="Interested">Interested</option>
-                    <option value="Not Interested">Not Interested</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Demo Schedule Status
-                  </label>
-                  <select
-                    className="w-full p-2 border rounded-lg focus:ring-1 focus:ring-purple-500"
-                    value={formData?.scheduleDemo?.status || ""}
-                    onChange={(e) =>
-                      handleInputChange("scheduleDemo", {
-                        ...formData?.scheduleDemo,
-                        status: e.target.value,
-                      })
-                    }
-                  >
-                    <option value="">Select Demo Status</option>
-                    <option value="Scheduled">Scheduled</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Cancelled">Cancelled</option>
-                    <option value="Pending">Pending</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Enrollment Status
-                  </label>
-                  <select
-                    className="w-full p-2 border rounded-lg focus:ring-1 focus:ring-purple-500"
-                    value={formData?.enquiryStatus || ""}
-                    onChange={(e) =>
-                      handleInputChange("enquiryStatus", e.target.value)
-                    }
-                  >
-                    <option value="">Select Enrollment Status</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Qualified Lead">Qualified Lead</option>
-                    <option value="Unqualified Lead">Unqualified Lead</option>
-                    <option value="Enrolled">Enrolled</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Enquiry Type
-                  </label>
-                  <select
-                    className="w-full p-2 border rounded-lg focus:ring-1 focus:ring-purple-500"
-                    value={formData?.enquiryType || ""}
-                    onChange={(e) =>
-                      handleInputChange("enquiryType", e.target.value)
-                    }
-                  >
-                    <option value="">Select Enquiry Type</option>
-                    <option value="warm">Warm</option>
-                    <option value="cold">Cold</option>
-                    <option value="hot">Hot</option>
-                  </select>
-                </div>
-              </div>
-            </div>
 
-            {/* Messages and Notes */}
+
             <div>
               <h3 className="text-lg font-semibold mb-4">Messages & Notes</h3>
               <div className="space-y-4">

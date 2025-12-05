@@ -454,6 +454,11 @@ const ModernSidebar = () => {
       subItems: [
         {
           icon: <RenewalsIcon />,
+          text: "Payment Verification ",
+          link: "/super-admin/department/pending-invoice",
+        },
+        {
+          icon: <RenewalsIcon />,
           text: "Renewals",
           link: "/superadminRenewals",
         },

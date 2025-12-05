@@ -16,11 +16,13 @@ import {
   InputLabel,
   FormControl,
   Tooltip,
+  Divider,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
-import { Trash2, Plus } from "lucide-react";
+import { Trash2, Plus, X, List } from "lucide-react";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
+import { useNavigate } from "react-router-dom";
 import {
   getAllProgrameDataEnquiry,
   updateEnquiry,
@@ -29,6 +31,7 @@ import {
   formatEmail,
   formatWhatsAppNumber,
 } from "../../../../utils/formatContacts";
+import EnqRelatedTask from "../../prospects/detailed-view/EnqRelatedTask";
 
 const DetailCard = ({ title, value, isEmail = false, maxLength = 25 }) => {
   const shouldTruncate = value && value.length > maxLength && !isEmail;
@@ -38,13 +41,13 @@ const DetailCard = ({ title, value, isEmail = false, maxLength = 25 }) => {
     if (isEmail) {
       return {
         wordBreak: "break-all",
-        overflowWrap: "break-word", 
+        overflowWrap: "break-word",
         whiteSpace: "pre-wrap",
         fontSize: "0.875rem",
         lineHeight: 1.4,
       };
     }
-    return { 
+    return {
       lineHeight: 1.6,
       wordBreak: "break-word",
       overflowWrap: "break-word"
@@ -71,13 +74,13 @@ const DetailCard = ({ title, value, isEmail = false, maxLength = 25 }) => {
       >
         {title}
       </Typography>
-      
+
       {shouldTruncate ? (
         <Tooltip title={value} arrow placement="top">
-          <Typography 
-            variant="body1" 
-            color="text.primary" 
-            sx={{ 
+          <Typography
+            variant="body1"
+            color="text.primary"
+            sx={{
               ...getTextStyles(),
               cursor: "pointer",
               "&:hover": {
@@ -89,9 +92,9 @@ const DetailCard = ({ title, value, isEmail = false, maxLength = 25 }) => {
           </Typography>
         </Tooltip>
       ) : (
-        <Typography 
-          variant="body1" 
-          color="text.primary" 
+        <Typography
+          variant="body1"
+          color="text.primary"
           sx={getTextStyles()}
         >
           {value || "N/A"}
@@ -116,7 +119,10 @@ const SectionTitle = ({ children }) => (
 );
 
 const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
+  const navigate = useNavigate();
   const empId = localStorage.getItem("empId");
+  const department = localStorage.getItem("department");
+
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [formData, setFormData] = useState(data);
   const [programsData, setProgramsData] = useState([]);
@@ -124,6 +130,51 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
   const [availablePrograms, setAvailablePrograms] = useState([]);
   const [availableLevels, setAvailableLevels] = useState([]);
   const [isFetchingPincode, setIsFetchingPincode] = useState(false);
+
+  // State for task assignment
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
+  const [position, setPosition] = useState({ x: window.innerWidth - 450, y: 100 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+
+  // Drag handlers for the task dialog
+  const handleMouseDown = (e) => {
+    // Don't start dragging if clicking on buttons or interactive elements
+    if (e.target.closest('button') || e.target.closest('input')) {
+      return;
+    }
+    setIsDragging(true);
+    setDragOffset({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y
+    });
+    e.preventDefault();
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (isDragging) {
+        setPosition({
+          x: e.clientX - dragOffset.x,
+          y: e.clientY - dragOffset.y
+        });
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragOffset]);
 
   // Helper functions for name handling
   const getCombinedName = (firstName, lastName) => {
@@ -167,23 +218,29 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
     fetchData();
   }, []);
 
-  // Update formData when data prop changes
+  // Update formData when data prop changes - NORMALIZE THE PROGRAMS FIELD
   useEffect(() => {
-    setFormData(data);
+    // Normalize the programs field to always use 'programs' (plural)
+    const normalizedData = {
+      ...data,
+      programs: data.programs || data.program || [],
+    };
+    setFormData(normalizedData);
   }, [data]);
 
-  // Initialize program options when edit dialog opens and data is available
+  // Initialize program options when programsData is loaded - FIXED
   useEffect(() => {
-    if (showEdit && programsData.length > 0) {
+    if (programsData.length > 0) {
       // Create a flattened list of all unique programs from all centers
       const allPrograms = programsData
-        .flatMap((center) => center.programLevels)
+        .flatMap((center) => center.programLevels || [])
         .filter(
           (prog, index, arr) =>
             arr.findIndex((p) => p.program === prog.program) === index
         );
 
       setAvailablePrograms(allPrograms);
+      console.log("Available programs set:", allPrograms);
 
       // If there are existing programs in formData, find levels for the first one
       if (formData.programs && formData.programs.length > 0) {
@@ -192,11 +249,11 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
           (p) => p.program === firstProgram.program
         );
         if (programData) {
-          setAvailableLevels(programData.levels);
+          setAvailableLevels(programData.levels || []);
         }
       }
     }
-  }, [showEdit, programsData, formData.programs]);
+  }, [programsData, formData.programs]);
 
   // Fetch city and state based on pincode
   const fetchPincodeDetails = async (pincode) => {
@@ -266,7 +323,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
     } else {
       // If no center selected, show all programs
       const allPrograms = programsData
-        .flatMap((center) => center.programLevels)
+        .flatMap((center) => center.programLevels || [])
         .filter(
           (prog, index, arr) =>
             arr.findIndex((p) => p.program === prog.program) === index
@@ -286,7 +343,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
     // If not found in availablePrograms, search across all centers
     if (!selectedProgramData) {
       for (const center of programsData) {
-        selectedProgramData = center.programLevels.find(
+        selectedProgramData = center.programLevels?.find(
           (p) => p.program === programName
         );
         if (selectedProgramData) break;
@@ -385,14 +442,15 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
     if (response.status === 200) {
       onEditSave(response.data);
     }
-    handleCloseEdit();
+    onEditClose();
   };
 
   if (!data) return null;
 
   return (
-    <Box sx={{ position: "relative" }}>
-      <Box>
+    <Box sx={{ position: "relative", height: "100%" }}>
+      {/* Main Content */}
+      <Box sx={{ height: "100%", overflowY: "auto", p: 3 }}>
         <Grid container spacing={4}>
           {/* Parent Information */}
           <Grid item xs={12}>
@@ -405,9 +463,9 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                 />
               </Grid>
               <Grid item xs={12} md={3}>
-                <DetailCard 
-                  title="EMAIL" 
-                  value={formatEmail(data.email)} 
+                <DetailCard
+                  title="EMAIL"
+                  value={formatEmail(data.email)}
                   isEmail={true}
                 />
               </Grid>
@@ -451,55 +509,35 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
             </Grid>
           </Grid>
 
-          {/* Programs */}
+          {/* Programs - FIXED */}
           <Grid item xs={12}>
             <SectionTitle>Program Details</SectionTitle>
             <Grid container spacing={3}>
-              {data.program?.map((program, index) => (
-                <Grid item xs={12} md={4} key={index}>
-                  <DetailCard
-                    title={`PROGRAM ${index + 1}`}
-                    value={`${program.program} (${program.level})`}
-                  />
+              {(data.programs || data.program || []).length > 0 ? (
+                (data.programs || data.program || []).map((program, index) => (
+                  <Grid item xs={12} md={4} key={index}>
+                    <DetailCard
+                      title={`PROGRAM ${index + 1}`}
+                      value={`${program.program} (${program.level})`}
+                    />
+                  </Grid>
+                ))
+              ) : (
+                <Grid item xs={12}>
+                  <Box
+                    sx={(theme) => ({
+                      p: 3,
+                      borderRadius: 2,
+                      bgcolor: alpha(theme.palette.primary.main, 0.04),
+                      textAlign: "center",
+                    })}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      No programs added yet
+                    </Typography>
+                  </Box>
                 </Grid>
-              ))}
-            </Grid>
-          </Grid>
-
-          {/* Status Information */}
-          <Grid item xs={12}>
-            <SectionTitle>Status Information</SectionTitle>
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={3}>
-                <DetailCard title="ENQUIRY FIELD" value={data.enquiryField} />
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <DetailCard
-                  title="PAYMENT STATUS"
-                  value={data.paymentStatus || data.payment}
-                />
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <DetailCard title="SOURCE" value={data.source} />
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <DetailCard title="DISPOSITION" value={data.disposition} />
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <DetailCard
-                  title="DEMO SCHEDULE"
-                  value={data.scheduleDemo?.status}
-                />
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <DetailCard
-                  title="ENROLLMENT STATUS"
-                  value={data.enquiryStatus}
-                />
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <DetailCard title="ENQUIRY TYPE" value={data.enquiryType} />
-              </Grid>
+              )}
             </Grid>
           </Grid>
 
@@ -521,7 +559,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                   >
                     Remarks
                   </Typography>
-                  <Typography 
+                  <Typography
                     variant="body1"
                     sx={{
                       wordBreak: "break-word",
@@ -547,7 +585,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                   >
                     Notes
                   </Typography>
-                  <Typography 
+                  <Typography
                     variant="body1"
                     sx={{
                       wordBreak: "break-word",
@@ -573,7 +611,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                   >
                     Status Log
                   </Typography>
-                  <Typography 
+                  <Typography
                     variant="body1"
                     sx={{
                       wordBreak: "break-word",
@@ -588,6 +626,17 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
             </Grid>
           </Grid>
         </Grid>
+
+        {/* Assign Task Button */}
+        <Box sx={{ position: 'fixed', bottom: 24, right: 24, zIndex: 1000 }}>
+          <button
+            onClick={() => setIsTaskDialogOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg shadow-lg hover:bg-primary-dark transition-colors"
+          >
+            <List size={18} />
+            Assign Tasks
+          </button>
+        </Box>
       </Box>
 
       {/* Edit Dialog */}
@@ -814,6 +863,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
               </Grid>
             </Grid>
 
+            {/* PROGRAMS SECTION - COMPLETELY FIXED */}
             <Grid item xs={12}>
               <Box
                 sx={{
@@ -843,268 +893,137 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                 </Button>
               </Box>
 
-              {formData.programs?.map((program, index) => {
-                // Find current program data to get available levels
-                let currentProgramData = availablePrograms.find(
-                  (p) => p.program === program.program
-                );
+              {/* Show message if no programs data loaded */}
+              {programsData.length === 0 && (
+                <Box
+                  sx={{
+                    p: 3,
+                    borderRadius: 2,
+                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
+                    textAlign: "center",
+                    mb: 2,
+                  }}
+                >
+                  <Typography variant="body2" color="text.secondary">
+                    Loading programs...
+                  </Typography>
+                </Box>
+              )}
 
-                // If not found in availablePrograms, search all centers
-                if (!currentProgramData) {
-                  for (const center of programsData) {
-                    currentProgramData = center.programLevels.find(
-                      (p) => p.program === program.program
-                    );
-                    if (currentProgramData) break;
+              {/* Show existing programs or empty state */}
+              {formData.programs && formData.programs.length > 0 ? (
+                formData.programs.map((program, index) => {
+                  // Find current program data to get available levels
+                  let currentProgramData = availablePrograms.find(
+                    (p) => p.program === program.program
+                  );
+
+                  // If not found in availablePrograms, search all centers
+                  if (!currentProgramData && programsData.length > 0) {
+                    for (const center of programsData) {
+                      currentProgramData = center.programLevels?.find(
+                        (p) => p.program === program.program
+                      );
+                      if (currentProgramData) break;
+                    }
                   }
-                }
 
-                const levelsForCurrentProgram =
-                  currentProgramData?.levels || [];
+                  const levelsForCurrentProgram = currentProgramData?.levels || [];
 
-                return (
-                  <Card key={index} sx={{ mb: 2, p: 2 }}>
-                    <Grid container spacing={2} alignItems="center">
-                      <Grid item xs={12} md={4}>
-                        <FormControl fullWidth>
-                          <InputLabel
-                            id={`program-select-label-${index}`}
-                            sx={{ backgroundColor: "white", px: 0.5 }}
-                          >
-                            Program Name
-                          </InputLabel>
-                          <Select
-                            labelId={`program-select-label-${index}`}
-                            value={program.program || ""}
-                            onChange={(e) =>
-                              handleProgramChange(e.target.value, index)
-                            }
-                            label="Program Name"
-                          >
-                            {availablePrograms.map((prog, progIndex) => (
-                              <MenuItem key={progIndex} value={prog.program}>
-                                {prog.program}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </Grid>
-                      <Grid item xs={12} md={4}>
-                        <FormControl fullWidth>
-                          <InputLabel
-                            id={`level-select-label-${index}`}
-                            sx={{ backgroundColor: "white", px: 0.5 }}
-                          >
-                            Level
-                          </InputLabel>
-                          <Select
-                            labelId={`level-select-label-${index}`}
-                            value={program.level || ""}
-                            onChange={(e) => {
-                              const updatedPrograms = [...formData.programs];
-                              updatedPrograms[index].level = e.target.value;
+                  return (
+                    <Card key={index} sx={{ mb: 2, p: 2 }}>
+                      <Grid container spacing={2} alignItems="center">
+                        <Grid item xs={12} md={4}>
+                          <FormControl fullWidth>
+                            <InputLabel
+                              id={`program-select-label-${index}`}
+                              sx={{ backgroundColor: "white", px: 0.5 }}
+                            >
+                              Program Name
+                            </InputLabel>
+                            <Select
+                              labelId={`program-select-label-${index}`}
+                              value={program.program || ""}
+                              onChange={(e) =>
+                                handleProgramChange(e.target.value, index)
+                              }
+                              label="Program Name"
+                              disabled={availablePrograms.length === 0}
+                            >
+                              {availablePrograms.length > 0 ? (
+                                availablePrograms.map((prog, progIndex) => (
+                                  <MenuItem key={progIndex} value={prog.program}>
+                                    {prog.program}
+                                  </MenuItem>
+                                ))
+                              ) : (
+                                <MenuItem value="">No programs available</MenuItem>
+                              )}
+                            </Select>
+                          </FormControl>
+                        </Grid>
+                        <Grid item xs={12} md={4}>
+                          <FormControl fullWidth>
+                            <InputLabel
+                              id={`level-select-label-${index}`}
+                              sx={{ backgroundColor: "white", px: 0.5 }}
+                            >
+                              Level
+                            </InputLabel>
+                            <Select
+                              labelId={`level-select-label-${index}`}
+                              value={program.level || ""}
+                              onChange={(e) => {
+                                const updatedPrograms = [...formData.programs];
+                                updatedPrograms[index].level = e.target.value;
+                                handleInputChange("programs", updatedPrograms);
+                              }}
+                              label="Level"
+                              disabled={!program.program || levelsForCurrentProgram.length === 0}
+                            >
+                              {levelsForCurrentProgram.length > 0 ? (
+                                levelsForCurrentProgram.map((level, levelIndex) => (
+                                  <MenuItem key={levelIndex} value={level}>
+                                    {level}
+                                  </MenuItem>
+                                ))
+                              ) : (
+                                <MenuItem value="">No levels available</MenuItem>
+                              )}
+                            </Select>
+                          </FormControl>
+                        </Grid>
+                        <Grid item xs={12} md={2}>
+                          <IconButton
+                            color="error"
+                            onClick={() => {
+                              const updatedPrograms = formData.programs.filter(
+                                (_, i) => i !== index
+                              );
                               handleInputChange("programs", updatedPrograms);
                             }}
-                            label="Level"
-                            disabled={!program.program}
                           >
-                            {levelsForCurrentProgram.map(
-                              (level, levelIndex) => (
-                                <MenuItem key={levelIndex} value={level}>
-                                  {level}
-                                </MenuItem>
-                              )
-                            )}
-                          </Select>
-                        </FormControl>
+                            <Trash2 size={20} />
+                          </IconButton>
+                        </Grid>
                       </Grid>
-                      <Grid item xs={12} md={2}>
-                        <IconButton
-                          color="error"
-                          onClick={() => {
-                            const updatedPrograms = formData.programs.filter(
-                              (_, i) => i !== index
-                            );
-                            handleInputChange("programs", updatedPrograms);
-                          }}
-                        >
-                          <Trash2 size={20} />
-                        </IconButton>
-                      </Grid>
-                    </Grid>
-                  </Card>
-                );
-              })}
-            </Grid>
-
-            <Grid item xs={12}>
-              <Typography
-                variant="subtitle1"
-                sx={{ mb: 2, mt: 2, fontWeight: 600 }}
-              >
-                Status Information
-              </Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth variant="outlined">
-                    <InputLabel
-                      id="enquiry-field-label"
-                      sx={{ backgroundColor: "white", px: 0.5 }}
-                    >
-                      Enquiry Field
-                    </InputLabel>
-                    <Select
-                      labelId="enquiry-field-label"
-                      value={formData.enquiryField || ""}
-                      onChange={(e) =>
-                        handleInputChange("enquiryField", e.target.value)
-                      }
-                      label="Enquiry Field"
-                    >
-                      <MenuItem value="enquiryList">Enquiry List</MenuItem>
-                      <MenuItem value="prospects">Prospects</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth variant="outlined">
-                    <InputLabel
-                      id="payment"
-                      sx={{ backgroundColor: "white", px: 0.5 }}
-                    >
-                      Payment Status
-                    </InputLabel>
-                    <Select
-                      value={formData.payment || formData.paymentStatus || ""}
-                      onChange={(e) => {
-                        handleInputChange("payment", e.target.value);
-                        handleInputChange("paymentStatus", e.target.value);
-                      }}
-                      label="Payment"
-                      disabled
-                    >
-                      <MenuItem value="Pending">Pending</MenuItem>
-                      <MenuItem value="Paid">Mark as Paid</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth>
-                    <InputLabel
-                      id="source"
-                      sx={{ backgroundColor: "white", px: 0.5 }}
-                    >
-                      Source
-                    </InputLabel>
-                    <Select
-                      value={formData.source || ""}
-                      onChange={(e) =>
-                        handleInputChange("source", e.target.value)
-                      }
-                    >
-                      <MenuItem value="">-Select-</MenuItem>
-                      <MenuItem value="website">Website</MenuItem>
-                      <MenuItem value="web_form">Web Form</MenuItem>
-                      <MenuItem value="justdial">JustDial</MenuItem>
-                      <MenuItem value="whatsapp">WhatsApp</MenuItem>
-                      <MenuItem value="phone_call">Phone Call</MenuItem>
-                      <MenuItem value="centre_walkin">Centre Walk-in</MenuItem>
-                      <MenuItem value="referral">Referral</MenuItem>
-                      <MenuItem value="social">Social Media</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth>
-                    <InputLabel
-                      id="disposition"
-                      sx={{ backgroundColor: "white", px: 0.5 }}
-                    >
-                      Disposition
-                    </InputLabel>
-                    <Select
-                      value={formData.disposition || ""}
-                      onChange={(e) =>
-                        handleInputChange("disposition", e.target.value)
-                      }
-                    >
-                      <MenuItem value="RnR">RnR</MenuItem>
-                      <MenuItem value="Call Back">Call Back</MenuItem>
-                      <MenuItem value="None">None</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth>
-                    <InputLabel
-                      id="demo-shedule"
-                      sx={{ backgroundColor: "white", px: 0.5 }}
-                    >
-                      Demo Schedule
-                    </InputLabel>
-                    <Select
-                      value={formData.scheduleDemo?.status || ""}
-                      onChange={(e) =>
-                        handleInputChange("scheduleDemo", {
-                          ...formData.scheduleDemo,
-                          status: e.target.value,
-                        })
-                      }
-                    >
-                      <MenuItem value="Scheduled">Scheduled</MenuItem>
-                      <MenuItem value="Completed">Completed</MenuItem>
-                      <MenuItem value="Cancelled">Cancelled</MenuItem>
-                      <MenuItem value="Pending">Pending</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth>
-                    <InputLabel
-                      id="enrollment-status"
-                      sx={{ backgroundColor: "white", px: 0.5 }}
-                    >
-                      Enrollment Status
-                    </InputLabel>
-                    <Select
-                      value={formData.enquiryStatus || ""}
-                      onChange={(e) =>
-                        handleInputChange("enquiryStatus", e.target.value)
-                      }
-                    >
-                      <MenuItem value="Pending">Pending</MenuItem>
-                      <MenuItem value="Qualified Lead">Qualified Lead</MenuItem>
-                      <MenuItem value="Unqualified Lead">
-                        Unqualified Lead
-                      </MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth>
-                    <InputLabel
-                      id="enquiry-type"
-                      sx={{ backgroundColor: "white", px: 0.5 }}
-                    >
-                      Enquiry Type
-                    </InputLabel>
-                    <Select
-                      value={formData.enquiryType || ""}
-                      onChange={(e) =>
-                        handleInputChange("enquiryType", e.target.value)
-                      }
-                    >
-                      <MenuItem value="warm">Warm</MenuItem>
-                      <MenuItem value="cold">Cold</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-              </Grid>
+                    </Card>
+                  );
+                })
+              ) : (
+                <Box
+                  sx={{
+                    p: 3,
+                    borderRadius: 2,
+                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
+                    textAlign: "center",
+                  }}
+                >
+                  <Typography variant="body2" color="text.secondary">
+                    No programs added yet. Click "Add Program" to get started.
+                  </Typography>
+                </Box>
+              )}
             </Grid>
 
             <Grid item xs={12}>
@@ -1148,6 +1067,110 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Draggable Task Dialog */}
+      {isTaskDialogOpen && (
+        <Box
+          className="draggable-dialog"
+          sx={{
+            position: 'fixed',
+            top: position.y,
+            left: position.x,
+            width: '850px',
+            maxWidth: '90vw',
+            height: '85vh',
+            maxHeight: '850px',
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+            zIndex: 1400,
+            display: 'flex',
+            flexDirection: 'column',
+            border: '1px solid #e0e0e0',
+            overflow: 'hidden',
+          }}
+        >
+          {/* Drag handle with buttons */}
+          <Box
+            className="drag-handle"
+            onMouseDown={handleMouseDown}
+            sx={{
+              padding: '14px 20px',
+              cursor: 'move',
+              backgroundColor: '#f8f9fa',
+              borderBottom: '2px solid #e0e0e0',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              userSelect: 'none',
+              '&:active': {
+                cursor: 'grabbing'
+              }
+            }}
+          >
+            <Typography variant="h6" sx={{ fontWeight: 600, color: '#2c3e50', fontSize: '1.1rem' }}>
+              Assign New Task
+            </Typography>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/${department}/department/list-task-assigned-me`);
+                }}
+                onMouseDown={(e) => e.stopPropagation()}
+                className="flex items-center gap-2 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium shadow-sm"
+                style={{ cursor: 'pointer' }}
+              >
+                <List size={16} />
+                View All Tasks
+              </button>
+
+              <IconButton
+                onClick={() => setIsTaskDialogOpen(false)}
+                onMouseDown={(e) => e.stopPropagation()}
+                size="small"
+                sx={{
+                  color: '#6c757d',
+                  '&:hover': {
+                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                    color: '#e74c3c'
+                  }
+                }}
+              >
+                <X size={20} />
+              </IconButton>
+            </Box>
+          </Box>
+
+          <Divider sx={{ m: 0 }} />
+
+          <Box sx={{
+            p: 3,
+            flex: 1,
+            overflow: 'auto',
+            backgroundColor: '#fafbfc',
+            '&::-webkit-scrollbar': {
+              width: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: '#f1f1f1',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: '#c1c1c1',
+              borderRadius: '4px',
+            },
+            '&::-webkit-scrollbar-thumb:hover': {
+              background: '#a8a8a8',
+            }
+          }}>
+            <EnqRelatedTask
+              id={data?._id}
+              onClose={() => setIsTaskDialogOpen(false)}
+            />
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 };
