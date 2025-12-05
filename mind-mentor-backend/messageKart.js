@@ -3,7 +3,7 @@ const axios = require('axios');
 const data = {
   message: {
     messageType: "template",
-    name: "v1_login_otp",
+    name: "skuare_login_otp",
     language: "en",
     components: [
       {
@@ -33,7 +33,7 @@ const data = {
 };
 
 axios.post(
-  'https://alb-backend.msgkart.com/api/v1/message/113970908185070/template?apikey=117d1f35-36b2-4b9a-a695-5fc6a6955386',
+  'https://alb-backend.msgkart.com/api/v1/message/12709045480244860/template?apikey=117d1f35-36b2-4b9a-a695-5fc6a6955386',
   data,
   {
     headers: {

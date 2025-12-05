@@ -50,7 +50,7 @@ const EnquiryProspectTab = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:3001/global-search/global-search?q=${query}`
+        `${import.meta.env.VITE_BASE_ROUTE}/global-search/global-search?q=${query}`
       );
       const data = await response.json();
       setSearchResults(data.data || []);
