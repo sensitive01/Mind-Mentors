@@ -49,6 +49,8 @@ const NewEnquiryFormStep = () => {
     relationship: "",
     otherRelationship: "",
     pincode: "",
+    referralName: "",
+    referralContactNum: "",
   });
 
   useEffect(() => {
@@ -268,7 +270,6 @@ const NewEnquiryFormStep = () => {
     switch (step) {
       case 0:
         return (
-          formData.parentFirstName.trim() &&
           formData.contactNumber &&
           formData.contactNumber.length >= 10 &&
           (!isSameAsContact ||
@@ -298,8 +299,18 @@ const NewEnquiryFormStep = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateStep(0)) {
+      toast.error("Please fill in Guardian Information");
+      setActiveStep(0);
+      return;
+    }
+    if (!validateStep(1)) {
+      toast.error("Please fill in Child Information");
+      setActiveStep(1);
+      return;
+    }
     if (!validateStep(2)) {
-      toast.error("Please fill in all required fields");
+      toast.error("Please fill in Program Selection");
       return;
     }
 
@@ -374,6 +385,8 @@ const NewEnquiryFormStep = () => {
             : formData.contactNumber,
           email: formData.email,
           source: formData.source,
+          referralName: formData.referralName,
+          referralContactNum: formData.referralContactNum,
           empId,
         };
       case 1:
@@ -414,13 +427,12 @@ const NewEnquiryFormStep = () => {
                 <div className="flex gap-4">
                   <input
                     type="text"
-                    placeholder="Guardian Name *"
+                    placeholder="Guardian Name"
                     className="flex-1 p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors"
                     value={formData.parentFirstName}
                     onChange={(e) =>
                       handleInputChange("parentFirstName", e.target.value)
                     }
-                    required
                   />
                 </div>
               </div>
@@ -529,13 +541,57 @@ const NewEnquiryFormStep = () => {
               >
                 <option value="">-Select-</option>
                 <option value="web_form">Web Form</option>
-                <option value="justdial">JustDial</option>
                 <option value="whatsapp">WhatsApp</option>
+                <option value="google_ads">Google Ads</option>
+                <option value="meta_ads">Meta Ads</option>
                 <option value="phone_call">Phone Call</option>
-                <option value="centre_walkin">Centre Walk-in</option>
+                <option value="centre_walkin">Center Walk-in</option>
                 <option value="referral">Referral</option>
+                <option value="affiliates">Affiliates</option>
+                <option value="below_the_line_ad">Below the Line Ad</option>
               </select>
             </div>
+
+            {formData.source === "referral" && (
+              <div className="space-y-4">
+                <h4 className="text-[#642b8f] font-medium text-sm">
+                  Referral Details
+                </h4>
+                <div className="flex gap-4">
+                  <input
+                    type="text"
+                    placeholder="Referee Name"
+                    className="flex-1 p-3 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors"
+                    value={formData.referralName || ""}
+                    onChange={(e) =>
+                      handleInputChange("referralName", e.target.value)
+                    }
+                  />
+                  <div className="flex-1">
+                    <PhoneInput
+                      country="in"
+                      value={formData.referralContactNum || ""}
+                      onChange={(value) =>
+                        handleInputChange("referralContactNum", value)
+                      }
+                      inputProps={{
+                        placeholder: "Referee Contact Number",
+                        className:
+                          "w-full p-4 rounded-lg border-2 border-[#aa88be] focus:border-[#642b8f] focus:outline-none transition-colors h-[50px]",
+                      }}
+                      containerClass="w-full"
+                      buttonClass="border-2 !border-[#aa88be] !rounded-l-lg"
+                      inputStyle={{
+                        width: "100%",
+                        height: "48px",
+                        fontSize: "16px",
+                      }}
+                      preferredCountries={["in"]}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
 

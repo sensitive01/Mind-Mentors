@@ -2,13 +2,7 @@ module.exports = {
   content: ["./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
-      colors: {
-        primary: "#642b8f",
-        secondary: "#f8a213",
-        tertiary: "#aa88be",
-        quaternary: "#f0ba6f",
-        quinary: "#efe8f0",
-      },
+     
       animation: {
         "border-run": "border-run 9s linear infinite",
       },

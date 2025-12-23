@@ -6,6 +6,7 @@ import KidTopbar from "../../component/kids-component/kids-dashboard/kid-layout/
 
 const KidsDashboard = () => {
   const [loading, setLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // State for mobile sidebar
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -15,27 +16,46 @@ const KidsDashboard = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  // Close sidebar on route change (for mobile)
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setSidebarOpen(false);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
+  const handleSidebarClose = () => {
+    setSidebarOpen(false);
+  };
+
   if (loading) {
     return <KidsLoadingAnimation />;
   }
 
   return (
-    <div className="flex h-screen">
-      {/* Sidebar */}
-      <div className="flex-none w-[250px]">
-        <KidSidebar />
-      </div>
+    <div className="flex h-screen overflow-hidden bg-gray-50">
+      {/* Sidebar - Responsive */}
+      <KidSidebar isOpen={sidebarOpen} onClose={handleSidebarClose} />
 
       {/* Main content area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0 relative">
         {/* Topbar */}
-        <div className="flex-none">
-          <KidTopbar />
+        <div className="flex-none z-10">
+          <KidTopbar onMenuClick={toggleSidebar} />
         </div>
 
         {/* Dashboard */}
-        <div className="flex-1 overflow-auto">
-          <KidsDahbaordPage />
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 lg:p-8">
+          <div className="max-w-7xl mx-auto h-full">
+            <KidsDahbaordPage />
+          </div>
         </div>
       </div>
     </div>

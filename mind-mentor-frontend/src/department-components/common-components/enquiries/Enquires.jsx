@@ -26,6 +26,7 @@ import {
   fetchAllEnquiries,
   moveToProspects,
   updateEnquiryStatus,
+  deleteEnquiry,
 } from "../../../api/service/employee/EmployeeService";
 import { ToastContainer, toast } from "react-toastify";
 import DetailView from "./detailed-view/DetailView";
@@ -237,12 +238,14 @@ const Enquiries = () => {
     // Show error if any fields are missing
     if (missingFields.length > 0) {
       toast.error(
-        `Please fill the required fields before moving to Prospects. Missing: ${missingFields.join(", ")}`,
+        `Please fill the required fields before moving to Prospects. Missing: ${missingFields.join(
+          ", "
+        )}`,
         {
           duration: 5000,
           style: {
-            background: '#ef4444',
-            color: '#fff',
+            background: "#ef4444",
+            color: "#fff",
           },
         }
       );
@@ -261,10 +264,10 @@ const Enquiries = () => {
             toast.success(
               `Successfully moved ${student.kidFirstName} to prospects`
             );
+            // Navigate to prospects tab and select the student
+            navigate(`?tab=prospects&selected=${id}`);
           } else {
-            toast.error(
-              `Failed to move ${student.kidFirstName} to prospects`
-            );
+            toast.error(`Failed to move ${student.kidFirstName} to prospects`);
           }
         } catch (error) {
           console.error("Error moving to prospects:", error);
@@ -277,7 +280,6 @@ const Enquiries = () => {
       },
     });
   };
-
 
   const handleShowLogs = (id) => {
     console.log("Handle logs ", id);
@@ -295,10 +297,30 @@ const Enquiries = () => {
     });
   };
 
+  const handleDelete = async (id) => {
+    // We can add a confirmation dialog here if needed, but for now strict implementation
+    if (window.confirm("Are you sure you want to delete this enquiry?")) {
+      try {
+        const response = await deleteEnquiry(id);
+        if (response.success || response.status === 200) {
+          toast.success("Enquiry deleted successfully");
+          setRows((prev) => prev.filter((row) => row._id !== id));
+        } else {
+          toast.error("Failed to delete enquiry");
+        }
+      } catch (error) {
+        console.error("Error deleting enquiry:", error);
+        toast.error("Error deleting enquiry");
+      }
+    }
+  };
+
   const WhatsAppDialog = ({ open, phoneNumber, onClose }) => {
     if (!phoneNumber) return null;
 
-    const widgetUrl = `${import.meta.env.VITE_MSGKART_MESSAGE_WIDGET}&subId=${phoneNumber}`;
+    const widgetUrl = `${
+      import.meta.env.VITE_MSGKART_MESSAGE_WIDGET
+    }&subId=${phoneNumber}`;
 
     return (
       <Slide direction="left" in={open} mountOnEnter unmountOnExit>
@@ -391,7 +413,8 @@ const Enquiries = () => {
                 handleMoveProspects,
                 handleShowLogs,
                 handleShowStatus,
-                handleMessage
+                handleMessage,
+                handleDelete
               )}
               paginationMode="server"
               rowCount={rowCount}

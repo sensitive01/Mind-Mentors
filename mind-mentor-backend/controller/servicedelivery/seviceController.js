@@ -26,22 +26,23 @@ const getAllActiveEnquiries = async (req, res) => {
     const page = Math.max(parseInt(req.query.page) || 1, 1);
     const limit = Math.min(Math.max(parseInt(req.query.limit) || 15, 1), 100);
     const skip = (page - 1) * limit;
+    const status = req.query.status || "Active"; // Default to Active
 
-    // Get total count of all active enquiries
-    const total = await operationDeptModel.countDocuments({
-      enquiryField: "prospects",
-      enquiryStatus: "Active"
-    });
-
-    // Fetch paginated active enquiries
-    const enquiries = await operationDeptModel.find({
-      enquiryField: "prospects",
-      enquiryStatus: "Active"
-    })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
+    // Run count and find in parallel
+    const [total, enquiries] = await Promise.all([
+      operationDeptModel.countDocuments({
+        enquiryField: "prospects",
+        enquiryStatus: status
+      }),
+      operationDeptModel.find({
+        enquiryField: "prospects",
+        enquiryStatus: status
+      })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean()
+    ]);
 
     // Format dates
     const formatDate = (date) => {
@@ -56,47 +57,82 @@ const getAllActiveEnquiries = async (req, res) => {
       });
     };
 
+    // Extract IDs for batch fetching
+    const logIds = enquiries.map(e => e.logs).filter(Boolean);
+    const enqIds = enquiries.map(e => e._id);
+
+    // Batch fetch logs and notes in parallel
+    const [fetchedLogs, fetchedNotes] = await Promise.all([
+      enquiryLogs.find({ _id: { $in: logIds } }).lean(),
+      NotesSection.find({ enqId: { $in: enqIds } }).lean()
+    ]);
+
+    // Create lookup maps
+    const logsMap = new Map();
+    fetchedLogs.forEach(log => logsMap.set(log._id.toString(), log));
+
+    const notesMap = new Map();
+    fetchedNotes.forEach(note => {
+      // Assuming multiple note sections could exist, we might want the latest one or handle array
+      // But based on original code `findOne`, we take one. 
+      // If there are multiple documents for one enqId (unlikely based on schema usually, but possible),
+      // we should handle it. Original code did findOne().sort({ createdOn: -1 }).
+      // Here we might get multiple if they exist. Let's group by enqId.
+      // However, usually it's one document per enquiry or we filter.
+      // If NotesSection is one document per enquiry with array of notes:
+      logsMap.set(note.enqId.toString() + "_notes", note);
+    });
+
+    // If NotesSection structure is one-doc-per-note or one-doc-per-enquiry?
+    // Original code: `NotesSection.findOne({ enqId: enquiry._id }).sort({ createdOn: -1 })`
+    // This implies there could be multiple NotesSection docs per enquiry?
+    // If so, we need to handle that. 
+    // Let's assume potentially multiple and picking the latest.
+    const notesByEnqId = {};
+    fetchedNotes.forEach(note => {
+      const eId = note.enqId.toString();
+      if (!notesByEnqId[eId] || new Date(note.createdOn) > new Date(notesByEnqId[eId].createdOn)) {
+        notesByEnqId[eId] = note;
+      }
+    });
+
     // Additional processing for each enquiry
-    const customizedEnquiries = await Promise.all(
-      enquiries.map(async (enquiry) => {
-        const parentName = `${enquiry.parentFirstName || ""} ${enquiry.parentLastName || ""}`.trim();
-        const kidName = `${enquiry.kidFirstName || ""} ${enquiry.kidLastName || ""}`.trim();
+    const customizedEnquiries = enquiries.map((enquiry) => {
+      const parentName = `${enquiry.parentFirstName || ""} ${enquiry.parentLastName || ""}`.trim();
+      const kidName = `${enquiry.kidFirstName || ""} ${enquiry.kidLastName || ""}`.trim();
 
-        // Get latest action from logs if needed
-        let latestAction = null;
-        if (enquiry.logs) {
-          const lastLog = await enquiryLogs.findOne({ _id: enquiry.logs });
-          if (lastLog?.logs?.length) {
-            const sortedLogs = lastLog.logs.sort(
-              (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-            );
-            latestAction = sortedLogs[0]?.action || null;
-          }
+      // Get latest action from logs
+      let latestAction = null;
+      if (enquiry.logs) {
+        const lastLog = logsMap.get(enquiry.logs.toString());
+        if (lastLog?.logs?.length) {
+          const sortedLogs = lastLog.logs.sort(
+            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+          );
+          latestAction = sortedLogs[0]?.action || null;
         }
+      }
 
-        // Get last note if needed
-        let lastNote = null;
-        const noteSection = await NotesSection.findOne(
-          { enqId: enquiry._id },
-          { notes: 1, createdOn: 1 }
-        ).sort({ createdOn: -1 });
+      // Get last note
+      let lastNote = null;
+      const noteSection = notesByEnqId[enquiry._id.toString()];
+      if (noteSection?.notes?.length) {
+        lastNote = noteSection.notes[noteSection.notes.length - 1];
+      }
 
-        if (noteSection?.notes?.length) {
-          lastNote = noteSection.notes[noteSection.notes.length - 1];
-        }
-
-        return {
-          ...enquiry,
-          parentName,
-          kidName,
-          latestAction,
-          lastNote: lastNote?.disposition || "None",
-          formattedCreatedAt: formatDate(enquiry.createdAt),
-          formattedUpdatedAt: formatDate(enquiry.updatedAt),
-          lastNoteDate: formatDate(lastNote?.createdOn)
-        };
-      })
-    );
+      return {
+        ...enquiry,
+        parentName,
+        kidName,
+        latestAction,
+        lastNote: lastNote?.disposition || "None",
+        formattedCreatedAt: formatDate(enquiry.createdAt),
+        formattedUpdatedAt: formatDate(enquiry.updatedAt),
+        lastNoteDate: formatDate(lastNote?.createdOn) // Note: original code used noteSection.createdOn for lastNoteDate? No, wait.
+        // Original: `formatDate(lastNote?.createdOn)` where lastNote is element of array.
+        // Note: noteSection.notes is array of objects.
+      };
+    });
 
     // Calculate total pages
     const totalPages = Math.ceil(total / limit);
@@ -697,7 +733,7 @@ const getActiveKidAndClassData = async (req, res) => {
 
     const paymentClassData = await classPaymentModel.findOne({
       enqId: enqId,
-      paymentStatus: "Success",
+      paymentStatus: { $in: ["Success", "Captured"] },
       isClassAdded: false,
     });
     console.log("paymentClassData", paymentClassData);
@@ -983,7 +1019,7 @@ const getScheduledClassData = async (req, res) => {
 
     // Fetch enrollment data
     const enqData = await operationDeptModel.findOne(
-      { _id: enqId, paymentStatus: "Success", enquiryStatus: "Active" },
+      { _id: enqId, paymentStatus: { $in: ["Success", "Captured"] }, enquiryStatus: "Active" },
       { programs: 1 }
     );
 

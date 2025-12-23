@@ -11,7 +11,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
 
 const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
-  console.log(data)
+  console.log(data);
   const navigate = useNavigate();
   const department = localStorage.getItem("department");
   const empId = localStorage.getItem("empId");
@@ -93,15 +93,8 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
       }
     }
 
-    // If numberOfClasses is higher than any range, use the highest range pricing
-    if (sortedPackages.length > 0) {
-      return {
-        oneClassPrice: sortedPackages[sortedPackages.length - 1].oneClassPrice,
-        packageData: sortedPackages[sortedPackages.length - 1],
-      };
-    }
-
-    // Fallback
+    // If numberOfClasses is higher than any range, return unavailable
+    // The previous logic defaulted to the highest range, which we want to avoid now.
     return {
       oneClassPrice: 0,
       packageData: null,
@@ -164,14 +157,7 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
       }
     }
 
-    // If numberOfClasses is higher than any range, use the highest range
-    if (sortedCenters.length > 0) {
-      return {
-        oneClassPrice: sortedCenters[sortedCenters.length - 1].oneClassPrice,
-        packageData: sortedCenters[sortedCenters.length - 1],
-      };
-    }
-
+    // If numberOfClasses is higher than any range, return unavailable
     return { oneClassPrice: 0, packageData: null };
   };
 
@@ -471,6 +457,13 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
     ];
 
     setAvailableCenters(uniqueCenters);
+
+    // Auto-select if only one center available (User requirement for online default)
+    if (uniqueCenters.length === 1 && packageType === "online") {
+      const autoCenterId = uniqueCenters[0].centerId;
+      setSelectedCenter(autoCenterId);
+      updateClassPricing(4, timeSlot, autoCenterId);
+    }
   };
 
   // Updated handleCenterSelectionForTimeSlot function
@@ -585,8 +578,7 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
 
       let packageData = {
         enqId,
-        kidName: data?.kidName||data?.kidFirstName
-,
+        kidName: data?.kidName || data?.kidFirstName,
         kidId: data.kidId,
         whatsappNumber: data?.whatsappNumber,
         programs: data?.programs,
@@ -679,12 +671,14 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
     <>
       <div
         className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center p-4 z-50 overflow-y-auto pt-24"
-        style={{ backdropFilter: 'blur(2px)' }}
+        style={{ backdropFilter: "blur(2px)" }}
       >
         <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl flex flex-col max-h-[calc(100vh-8rem)]">
           {/* Header */}
           <div className="flex items-center justify-between p-5 border-b border-gray-200 sticky top-0 bg-white z-10">
-            <h2 className="text-xl font-semibold text-gray-800">Select Package</h2>
+            <h2 className="text-xl font-semibold text-gray-800">
+              Select Package
+            </h2>
             <button
               onClick={onClose}
               className="text-gray-500 hover:text-gray-700 p-1 -mr-1 rounded-full hover:bg-gray-100"
@@ -742,39 +736,43 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => handlePackageTypeChange("online")}
-                    className={`flex-1 py-2 px-3 rounded-md ${packageType === "online"
-                      ? "bg-purple-600 text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
+                    className={`flex-1 py-2 px-3 rounded-md ${
+                      packageType === "online"
+                        ? "bg-purple-600 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
                   >
                     Online
                   </button>
                   <button
                     onClick={() => handlePackageTypeChange("offline")}
-                    className={`flex-1 py-2 px-3 rounded-md ${packageType === "offline"
-                      ? "bg-purple-600 text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
+                    className={`flex-1 py-2 px-3 rounded-md ${
+                      packageType === "offline"
+                        ? "bg-purple-600 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
                   >
                     Offline
                   </button>
                   <button
                     onClick={() => handlePackageTypeChange("hybrid")}
-                    className={`flex-1 py-2 px-3 rounded-md ${packageType === "hybrid"
-                      ? "bg-purple-600 text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
+                    className={`flex-1 py-2 px-3 rounded-md ${
+                      packageType === "hybrid"
+                        ? "bg-purple-600 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
                   >
                     Hybrid
                   </button>
                   <button
                     onClick={() => handlePackageTypeChange("kit")}
-                    className={`flex-1 py-2 px-3 rounded-md ${packageType === "kit"
-                      ? "bg-purple-600 text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
+                    className={`flex-1 py-2 px-3 rounded-md ${
+                      packageType === "kit"
+                        ? "bg-purple-600 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
                   >
-                    Kit
+                    Others
                   </button>
                 </div>
               </div>
@@ -808,7 +806,9 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
                             name="timeSlot"
                             value="night"
                             checked={selectedTimeSlot === "night"}
-                            onChange={(e) => handleTimeSlotChange(e.target.value)}
+                            onChange={(e) =>
+                              handleTimeSlotChange(e.target.value)
+                            }
                             className="mr-2 text-purple-600 focus:ring-purple-500"
                           />
                           <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
@@ -863,6 +863,12 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
                         {numberOfClasses !== "" && numberOfClasses < 4 && (
                           <p className="text-red-500 text-sm">
                             Minimum 4 classes required
+                          </p>
+                        )}
+                        {/* Show error if class count is valid (>4) but no package found (rate is 0) */}
+                        {numberOfClasses >= 4 && classRate === 0 && (
+                          <p className="text-red-500 text-sm">
+                            Package is currently not available
                           </p>
                         )}
                       </div>
@@ -1008,7 +1014,11 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
                         placeholder="Quantity"
                         value={item.quantity}
                         onChange={(e) =>
-                          updateKitItem(index, "quantity", Number(e.target.value))
+                          updateKitItem(
+                            index,
+                            "quantity",
+                            Number(e.target.value)
+                          )
                         }
                         className="w-24 rounded-md border border-gray-300 px-2 py-1"
                         min="0"
@@ -1053,14 +1063,18 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
                       (onlineClasses > 0 || offlineClasses > 0) && (
                         <>
                           <div className="flex justify-between">
-                            <span className="text-gray-600">Online Classes:</span>
+                            <span className="text-gray-600">
+                              Online Classes:
+                            </span>
                             <span className="font-medium">{onlineClasses}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">
                               Offline Classes:
                             </span>
-                            <span className="font-medium">{offlineClasses}</span>
+                            <span className="font-medium">
+                              {offlineClasses}
+                            </span>
                           </div>
                         </>
                       )}
@@ -1068,7 +1082,9 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
                       <span className="text-gray-600">
                         Base Amount (GST Included)
                       </span>
-                      <span className="font-bold">₹{baseAmount.toFixed(2)}</span>
+                      <span className="font-bold">
+                        ₹{baseAmount.toFixed(2)}
+                      </span>
                     </div>
                     {discount > 0 && (
                       <div className="flex justify-between text-green-600">
@@ -1092,8 +1108,12 @@ const PackageSelectionDialog = ({ open, onClose, data, enqId }) => {
               {paymentId && (
                 <div className="bg-white p-4 rounded-lg shadow-sm">
                   <div className="flex justify-between items-center">
-                    <span className="font-medium text-gray-700">Payment ID:</span>
-                    <span className="font-bold text-purple-600">{paymentId}</span>
+                    <span className="font-medium text-gray-700">
+                      Payment ID:
+                    </span>
+                    <span className="font-bold text-purple-600">
+                      {paymentId}
+                    </span>
                   </div>
                   <p className="mt-2 text-sm text-gray-600">
                     Redirecting to payment details page...

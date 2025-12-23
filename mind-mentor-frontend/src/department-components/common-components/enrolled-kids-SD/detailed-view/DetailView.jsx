@@ -1,8 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useState } from "react";
-import { Box, Grid, Typography } from "@mui/material";
+import { Box, Grid, Typography, IconButton, Divider } from "@mui/material";
 import { alpha } from "@mui/material/styles";
-import { Trash2, Plus } from "lucide-react";
 import { updateEnquiry } from "../../../../api/service/employee/EmployeeService";
 import { useNavigate } from "react-router-dom";
 import {
@@ -10,6 +9,8 @@ import {
   formatWhatsAppNumber,
 } from "../../../../utils/formatContacts";
 import EditDialogBox from "./edit/EditDialogBox";
+import { X, List } from "lucide-react";
+import EnqRelatedTask from "../../prospects/detailed-view/EnqRelatedTask"; // Using shared component
 
 const DetailCard = ({ title, value, isEmail = false }) => (
   <Box
@@ -35,7 +36,6 @@ const DetailCard = ({ title, value, isEmail = false }) => (
       color="text.primary"
       sx={{
         lineHeight: 1.6,
-        // Handle email overflow
         wordBreak: isEmail ? "break-all" : "normal",
         overflow: "hidden",
         textOverflow: "ellipsis",
@@ -43,7 +43,7 @@ const DetailCard = ({ title, value, isEmail = false }) => (
         fontSize: isEmail ? "0.85rem" : "1rem",
         maxWidth: "100%",
       }}
-      title={isEmail ? value : undefined} // Show full email on hover
+      title={isEmail ? value : undefined}
     >
       {value || "N/A"}
     </Typography>
@@ -64,7 +64,7 @@ const SectionTitle = ({ children }) => (
   </Typography>
 );
 
-const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
+const DetailView = ({ data, showEdit, onEditClose, onEditSave, openTaskDialog }) => {
   const navigate = useNavigate();
   const department = localStorage.getItem("department");
   const empId = localStorage.getItem("empId");
@@ -72,6 +72,53 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [formData, setFormData] = useState(data);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+
+  // State for task assignment
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
+  const [position, setPosition] = useState({ x: window.innerWidth - 450, y: 100 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    if (openTaskDialog) {
+      setIsTaskDialogOpen(true);
+    }
+  }, [openTaskDialog]);
+
+  // Drag handlers for the task dialog
+  const handleMouseDown = (e) => {
+    if (e.target.closest("button") || e.target.closest("input")) {
+      return;
+    }
+    setIsDragging(true);
+    setDragOffset({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y
+    });
+    e.preventDefault();
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (isDragging) {
+        setPosition({
+          x: e.clientX - dragOffset.x,
+          y: e.clientY - dragOffset.y
+        });
+      }
+    };
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+    if (isDragging) {
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    }
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging, dragOffset]);
 
   useEffect(() => {
     setFormData(data);
@@ -86,29 +133,21 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
   };
 
   const handleSave = async () => {
-    console.log("Updated data:", formData);
     const response = await updateEnquiry(formData, empId);
-    console.log("Response0", response);
     if (response.status === 200) {
       onEditSave(response.data);
     }
     handleCloseEdit();
   };
 
-  // Helper function to format email for better display
   const formatEmailForDisplay = (email) => {
     if (!email) return "N/A";
-
     const formattedEmail = formatEmail(email);
-
-    // If email is too long, truncate intelligently
     if (formattedEmail.length > 30) {
       const atIndex = formattedEmail.indexOf("@");
       if (atIndex > 0) {
         const username = formattedEmail.substring(0, atIndex);
         const domain = formattedEmail.substring(atIndex);
-
-        // Show first 10 chars of username + ... + full domain
         if (username.length > 10) {
           return `${username.substring(0, 10)}...${domain}`;
         }
@@ -121,10 +160,8 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
 
   return (
     <Box sx={{ position: "relative" }}>
-      {/* Content */}
       <Box>
         <Grid container spacing={4}>
-          {/* Parent Information */}
           <Grid item xs={12}>
             <SectionTitle>Parent Information</SectionTitle>
             <Grid container spacing={3}>
@@ -155,7 +192,6 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
             </Grid>
           </Grid>
 
-          {/* Kid Information */}
           <Grid item xs={12}>
             <SectionTitle>Kid Information</SectionTitle>
             <Grid container spacing={3}>
@@ -174,7 +210,6 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
             </Grid>
           </Grid>
 
-          {/* Programs */}
           <Grid item xs={12}>
             <SectionTitle>Program Details</SectionTitle>
             <Grid container spacing={3}>
@@ -189,7 +224,6 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
             </Grid>
           </Grid>
 
-          {/* Status Information */}
           <Grid item xs={12}>
             <SectionTitle>Status Information</SectionTitle>
             <Grid container spacing={3}>
@@ -275,7 +309,6 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
             </Grid>
           </Grid>
 
-          {/* Messages and Notes */}
           <Grid item xs={12}>
             <SectionTitle>Messages & Notes</SectionTitle>
             <Grid container spacing={3}>
@@ -339,6 +372,17 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
             </Grid>
           </Grid>
         </Grid>
+
+        {/* Assign Task Button */}
+        <Box sx={{ position: 'fixed', bottom: 24, right: 24, zIndex: 1000 }}>
+          <button
+            onClick={() => setIsTaskDialogOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg shadow-lg hover:bg-primary-dark transition-colors"
+          >
+            <List size={18} />
+            Assign Tasks
+          </button>
+        </Box>
       </Box>
 
       <EditDialogBox
@@ -348,6 +392,92 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
         handleInputChange={handleInputChange}
         handleSave={handleSave}
       />
+
+      {/* RESTORED CUSTOM DRAGGABLE TASK DIALOG */}
+      {isTaskDialogOpen && (
+        <Box
+          sx={{
+            position: 'fixed',
+            top: position.y,
+            left: position.x,
+            width: '850px',
+            maxWidth: '95vw',
+            height: '85vh',
+            maxHeight: '800px',
+            bgcolor: 'background.paper',
+            borderRadius: 3,
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            zIndex: 1300,
+            display: 'flex',
+            flexDirection: 'column',
+            border: '1px solid',
+            borderColor: 'divider',
+            transition: isDragging ? 'none' : 'box-shadow 0.3s ease',
+          }}
+        >
+          {/* Draggable Header */}
+          <Box
+            className="drag-handle"
+            onMouseDown={handleMouseDown}
+            sx={{
+              p: 2,
+              borderBottom: '1px solid',
+              borderColor: 'divider',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              cursor: isDragging ? 'grabbing' : 'grab',
+              bgcolor: 'grey.50',
+              borderTopLeftRadius: 12,
+              borderTopRightRadius: 12,
+              userSelect: 'none'
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600 }}>
+                Assign New Task
+              </Typography>
+            </Box>
+
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/${department}/department/list-task-assigned-me`);
+                }}
+                onMouseDown={(e) => e.stopPropagation()}
+                className="flex items-center gap-2 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium shadow-sm"
+              >
+                <List size={14} />
+                View All Tasks
+              </button>
+              <IconButton
+                size="small"
+                onClick={() => setIsTaskDialogOpen(false)}
+                onMouseDown={(e) => e.stopPropagation()}
+              >
+                <X size={20} />
+              </IconButton>
+            </Box>
+          </Box>
+
+          {/* Scrollable Content Area */}
+          <Box sx={{
+            flexGrow: 1,
+            overflowY: 'auto',
+            minHeight: 0,
+            p: 0
+          }}>
+            <EnqRelatedTask
+              id={data?._id}
+              onClose={() => {
+                setIsTaskDialogOpen(false);
+              }}
+            />
+          </Box>
+        </Box>
+      )}
+
     </Box>
   );
 };

@@ -28,7 +28,10 @@ import { toast } from "react-toastify";
 import TaskAssignmentOverlay from "./detailed-view/SlideDialog";
 import EnquiryRelatedTaskComponent from "../prospects/enquiry-task/EnquiryRelatedTaskComponent";
 import { fechAllActiveEnrolledEnquiry } from "../../../api/service/employee/serviceDeliveryService";
-import { updateEnquiryStatus } from "../.././../api/service/employee/EmployeeService";
+import {
+  updateEnquiryStatus,
+  deleteEnquiry,
+} from "../.././../api/service/employee/EmployeeService";
 
 const theme = createTheme({
   palette: {
@@ -92,7 +95,7 @@ const theme = createTheme({
   },
 });
 
-const Prospects = () => {
+const ActiveEnquiry = () => {
   const [searchParams] = useSearchParams();
   const selectedId = searchParams.get("selected");
   const navigate = useNavigate();
@@ -121,11 +124,14 @@ const Prospects = () => {
   const loadEnquiries = async (page, pageSize) => {
     try {
       setLoading(true);
-      const { data, total } = await fechAllActiveEnrolledEnquiry(page + 1, pageSize);
+      const { data, total } = await fechAllActiveEnrolledEnquiry(
+        page + 1,
+        pageSize
+      );
 
       const rowsWithSlNo = data.map((item, index) => ({
         ...item,
-        slNo: (page * pageSize) + index + 1, // Calculate serial number based on pagination
+        slNo: page * pageSize + index + 1, // Calculate serial number based on pagination
       }));
 
       setRows(rowsWithSlNo);
@@ -220,11 +226,31 @@ const Prospects = () => {
     navigate(`/${department}/department/show-complete-status-logs/${id}`);
   };
 
+  const handleDelete = async (id) => {
+    if (
+      window.confirm("Are you sure you want to delete this active enquiry?")
+    ) {
+      try {
+        const response = await deleteEnquiry(id);
+        if (response.success || response.status === 200) {
+          toast.success("Active enquiry deleted successfully");
+          setRows((prev) => prev.filter((row) => row._id !== id));
+        } else {
+          toast.error("Failed to delete active enquiry");
+        }
+      } catch (error) {
+        console.error("Error deleting active enquiry:", error);
+        toast.error("Error deleting active enquiry");
+      }
+    }
+  };
+
   const WhatsAppDialog = ({ open, phoneNumber, onClose }) => {
     if (!phoneNumber) return null;
 
-    const widgetUrl = `${import.meta.env.VITE_MSGKART_MESSAGE_WIDGET
-      }&customerNumber=${phoneNumber}`;
+    const widgetUrl = `${
+      import.meta.env.VITE_MSGKART_MESSAGE_WIDGET
+    }&subId=${phoneNumber}`;
 
     return (
       <Slide direction="left" in={open} mountOnEnter unmountOnExit>
@@ -311,7 +337,9 @@ const Prospects = () => {
                   theme,
                   handleStatusToggle,
                   handleShowLogs,
-                  handleMessage
+                  handleShowStatus,
+                  handleMessage,
+                  handleDelete
                 )}
                 paginationMode="server"
                 rowCount={rowCount}
@@ -468,40 +496,6 @@ const Prospects = () => {
                       Edit
                     </Button>
 
-                    <Button
-                      variant="outlined"
-                      startIcon={<ClipboardList size={18} />}
-                      onClick={() => {
-                        if (viewDialog.rowData) {
-                          setIsTaskOverlayOpen(true);
-                          setEnqId(viewDialog.rowData._id);
-                          // Close the details dialog when opening task overlay
-                          setViewDialog({
-                            open: false,
-                            rowData: null,
-                            showEdit: false,
-                          });
-                        }
-                      }}
-                      sx={{
-                        borderColor: "#ffffff",
-                        color: "#ffffff",
-                        px: 3,
-                        py: 1,
-                        borderRadius: "20px",
-                        fontWeight: 600,
-                        textTransform: "none",
-                        backgroundColor: "transparent",
-                        "&:hover": {
-                          backgroundColor: "#a5d6a7",
-                          borderColor: "#2e7d32",
-                          color: "#2e7d32",
-                          boxShadow: "0 4px 8px rgba(46, 125, 50, 0.3)",
-                        },
-                      }}
-                    >
-                      Assign Task
-                    </Button>
                     <IconButton
                       onClick={() =>
                         setViewDialog({ open: false, rowData: null })
@@ -522,6 +516,7 @@ const Prospects = () => {
                   <DetailView
                     data={viewDialog.rowData || {}}
                     showEdit={viewDialog.showEdit}
+                    openTaskDialog={isTaskOverlayOpen}
                     onEditClose={() =>
                       setViewDialog((prev) => ({ ...prev, showEdit: false }))
                     }
@@ -579,20 +574,7 @@ const Prospects = () => {
           </DialogActions>
         </Dialog>
       </ThemeProvider>
-      <TaskAssignmentOverlay
-        isOpen={isTaskOverlayOpen}
-        onClose={() => setIsTaskOverlayOpen(false)}
-        sx={{
-          "& .MuiDialog-container": {
-            zIndex: 1400, // Higher z-index to appear on top
-          },
-        }}
-      >
-        <EnquiryRelatedTaskComponent
-          id={enqId}
-          onClose={() => setIsTaskOverlayOpen(false)}
-        />
-      </TaskAssignmentOverlay>
+
       <WhatsAppDialog
         open={whatsappDialog.open}
         phoneNumber={whatsappDialog.phoneNumber}
@@ -601,4 +583,4 @@ const Prospects = () => {
     </>
   );
 };
-export default Prospects;
+export default ActiveEnquiry;

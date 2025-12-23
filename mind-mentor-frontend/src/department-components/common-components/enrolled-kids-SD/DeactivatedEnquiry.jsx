@@ -7,7 +7,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Divider,
   Fade,
   IconButton,
   Paper,
@@ -22,17 +21,14 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import columns from "./Columns";
 
+import DetailView from "./detailed-view/DetailView";
+import { Edit, X } from "lucide-react";
+import { toast } from "react-toastify";
+import { fechAllActiveEnrolledEnquiry } from "../../../api/service/employee/serviceDeliveryService";
 import {
   updateEnquiryStatus,
-  fetchProspectsEnquiries,
-  handleMoveToEnquiry,
   deleteEnquiry,
-} from "../../../api/service/employee/EmployeeService";
-import DetailView from "./detailed-view/DetailView";
-import { ClipboardList, Edit, X } from "lucide-react";
-import { toast } from "react-toastify";
-import TaskAssignmentOverlay from "./detailed-view/SlideDialog";
-import EnquiryRelatedTaskComponent from "./enquiry-task/EnquiryRelatedTaskComponent";
+} from "../.././../api/service/employee/EmployeeService";
 
 const theme = createTheme({
   palette: {
@@ -47,12 +43,12 @@ const theme = createTheme({
       light: "#F472B6",
       dark: "#DB2777",
     },
-    cold: {
+    warm: {
       main: "#F59E0B",
       light: "#FCD34D",
       dark: "#D97706",
     },
-    warm: {
+    cold: {
       main: "#3B82F6",
       light: "#60A5FA",
       dark: "#2563EB",
@@ -96,7 +92,7 @@ const theme = createTheme({
   },
 });
 
-const Prospects = () => {
+const DeactivatedEnquiry = () => {
   const [searchParams] = useSearchParams();
   const selectedId = searchParams.get("selected");
   const navigate = useNavigate();
@@ -107,44 +103,50 @@ const Prospects = () => {
   const [loading, setLoading] = useState(true);
   const [rowCount, setRowCount] = useState(0);
   const [paginationModel, setPaginationModel] = useState({
-    page: 0, // MUI DataGrid uses 0-based page index
-    pageSize: 15, // 15 records per page
-  });
-  const [whatsappDialog, setWhatsappDialog] = useState({
-    open: false,
-    phoneNumber: null,
+    page: 0,
+    pageSize: 15, // Default to 15 records per page
   });
   const [confirmDialog, setConfirmDialog] = useState({
     open: false,
     studentName: "",
     onConfirm: null,
   });
-  const [isTaskOverlayOpen, setIsTaskOverlayOpen] = useState(false);
-  const [enqId, setEnqId] = useState();
 
-  const loadProspects = async (page, pageSize) => {
+  const [whatsappDialog, setWhatsappDialog] = useState({
+    open: false,
+    phoneNumber: null,
+  });
+
+  const loadEnquiries = async (page, pageSize) => {
     try {
       setLoading(true);
-      const { data, total } = await fetchProspectsEnquiries(page + 1, pageSize);
+      const { data, total } = await fechAllActiveEnrolledEnquiry(
+        page + 1,
+        pageSize,
+        "Deactivated"
+      );
 
       const rowsWithSlNo = data.map((item, index) => ({
         ...item,
         slNo: page * pageSize + index + 1, // Calculate serial number based on pagination
-        id:
-          item.source +
-          "_" +
-          (item.kidId || item.ID || page * pageSize + index),
       }));
 
       setRows(rowsWithSlNo);
       setRowCount(total || 0);
     } catch (err) {
-      console.error("Failed to fetch Prospects:", err);
-      toast.error("Failed to load prospects. Please try again later.");
+      console.error("Failed to fetch Active Enquiries:", err);
+      toast.error(
+        "Failed to load deactivated enquiries. Please try again later."
+      );
     } finally {
       setLoading(false);
     }
   };
+
+  // Load data when component mounts and when pagination changes
+  useEffect(() => {
+    loadEnquiries(paginationModel.page, paginationModel.pageSize);
+  }, [paginationModel.page, paginationModel.pageSize]);
   useEffect(() => {
     if (selectedId) {
       // Automatically scroll the selected row into view
@@ -158,32 +160,11 @@ const Prospects = () => {
     }
   }, [selectedId, rows]);
 
-  // Load data when component mounts and when pagination changes
-  useEffect(() => {
-    loadProspects(paginationModel.page, paginationModel.pageSize);
-  }, [paginationModel.page, paginationModel.pageSize]);
-
-  // Open detail view if ID is selected in URL
   const [viewDialog, setViewDialog] = useState({
     open: false,
     rowData: null,
     showEdit: false,
   });
-
-  useEffect(() => {
-    if (selectedId && rows.length > 0) {
-      const selectedRow = rows.find((row) => row._id === selectedId);
-      if (selectedRow) {
-        setViewDialog({ open: true, rowData: selectedRow, showEdit: false });
-      }
-    }
-  }, [selectedId, rows]);
-  const handleMessage = (phoneNumber) => {
-    setWhatsappDialog({
-      open: true,
-      phoneNumber,
-    });
-  };
 
   const handleStatusToggle = async (id) => {
     const rowToUpdate = rows.find((row) => row._id === id);
@@ -227,35 +208,10 @@ const Prospects = () => {
     console.error("Row update error:", error);
   };
 
-  const handleMoveBackToEnquiry = async (id) => {
-    const student = rows.find((row) => row._id === id);
-    if (!student) return;
-
-    setConfirmDialog({
+  const handleMessage = (phoneNumber) => {
+    setWhatsappDialog({
       open: true,
-      studentName: student.kidFirstName,
-      onConfirm: async () => {
-        try {
-          const response = await handleMoveToEnquiry(id, empId);
-          if (response.status === 200 || response.success) {
-            // Update the local state to reflect the change
-            setRows(rows.filter((row) => row._id !== id));
-
-            toast.success(
-              `Successfully moved ${student.kidFirstName} to enquiry`
-            );
-          } else {
-            toast.error(`Failed to move ${student.kidFirstName} to enquiry`);
-          }
-        } catch (error) {
-          console.error("Error moving to enquiry:", error);
-          toast.error(
-            `Failed to move ${student.kidFirstName} to enquiry: ${error.message}`
-          );
-        } finally {
-          setConfirmDialog({ open: false, studentName: "", onConfirm: null });
-        }
-      },
+      phoneNumber,
     });
   };
 
@@ -270,18 +226,22 @@ const Prospects = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this prospect?")) {
+    if (
+      window.confirm(
+        "Are you sure you want to permanently delete this deactivated enquiry?"
+      )
+    ) {
       try {
         const response = await deleteEnquiry(id);
         if (response.success || response.status === 200) {
-          toast.success("Prospect deleted successfully");
+          toast.success("Deactivated enquiry deleted successfully");
           setRows((prev) => prev.filter((row) => row._id !== id));
         } else {
-          toast.error("Failed to delete prospect");
+          toast.error("Failed to delete deactivated enquiry");
         }
       } catch (error) {
-        console.error("Error deleting prospect:", error);
-        toast.error("Error deleting prospect");
+        console.error("Error deleting deactivated enquiry:", error);
+        toast.error("Error deleting deactivated enquiry");
       }
     }
   };
@@ -361,7 +321,7 @@ const Prospects = () => {
     <>
       <ThemeProvider theme={theme}>
         <Fade in={true}>
-          <Box sx={{ width: "100%", height: "100%", ml: "auto", p: 2 }}>
+          <Box sx={{ width: "100%", height: "100%", ml: "auto" }}>
             <Paper
               elevation={0}
               sx={{
@@ -377,7 +337,6 @@ const Prospects = () => {
                 columns={columns(
                   theme,
                   handleStatusToggle,
-                  handleMoveBackToEnquiry,
                   handleShowLogs,
                   handleShowStatus,
                   handleMessage,
@@ -392,7 +351,7 @@ const Prospects = () => {
                 disableRowSelectionOnClick
                 loading={loading}
                 // editMode="row"
-                getRowId={(row) => row._id || row.id}
+                getRowId={(row) => row._id}
                 onRowClick={(params) => {
                   setViewDialog({ open: true, rowData: params.row });
                 }}
@@ -407,7 +366,7 @@ const Prospects = () => {
                   },
                 }}
                 sx={{
-                  height: 900,
+                  height: 700,
                   border: "none",
                   "& .MuiDataGrid-cell:focus": {
                     outline: "none",
@@ -490,7 +449,7 @@ const Prospects = () => {
                 TransitionProps={{ direction: "up" }}
                 sx={{
                   "& .MuiDialog-container": {
-                    zIndex: isTaskOverlayOpen ? 1200 : 1300, // Lower z-index when task overlay is open
+                    zIndex: 1300, // Fixed z-index
                   },
                 }}
               >
@@ -558,6 +517,7 @@ const Prospects = () => {
                   <DetailView
                     data={viewDialog.rowData || {}}
                     showEdit={viewDialog.showEdit}
+                    openTaskDialog={false}
                     onEditClose={() =>
                       setViewDialog((prev) => ({ ...prev, showEdit: false }))
                     }
@@ -615,20 +575,7 @@ const Prospects = () => {
           </DialogActions>
         </Dialog>
       </ThemeProvider>
-      <TaskAssignmentOverlay
-        isOpen={isTaskOverlayOpen}
-        onClose={() => setIsTaskOverlayOpen(false)}
-        sx={{
-          "& .MuiDialog-container": {
-            zIndex: 1400, // Higher z-index to appear on top
-          },
-        }}
-      >
-        <EnquiryRelatedTaskComponent
-          id={enqId}
-          onClose={() => setIsTaskOverlayOpen(false)}
-        />
-      </TaskAssignmentOverlay>
+
       <WhatsAppDialog
         open={whatsappDialog.open}
         phoneNumber={whatsappDialog.phoneNumber}
@@ -637,4 +584,4 @@ const Prospects = () => {
     </>
   );
 };
-export default Prospects;
+export default DeactivatedEnquiry;

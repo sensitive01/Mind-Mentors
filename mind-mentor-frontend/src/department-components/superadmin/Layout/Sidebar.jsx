@@ -1,6 +1,5 @@
 import {
   Dashboard as DashboardIcon,
-  Receipt as EnquiriesIcon,
   ChildCare as KidsIcon,
   People as ParentsIcon,
   TaskAlt as TasksIcon,
@@ -67,7 +66,7 @@ import logoImage from "../../../assets/mindmentorz.png";
 
 const ModernSidebar = () => {
   const location = useLocation();
-  const [openEnquiries, setOpenEnquiries] = useState(false);
+
   const [openEmployees, setOpenEmployees] = useState(false);
   const [openClasses, setOpenClasses] = useState(false);
   const [openCenters, setOpenCenters] = useState(false);
@@ -89,13 +88,6 @@ const ModernSidebar = () => {
 
     // Then open the appropriate submenu based on the current path
     if (
-      currentPath.includes("/super-admin/department/enrollment-data") ||
-      currentPath.includes("/super-admin/department/parents-data") ||
-      currentPath.includes("/super-admin/department/kids-data") ||
-      currentPath.includes("/super-admin/department/active-kid-data")
-    ) {
-      setOpenEnquiries(true);
-    } else if (
       currentPath.includes("/super-admin/department/employees") ||
       currentPath.includes(
         "/super-admin/department/employee-mark-attandance"
@@ -265,7 +257,6 @@ const ModernSidebar = () => {
 
   // Function to close all open submenus
   const closeAllSubmenus = () => {
-    setOpenEnquiries(false);
     setOpenEmployees(false);
     setOpenClasses(false);
     setOpenCenters(false);
@@ -275,11 +266,6 @@ const ModernSidebar = () => {
   };
 
   // Event handlers for toggling submenus
-  const handleEnquiriesClick = (e) => {
-    if (e) e.preventDefault();
-    closeAllSubmenus();
-    setOpenEnquiries(true);
-  };
 
   const handleEmployeesClick = (e) => {
     if (e) e.preventDefault();
@@ -341,27 +327,14 @@ const ModernSidebar = () => {
       link: "/super-admin/department/dashboard",
     },
     {
-      icon: <EnquiriesIcon />,
-      text: "Enquiries",
-      subItems: [
-        {
-          icon: <EnquiriesIcon />,
-          text: "Leads",
-          link: "/super-admin/department/enrollment-data",
-        },
-        {
-          icon: <ParentsIcon />,
-          text: "Parents",
-          link: "/super-admin/department/parents-data",
-        },
-        // {
-        //   icon: <ActiveIcon />,
-        //   text: "Active Kids",
-        //   link: "/super-admin/department/active-kid-data",
-        // },
-      ],
-      open: openEnquiries,
-      onClick: handleEnquiriesClick,
+      icon: <KidsIcon />,
+      text: "Kids",
+      link: "/super-admin/department/enrollment-data",
+    },
+    {
+      icon: <ParentsIcon />,
+      text: "Parents",
+      link: "/super-admin/department/parents-data",
     },
     {
       icon: <EmployeesIcon />,
@@ -449,6 +422,29 @@ const ModernSidebar = () => {
       onClick: handleCentersClick,
     },
     {
+      icon: <TournamentsIcon />,
+      text: "Tournaments",
+      subItems: [
+        {
+          icon: <TournamentsIcon />,
+          text: "Tournaments",
+          link: "/super-admin/department/tournaments",
+        },
+        {
+          icon: <ParticipantsIcon />,
+          text: "Tournament Participants",
+          link: "/participents",
+        },
+      ],
+      open: openTournaments,
+      onClick: handleTournamentsClick,
+    },
+    {
+      icon: <ChessKidIcon />,
+      text: "Chesskid",
+      link: "/super-admin/department/chessKids",
+    },
+    {
       icon: <SubscriptionsIcon />,
       text: "Subscriptions",
       subItems: [
@@ -482,19 +478,35 @@ const ModernSidebar = () => {
       onClick: handleSubscriptionsClick,
     },
     {
-      icon: <ChessKidIcon />,
-      text: "Chesskid",
-      link: "/super-admin/department/chessKids",
+      icon: <TransactionsIcon />,
+      text: "Transactions",
+      link: "/transactions",
+    },
+    {
+      icon: <ExpensesIcon />,
+      text: "Expenses",
+      subItems: [
+        {
+          icon: <ExpensesIcon />,
+          text: "Expenses",
+          link: "/expenses",
+        },
+        {
+          icon: <ExpensesIcon />,
+          text: "Allowances / Deductions",
+          link: "/super-admin/department/allowdeduct",
+        },
+      ],
+    },
+    {
+      icon: <PayrollIcon />,
+      text: "Payroll",
+      link: "/payroll",
     },
     {
       icon: <TasksIcon />,
       text: "Tasks",
       link: "/super-admin/department/show-all-task",
-    },
-    {
-      icon: <NotificationsIcon />,
-      text: "Notifications",
-      link: "/notifications",
     },
     {
       icon: <SupportIcon />,
@@ -514,31 +526,13 @@ const ModernSidebar = () => {
       open: openSupports,
       onClick: handleSupportsClick,
     },
-    // {
-    //   icon: <DocumentsIcon />,
-    //   text: "Documents",
-    //   link: "/documents",
-    // },
     {
-      icon: <TournamentsIcon />,
-      text: "Tournaments",
-      subItems: [
-        {
-          icon: <TournamentsIcon />,
-          text: "Tournaments",
-          link: "/super-admin/department/tournaments",
-        },
-        {
-          icon: <ParticipantsIcon />,
-          text: "Tournament Participants",
-          link: "/participents",
-        },
-      ],
-      open: openTournaments,
-      onClick: handleTournamentsClick,
+      icon: <NotificationsIcon />,
+      text: "Notifications",
+      link: "/notifications",
     },
     {
-      ikon: <HolidayIcon />,
+      icon: <HolidayIcon />,
       text: "Holidays",
       link: "/holiday",
     },
@@ -547,37 +541,6 @@ const ModernSidebar = () => {
       text: "Marketing",
       link: "#",
     },
-    {
-      icon: <ExpensesIcon />,
-      text: "Expenses",
-      subItems: [
-        {
-          icon: <ExpensesIcon />,
-          text: "Expenses",
-          link: "/expenses",
-        },
-        {
-          icon: <ExpensesIcon />,
-          text: "Allowances / Deductions",
-          link: "/super-admin/department/allowdeduct",
-        },
-      ],
-    },
-    {
-      icon: <TransactionsIcon />,
-      text: "Transactions",
-      link: "/transactions",
-    },
-    {
-      icon: <PayrollIcon />,
-      text: "Payroll",
-      link: "/payroll",
-    },
-    // {
-    //   icon: <LogoutIcon />,
-    //   text: "Logout",
-    //   link: "/logout",
-    // },
   ];
 
   return (

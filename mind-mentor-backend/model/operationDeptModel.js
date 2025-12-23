@@ -78,20 +78,20 @@ const operationDeptSchema = new mongoose.Schema(
     enquiryStage: { type: String },
     recomentedLevel: { type: String },
     chessKidName: { type: String },
-    
+
     stageTag: { type: String },
-    
+
     enquiryStatus: {
       type: String,
       default: "Pending",
     },
-    
+
     disposition: {
       type: String,
       enum: ["RnR", "Call Back", "None", "Connected"],
       default: "None",
     },
-    
+
     enquiryField: { type: String, default: "enquiryList" },
     scheduleDemo: {
       status: {
@@ -102,7 +102,7 @@ const operationDeptSchema = new mongoose.Schema(
       sheduledDay: { type: String },
     },
     dateOfJoining: { type: Date },
-    
+
     referral: [
       {
         referredTo: { type: String },
@@ -113,14 +113,14 @@ const operationDeptSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Log",
     },
-    oldLogs:{type:String},
-    
+    oldLogs: { type: String },
+
     paymentData: [
       {
         type: String,
       },
     ],
-    
+
     paymentStatus: {
       type: String,
       enum: ["Pending", "Success", "Requested", "Processing"],
@@ -131,14 +131,14 @@ const operationDeptSchema = new mongoose.Schema(
     perHourRate: { type: Number },
     employmentType: { type: String },
 
-    chessKidGoldEnabledDateAndTime:{type:String},
-    chessKidGoldExperationDateAndTime:{type:String},
-    chessKidGoldDeactivationDateAndTime:{type:String},
-    reasonForDeactivation:{type:String},
-    lastInteractionDateandTime:{type:String},
-    
-    
-    
+    chessKidGoldEnabledDateAndTime: { type: String },
+    chessKidGoldExperationDateAndTime: { type: String },
+    chessKidGoldDeactivationDateAndTime: { type: String },
+    reasonForDeactivation: { type: String },
+    lastInteractionDateandTime: { type: String },
+
+
+
     classAssigned: { type: Boolean, default: false },
     isNewUser: { type: Boolean, default: true },
     isParentNameCompleted: { type: Boolean, default: false },
@@ -153,8 +153,8 @@ const operationDeptSchema = new mongoose.Schema(
     isEnrollmementStepCompleted: { type: Boolean, default: false },
     isProfileActive: { type: Boolean, default: false },
     isEnquiryNew: { type: Boolean, default: true },
-    isProfilePaused:{type:Boolean,default:false},
-    isChessKidGoldTaken:{type:Boolean,default:false},
+    isProfilePaused: { type: Boolean, default: false },
+    isChessKidGoldTaken: { type: Boolean, default: false },
 
 
     totalRenewalCount: { type: Number }
@@ -163,5 +163,10 @@ const operationDeptSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Indexes for performance optimization
+operationDeptSchema.index({ enquiryField: 1, createdAt: -1 });
+operationDeptSchema.index({ enquiryField: 1, paymentStatus: 1, createdAt: -1 });
+operationDeptSchema.index({ enquiryField: 1, enquiryStatus: 1, createdAt: -1 });
 
 module.exports = mongoose.model("OperationDept", operationDeptSchema);

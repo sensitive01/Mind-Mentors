@@ -483,6 +483,7 @@ const AddPhysicalCenterForm = ({ initialData = null }) => {
           fieldName="Physical Center Photos"
           name="photos"
           onFileUpload={handleFileUpload}
+          initialFiles={formData.photos}
         />
 
         {errors.photos && (
@@ -528,7 +529,7 @@ const AddPhysicalCenterForm = ({ initialData = null }) => {
           </button>
         </div>
       </form>
-      <ToastContainer style={{marginTop:"60px"}} />
+      <ToastContainer style={{ marginTop: "60px" }} />
     </div>
   );
 };

@@ -1,9 +1,9 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import mindmentors from "../../../../images/mindmentorz_logo.png";
-import { HelpCircle, LogOut } from "lucide-react";
+import { HelpCircle, LogOut, Menu } from "lucide-react";
 
-const KidTopbar = () => {
+const KidTopbar = ({ onMenuClick }) => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -14,20 +14,27 @@ const KidTopbar = () => {
     <div className="w-full bg-gradient-to-r from-primary/90 to-primary/70 shadow-md">
       <div className="max-w-6xl mx-auto px-4 py-3">
         <div className="flex justify-between items-center">
-          <div className="flex items-center">
+          <div className="flex items-center gap-4">
+            {/* Mobile Menu Button */}
+            <button
+              onClick={onMenuClick}
+              className="lg:hidden p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
+            >
+              <Menu size={24} />
+            </button>
             <img
               src={mindmentors}
               alt="MindMentorz Logo"
-              className="w-[180px] h-[50px] object-contain transition-transform hover:scale-105 opacity-90"
+              className="w-[140px] sm:w-[180px] h-[40px] sm:h-[50px] object-contain transition-transform hover:scale-105 opacity-90"
             />
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             <button
               className="p-2 bg-white/20 rounded-full shadow-md hover:bg-white/30 transition-all duration-300 group"
               aria-label="Help"
             >
-              <HelpCircle className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+              <HelpCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white group-hover:scale-110 transition-transform" />
             </button>
 
             <button
@@ -35,7 +42,7 @@ const KidTopbar = () => {
               className="p-2 bg-white/20 rounded-full shadow-md hover:bg-white/30 transition-all duration-300 group"
               aria-label="Logout"
             >
-              <LogOut className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+              <LogOut className="w-5 h-5 sm:w-6 sm:h-6 text-white group-hover:scale-110 transition-transform" />
             </button>
           </div>
         </div>

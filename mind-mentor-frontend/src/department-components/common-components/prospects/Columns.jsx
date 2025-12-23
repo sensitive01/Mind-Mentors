@@ -10,7 +10,7 @@ import {
   Typography,
 } from "@mui/material";
 
-import { HistoryIcon } from "lucide-react";
+import { HistoryIcon, Trash2 } from "lucide-react";
 import { toast } from "react-toastify";
 import { makeCallToParent } from "../../../api/service/employee/EmployeeService";
 import { useState } from "react";
@@ -41,7 +41,8 @@ const columns = (
   handleMoveBackToEnquiry,
   handleShowLogs,
   handleShowStatus,
-  handleMessage
+  handleMessage,
+  handleDelete
 ) => {
   // Call state management
   const { activeCall, initiateCall, endCall } = useCallState();
@@ -340,7 +341,7 @@ const columns = (
               display: "flex",
               alignItems: "center",
               gap: 1,
-              color: params.value === "cold" ? "#F59E0B" : "#642b8f",
+              color: params.value === "cold" ? "#3B82F6" : "#F59E0B",
               padding: "4px 12px",
               borderRadius: "20px",
               transition: "all 0.3s ease",
@@ -375,7 +376,7 @@ const columns = (
       renderHeader: () => <strong>Move to Enquiry</strong>,
       width: 150,
       renderCell: (params) => {
-        const isWarmStatus = params.row.enquiryType === "cold"; // Assuming "status" is the field name
+        const isWarmStatus = params.row.enquiryType !== "cold"; // Only allow if status is "cold"
 
         return (
           <button
@@ -383,14 +384,17 @@ const columns = (
               e.stopPropagation();
               if (!isWarmStatus) {
                 handleMoveBackToEnquiry(params.row._id);
+              } else {
+                toast.error("Status needs to be Cold to move back to Enquiry");
               }
             }}
-            disabled={isWarmStatus} // Disable the button if the status is "warm"
+            disabled={isWarmStatus} // Disable the button if the status is "warm" (not cold)
             className={`px-4 py-1 text-sm font-medium text-white rounded-md transition-all duration-300 ease-in-out border-2 border-transparent
-                        ${isWarmStatus
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-primary hover:bg-primary hover:text-white hover:border-primary hover:border-2"
-              }`}
+                        ${
+                          isWarmStatus
+                            ? "bg-gray-400 cursor-not-allowed"
+                            : "bg-primary hover:bg-primary hover:text-white hover:border-primary hover:border-2"
+                        }`}
           >
             {"Move to Enquiry"}
           </button>
@@ -521,6 +525,32 @@ const columns = (
           </Tooltip>
         );
       },
+    },
+    {
+      field: "actions",
+      headerName: "Actions",
+      width: 100,
+      renderCell: (params) => (
+        <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
+          <Tooltip title="Delete Prospect" arrow>
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete(params.row._id);
+              }}
+              sx={{
+                color: "#ff4444",
+                "&:hover": {
+                  backgroundColor: alpha("#ff4444", 0.1),
+                },
+              }}
+              size="small"
+            >
+              <Trash2 size={18} />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      ),
     },
   ];
 };

@@ -299,13 +299,19 @@ const MultipleFileUpload = ({
                       <X className="w-5 h-5 text-gray-500" />
                     </button>
                   </div>
-                  <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
-                    {statusDisplay.progressBar}
-                  </div>
-                  <div className="flex items-center justify-center mt-3">
-                    {statusDisplay.icon}
-                    <span className="ml-2 text-sm">{statusDisplay.text}</span>
-                  </div>
+                  {fileState.status !== "complete" && !fileState.isInitial && (
+                    <>
+                      <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
+                        {statusDisplay.progressBar}
+                      </div>
+                      <div className="flex items-center justify-center mt-3">
+                        {statusDisplay.icon}
+                        <span className="ml-2 text-sm">
+                          {statusDisplay.text}
+                        </span>
+                      </div>
+                    </>
+                  )}
                 </div>
               );
             })}

@@ -1,4 +1,5 @@
 const express = require("express");
+require("dotenv").config();
 const cors = require("cors");
 const path = require("path");
 const cookieParser = require("cookie-parser");
@@ -21,6 +22,7 @@ const bbbClassRouting = require("./routes/bbbClassRouting/bbbClassLinks");
 const bbbClassRoutingNew = require("./routes/bbbClassRouting/bbMMClassLink");
 const hostingerRoutingClass = require("./routes/bbbClassRouting/hostingerBB");
 const kimsDataRoutes = require("./routes/kimsRoutes/kimsRoute")
+const messageKartRoute = require("./routes/messageKartRoute/messageKartRoute")
 
 // ✅ Import socket setup function
 const { initSocket } = require("./utils/socket");
@@ -28,7 +30,7 @@ const globalSerchRouter = require("./routes/employee/opertation-dept/globalSearc
 
 const PORT = 3001;
 const app = express();
-const server = http.createServer(app); // Create HTTP server for Socket.IO
+const server = http.createServer(app);
 
 app.set("trust proxy", true);
 
@@ -49,6 +51,7 @@ const allowedOrigins = [
   "https://bbb.mindmentorz.in",
   "http://app.mindmentorz.in",
   "https://app.mindmentorz.in",
+  "http://localhost:5174"
 ];
 
 const corsOptions = {
@@ -101,11 +104,12 @@ app.use("/api/class-new", bbbClassRoutingNew); // AWS
 app.use("/api/new-class", hostingerRoutingClass); // Hostinger
 
 app.use("/global-search", globalSerchRouter);
+app.use("/callback/cdr", messageKartRoute);
 
 
 
 
-app.use("/kims",kimsDataRoutes)
+app.use("/kims", kimsDataRoutes)
 
 
 

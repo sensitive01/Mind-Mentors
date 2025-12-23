@@ -1,7 +1,9 @@
 const axios = require("axios");
 const { MESSAGING_API, MSGKART_PHONENUMBER_ID, MSGKART_TEMPLATE_NAME } = require("../config/variables/variables");
+console.log( MESSAGING_API, MSGKART_PHONENUMBER_ID, MSGKART_TEMPLATE_NAME)
 
 const sendOTP = async (otp, mobile) => {
+  console.log("sending otp")
   const data = {
     message: {
       messageType: "template",

@@ -1052,7 +1052,7 @@ const AddNewClassTimeTable = () => {
                       <Divider sx={{ my: 1 }} />
                     </Grid>
 
-                    <Grid item xs={12} sm={6} md={3}>
+                    <Grid item xs={12} sm={4} md={4}>
                       <FormControl
                         size="small"
                         fullWidth
@@ -1085,7 +1085,7 @@ const AddNewClassTimeTable = () => {
                       </FormControl>
                     </Grid>
 
-                    <Grid item xs={12} sm={6} md={3}>
+                    <Grid item xs={12} sm={4} md={4}>
                       <FormControl
                         size="small"
                         fullWidth
@@ -1117,7 +1117,7 @@ const AddNewClassTimeTable = () => {
                       </FormControl>
                     </Grid>
 
-                    <Grid item xs={12} sm={4} md={2}>
+                    <Grid item xs={12} sm={4} md={4}>
                       <FormControl
                         size="small"
                         fullWidth
@@ -1165,7 +1165,7 @@ const AddNewClassTimeTable = () => {
                       </FormControl>
                     </Grid>
 
-                    <Grid item xs={12} sm={8} md={4}>
+                    {/* <Grid item xs={12} sm={8} md={4}>
                       <TextField
                         size="small"
                         fullWidth
@@ -1175,7 +1175,7 @@ const AddNewClassTimeTable = () => {
                         variant="outlined"
                         aria-label="Selected date"
                       />
-                    </Grid>
+                    </Grid> */}
 
                     <Grid item xs={12}>
                       <Divider sx={{ my: 1 }} />

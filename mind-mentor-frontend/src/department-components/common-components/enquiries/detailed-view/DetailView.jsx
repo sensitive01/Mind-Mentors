@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Box,
   Grid,
@@ -19,7 +19,7 @@ import {
   Divider,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
-import { Trash2, Plus, X, List } from "lucide-react";
+import { Trash2, Plus, X, List, GripHorizontal } from "lucide-react";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { useNavigate } from "react-router-dom";
@@ -33,6 +33,7 @@ import {
 } from "../../../../utils/formatContacts";
 import EnqRelatedTask from "../../prospects/detailed-view/EnqRelatedTask";
 
+// ... (DetailCard and SectionTitle components remain the same)
 const DetailCard = ({ title, value, isEmail = false, maxLength = 25 }) => {
   const shouldTruncate = value && value.length > maxLength && !isEmail;
   const displayValue = shouldTruncate ? `${value.substring(0, maxLength)}...` : value;
@@ -131,33 +132,46 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
   const [availableLevels, setAvailableLevels] = useState([]);
   const [isFetchingPincode, setIsFetchingPincode] = useState(false);
 
-  // State for task assignment
+  // --- DRAGGABLE DIALOG STATE ---
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
-  const [position, setPosition] = useState({ x: window.innerWidth - 450, y: 100 });
+  const [position, setPosition] = useState({ x: 0, y: 0 }); // Initial position calculated in useEffect
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const taskDialogRef = useRef(null);
 
-  // Drag handlers for the task dialog
-  const handleMouseDown = (e) => {
-    // Don't start dragging if clicking on buttons or interactive elements
-    if (e.target.closest('button') || e.target.closest('input')) {
-      return;
+  // Set initial position centered-ish
+  useEffect(() => {
+    if (isTaskDialogOpen) {
+      const initialX = Math.max(0, window.innerWidth - 900); // 50px from right or fit
+      const initialY = 100;
+      setPosition({ x: initialX, y: initialY });
     }
-    setIsDragging(true);
-    setDragOffset({
-      x: e.clientX - position.x,
-      y: e.clientY - position.y
-    });
-    e.preventDefault();
+  }, [isTaskDialogOpen]);
+
+  const handleMouseDown = (e) => {
+    // Only drag if clicking the header/handle
+    if (e.target.closest('.drag-handle')) {
+      setIsDragging(true);
+      const rect = taskDialogRef.current.getBoundingClientRect();
+      setDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+      e.preventDefault(); // Prevent text selection
+    }
   };
 
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (isDragging) {
-        setPosition({
-          x: e.clientX - dragOffset.x,
-          y: e.clientY - dragOffset.y
-        });
+        let newX = e.clientX - dragOffset.x;
+        let newY = e.clientY - dragOffset.y;
+
+        // Simple bounds checking
+        newX = Math.max(0, Math.min(newX, window.innerWidth - 100));
+        newY = Math.max(0, Math.min(newY, window.innerHeight - 100));
+
+        setPosition({ x: newX, y: newY });
       }
     };
 
@@ -169,7 +183,6 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
     }
-
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
@@ -207,7 +220,6 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
     const fetchData = async () => {
       try {
         const response = await getAllProgrameDataEnquiry();
-        console.log("Response", response);
         if (response.status === 200) {
           setProgramsData(response.data.programs);
         }
@@ -218,9 +230,8 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
     fetchData();
   }, []);
 
-  // Update formData when data prop changes - NORMALIZE THE PROGRAMS FIELD
+  // Update formData when data prop changes
   useEffect(() => {
-    // Normalize the programs field to always use 'programs' (plural)
     const normalizedData = {
       ...data,
       programs: data.programs || data.program || [],
@@ -228,10 +239,9 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
     setFormData(normalizedData);
   }, [data]);
 
-  // Initialize program options when programsData is loaded - FIXED
+  // Initialize program options
   useEffect(() => {
     if (programsData.length > 0) {
-      // Create a flattened list of all unique programs from all centers
       const allPrograms = programsData
         .flatMap((center) => center.programLevels || [])
         .filter(
@@ -240,9 +250,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
         );
 
       setAvailablePrograms(allPrograms);
-      console.log("Available programs set:", allPrograms);
 
-      // If there are existing programs in formData, find levels for the first one
       if (formData.programs && formData.programs.length > 0) {
         const firstProgram = formData.programs[0];
         const programData = allPrograms.find(
@@ -285,14 +293,12 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
   const handlePincodeChange = (e) => {
     const value = e.target.value;
     handleInputChange("pincode", value);
-
-    // Only fetch if pincode is 6 digits
     if (value.length === 6) {
       fetchPincodeDetails(value);
     }
   };
 
-  // Handle center selection and update available programs
+  // Handle center selection
   const handleCenterChange = (centerId) => {
     setSelectedCenter(centerId);
     const selectedCenterData = programsData.find(
@@ -301,10 +307,8 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
 
     if (selectedCenterData) {
       setAvailablePrograms(selectedCenterData.programLevels || []);
-      // Reset levels when center changes
       setAvailableLevels([]);
 
-      // Update programs in formData to match the new center's programs
       const updatedPrograms =
         formData.programs?.map((program) => {
           const matchingProgram = selectedCenterData.programLevels.find(
@@ -321,7 +325,6 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
 
       handleInputChange("programs", updatedPrograms);
     } else {
-      // If no center selected, show all programs
       const allPrograms = programsData
         .flatMap((center) => center.programLevels || [])
         .filter(
@@ -333,14 +336,12 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
     }
   };
 
-  // Updated handleProgramChange function
+  // Updated handleProgramChange
   const handleProgramChange = (programName, programIndex) => {
-    // Find the program data from availablePrograms
     let selectedProgramData = availablePrograms.find(
       (prog) => prog.program === programName
     );
 
-    // If not found in availablePrograms, search across all centers
     if (!selectedProgramData) {
       for (const center of programsData) {
         selectedProgramData = center.programLevels?.find(
@@ -350,16 +351,13 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
       }
     }
 
-    // Update available levels for this program
     if (selectedProgramData) {
       setAvailableLevels(selectedProgramData.levels || []);
     }
 
-    // Update the program in formData
     const updatedPrograms = [...(formData.programs || [])];
     const existingLevel = updatedPrograms[programIndex]?.level;
 
-    // Keep existing level if it's valid for the new program, otherwise use first available level
     const validLevel = selectedProgramData?.levels?.includes(existingLevel)
       ? existingLevel
       : selectedProgramData?.levels?.[0] || "";
@@ -377,14 +375,12 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
     setIsEditOpen(false);
   };
 
-  // Enhanced input change handler for names
+  // Enhanced input change handler
   const handleInputChange = (field, value) => {
     if (field === "parentName") {
       const names = value.trim().split(" ");
       const firstName = names[0] || "";
       const lastName = names.slice(1).join(" ");
-
-      // Update both combined and separate fields
       setFormData((prev) => ({
         ...prev,
         parentName: value,
@@ -395,8 +391,6 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
       const names = value.trim().split(" ");
       const firstName = names[0] || "";
       const lastName = names.slice(1).join(" ");
-
-      // Update both combined and separate fields
       setFormData((prev) => ({
         ...prev,
         kidName: value,
@@ -410,7 +404,6 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
         const newLastName =
           field === "parentLastName" ? value : prev.parentLastName;
         const combinedName = getCombinedName(newFirstName, newLastName);
-
         return {
           ...prev,
           [field]: value,
@@ -423,7 +416,6 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
           field === "kidFirstName" ? value : prev.kidFirstName;
         const newLastName = field === "kidLastName" ? value : prev.kidLastName;
         const combinedName = getCombinedName(newFirstName, newLastName);
-
         return {
           ...prev,
           [field]: value,
@@ -436,9 +428,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
   };
 
   const handleSave = async () => {
-    console.log("Updated data:", formData);
     const response = await updateEnquiry(formData, empId);
-    console.log("Response0", response);
     if (response.status === 200) {
       onEditSave(response.data);
     }
@@ -452,7 +442,6 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
       {/* Main Content */}
       <Box sx={{ height: "100%", overflowY: "auto", p: 3 }}>
         <Grid container spacing={4}>
-          {/* Parent Information */}
           <Grid item xs={12}>
             <SectionTitle>Parent Information</SectionTitle>
             <Grid container spacing={3}>
@@ -484,7 +473,6 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
             </Grid>
           </Grid>
 
-          {/* Kid Information */}
           <Grid item xs={12}>
             <SectionTitle>Kid Information</SectionTitle>
             <Grid container spacing={3}>
@@ -509,7 +497,6 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
             </Grid>
           </Grid>
 
-          {/* Programs - FIXED */}
           <Grid item xs={12}>
             <SectionTitle>Program Details</SectionTitle>
             <Grid container spacing={3}>
@@ -541,7 +528,6 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
             </Grid>
           </Grid>
 
-          {/* Messages and Notes */}
           <Grid item xs={12}>
             <SectionTitle>Remarks & Notes</SectionTitle>
             <Grid container spacing={3}>
@@ -666,13 +652,13 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
         </DialogTitle>
 
         <DialogContent sx={{ p: 3 }}>
+          {/* ... (Edit form content similar to before) ... */}
           <Grid container spacing={3}>
             <Grid item xs={12}>
               <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
                 Parent Information
               </Typography>
               <Grid container spacing={2}>
-                {/* Combined Parent Name Field */}
                 <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth
@@ -760,7 +746,6 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                 Kid Information
               </Typography>
               <Grid container spacing={2}>
-                {/* Combined Kid Name Field */}
                 <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth
@@ -803,17 +788,22 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                     label="Pincode"
                     value={formData.pincode || ""}
                     onChange={handlePincodeChange}
-                    disabled={isFetchingPincode}
-                    helperText={isFetchingPincode ? "Fetching location..." : ""}
+                    InputProps={{
+                      endAdornment: isFetchingPincode && (
+                        <Typography variant="caption" color="textSecondary">
+                          ...
+                        </Typography>
+                      ),
+                    }}
                   />
                 </Grid>
-
                 <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth
                     label="City"
                     value={formData.city || ""}
                     onChange={(e) => handleInputChange("city", e.target.value)}
+                    InputLabelProps={{ shrink: true }}
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
@@ -822,6 +812,7 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                     label="State"
                     value={formData.state || ""}
                     onChange={(e) => handleInputChange("state", e.target.value)}
+                    InputLabelProps={{ shrink: true }}
                   />
                 </Grid>
               </Grid>
@@ -832,198 +823,97 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                 variant="subtitle1"
                 sx={{ mb: 2, mt: 2, fontWeight: 600 }}
               >
-                Center Selection (Optional)
+                Program Selection
               </Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth>
-                    <InputLabel
-                      id="center-select-label"
-                      sx={{ backgroundColor: "white", px: 0.5 }}
-                    >
-                      Select Center
-                    </InputLabel>
-                    <Select
-                      labelId="center-select-label"
-                      value={selectedCenter}
-                      onChange={(e) => handleCenterChange(e.target.value)}
-                      label="Select Center"
-                    >
-                      <MenuItem value="">
-                        <em>All Centers</em>
-                      </MenuItem>
-                      {programsData.map((center) => (
-                        <MenuItem key={center._id} value={center._id}>
-                          {center.centerName} ({center.centerType})
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-              </Grid>
-            </Grid>
 
-            {/* PROGRAMS SECTION - COMPLETELY FIXED */}
-            <Grid item xs={12}>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  mb: 2,
-                  mt: 2,
-                }}
-              >
-                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                  Programs
-                </Typography>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<Plus size={16} />}
-                  onClick={() => {
-                    const updatedPrograms = [
-                      ...(formData.programs || []),
-                      { program: "", level: "" },
-                    ];
-                    handleInputChange("programs", updatedPrograms);
-                  }}
-                >
-                  Add Program
-                </Button>
+              {/* Center Selection - Optional based on design */}
+              <Box sx={{ mb: 2 }}>
+                <FormControl fullWidth>
+                  <InputLabel>Filter by Center (Optional)</InputLabel>
+                  <Select
+                    value={selectedCenter}
+                    onChange={(e) => handleCenterChange(e.target.value)}
+                    label="Filter by Center (Optional)"
+                  >
+                    <MenuItem value="">All Centers</MenuItem>
+                    {programsData.map((center) => (
+                      <MenuItem key={center._id} value={center._id}>{center.centerName}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </Box>
 
-              {/* Show message if no programs data loaded */}
-              {programsData.length === 0 && (
-                <Box
-                  sx={{
-                    p: 3,
-                    borderRadius: 2,
-                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
-                    textAlign: "center",
-                    mb: 2,
-                  }}
+              {(formData.programs || []).map((programItem, index) => (
+                <Card
+                  key={index}
+                  variant="outlined"
+                  sx={{ p: 2, mb: 2, bgcolor: "#f9f9f9" }}
                 >
-                  <Typography variant="body2" color="text.secondary">
-                    Loading programs...
-                  </Typography>
-                </Box>
-              )}
-
-              {/* Show existing programs or empty state */}
-              {formData.programs && formData.programs.length > 0 ? (
-                formData.programs.map((program, index) => {
-                  // Find current program data to get available levels
-                  let currentProgramData = availablePrograms.find(
-                    (p) => p.program === program.program
-                  );
-
-                  // If not found in availablePrograms, search all centers
-                  if (!currentProgramData && programsData.length > 0) {
-                    for (const center of programsData) {
-                      currentProgramData = center.programLevels?.find(
-                        (p) => p.program === program.program
-                      );
-                      if (currentProgramData) break;
-                    }
-                  }
-
-                  const levelsForCurrentProgram = currentProgramData?.levels || [];
-
-                  return (
-                    <Card key={index} sx={{ mb: 2, p: 2 }}>
-                      <Grid container spacing={2} alignItems="center">
-                        <Grid item xs={12} md={4}>
-                          <FormControl fullWidth>
-                            <InputLabel
-                              id={`program-select-label-${index}`}
-                              sx={{ backgroundColor: "white", px: 0.5 }}
-                            >
-                              Program Name
-                            </InputLabel>
-                            <Select
-                              labelId={`program-select-label-${index}`}
-                              value={program.program || ""}
-                              onChange={(e) =>
-                                handleProgramChange(e.target.value, index)
-                              }
-                              label="Program Name"
-                              disabled={availablePrograms.length === 0}
-                            >
-                              {availablePrograms.length > 0 ? (
-                                availablePrograms.map((prog, progIndex) => (
-                                  <MenuItem key={progIndex} value={prog.program}>
-                                    {prog.program}
-                                  </MenuItem>
-                                ))
-                              ) : (
-                                <MenuItem value="">No programs available</MenuItem>
-                              )}
-                            </Select>
-                          </FormControl>
-                        </Grid>
-                        <Grid item xs={12} md={4}>
-                          <FormControl fullWidth>
-                            <InputLabel
-                              id={`level-select-label-${index}`}
-                              sx={{ backgroundColor: "white", px: 0.5 }}
-                            >
-                              Level
-                            </InputLabel>
-                            <Select
-                              labelId={`level-select-label-${index}`}
-                              value={program.level || ""}
-                              onChange={(e) => {
-                                const updatedPrograms = [...formData.programs];
-                                updatedPrograms[index].level = e.target.value;
-                                handleInputChange("programs", updatedPrograms);
-                              }}
-                              label="Level"
-                              disabled={!program.program || levelsForCurrentProgram.length === 0}
-                            >
-                              {levelsForCurrentProgram.length > 0 ? (
-                                levelsForCurrentProgram.map((level, levelIndex) => (
-                                  <MenuItem key={levelIndex} value={level}>
-                                    {level}
-                                  </MenuItem>
-                                ))
-                              ) : (
-                                <MenuItem value="">No levels available</MenuItem>
-                              )}
-                            </Select>
-                          </FormControl>
-                        </Grid>
-                        <Grid item xs={12} md={2}>
-                          <IconButton
-                            color="error"
-                            onClick={() => {
-                              const updatedPrograms = formData.programs.filter(
-                                (_, i) => i !== index
-                              );
-                              handleInputChange("programs", updatedPrograms);
-                            }}
-                          >
-                            <Trash2 size={20} />
-                          </IconButton>
-                        </Grid>
-                      </Grid>
-                    </Card>
-                  );
-                })
-              ) : (
-                <Box
-                  sx={{
-                    p: 3,
-                    borderRadius: 2,
-                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
-                    textAlign: "center",
-                  }}
-                >
-                  <Typography variant="body2" color="text.secondary">
-                    No programs added yet. Click "Add Program" to get started.
-                  </Typography>
-                </Box>
-              )}
+                  <Grid container spacing={2} alignItems="center">
+                    <Grid item xs={12} md={5}>
+                      <FormControl fullWidth size="small">
+                        <InputLabel>Program</InputLabel>
+                        <Select
+                          value={programItem.program || ""}
+                          onChange={(e) =>
+                            handleProgramChange(e.target.value, index)
+                          }
+                          label="Program"
+                        >
+                          {availablePrograms.map((p, i) => (
+                            <MenuItem key={i} value={p.program}>
+                              {p.program}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={12} md={5}>
+                      <FormControl fullWidth size="small">
+                        <InputLabel>Level</InputLabel>
+                        <Select
+                          value={programItem.level || ""}
+                          onChange={(e) => {
+                            const updatedPrograms = [...formData.programs];
+                            updatedPrograms[index].level = e.target.value;
+                            handleInputChange("programs", updatedPrograms);
+                          }}
+                          label="Level"
+                        >
+                          {availableLevels.map((lvl, i) => (
+                            <MenuItem key={i} value={lvl}>{lvl}</MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={12} md={2} textAlign="right">
+                      <IconButton
+                        color="error"
+                        onClick={() => {
+                          const updatedPrograms = formData.programs.filter(
+                            (_, i) => i !== index
+                          );
+                          handleInputChange("programs", updatedPrograms);
+                        }}
+                      >
+                        <Trash2 size={20} />
+                      </IconButton>
+                    </Grid>
+                  </Grid>
+                </Card>
+              ))}
+              <Button
+                startIcon={<Plus size={18} />}
+                variant="outlined"
+                onClick={() => {
+                  handleInputChange("programs", [
+                    ...(formData.programs || []),
+                    { program: "", level: "" }
+                  ])
+                }}
+              >
+                Add Program
+              </Button>
             </Grid>
 
             <Grid item xs={12}>
@@ -1068,101 +958,85 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
         </DialogActions>
       </Dialog>
 
-      {/* Draggable Task Dialog */}
+      {/* RESTORED CUSTOM DRAGGABLE TASK DIALOG */}
       {isTaskDialogOpen && (
         <Box
-          className="draggable-dialog"
+          ref={taskDialogRef}
           sx={{
             position: 'fixed',
             top: position.y,
             left: position.x,
             width: '850px',
-            maxWidth: '90vw',
+            maxWidth: '95vw',
             height: '85vh',
-            maxHeight: '850px',
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
-            zIndex: 1400,
+            maxHeight: '800px',
+            bgcolor: 'background.paper',
+            borderRadius: 3,
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            zIndex: 1300,
             display: 'flex',
             flexDirection: 'column',
-            border: '1px solid #e0e0e0',
-            overflow: 'hidden',
+            border: '1px solid',
+            borderColor: 'divider',
+            transition: isDragging ? 'none' : 'box-shadow 0.3s ease',
           }}
         >
-          {/* Drag handle with buttons */}
+          {/* Draggable Header */}
           <Box
             className="drag-handle"
             onMouseDown={handleMouseDown}
             sx={{
-              padding: '14px 20px',
-              cursor: 'move',
-              backgroundColor: '#f8f9fa',
-              borderBottom: '2px solid #e0e0e0',
+              p: 2,
+              borderBottom: '1px solid',
+              borderColor: 'divider',
               display: 'flex',
-              justifyContent: 'space-between',
               alignItems: 'center',
-              userSelect: 'none',
-              '&:active': {
-                cursor: 'grabbing'
-              }
+              justifyContent: 'space-between',
+              cursor: isDragging ? 'grabbing' : 'grab',
+              bgcolor: 'grey.50',
+              borderTopLeftRadius: 12,
+              borderTopRightRadius: 12,
+              userSelect: 'none'
             }}
           >
-            <Typography variant="h6" sx={{ fontWeight: 600, color: '#2c3e50', fontSize: '1.1rem' }}>
-              Assign New Task
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <GripHorizontal size={20} className="text-gray-400" />
+              <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600 }}>
+                Assign New Task
+              </Typography>
+            </Box>
 
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <button
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                size="small"
+                variant="outlined"
+                color="primary"
+                startIcon={<List size={14} />}
                 onClick={(e) => {
-                  e.stopPropagation();
+                  e.stopPropagation(); // Prevent drag start
                   navigate(`/${department}/department/list-task-assigned-me`);
                 }}
-                onMouseDown={(e) => e.stopPropagation()}
-                className="flex items-center gap-2 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium shadow-sm"
-                style={{ cursor: 'pointer' }}
+                onMouseDown={(e) => e.stopPropagation()} // Prevent drag start
+                sx={{ textTransform: 'none' }}
               >
-                <List size={16} />
                 View All Tasks
-              </button>
-
+              </Button>
               <IconButton
-                onClick={() => setIsTaskDialogOpen(false)}
-                onMouseDown={(e) => e.stopPropagation()}
                 size="small"
-                sx={{
-                  color: '#6c757d',
-                  '&:hover': {
-                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
-                    color: '#e74c3c'
-                  }
-                }}
+                onClick={() => setIsTaskDialogOpen(false)}
+                onMouseDown={(e) => e.stopPropagation()} // Prevent drag start
               >
                 <X size={20} />
               </IconButton>
             </Box>
           </Box>
 
-          <Divider sx={{ m: 0 }} />
-
+          {/* Scrollable Content Area */}
           <Box sx={{
-            p: 3,
-            flex: 1,
-            overflow: 'auto',
-            backgroundColor: '#fafbfc',
-            '&::-webkit-scrollbar': {
-              width: '8px',
-            },
-            '&::-webkit-scrollbar-track': {
-              background: '#f1f1f1',
-            },
-            '&::-webkit-scrollbar-thumb': {
-              background: '#c1c1c1',
-              borderRadius: '4px',
-            },
-            '&::-webkit-scrollbar-thumb:hover': {
-              background: '#a8a8a8',
-            }
+            flexGrow: 1,
+            overflowY: 'auto',
+            minHeight: 0, // Critical for flexbox scrolling
+            p: 0
           }}>
             <EnqRelatedTask
               id={data?._id}

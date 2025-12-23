@@ -1042,8 +1042,8 @@ export const addNewTournamentData = async (tournamentData) => {
   return response;
 };
 
-export const getSuperAdminDashboard = async () => {
-  const response = await userInstance.get(`/get-super-admin-dashboard-data`);
+export const getSuperAdminDashboard = async (filter = "today") => {
+  const response = await userInstance.get(`/get-super-admin-dashboard-data?filter=${filter}`);
   return response;
 };
 

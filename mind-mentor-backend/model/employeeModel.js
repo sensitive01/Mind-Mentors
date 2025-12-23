@@ -13,11 +13,22 @@ const employeeSchema = new mongoose.Schema(
     address: { type: String },
     gender: { type: String },
     isPasswordChanged: { type: Boolean, default: false },
-    centerName: { type: String, default: null },
-    centerId: { type: String, default: null },
-    modes: [{ type: String }], 
+    centers: [{
+      centerId: { type: String },
+      centerName: { type: String }
+    }],
+    modes: [{ type: String }],
     perHourRate: { type: Number, default: 0 },
     employmentType: { type: String, default: null },
+    dob: { type: Date },
+    doj: { type: Date },
+    bloodGroup: { type: String },
+    bankDetails: {
+      accountNumber: { type: String },
+      panCard: { type: String }, // Storing as string (file path if uploaded, or ID string)
+      idCard: { type: String }, // Storing as string (file path)
+      emergencyContact: { type: String }
+    }
   },
   {
     timestamps: true,

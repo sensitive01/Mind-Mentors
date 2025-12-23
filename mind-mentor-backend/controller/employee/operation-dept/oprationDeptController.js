@@ -25,6 +25,7 @@ const onlineClassPackage = require("../../../model/class/onlineClassPackage");
 const offlineClassPackage = require("../../../model/class/offlineClassPackage");
 const hybridClassPackage = require("../../../model/class/hybridClassPackage");
 const kitPackages = require("../../../model/class/kitPrice");
+const msgKartCallingModel = require("../../../model/msgkart/msgKartCallingModel");
 
 const relBtwKidParent = require("../../../model/kimsdatabase/relBtwParentKid");
 const kimsParentDataBase = require("../../../model/kimsdatabase/basicParentDataKIMS");
@@ -609,19 +610,19 @@ const getAllEnquiries = async (req, res) => {
     const limit = Math.min(Math.max(parseInt(req.query.limit) || 15, 1), 100); // Default 15, max 100
     const skip = (page - 1) * limit;
 
-    // 1️⃣ Get total count of all enquiries
-    const total = await OperationDept.countDocuments({
-      enquiryField: "enquiryList"
-    });
-
-    // 2️⃣ Fetch paginated enquiries
-    const enquiries = await OperationDept.find({
-      enquiryField: "enquiryList"
-    })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean(); // Convert to plain JavaScript objects
+    // Run count and find in parallel
+    const [total, enquiries] = await Promise.all([
+      OperationDept.countDocuments({
+        enquiryField: "enquiryList"
+      }),
+      OperationDept.find({
+        enquiryField: "enquiryList"
+      })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean()
+    ]);
 
     // Format dates
     const formatDate = (date) => {
@@ -671,21 +672,21 @@ const getProspectsData = async (req, res) => {
     const limit = Math.min(Math.max(parseInt(req.query.limit) || 15, 1), 100);
     const skip = (page - 1) * limit;
 
-    // Get total count of all prospects
-    const total = await OperationDept.countDocuments({
-      enquiryField: "prospects",
-      paymentStatus: "Pending"
-    });
-
-    // Fetch paginated prospects
-    const prospects = await OperationDept.find({
-      enquiryField: "prospects",
-      paymentStatus: "Pending"
-    })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
+    // Run count and find in parallel
+    const [total, prospects] = await Promise.all([
+      OperationDept.countDocuments({
+        enquiryField: "prospects",
+        paymentStatus: "Pending"
+      }),
+      OperationDept.find({
+        enquiryField: "prospects",
+        paymentStatus: "Pending"
+      })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean()
+    ]);
 
     // Format dates
     const formatDate = (date) => {
@@ -804,9 +805,9 @@ const deleteEnquiry = async (req, res) => {
     const { id } = req.params;
     const deletedEntry = await OperationDept.findByIdAndDelete(id);
     if (!deletedEntry) {
-      return res.status(404).json({ message: "Enquiry not found" });
+      return res.status(404).json({ success: false, message: "Enquiry not found" });
     }
-    res.status(200).json({ message: "Enquiry deleted successfully" });
+    res.status(200).json({ success: true, message: "Enquiry deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error deleting data" });
   }
@@ -3637,23 +3638,34 @@ const updatePaymentData = async (req, res) => {
       .json({ message: "Internal server error", error: err.message });
   }
 };
-
 const makeaCallToParent = async (req, res) => {
+  const { mobile } = req.body;
+
   try {
-    const { mobile } = req.body;
+    const response = await fetch(`${CALLING_API}=${mobile}`, { method: "POST" });
+    const result = await response.json();
 
-    const response = await fetch(`${CALLING_API}=${mobile}`, {
-      method: "POST",
-    });
+    if (result?.data?.transactionId) {
+      await msgKartCallingModel.create({
+        parentMobile: mobile,
+        transactionId: result.data.transactionId,
+        status: "INITIATED"
+      });
+    }
 
-    const data = await response.json();
-    res.json(data);
-    // res.status(200).json()
+    return res.json(result);
   } catch (error) {
-    console.error("Error calling external API:", error);
-    res.status(500).json({ success: false, message: error.message });
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Error calling external API",
+      error: error.message
+    });
   }
 };
+
+
+
 
 const getEmployeeData = async (req, res) => {
   try {

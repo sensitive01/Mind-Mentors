@@ -344,7 +344,7 @@ const ProgramListing = () => {
         const response = await adminAddNewProgramme(programData);
         console.log("Add response:", response);
 
-        if (response.status === 201||response.status === 200) {
+        if (response.status === 201 || response.status === 200) {
           handleClose();
 
           // Refresh the data immediately
@@ -837,6 +837,7 @@ const ProgramListing = () => {
         autoHideDuration={6000}
         onClose={handleToastClose}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        sx={{ mt: 10 }}
       >
         <Alert
           onClose={handleToastClose}

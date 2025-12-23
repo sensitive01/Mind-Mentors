@@ -94,7 +94,7 @@ const parentLogin = async (req, res) => {
     const rawMobile = req.body.mobile;
     const mobile = rawMobile.replace(/^\+/, "");
 
-    console.log("mobile",mobile)
+    console.log("mobile sent",mobile)
 
 
     

@@ -636,51 +636,53 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
         />
       </Box>
 
-      {/* Draggable Task Dialog */}
+      {/* RESTORED CUSTOM DRAGGABLE TASK DIALOG */}
       {isTaskDialogOpen && (
         <Box
-          className="draggable-dialog"
           sx={{
             position: 'fixed',
             top: position.y,
             left: position.x,
             width: '850px',
-            maxWidth: '90vw',
+            maxWidth: '95vw',
             height: '85vh',
-            maxHeight: '850px',
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
-            zIndex: 1400,
+            maxHeight: '800px',
+            bgcolor: 'background.paper',
+            borderRadius: 3,
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            zIndex: 1300,
             display: 'flex',
             flexDirection: 'column',
-            border: '1px solid #e0e0e0',
-            overflow: 'hidden',
+            border: '1px solid',
+            borderColor: 'divider',
+            transition: isDragging ? 'none' : 'box-shadow 0.3s ease',
           }}
         >
-          {/* Drag handle with buttons */}
+          {/* Draggable Header */}
           <Box
             className="drag-handle"
             onMouseDown={handleMouseDown}
             sx={{
-              padding: '14px 20px',
-              cursor: 'move',
-              backgroundColor: '#f8f9fa',
-              borderBottom: '2px solid #e0e0e0',
+              p: 2,
+              borderBottom: '1px solid',
+              borderColor: 'divider',
               display: 'flex',
-              justifyContent: 'space-between',
               alignItems: 'center',
-              userSelect: 'none',
-              '&:active': {
-                cursor: 'grabbing'
-              }
+              justifyContent: 'space-between',
+              cursor: isDragging ? 'grabbing' : 'grab',
+              bgcolor: 'grey.50',
+              borderTopLeftRadius: 12,
+              borderTopRightRadius: 12,
+              userSelect: 'none'
             }}
           >
-            <Typography variant="h6" sx={{ fontWeight: 600, color: '#2c3e50', fontSize: '1.1rem' }}>
-              Assign New Task
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600 }}>
+                Assign New Task
+              </Typography>
+            </Box>
 
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Box sx={{ display: 'flex', gap: 1 }}>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -688,49 +690,26 @@ const DetailView = ({ data, showEdit, onEditClose, onEditSave }) => {
                 }}
                 onMouseDown={(e) => e.stopPropagation()}
                 className="flex items-center gap-2 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium shadow-sm"
-                style={{ cursor: 'pointer' }}
               >
-                <List size={16} />
+                <List size={14} />
                 View All Tasks
               </button>
-
               <IconButton
+                size="small"
                 onClick={() => setIsTaskDialogOpen(false)}
                 onMouseDown={(e) => e.stopPropagation()}
-                size="small"
-                sx={{
-                  color: '#6c757d',
-                  '&:hover': {
-                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
-                    color: '#e74c3c'
-                  }
-                }}
               >
                 <X size={20} />
               </IconButton>
             </Box>
           </Box>
 
-          <Divider sx={{ m: 0 }} />
-
+          {/* Scrollable Content Area */}
           <Box sx={{
-            p: 3,
-            flex: 1,
-            overflow: 'auto',
-            backgroundColor: '#fafbfc',
-            '&::-webkit-scrollbar': {
-              width: '8px',
-            },
-            '&::-webkit-scrollbar-track': {
-              background: '#f1f1f1',
-            },
-            '&::-webkit-scrollbar-thumb': {
-              background: '#c1c1c1',
-              borderRadius: '4px',
-            },
-            '&::-webkit-scrollbar-thumb:hover': {
-              background: '#a8a8a8',
-            }
+            flexGrow: 1,
+            overflowY: 'auto',
+            minHeight: 0,
+            p: 0
           }}>
             <EnqRelatedTask
               id={displayData?._id}

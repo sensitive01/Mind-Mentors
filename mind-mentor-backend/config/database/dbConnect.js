@@ -5,7 +5,7 @@ const dbConnect = () => {
 
   mongoose
     .connect(
-      "mongodb+srv://MindMentorz:3jQhR36LMPNNznsN@cluster0.f5db1.mongodb.net/mindmentors",
+      process.env.MONGO_URI,
       {
         serverSelectionTimeoutMS: 30000,
         socketTimeoutMS: 45000,

@@ -2,10 +2,10 @@ import { serviceInstance } from "../../axios/serviceInstance";
 
 
 
-export const sheduleTimeTable = async (empId,shedules) => {
+export const sheduleTimeTable = async (empId, shedules) => {
   const response = await serviceInstance.post(
-    `/service/save-class-shedule/${empId}`,{shedules},
-    
+    `/service/save-class-shedule/${empId}`, { shedules },
+
   );
   return response;
 };
@@ -14,7 +14,7 @@ export const sheduleTimeTable = async (empId,shedules) => {
 export const getClassShedules = async (department) => {
   const response = await serviceInstance.get(
     `/service/get-class-shedule?department=${department}`,
-    
+
   );
   return response.data.classData;
 };
@@ -22,7 +22,7 @@ export const getClassShedules = async (department) => {
 export const centerClassTimeTable = async (empId) => {
   const response = await serviceInstance.get(
     `/service/get-center-class-shedule?empId=${empId}`,
-    
+
   );
   return response.data.classData;
 };
@@ -30,7 +30,7 @@ export const centerClassTimeTable = async (empId) => {
 export const fetchCoachData = async () => {
   const response = await serviceInstance.get(
     `/service/get-coach-data`,
-    
+
   );
   return response;
 };
@@ -40,8 +40,8 @@ export const fetchCoachData = async () => {
 
 export const saveAvailabletime = async (data) => {
   const response = await serviceInstance.post(
-    `/service/save-coach-availabledays`,{data}
-    
+    `/service/save-coach-availabledays`, { data }
+
   );
   return response;
 };
@@ -50,7 +50,7 @@ export const saveAvailabletime = async (data) => {
 export const getCoachAvailabilityData = async () => {
   const response = await serviceInstance.get(
     `/service/get-coach-availabledata-table`
-    
+
   );
   return response;
 };
@@ -59,20 +59,20 @@ export const getCoachAvailabilityData = async () => {
 export const getClassandStudentData = async (id) => {
   const response = await serviceInstance.get(
     `/service/get-class-student-data/${id}`
-    
+
   );
   return response;
 };
 
 
-export const saveClassDetails = async (classId,students,empId) => {
-  const response = await serviceInstance.post(`/service/save-class-data/${empId}`,{classId,students});
+export const saveClassDetails = async (classId, students, empId) => {
+  const response = await serviceInstance.post(`/service/save-class-data/${empId}`, { classId, students });
   return response;
 };
 
 
-export const updateCoachAvailability = async (id,data) => {
-  const response = await serviceInstance.put(`/service/edit-coach-availability/${id}`,{data});
+export const updateCoachAvailability = async (id, data) => {
+  const response = await serviceInstance.put(`/service/edit-coach-availability/${id}`, { data });
   return response;
 };
 
@@ -87,9 +87,9 @@ export const deleteCoachAvailability = async (id) => {
  * @param {number} limit - Number of records per page (default: 15)
  * @returns {Promise} Paginated response with data and total count
  */
-export const fechAllActiveEnrolledEnquiry = async (page = 1, limit = 15) => {
+export const fechAllActiveEnrolledEnquiry = async (page = 1, limit = 15, status = "Active") => {
   const response = await serviceInstance.get(
-    `/service/get-active-enquiry-data?page=${page}&limit=${limit}`
+    `/service/get-active-enquiry-data?page=${page}&limit=${limit}&status=${status}`
   );
   return {
     data: response.data.data || [],
@@ -109,7 +109,7 @@ export const getActiveKidData = async (enqId) => {
 
 
 export const assignWholeClass = async (submissionData) => {
-  const response = await serviceInstance.post(`/service/assign-whole-class`,{submissionData});
+  const response = await serviceInstance.post(`/service/assign-whole-class`, { submissionData });
   return response.data;
 };
 
@@ -130,13 +130,13 @@ export const getLastClassData = async (classId) => {
   return response;
 };
 
-export const pauseTheClass = async (enqId,updatedData,pauseRemarks,classId,pauseStartDate,pauseEndDate,empId) => {
-  const response = await serviceInstance.post(`/service/pause-class-temporary/${enqId}/${classId}/${empId}`,{updatedData,pauseRemarks,pauseStartDate,pauseEndDate});
+export const pauseTheClass = async (enqId, updatedData, pauseRemarks, classId, pauseStartDate, pauseEndDate, empId) => {
+  const response = await serviceInstance.post(`/service/pause-class-temporary/${enqId}/${classId}/${empId}`, { updatedData, pauseRemarks, pauseStartDate, pauseEndDate });
   return response;
 };
 
-export const resumeTheClass = async (enqId,updatedData,classId,empId) => {
-  const response = await serviceInstance.post(`/service/resume-the-class/${enqId}/${classId}/${empId}`,{updatedData});
+export const resumeTheClass = async (enqId, updatedData, classId, empId) => {
+  const response = await serviceInstance.post(`/service/resume-the-class/${enqId}/${classId}/${empId}`, { updatedData });
   return response;
 };
 
@@ -145,7 +145,7 @@ export const getClassKidData = async (classId) => {
   return response;
 };
 
-export const addExtraClassToKid = async (classId,data) => {
-  const response = await serviceInstance.put(`/service/add-extra-class-to-kid/${classId}`,{data});
+export const addExtraClassToKid = async (classId, data) => {
+  const response = await serviceInstance.put(`/service/add-extra-class-to-kid/${classId}`, { data });
   return response;
 };

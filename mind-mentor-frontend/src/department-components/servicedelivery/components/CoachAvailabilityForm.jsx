@@ -41,7 +41,7 @@ const days = [
 const generateTimeSlots = () => {
   const slots = [];
   for (let hour = 0; hour < 24; hour++) {
-    for (let minute of [0, 15, 30, 45]) {
+    for (let minute of [0, 30]) {
       const formattedHour = hour.toString().padStart(2, "0");
       const formattedMinute = minute.toString().padStart(2, "0");
       slots.push(`${formattedHour}:${formattedMinute}`);
@@ -88,7 +88,7 @@ const CoachAvailabilityForm = () => {
       coachName: "",
       days: [],
       program: "",
-      level: "",
+      level: [],
       fromTime: "",
       toTime: "",
     },
@@ -147,7 +147,6 @@ const CoachAvailabilityForm = () => {
       if (
         !current.coachName ||
         !current.program ||
-        !current.level ||
         current.days.length === 0 ||
         !current.fromTime ||
         !current.toTime
@@ -192,17 +191,23 @@ const CoachAvailabilityForm = () => {
             );
 
             // Different error messages based on whether it's same program/level or different
-            const isSameProgramLevel =
-              current.program === other.program &&
-              current.level === other.level;
+            // For levels (array), check if they share any common levels/programs
+            const isSameProgram = current.program === other.program;
+            // If array, join for display
+            const level1Str = Array.isArray(current.level)
+              ? current.level.join(", ")
+              : current.level;
+            const level2Str = Array.isArray(other.level)
+              ? other.level.join(", ")
+              : other.level;
 
             let errorType, errorMessage;
 
-            if (isSameProgramLevel) {
+            if (isSameProgram) {
               errorType = "duplicate_schedule";
               errorMessage = `Duplicate schedule detected: ${coachName} is already scheduled for ${
                 current.program
-              } (${current.level}) on ${commonDays.join(
+              } (${level1Str}) on ${commonDays.join(
                 ", "
               )} from ${convertTo12Hour(current.fromTime)} - ${convertTo12Hour(
                 current.toTime
@@ -212,10 +217,10 @@ const CoachAvailabilityForm = () => {
               errorMessage = `Time conflict detected: ${coachName} cannot teach multiple programs at the same time. On ${commonDays.join(
                 ", "
               )}, there's a conflict between:
-              • ${current.program} (${current.level}): ${convertTo12Hour(
+              • ${current.program} (${level1Str}): ${convertTo12Hour(
                 current.fromTime
               )} - ${convertTo12Hour(current.toTime)}
-              • ${other.program} (${other.level}): ${convertTo12Hour(
+              • ${other.program} (${level2Str}): ${convertTo12Hour(
                 other.fromTime
               )} - ${convertTo12Hour(other.toTime)}
               A coach can only teach one program/level at a particular time on a particular day.`;
@@ -273,7 +278,7 @@ const CoachAvailabilityForm = () => {
     }
 
     if (field === "program") {
-      newAvailabilities[index].level = "";
+      newAvailabilities[index].level = [];
     }
 
     setAvailabilities(newAvailabilities);
@@ -306,7 +311,7 @@ const CoachAvailabilityForm = () => {
         coachName: selectedCoach,
         days: [],
         program: "",
-        level: "",
+        level: [],
         fromTime: "",
         toTime: "",
       },
@@ -340,14 +345,17 @@ const CoachAvailabilityForm = () => {
 
     try {
       const formattedAvailabilities = availabilities.flatMap((availability) =>
-        availability.days.map((day) => ({
-          coachName: availability.coachName,
-          day: day,
-          program: availability.program,
-          level: availability.level,
-          fromTime: availability.fromTime,
-          toTime: availability.toTime,
-        }))
+        availability.days.flatMap((day) =>
+          // Also flatMap levels to create one entry per level per day
+          availability.level.map((lvl) => ({
+            coachName: availability.coachName,
+            day: day,
+            program: availability.program,
+            level: lvl,
+            fromTime: availability.fromTime,
+            toTime: availability.toTime,
+          }))
+        )
       );
 
       console.log("Submitted Availabilities:", formattedAvailabilities);
@@ -371,7 +379,7 @@ const CoachAvailabilityForm = () => {
         coachName: "",
         days: [],
         program: "",
-        level: "",
+        level: [],
         fromTime: "",
         toTime: "",
       },
@@ -462,16 +470,23 @@ const CoachAvailabilityForm = () => {
                 <FormControl fullWidth margin="normal">
                   <InputLabel>Level</InputLabel>
                   <Select
-                    value={availability.level}
+                    multiple
+                    value={availability.level || []}
                     onChange={(e) =>
                       handleChange(index, "level", e.target.value)
                     }
                     label="Level"
                     disabled={!availability.program}
+                    renderValue={(selected) => selected.join(", ")}
                   >
                     {getLevelsForProgram(availability.program).map((level) => (
                       <MenuItem key={level} value={level}>
-                        {level}
+                        <Checkbox
+                          checked={
+                            (availability.level || []).indexOf(level) > -1
+                          }
+                        />
+                        <ListItemText primary={level} />
                       </MenuItem>
                     ))}
                   </Select>

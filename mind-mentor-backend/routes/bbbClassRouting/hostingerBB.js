@@ -7,7 +7,7 @@ const xml2js = require("xml2js");
 const ClassSchedule = require("../../model/classSheduleModel");
 
 const BASE_URL = "https://class.mindmentorz.in";
-const SECRET = "J4y5nIH5D0CeI3wJPS5ODc4Pgtw2jsFGwbMlY94ah4";
+const SECRET = "63Hx9fxmxSOBcOGgOHY1oYbLzl8FMw121bsUs6pw";
 
 // ✅ Route 1: Create a new class
 router.post("/create-new-class", async (req, res) => {

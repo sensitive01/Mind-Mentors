@@ -23,6 +23,7 @@ import {
   getAllPhysicalcenters,
 } from "../../../../api/service/employee/hrService";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import MultipleFileUpload from "../../../../components/uploader/MultipleFileUpload";
 
 const AddEmployeeForm = () => {
   const [formData, setFormData] = useState({
@@ -33,8 +34,8 @@ const AddEmployeeForm = () => {
     gender: "",
     department: "",
     role: "",
-    centerId: "",
-    centerName: "",
+    // Replaced single centerId/Name with array
+    selectedCenters: [],
     password: "",
     modes: {
       online: false,
@@ -43,6 +44,14 @@ const AddEmployeeForm = () => {
     // New coach-specific fields
     perHourRate: "",
     employmentType: "",
+    // New Personal & Bank Details
+    dob: "",
+    doj: "",
+    bloodGroup: "",
+    accountNumber: "",
+    panCard: "",
+    idCard: "",
+    emergencyContact: "",
   });
 
   const [centers, setCenters] = useState([]);
@@ -79,21 +88,52 @@ const AddEmployeeForm = () => {
 
       setFilteredCenters(filtered);
 
-      // Clear selected center if it's not in the filtered list
-      if (formData.centerId) {
-        const centerStillValid = filtered.some(
-          (center) => center._id === formData.centerId
+      // Auto-select 'online' centers if only online mode is active
+      if (formData.modes.online && !formData.modes.offline) {
+        const onlineCentersIds = centers
+          .filter((center) => center.centerType === "online")
+          .map((center) => center._id);
+
+        setFormData((prev) => {
+          // Avoid infinite loop by checking if changes are actually needed
+          const currentSelected = new Set(prev.selectedCenters);
+          const hasAllOnline = onlineCentersIds.every((id) =>
+            currentSelected.has(id)
+          );
+
+          if (!hasAllOnline) {
+            return {
+              ...prev,
+              selectedCenters: [
+                ...new Set([...prev.selectedCenters, ...onlineCentersIds]),
+              ],
+            };
+          }
+          return prev;
+        });
+      }
+
+      // Clear selected centers that are no longer valid in the filtered list
+      if (formData.selectedCenters.length > 0) {
+        const validSelectedCenters = formData.selectedCenters.filter(
+          (selectedId) => filtered.some((center) => center._id === selectedId)
         );
-        if (!centerStillValid) {
+
+        // Only update if the length differs to avoid infinite loops with the dependency array
+        if (validSelectedCenters.length !== formData.selectedCenters.length) {
           setFormData((prev) => ({
             ...prev,
-            centerId: "",
-            centerName: "",
+            selectedCenters: validSelectedCenters,
           }));
         }
       }
     }
-  }, [centers, formData.modes.online, formData.modes.offline]);
+  }, [
+    centers,
+    formData.modes.online,
+    formData.modes.offline,
+    formData.selectedCenters,
+  ]);
 
   useEffect(() => {
     // Show center dropdown if department or role is "centeradmin" or any mode is selected
@@ -104,13 +144,15 @@ const AddEmployeeForm = () => {
       formData.modes.online
     ) {
       setShowCenterDropdown(true);
+
+      // Auto-select online center logic can go here if needed
+      // Example: if online mode, find online center and add to selection if not present
     } else {
       setShowCenterDropdown(false);
       // Clear center selection if not a center admin or no mode is selected
       setFormData((prev) => ({
         ...prev,
-        centerId: "",
-        centerName: "",
+        selectedCenters: [],
       }));
     }
   }, [
@@ -146,22 +188,12 @@ const AddEmployeeForm = () => {
   };
 
   const handleCenterChange = (e) => {
-    const selectedId = e.target.value;
-    const selectedCenter = centers.find((center) => center._id === selectedId);
-
-    if (selectedCenter) {
-      setFormData((prev) => ({
-        ...prev,
-        centerId: selectedCenter._id,
-        centerName: selectedCenter.centerName,
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        centerId: "",
-        centerName: "",
-      }));
-    }
+    const { value } = e.target;
+    // On autofill or multiple select, value is an array
+    setFormData((prev) => ({
+      ...prev,
+      selectedCenters: typeof value === "string" ? value.split(",") : value,
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -172,6 +204,15 @@ const AddEmployeeForm = () => {
       const modesArray = Object.entries(formData.modes)
         .filter(([_, isSelected]) => isSelected)
         .map(([modeName]) => modeName);
+
+      // Map selected center IDs to full objects {centerId, centerName}
+      const centersPayload = formData.selectedCenters.map((centerId) => {
+        const centerObj = centers.find((c) => c._id === centerId);
+        return {
+          centerId: centerId,
+          centerName: centerObj ? centerObj.centerName : "",
+        };
+      });
 
       // Prepare the data to be submitted - only the fields we're keeping
       const formDataToSubmit = {
@@ -184,12 +225,20 @@ const AddEmployeeForm = () => {
         role: formData.role,
         password: formData.password,
         modes: modesArray, // Submit as array of selected modes
+        dob: formData.dob,
+        doj: formData.doj,
+        bloodGroup: formData.bloodGroup,
+        bankDetails: {
+          accountNumber: formData.accountNumber,
+          panCard: formData.panCard, // Assuming string/path
+          idCard: formData.idCard, // Assuming string/path
+          emergencyContact: formData.emergencyContact,
+        },
       };
 
       // Only include center data if it's selected
-      if (formData.centerId) {
-        formDataToSubmit.centerId = formData.centerId;
-        formDataToSubmit.centerName = formData.centerName;
+      if (centersPayload.length > 0) {
+        formDataToSubmit.centers = centersPayload;
       }
 
       // Include coach-specific fields if role or department is coach
@@ -237,6 +286,8 @@ const AddEmployeeForm = () => {
     { value: "Female", label: "Female" },
     { value: "Other", label: "Other" },
   ];
+
+  const bloodGroupOptions = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
   const employmentTypeOptions = [
     { value: "full-time", label: "Full-time Employee" },
@@ -309,6 +360,54 @@ const AddEmployeeForm = () => {
                     {genderOptions.map((option) => (
                       <MenuItem key={option.value} value={option.value}>
                         {option.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </div>
+
+              {/* DOB, DOJ, Blood Group */}
+              <div className="flex gap-4 mb-4">
+                <TextField
+                  label="Date of Birth"
+                  type="date"
+                  variant="outlined"
+                  className="flex-1"
+                  value={formData.dob}
+                  onChange={(e) => handleInputChange("dob", e.target.value)}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  fullWidth
+                />
+                <TextField
+                  label="Date of Joining"
+                  type="date"
+                  variant="outlined"
+                  className="flex-1"
+                  value={formData.doj}
+                  onChange={(e) => handleInputChange("doj", e.target.value)}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  fullWidth
+                />
+                <FormControl variant="outlined" className="flex-1">
+                  <InputLabel id="blood-group-label">Blood Group</InputLabel>
+                  <Select
+                    labelId="blood-group-label"
+                    value={formData.bloodGroup}
+                    onChange={(e) =>
+                      handleInputChange("bloodGroup", e.target.value)
+                    }
+                    label="Blood Group"
+                  >
+                    <MenuItem value="">
+                      <em>None</em>
+                    </MenuItem>
+                    {bloodGroupOptions.map((bg) => (
+                      <MenuItem key={bg} value={bg}>
+                        {bg}
                       </MenuItem>
                     ))}
                   </Select>
@@ -450,7 +549,7 @@ const AddEmployeeForm = () => {
                   <h3 className="text-[#642b8f] font-semibold text-lg pb-2 border-b-2 border-[#f8a213] mt-6">
                     Coach Information
                   </h3>
-                  
+
                   <div className="flex gap-4 mb-4">
                     <TextField
                       label="Per Hour Rate"
@@ -474,8 +573,14 @@ const AddEmployeeForm = () => {
                       helperText="Enter the hourly rate for coaching sessions"
                     />
 
-                    <FormControl variant="outlined" className="flex-1" required={isCoach}>
-                      <InputLabel id="employment-type-label">Employment Type</InputLabel>
+                    <FormControl
+                      variant="outlined"
+                      className="flex-1"
+                      required={isCoach}
+                    >
+                      <InputLabel id="employment-type-label">
+                        Employment Type
+                      </InputLabel>
                       <Select
                         labelId="employment-type-label"
                         id="employment-type"
@@ -495,7 +600,8 @@ const AddEmployeeForm = () => {
                         ))}
                       </Select>
                       <FormHelperText>
-                        Select whether the coach is a full-time employee or freelancer
+                        Select whether the coach is a full-time employee or
+                        freelancer
                       </FormHelperText>
                     </FormControl>
                   </div>
@@ -526,36 +632,42 @@ const AddEmployeeForm = () => {
                 }}
               />
 
-              {/* Conditional Center dropdown with filtered centers */}
+              {/* Multi-Select Center dropdown */}
               {showCenterDropdown && (
                 <div className="mb-4">
-                  <FormControl
-                    variant="outlined"
-                    fullWidth
-                    required={showCenterDropdown}
-                  >
-                    <InputLabel id="center-label">Physical Center</InputLabel>
+                  <FormControl variant="outlined" fullWidth required>
+                    <InputLabel id="center-label">
+                      Physical Center(s)
+                    </InputLabel>
                     <Select
                       labelId="center-label"
                       id="center"
-                      value={formData.centerId}
+                      multiple
+                      value={formData.selectedCenters}
                       onChange={handleCenterChange}
-                      label="Physical Center"
+                      label="Physical Center(s)"
+                      renderValue={(selected) => {
+                        const selectedCenterNames = selected.map((id) => {
+                          const center = centers.find((c) => c._id === id);
+                          return center ? center.centerName : id;
+                        });
+                        return selectedCenterNames.join(", ");
+                      }}
                     >
-                      <MenuItem value="" disabled>
-                        <em>Select Center</em>
-                      </MenuItem>
                       {filteredCenters.map((center) => (
                         <MenuItem key={center._id} value={center._id}>
+                          <Checkbox
+                            checked={
+                              formData.selectedCenters.indexOf(center._id) > -1
+                            }
+                          />
                           {center.centerName} ({center.centerType})
                         </MenuItem>
                       ))}
                     </Select>
-                    {formData.centerName && (
-                      <FormHelperText>
-                        Selected: {formData.centerName}
-                      </FormHelperText>
-                    )}
+                    <FormHelperText>
+                      You can select multiple centers
+                    </FormHelperText>
                   </FormControl>
                 </div>
               )}
@@ -573,6 +685,81 @@ const AddEmployeeForm = () => {
                   required
                 />
               </div>
+
+              {/* Bank & Emergency Details */}
+              <h3 className="text-[#642b8f] font-semibold text-lg pb-2 border-b-2 border-[#f8a213] mt-6">
+                Personal & Bank Details
+              </h3>
+              <div className="flex gap-4 mb-4">
+                <TextField
+                  label="Bank Account Number"
+                  variant="outlined"
+                  fullWidth
+                  value={formData.accountNumber}
+                  onChange={(e) =>
+                    handleInputChange("accountNumber", e.target.value)
+                  }
+                />
+                <TextField
+                  label="Emergency Contact"
+                  variant="outlined"
+                  fullWidth
+                  value={formData.emergencyContact}
+                  onChange={(e) =>
+                    handleInputChange("emergencyContact", e.target.value)
+                  }
+                />
+              </div>
+
+              {/* File Uploads for Proofs */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                <div>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ mb: 1, fontWeight: 500, color: "text.secondary" }}
+                  >
+                    PAN Card Proof
+                  </Typography>
+                  <MultipleFileUpload
+                    fieldName="panCard"
+                    name="panCard"
+                    onFileUpload={(urls) => {
+                      // Take the first URL since it's a single document proof usually
+                      handleInputChange(
+                        "panCard",
+                        urls.length > 0 ? urls[0] : ""
+                      );
+                    }}
+                    initialFiles={formData.panCard ? [formData.panCard] : []}
+                  />
+                  <FormHelperText>
+                    Upload clear image of PAN Card
+                  </FormHelperText>
+                </div>
+
+                <div>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ mb: 1, fontWeight: 500, color: "text.secondary" }}
+                  >
+                    ID Card Proof
+                  </Typography>
+                  <MultipleFileUpload
+                    fieldName="idCard"
+                    name="idCard"
+                    onFileUpload={(urls) => {
+                      handleInputChange(
+                        "idCard",
+                        urls.length > 0 ? urls[0] : ""
+                      );
+                    }}
+                    initialFiles={formData.idCard ? [formData.idCard] : []}
+                  />
+                  <FormHelperText>
+                    Upload clear image of Aadhar/Voter ID/Passport
+                  </FormHelperText>
+                </div>
+              </div>
             </div>
           </div>
           <div className="flex justify-center gap-6 mt-8">
@@ -584,7 +771,10 @@ const AddEmployeeForm = () => {
                 color: "white",
                 padding: "10px 32px",
               }}
-              disabled={!isAnyModeSelected || (isCoach && (!formData.perHourRate || !formData.employmentType))}
+              disabled={
+                !isAnyModeSelected ||
+                (isCoach && (!formData.perHourRate || !formData.employmentType))
+              }
             >
               Submit
             </Button>
@@ -605,12 +795,18 @@ const AddEmployeeForm = () => {
                   gender: "",
                   department: "",
                   role: "",
-                  centerId: "",
-                  centerName: "",
+                  selectedCenters: [],
                   password: "",
                   modes: { online: false, offline: false },
                   perHourRate: "",
                   employmentType: "",
+                  dob: "",
+                  doj: "",
+                  bloodGroup: "",
+                  accountNumber: "",
+                  panCard: "",
+                  idCard: "",
+                  emergencyContact: "",
                 });
               }}
             >

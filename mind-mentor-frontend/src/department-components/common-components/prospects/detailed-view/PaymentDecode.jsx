@@ -51,7 +51,7 @@ const PaymentDecode = () => {
   const [paymentData, setPaymentData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [paymentStatus, setPaymentStatus] = useState("pending"); // pending, processing, completed, failed
+  const [paymentStatus, setPaymentStatus] = useState("pending"); // pending, Captured, completed, failed
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -132,7 +132,7 @@ const PaymentDecode = () => {
     try {
       setPaymentDialogOpen(false);
 
-      setPaymentStatus("processing");
+      setPaymentStatus("Captured");
 
       // const orderData = await createRazorpayOrder(paymentData.totalAmount);
 
@@ -196,7 +196,7 @@ const PaymentDecode = () => {
         throw new Error("Payment update failed");
       }
     } catch (err) {
-      console.error("Error processing payment:", err);
+      console.error("Error Captured payment:", err);
       setPaymentStatus("failed");
       showSnackbar(
         "Payment verification failed. Please contact support.",
@@ -290,15 +290,15 @@ const PaymentDecode = () => {
         return;
       }
 
-      // Set status to processing immediately in the UI
-      setPaymentStatus("processing");
+      // Set status to Captured immediately in the UI
+      setPaymentStatus("Captured");
       setUpdateDialogOpen(false);
 
       // Create form data for status update
       const updateData = {
         kidId: paymentData.kidId,
         packageId: paymentData.packageId,
-        status: "Processing",  // Make sure this matches your backend's expected status
+        status: "Captured",  // Make sure this matches your backend's expected status
         amount: paymentData.totalAmount,
         transactionId: transactionDetails.transactionId,
         paymentMode: transactionDetails.paymentMode,
@@ -316,8 +316,8 @@ const PaymentDecode = () => {
       const response = await updatePaymentStatus(updateData);
 
       if (response?.status === 200) {
-        // Keep the status as "processing" instead of changing to "completed"
-        showSnackbar("Payment status updated to Processing!", "success");
+        // Keep the status as "Captured" instead of changing to "completed"
+        showSnackbar("Payment status updated to Captured!", "success");
 
         // Reset form
         setTransactionDetails({
@@ -519,7 +519,7 @@ const PaymentDecode = () => {
       border: "#FFCC80",
       icon: <UpdateIcon fontSize="small" sx={{ mr: 0.5 }} />,
     },
-    processing: {
+    Captured: {
       bg: "#E3F2FD",
       color: "#1976D2",
       border: "#90CAF9",
@@ -821,7 +821,7 @@ const PaymentDecode = () => {
               color="error"
               onClick={handleCancel}
               startIcon={<CancelIcon />}
-              disabled={paymentStatus === "processing"}
+              disabled={paymentStatus === "Captured"}
               sx={{
                 minWidth: 150,
                 py: 1,
@@ -837,7 +837,7 @@ const PaymentDecode = () => {
                   color="primary"
                   onClick={handleUpdateStatus}
                   startIcon={<UpdateIcon />}
-                  disabled={paymentStatus === "processing"}
+                  disabled={paymentStatus === "Captured"}
                   sx={{
                     minWidth: 150,
                     py: 1,
@@ -851,7 +851,7 @@ const PaymentDecode = () => {
                   color="primary"
                   onClick={handlePayNow}
                   startIcon={<AccountBalanceWalletIcon />}
-                  disabled={paymentStatus === "processing"}
+                  disabled={paymentStatus === "Captured"}
                   sx={{
                     minWidth: 150,
                     py: 1,

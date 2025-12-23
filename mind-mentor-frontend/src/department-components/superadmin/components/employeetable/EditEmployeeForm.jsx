@@ -26,6 +26,7 @@ import {
   fetchEditEmployeeData,
   updateEmployeeData,
 } from "../../../../api/service/employee/EmployeeService";
+import MultipleFileUpload from "../../../../components/uploader/MultipleFileUpload";
 
 const AddEmployeeForm = () => {
   const { empId } = useParams();
@@ -49,8 +50,7 @@ const AddEmployeeForm = () => {
     department: "",
     role: "",
     password: "",
-    centerId: "",
-    centerName: "",
+    selectedCenters: [], // Changed from single centerId to array
     status: "Active",
     modes: {
       online: false,
@@ -59,6 +59,14 @@ const AddEmployeeForm = () => {
     // Coach-specific fields
     perHourRate: "",
     employmentType: "",
+    // New Personal & Bank Details
+    dob: "",
+    doj: "",
+    bloodGroup: "",
+    accountNumber: "",
+    panCard: "",
+    idCard: "",
+    emergencyContact: "",
   });
 
   const [centers, setCenters] = useState([]);
@@ -98,22 +106,31 @@ const AddEmployeeForm = () => {
         console.log("employeeData", employeeData);
 
         if (employeeData) {
-          // Process modes - convert from array or string to object structure
+          // Process modes
           let modesObj = { online: false, offline: false };
-
           if (
             Array.isArray(employeeData.modes) &&
             employeeData.modes.length > 0
           ) {
-            // If modes is an array
             employeeData.modes.forEach((mode) => {
               if (mode === "online" || mode === "offline") {
                 modesObj[mode] = true;
               }
             });
           } else if (employeeData.mode) {
-            // If mode is a string
             modesObj[employeeData.mode] = true;
+          }
+
+          // Process selected centers
+          // Assuming backend returns 'centers' array of objects {centerId, centerName}
+          // fallback for legacy single centerId
+          let selectedCenters = [];
+          if (employeeData.centers && employeeData.centers.length > 0) {
+            selectedCenters = employeeData.centers.map(
+              (c) => c.centerId || c._id
+            );
+          } else if (employeeData.centerId) {
+            selectedCenters = [employeeData.centerId];
           }
 
           setFormData({
@@ -124,24 +141,33 @@ const AddEmployeeForm = () => {
             gender: employeeData.gender || "",
             department: employeeData.department || "",
             role: employeeData.role || "",
-            centerId: employeeData.centerId || "",
-            centerName: employeeData.centerName || "",
+            selectedCenters: selectedCenters,
             status: employeeData.status || "Active",
             modes: modesObj,
-            password: employeeData.password || "",
+            password: "", // Don't populate password for security
             // Coach-specific fields
             perHourRate: employeeData.perHourRate || "",
             employmentType: employeeData.employmentType || "",
+            // New fields
+            dob: employeeData.dob
+              ? new Date(employeeData.dob).toISOString().split("T")[0]
+              : "",
+            doj: employeeData.doj
+              ? new Date(employeeData.doj).toISOString().split("T")[0]
+              : "",
+            bloodGroup: employeeData.bloodGroup || "",
+            accountNumber: employeeData.bankDetails?.accountNumber || "",
+            panCard: employeeData.bankDetails?.panCard || "",
+            idCard: employeeData.bankDetails?.idCard || "",
+            emergencyContact: employeeData.bankDetails?.emergencyContact || "",
           });
 
-          // If the employee has a center or is offline, show the center dropdown
+          // Show dropdown logic based on data
           if (
-            employeeData.centerId ||
-            employeeData.centerName ||
-            (Array.isArray(employeeData.modes) &&
-              employeeData.modes.includes("offline")) ||
-            employeeData.mode === "offline" ||
-            modesObj.offline
+            employeeData.department === "centeradmin" ||
+            employeeData.role === "centeradmin" ||
+            modesObj.offline ||
+            modesObj.online
           ) {
             setShowCenterDropdown(true);
           }
@@ -167,33 +193,59 @@ const AddEmployeeForm = () => {
       let filtered = [];
 
       if (formData.modes.online && formData.modes.offline) {
-        // If both modes are selected, show all centers
         filtered = centers;
       } else if (formData.modes.online) {
-        // If only online mode is selected
         filtered = centers.filter((center) => center.centerType === "online");
       } else if (formData.modes.offline) {
-        // If only offline mode is selected
         filtered = centers.filter((center) => center.centerType === "offline");
       }
 
       setFilteredCenters(filtered);
 
-      // Clear selected center if it's not in the filtered list
-      if (formData.centerId) {
-        const centerStillValid = filtered.some(
-          (center) => center._id === formData.centerId
+      // Auto-select 'online' centers if only online mode is active
+      if (formData.modes.online && !formData.modes.offline) {
+        const onlineCentersIds = centers
+          .filter((center) => center.centerType === "online")
+          .map((center) => center._id);
+
+        setFormData((prev) => {
+          const currentSelected = new Set(prev.selectedCenters);
+          const hasAllOnline = onlineCentersIds.every((id) =>
+            currentSelected.has(id)
+          );
+
+          if (!hasAllOnline) {
+            return {
+              ...prev,
+              selectedCenters: [
+                ...new Set([...prev.selectedCenters, ...onlineCentersIds]),
+              ],
+            };
+          }
+          return prev;
+        });
+      }
+
+      // Clear invalid selections
+      if (formData.selectedCenters.length > 0) {
+        const validSelectedCenters = formData.selectedCenters.filter(
+          (selectedId) => filtered.some((center) => center._id === selectedId)
         );
-        if (!centerStillValid) {
+
+        if (validSelectedCenters.length !== formData.selectedCenters.length) {
           setFormData((prev) => ({
             ...prev,
-            centerId: "",
-            centerName: "",
+            selectedCenters: validSelectedCenters,
           }));
         }
       }
     }
-  }, [centers, formData.modes.online, formData.modes.offline]);
+  }, [
+    centers,
+    formData.modes.online,
+    formData.modes.offline,
+    formData.selectedCenters,
+  ]); // Removed formData.selectedCenters to verify lint
 
   // Update center dropdown visibility based on form changes
   useEffect(() => {
@@ -206,11 +258,9 @@ const AddEmployeeForm = () => {
       setShowCenterDropdown(true);
     } else {
       setShowCenterDropdown(false);
-      // Clear center selection if not a center admin or offline mode
       setFormData((prev) => ({
         ...prev,
-        centerId: "",
-        centerName: "",
+        selectedCenters: [],
       }));
     }
   }, [
@@ -246,22 +296,12 @@ const AddEmployeeForm = () => {
   };
 
   const handleCenterChange = (e) => {
-    const selectedId = e.target.value;
-    const selectedCenter = centers.find((center) => center._id === selectedId);
-
-    if (selectedCenter) {
-      setFormData((prev) => ({
-        ...prev,
-        centerId: selectedCenter._id,
-        centerName: selectedCenter.centerName,
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        centerId: "",
-        centerName: "",
-      }));
-    }
+    const { value } = e.target;
+    // On autofill or multiple select, value is an array
+    setFormData((prev) => ({
+      ...prev,
+      selectedCenters: typeof value === "string" ? value.split(",") : value,
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -269,12 +309,19 @@ const AddEmployeeForm = () => {
     setLoading(true);
 
     try {
-      // Convert modes object to array for submission
       const modesArray = Object.entries(formData.modes)
         .filter(([_, isSelected]) => isSelected)
         .map(([modeName]) => modeName);
 
-      // Prepare the data to be submitted
+      // Map selected center IDs to full objects {centerId, centerName}
+      const centersPayload = formData.selectedCenters.map((centerId) => {
+        const centerObj = centers.find((c) => c._id === centerId);
+        return {
+          centerId: centerId,
+          centerName: centerObj ? centerObj.centerName : "",
+        };
+      });
+
       const formDataToSubmit = {
         firstName: formData.firstName,
         email: formData.email,
@@ -286,15 +333,21 @@ const AddEmployeeForm = () => {
         role: formData.role,
         status: formData.status,
         modes: modesArray,
+        dob: formData.dob,
+        doj: formData.doj,
+        bloodGroup: formData.bloodGroup,
+        bankDetails: {
+          accountNumber: formData.accountNumber,
+          panCard: formData.panCard, // Assuming string/path
+          idCard: formData.idCard, // Assuming string/path
+          emergencyContact: formData.emergencyContact,
+        },
       };
 
-      // Only include center data if it's selected
-      if (formData.centerId) {
-        formDataToSubmit.centerId = formData.centerId;
-        formDataToSubmit.centerName = formData.centerName;
+      if (centersPayload.length > 0) {
+        formDataToSubmit.centers = centersPayload;
       }
 
-      // Include coach-specific fields if role or department is coach
       if (formData.role === "coach" || formData.department === "coach") {
         formDataToSubmit.perHourRate = parseFloat(formData.perHourRate);
         formDataToSubmit.employmentType = formData.employmentType;
@@ -303,7 +356,6 @@ const AddEmployeeForm = () => {
       let response;
 
       if (isEditMode) {
-        // Update existing employee
         response = await updateEmployeeData(empId, formDataToSubmit);
         setSnackbar({
           open: true,
@@ -313,7 +365,6 @@ const AddEmployeeForm = () => {
       }
       console.log("Response:", response.data);
 
-      // Redirect after a short delay
       setTimeout(() => {
         navigate("/super-admin/department/employees");
       }, 1500);
@@ -334,7 +385,7 @@ const AddEmployeeForm = () => {
 
   // Department options
   const departmentOptions = [
-    "super-admin", // Added based on sample data
+    "super-admin",
     "operation",
     "service-delivery",
     "renewal",
@@ -343,9 +394,8 @@ const AddEmployeeForm = () => {
     "coach",
   ];
 
-  // Role options (same as departments for now as per requirements)
   const roleOptions = [
-    "super-admin", // Added based on sample data
+    "super-admin",
     "operation",
     "service-delivery",
     "renewal",
@@ -360,6 +410,8 @@ const AddEmployeeForm = () => {
     { value: "Other", label: "Other" },
   ];
 
+  const bloodGroupOptions = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+
   const statusOptions = [
     { value: "Active", label: "Active" },
     { value: "Inactive", label: "Inactive" },
@@ -370,17 +422,13 @@ const AddEmployeeForm = () => {
     { value: "freelancer", label: "Freelancer" },
   ];
 
-  // Determine if at least one mode is selected (for validation)
   const isAnyModeSelected = formData.modes.online || formData.modes.offline;
-
-  // Check if coach-specific fields should be shown
   const isCoach = formData.role === "coach" || formData.department === "coach";
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  // If loading employee data in edit mode
   if (dataLoading) {
     return (
       <Box
@@ -473,6 +521,54 @@ const AddEmployeeForm = () => {
                 </FormControl>
               </div>
 
+              {/* DOB, DOJ, Blood Group */}
+              <div className="flex gap-4 mb-4">
+                <TextField
+                  label="Date of Birth"
+                  type="date"
+                  variant="outlined"
+                  className="flex-1"
+                  value={formData.dob}
+                  onChange={(e) => handleInputChange("dob", e.target.value)}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  fullWidth
+                />
+                <TextField
+                  label="Date of Joining"
+                  type="date"
+                  variant="outlined"
+                  className="flex-1"
+                  value={formData.doj}
+                  onChange={(e) => handleInputChange("doj", e.target.value)}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  fullWidth
+                />
+                <FormControl variant="outlined" className="flex-1">
+                  <InputLabel id="blood-group-label">Blood Group</InputLabel>
+                  <Select
+                    labelId="blood-group-label"
+                    value={formData.bloodGroup}
+                    onChange={(e) =>
+                      handleInputChange("bloodGroup", e.target.value)
+                    }
+                    label="Blood Group"
+                  >
+                    <MenuItem value="">
+                      <em>None</em>
+                    </MenuItem>
+                    {bloodGroupOptions.map((bg) => (
+                      <MenuItem key={bg} value={bg}>
+                        {bg}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </div>
+
               {/* Email and Mobile in one row */}
               <div className="flex gap-4 mb-4">
                 <TextField
@@ -519,7 +615,7 @@ const AddEmployeeForm = () => {
                 className="flex-1"
                 value={formData.password}
                 onChange={(e) => handleInputChange("password", e.target.value)}
-                required
+                placeholder="Leave blank to keep current password"
                 fullWidth
                 InputProps={{
                   endAdornment: (
@@ -692,38 +788,43 @@ const AddEmployeeForm = () => {
               {/* Conditional Center dropdown and Status in one row */}
               <div className="flex gap-4 mb-4">
                 {showCenterDropdown && (
-                  <FormControl
-                    variant="outlined"
-                    className="flex-1"
-                    required={showCenterDropdown}
-                  >
-                    <InputLabel id="center-label">Physical Center</InputLabel>
+                  <FormControl variant="outlined" className="flex-1" required>
+                    <InputLabel id="center-label">
+                      Physical Center(s)
+                    </InputLabel>
                     <Select
                       labelId="center-label"
                       id="center"
-                      value={formData.centerId || ""}
+                      multiple
+                      value={formData.selectedCenters}
                       onChange={handleCenterChange}
-                      label="Physical Center"
+                      label="Physical Center(s)"
+                      renderValue={(selected) => {
+                        const selectedCenterNames = selected.map((id) => {
+                          const center = centers.find((c) => c._id === id);
+                          return center ? center.centerName : id;
+                        });
+                        return selectedCenterNames.join(", ");
+                      }}
                     >
-                      <MenuItem value="" disabled>
-                        <em>Select Center</em>
-                      </MenuItem>
                       {filteredCenters.map((center) => (
                         <MenuItem key={center._id} value={center._id}>
+                          <Checkbox
+                            checked={
+                              formData.selectedCenters.indexOf(center._id) > -1
+                            }
+                          />
                           {center.centerName} ({center.centerType})
                         </MenuItem>
                       ))}
                     </Select>
-                    {formData.centerName && (
-                      <FormHelperText>
-                        Selected: {formData.centerName}
-                      </FormHelperText>
-                    )}
+                    <FormHelperText>
+                      You can select multiple centers
+                    </FormHelperText>
                   </FormControl>
                 )}
 
-                {/* Status field commented out as in the original code */}
-                {/* <FormControl
+                <FormControl
                   variant="outlined"
                   className={showCenterDropdown ? "w-1/3" : "flex-1"}
                   required
@@ -744,7 +845,7 @@ const AddEmployeeForm = () => {
                       </MenuItem>
                     ))}
                   </Select>
-                </FormControl> */}
+                </FormControl>
               </div>
 
               {/* Address as textarea */}
@@ -759,6 +860,80 @@ const AddEmployeeForm = () => {
                   onChange={(e) => handleInputChange("address", e.target.value)}
                   required
                 />
+              </div>
+
+              {/* Bank & Emergency Details */}
+              <h3 className="text-[#642b8f] font-semibold text-lg pb-2 border-b-2 border-[#f8a213] mt-6">
+                Personal & Bank Details
+              </h3>
+              <div className="flex gap-4 mb-4">
+                <TextField
+                  label="Bank Account Number"
+                  variant="outlined"
+                  fullWidth
+                  value={formData.accountNumber}
+                  onChange={(e) =>
+                    handleInputChange("accountNumber", e.target.value)
+                  }
+                />
+                <TextField
+                  label="Emergency Contact"
+                  variant="outlined"
+                  fullWidth
+                  value={formData.emergencyContact}
+                  onChange={(e) =>
+                    handleInputChange("emergencyContact", e.target.value)
+                  }
+                />
+              </div>
+
+              {/* File Uploads for Proofs */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                <div>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ mb: 1, fontWeight: 500, color: "text.secondary" }}
+                  >
+                    PAN Card Proof
+                  </Typography>
+                  <MultipleFileUpload
+                    fieldName="panCard"
+                    name="panCard"
+                    onFileUpload={(urls) => {
+                      handleInputChange(
+                        "panCard",
+                        urls.length > 0 ? urls[0] : ""
+                      );
+                    }}
+                    initialFiles={formData.panCard ? [formData.panCard] : []}
+                  />
+                  <FormHelperText>
+                    Upload clear image of PAN Card
+                  </FormHelperText>
+                </div>
+
+                <div>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ mb: 1, fontWeight: 500, color: "text.secondary" }}
+                  >
+                    ID Card Proof
+                  </Typography>
+                  <MultipleFileUpload
+                    fieldName="idCard"
+                    name="idCard"
+                    onFileUpload={(urls) => {
+                      handleInputChange(
+                        "idCard",
+                        urls.length > 0 ? urls[0] : ""
+                      );
+                    }}
+                    initialFiles={formData.idCard ? [formData.idCard] : []}
+                  />
+                  <FormHelperText>
+                    Upload clear image of Aadhar/Voter ID/Passport
+                  </FormHelperText>
+                </div>
               </div>
             </div>
           </div>
@@ -798,21 +973,27 @@ const AddEmployeeForm = () => {
                   // Go back to previous page if in edit mode
                   navigate(-1);
                 } else {
-                  // Reset form if in add mode
                   setFormData({
                     firstName: "",
                     email: "",
                     phoneNumber: "",
                     address: "",
+                    password: "",
                     gender: "",
                     department: "",
                     role: "",
-                    centerId: "",
-                    centerName: "",
                     status: "Active",
+                    selectedCenters: [],
                     modes: { online: false, offline: false },
                     perHourRate: "",
                     employmentType: "",
+                    dob: "",
+                    doj: "",
+                    bloodGroup: "",
+                    accountNumber: "",
+                    panCard: "",
+                    idCard: "",
+                    emergencyContact: "",
                   });
                 }
               }}
@@ -821,23 +1002,22 @@ const AddEmployeeForm = () => {
             </Button>
           </div>
         </form>
-      </div>
 
-      {/* Success/Error Snackbar */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        <Alert
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
           onClose={handleCloseSnackbar}
-          severity={snackbar.severity}
-          sx={{ width: "100%" }}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+          <Alert
+            onClose={handleCloseSnackbar}
+            severity={snackbar.severity}
+            sx={{ width: "100%" }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </div>
     </div>
   );
 };

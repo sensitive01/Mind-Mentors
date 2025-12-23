@@ -1,13 +1,12 @@
-/* eslint-disable react/display-name */
+/* eslint-disable react/display-name, react/prop-types */
 import React, { useEffect, useState, useMemo, useCallback } from "react";
-import { Calendar, Clock, Award, X, Trash2, ChevronDown } from "lucide-react";
+import { Clock, Award, X, Calendar, ArrowDown, ArrowUp } from "lucide-react";
 import {
   assignWholeClass,
   getActiveKidData,
   getScheduledClassData,
 } from "../../../api/service/employee/serviceDeliveryService";
 import { useNavigate, useParams } from "react-router-dom";
-import ClassCalenderSelection from "../../../component/parent-component/parent-dashboard/dashboard-components/ClassCalenderSelection";
 
 // Extracted components
 const InfoCard = ({ label, value }) => (
@@ -57,282 +56,251 @@ const Modal = ({ isOpen, onClose, title, children }) => {
   );
 };
 
-const ClassSelectionDropdown = React.memo(
-  ({
-    isOpen,
-    onToggle,
-    selectedClasses,
-    onClassSelection,
-    availableClasses,
-    classMode,
-  }) => {
-    // Group classes by type for hybrid mode
-    const groupedClasses = useMemo(() => {
-      if (classMode !== "hybrid") return { all: availableClasses };
+const DAYS_OF_WEEK = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
 
-      return {
-        online: availableClasses.filter((cls) => cls.type === "online"),
-        offline: availableClasses.filter((cls) => cls.type === "offline"),
-      };
-    }, [availableClasses, classMode]);
-
-    const renderClassGroup = (classes, title) => (
-      <div className="mb-4">
-        {title && (
-          <div className="text-sm font-medium text-gray-600 mb-2 px-2">
-            {title} Classes
-          </div>
-        )}
-        {classes.map((classItem) => (
-          <ClassOption
-            key={classItem._id}
-            classItem={classItem}
-            isSelected={selectedClasses.some((c) => c._id === classItem._id)}
-            onSelect={() => onClassSelection(classItem)}
-          />
+const DaySelection = ({ selectedDays, onDayToggle }) => {
+  return (
+    <div className="bg-white p-4 rounded-lg shadow mb-4">
+      <h3 className="text-lg font-semibold text-gray-800 mb-3">Select Days</h3>
+      <div className="flex flex-wrap gap-4">
+        {DAYS_OF_WEEK.map((day) => (
+          <label
+            key={day}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-all ${
+              selectedDays.includes(day)
+                ? "bg-blue-50 border-blue-500 text-blue-700"
+                : "hover:bg-gray-50 border-gray-200"
+            }`}
+          >
+            <input
+              type="checkbox"
+              className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+              checked={selectedDays.includes(day)}
+              onChange={() => onDayToggle(day)}
+            />
+            <span className="font-medium">{day}</span>
+          </label>
         ))}
       </div>
-    );
+    </div>
+  );
+};
 
+const ClassOption = React.memo(
+  ({ classItem, isSelected, onSelect, showDay = true }) => {
     return (
-      <div className="relative">
-        <button
-          onClick={onToggle}
-          className="w-full bg-white border rounded-lg p-3 text-left hover:border-blue-500 transition-all flex items-center justify-between shadow-sm"
-        >
-          <div className="flex items-center gap-2">
-            {selectedClasses.length === 0 ? (
-              <span className="text-gray-500">Select Classes</span>
-            ) : (
-              <>
-                <span className="bg-primary text-white text-xs font-medium px-2 py-1 rounded-full">
-                  {selectedClasses.length}
-                </span>
-                <span className="text-gray-700 font-medium">
-                  Classes Selected
-                </span>
-                {classMode === "hybrid" && (
-                  <div className="flex gap-1 ml-2">
-                    <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded">
-                      Online:{" "}
-                      {
-                        selectedClasses.filter((c) => c.type === "online")
-                          .length
-                      }
-                    </span>
-                    <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded">
-                      Offline:{" "}
-                      {
-                        selectedClasses.filter((c) => c.type === "offline")
-                          .length
-                      }
-                    </span>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-          <ChevronDown
-            className={`w-5 h-5 text-gray-400 transition-transform ${
-              isOpen ? "rotate-180" : ""
+      <div
+        className={`group relative flex items-center p-4 rounded-xl border transition-all duration-200 cursor-pointer mb-3 last:mb-0 hover:shadow-md ${
+          isSelected
+            ? "bg-blue-50 border-blue-200 shadow-sm ring-1 ring-blue-100"
+            : "bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+        } }`}
+        onClick={onSelect}
+      >
+        <div className="flex items-center mr-4">
+          <input
+            type={showDay ? "checkbox" : "radio"}
+            checked={isSelected}
+            onChange={onSelect}
+            className={`w-5 h-5 text-blue-600 bg-white border-2 border-gray-300 focus:ring-blue-500 focus:ring-offset-0 transition-colors duration-150 ${
+              !showDay ? "rounded-full" : "rounded-md"
             }`}
+            onClick={(e) => e.stopPropagation()}
           />
-        </button>
+        </div>
 
-        {isOpen && (
-          <div className="absolute z-10 mt-2 w-full bg-white rounded-lg shadow-lg border max-h-96 overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b p-3 flex justify-between items-center">
-              <h4 className="font-medium text-gray-700">Available Classes</h4>
-              {selectedClasses.length > 0 && (
-                <button
-                  onClick={() =>
-                    selectedClasses.forEach((c) => onClassSelection(c))
-                  }
-                  className="text-xs text-red-500 hover:text-red-700 transition-colors"
-                >
-                  Clear All
-                </button>
-              )}
+        <div
+          className={`flex-1 flex flex-wrap items-center gap-3 ${
+            showDay ? "justify-start" : "justify-between"
+          }`}
+        >
+          {showDay && (
+            <div className="flex flex-col min-w-[80px]">
+              <span className="font-semibold text-gray-900 text-base leading-tight">
+                {classItem.day}
+              </span>
+              <span className="text-xs text-gray-500 mt-0.5">
+                {new Date(classItem.classDate).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                })}
+              </span>
             </div>
+          )}
 
-            <div className="p-3">
-              {availableClasses.length === 0 ? (
-                <div className="text-center py-6 text-gray-500">
-                  No classes available
-                </div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-4 text-xs text-gray-500 mb-2 px-2">
-                    <div className="col-span-1">Day</div>
-                    <div className="col-span-1">Time</div>
-                    <div className="col-span-1">Coach</div>
-                    <div className="col-span-1">Type</div>
-                  </div>
-
-                  {classMode === "hybrid" ? (
-                    <>
-                      {renderClassGroup(groupedClasses.online, "Online")}
-                      {renderClassGroup(groupedClasses.offline, "Offline")}
-                    </>
-                  ) : (
-                    renderClassGroup(groupedClasses.all)
-                  )}
-                </>
-              )}
+          <div className="flex items-center gap-2 min-w-[140px]">
+            <div className="flex items-center justify-center w-7 h-7 bg-gray-100 rounded-lg group-hover:bg-gray-200 transition-colors">
+              <Clock className="w-4 h-4 text-gray-600" />
             </div>
-
-            {selectedClasses.length > 0 && (
-              <div className="sticky bottom-0 bg-white border-t p-3 flex justify-end">
-                <button
-                  onClick={onToggle}
-                  className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors"
-                >
-                  Done
-                </button>
-              </div>
-            )}
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-gray-800">
+                {classItem.classTime}
+              </span>
+              <span className="text-xs text-gray-500">Duration</span>
+            </div>
           </div>
+
+          <div className="flex items-center gap-2 min-w-[120px]">
+            <div className="flex items-center justify-center w-7 h-7 bg-amber-100 rounded-lg group-hover:bg-amber-200 transition-colors">
+              <Award className="w-4 h-4 text-amber-600" />
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span
+                className="text-sm font-medium text-gray-800 truncate max-w-[120px]"
+                title={classItem.coachName}
+              >
+                {classItem.coachName}
+              </span>
+              <span className="text-xs text-gray-500">Coach</span>
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <StatusBadge type={classItem.type} />
+          </div>
+        </div>
+
+        {isSelected && (
+          <div className="absolute top-2 right-2 w-2 h-2 bg-blue-500 rounded-full"></div>
         )}
       </div>
     );
   }
 );
 
-const ClassOption = React.memo(({ classItem, isSelected, onSelect }) => {
-  const isClassPassed = useMemo(() => {
-    const classDate = new Date(classItem.classDate);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return classDate < today;
-  }, [classItem.classDate]);
+const ScheduleCalendar = ({ schedule, onSessionAction }) => {
+  // Group classes by Month for the list view
+  const classesByMonth = useMemo(() => {
+    const grouped = {};
+    const sortedSchedule = [...schedule].sort(
+      (a, b) => new Date(a.classDate) - new Date(b.classDate)
+    );
+
+    sortedSchedule.forEach((session) => {
+      const date = new Date(session.classDate);
+      const monthKey = date.toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric",
+      });
+      if (!grouped[monthKey]) grouped[monthKey] = [];
+      grouped[monthKey].push(session);
+    });
+    return grouped;
+  }, [schedule]);
 
   return (
-    <div
-      className={`group relative flex items-center p-4 rounded-xl border transition-all duration-200 cursor-pointer mb-3 last:mb-0 hover:shadow-md ${
-        isSelected
-          ? "bg-blue-50 border-blue-200 shadow-sm ring-1 ring-blue-100"
-          : "bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-      } }`}
-      onClick={onSelect}
-    >
-      {/* Selection Indicator */}
-      <div className="flex items-center mr-4">
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onChange={onSelect}
-          className="w-5 h-5 text-blue-600 bg-white border-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 transition-colors duration-150"
-          onClick={(e) => e.stopPropagation()}
-        />
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8 overflow-hidden">
+      <div className="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+        <h3 className="font-bold text-gray-800 text-lg">Class Schedule</h3>
+        <span className="text-sm text-gray-500">
+          {schedule.length} Sessions
+        </span>
       </div>
 
-      {/* Content Grid */}
-      <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-        {/* Day Column */}
-        <div className="flex flex-col">
-          <span className="font-semibold text-gray-900 text-base leading-tight">
-            {classItem.day}
-          </span>
-          <span className="text-xs text-gray-500 mt-0.5">
-            {new Date(classItem.classDate).toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-            })}
-          </span>
-        </div>
+      <div className="max-h-[600px] overflow-y-auto custom-scrollbar bg-white">
+        {Object.keys(classesByMonth).length > 0 ? (
+          Object.entries(classesByMonth).map(([month, sessions]) => (
+            <div key={month} className="relative">
+              {/* Sticky Month Header */}
+              <div className="sticky top-0 z-10 bg-gray-50/95 backdrop-blur-sm px-4 py-2 border-y border-gray-100 shadow-sm">
+                <h3 className="text-sm font-bold text-blue-800 uppercase tracking-wider">
+                  {month}
+                </h3>
+              </div>
 
-        {/* Time Column */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center w-7 h-7 bg-gray-100 rounded-lg group-hover:bg-gray-200 transition-colors">
-            <Clock className="w-4 h-4 text-gray-600" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-medium text-gray-800">
-              {classItem.classTime}
-            </span>
-            <span className="text-xs text-gray-500">Duration</span>
-          </div>
-        </div>
+              <div className="p-4 space-y-3">
+                {sessions.map((session) => (
+                  <div
+                    key={session.sessionId}
+                    className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-xl border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all bg-white group"
+                  >
+                    {/* Date Block */}
+                    <div className="flex-shrink-0 flex sm:flex-col items-center gap-2 sm:gap-0 min-w-[80px] sm:text-center">
+                      <span className="text-xs font-bold text-gray-400 uppercase">
+                        {new Date(session.classDate).toLocaleDateString(
+                          "en-US",
+                          { weekday: "short" }
+                        )}
+                      </span>
+                      <span className="text-2xl font-bold text-blue-600 leading-none">
+                        {new Date(session.classDate).getDate()}
+                      </span>
+                    </div>
 
-        {/* Coach Column */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center w-7 h-7 bg-amber-100 rounded-lg group-hover:bg-amber-200 transition-colors">
-            <Award className="w-4 h-4 text-amber-600" />
-          </div>
-          <div className="flex flex-col min-w-0">
-            <span
-              className="text-sm font-medium text-gray-800 truncate"
-              title={classItem.coachName}
-            >
-              {classItem.coachName}
-            </span>
-            <span className="text-xs text-gray-500">Coach</span>
-          </div>
-        </div>
+                    {/* Vertical Divider (Desktop) */}
+                    <div className="hidden sm:block w-px h-10 bg-gray-100"></div>
 
-        {/* Status Column */}
-        <div className="flex justify-end md:justify-center">
-          <StatusBadge type={classItem.type} />
-        </div>
-      </div>
+                    {/* Details */}
+                    <div className="flex-grow">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Clock className="w-4 h-4 text-gray-400" />
+                        <span className="font-semibold text-gray-800">
+                          {session.classTime}
+                        </span>
 
-      {/* Selected State Indicator */}
-      {isSelected && (
-        <div className="absolute top-2 right-2 w-2 h-2 bg-blue-500 rounded-full"></div>
-      )}
-    </div>
-  );
-});
+                        {/* Status Pills */}
+                        {session.status === "cancelled" && (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-600 uppercase tracking-wide">
+                            Cancelled
+                          </span>
+                        )}
+                        {session.status === "rescheduled" && (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 uppercase tracking-wide">
+                            Rescheduled
+                          </span>
+                        )}
+                      </div>
 
-const ClassCard = React.memo(({ session, onSessionAction }) => (
-  <div
-    className={`group relative bg-white rounded-xl border border-gray-100 hover:shadow-lg transition-all duration-300 ${
-      session.status === "cancelled" ? "bg-red-50" : ""
-    } ${session.status === "rescheduled" ? "bg-yellow-50" : ""}`}
-  >
-    <div
-      className={`absolute top-0 left-0 right-0 h-1 ${
-        session.type === "online" ? "bg-blue-500" : "bg-green-500"
-      }`}
-    />
-    <div className="p-4">
-      <div className="flex justify-between items-start mb-3">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-lg font-semibold text-gray-800">
-              Session {session.sessionNumber}
-            </span>
-            <StatusBadge type={session.type} status={session.status} />
+                      <div className="flex items-center gap-3 text-sm text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <Award className="w-4 h-4 text-amber-500" />
+                          {session.coachName}
+                        </span>
+                        <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                        <span
+                          className={`capitalize ${
+                            session.type === "online"
+                              ? "text-blue-500"
+                              : "text-green-500"
+                          }`}
+                        >
+                          {session.type} Class
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Action Button */}
+                    {session.status !== "cancelled" && (
+                      <button
+                        onClick={() => onSessionAction(session)}
+                        className="w-full sm:w-auto mt-3 sm:mt-0 px-5 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                      >
+                        Manage
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20 text-gray-500">
+            <Calendar className="w-12 h-12 text-gray-300 mb-3" />
+            <p className="font-medium">No classes scheduled</p>
           </div>
-          <h3 className="text-base font-medium text-gray-700">{session.day}</h3>
-        </div>
-        {session.status !== "cancelled" && (
-          <button
-            onClick={() => onSessionAction(session)}
-            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all duration-200"
-            title="Cancel session"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
         )}
       </div>
-      <div className="flex items-center gap-6">
-        <div className="flex items-center gap-2 text-gray-600">
-          <Calendar className="w-4 h-4 text-gray-400" />
-          <span className="text-sm">{session.formattedDate}</span>
-        </div>
-        <div className="flex items-center gap-2 text-gray-600">
-          <Clock className="w-4 h-4 text-gray-400" />
-          <span className="text-sm">{session.classTime}</span>
-        </div>
-        <div className="flex items-center gap-2 text-gray-600">
-          <Award className="w-4 h-4 text-gray-400" />
-          <span className="text-sm">{session.coachName}</span>
-        </div>
-      </div>
     </div>
-  </div>
-));
+  );
+};
 
 const AssigningWholeClassToKid = () => {
   const { enqId } = useParams();
@@ -340,8 +308,8 @@ const AssigningWholeClassToKid = () => {
   const [kidData, setKidData] = useState(null);
   const [availableClasses, setAvailableClasses] = useState([]);
   const [selectedClasses, setSelectedClasses] = useState([]);
+  const [selectedDays, setSelectedDays] = useState([]);
   const [generatedSchedule, setGeneratedSchedule] = useState([]);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [modalState, setModalState] = useState({
     action: false,
@@ -599,11 +567,23 @@ const AssigningWholeClassToKid = () => {
 
   const handleClassSelection = useCallback((classItem) => {
     setSelectedClasses((prev) => {
-      const isSelected = prev.some((c) => c._id === classItem._id);
-      const updated = isSelected
-        ? prev.filter((c) => c._id !== classItem._id)
-        : [...prev, classItem];
-      return updated;
+      // Check if this specific class is already selected
+      const isAlreadySelected = prev.some((c) => c._id === classItem._id);
+
+      // Filter out any class that is on the SAME day as the new selection
+      // This enforces "one selection per day"
+      const others = prev.filter((c) => c.day !== classItem.day);
+
+      if (isAlreadySelected) {
+        // If clicking the same one, just deselect it (toggle)
+        // Or if you want strict radio behavior (cannot deselect by clicking), return [ ...others, classItem ]
+        // User asked to "select only one timings", doesn't explicitly say toggle off.
+        // Assuming toggle is fine.
+        return others;
+      }
+
+      // Add the new selection (replacing any existing one for that day)
+      return [...others, classItem];
     });
   }, []);
 
@@ -792,50 +772,262 @@ const AssigningWholeClassToKid = () => {
             />
           </div>
 
-          <ClassCalenderSelection
-            isOpen={isDropdownOpen}
-            onToggle={() => setIsDropdownOpen(!isDropdownOpen)}
-            selectedClasses={selectedClasses}
-            onClassSelection={handleClassSelection}
-            availableClasses={availableClasses}
-            classMode={kidData.classDetails?.classMode}
-          />
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8 mt-6">
+            <h3 className="text-lg font-bold text-blue-900 mb-4 flex items-center gap-2">
+              <div className="bg-blue-200 p-1.5 rounded-full">
+                <Clock className="w-4 h-4 text-blue-700" />
+              </div>
+              How to Schedule Classes
+            </h3>
+            <div className="grid md:grid-cols-3 gap-6 relative">
+              {/* Connector Line (Desktop) */}
+              <div className="hidden md:block absolute top-4 left-[16%] right-[16%] h-0.5 bg-blue-200 -z-0"></div>
+
+              <div className="flex gap-4 relative z-10">
+                <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shrink-0 shadow-sm border-2 border-white">
+                  1
+                </div>
+                <div>
+                  <p className="font-bold text-gray-900">Select Days</p>
+                  <p className="text-sm text-gray-600 leading-snug">
+                    Pick the days of the week for classes (e.g., Mon, Wed).
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-4 relative z-10">
+                <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shrink-0 shadow-sm border-2 border-white">
+                  2
+                </div>
+                <div>
+                  <p className="font-bold text-gray-900">Choose One Time</p>
+                  <p className="text-sm text-gray-600 leading-snug">
+                    Select <span className="underline">one</span> convenient
+                    time slot for each chosen day.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-4 relative z-10">
+                <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shrink-0 shadow-sm border-2 border-white">
+                  3
+                </div>
+                <div>
+                  <p className="font-bold text-gray-900">Review Schedule</p>
+                  <p className="text-sm text-gray-600 leading-snug">
+                    Check the generated list below and click Confirm.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative">
+            {selectedDays.length === 0 && (
+              <div className="absolute -top-12 left-2 md:left-10 animate-bounce z-20 flex flex-col items-center pointer-events-none">
+                <div className="bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg mb-1 whitespace-nowrap relative">
+                  Step 1: Select Days
+                  <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-blue-600 rotate-45"></div>
+                </div>
+              </div>
+            )}
+            <DaySelection
+              selectedDays={selectedDays}
+              onDayToggle={(day) => {
+                setSelectedDays((prev) =>
+                  prev.includes(day)
+                    ? prev.filter((d) => d !== day)
+                    : [...prev, day]
+                );
+              }}
+            />
+          </div>
+
+          {selectedDays.length > 0 && (
+            <div className="bg-white rounded-lg shadow mb-6 p-4 relative mt-12">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                Available Classes
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {DAYS_OF_WEEK.filter((day) => selectedDays.includes(day)).map(
+                  (day, index, array) => {
+                    const classesForDay = availableClasses.filter(
+                      (cls) => cls.day === day
+                    );
+
+                    // Logic to find if this is the first day WITH classes that needs attention
+                    const daysWithClasses = DAYS_OF_WEEK.filter(
+                      (d) =>
+                        selectedDays.includes(d) &&
+                        availableClasses.some((c) => c.day === d)
+                    );
+
+                    // NEW: Find the first day that needs a selection but doesn't have one yet
+                    const daysWithSelection = selectedClasses.map((c) => c.day);
+                    const firstIncompleteDay = daysWithClasses.find(
+                      (d) => !daysWithSelection.includes(d)
+                    );
+
+                    // Show arrow only on the specific day that needs action next
+                    const showArrow =
+                      day === firstIncompleteDay && classesForDay.length > 0;
+
+                    // Helper to sort and group by time of day
+                    const getStartTime = (timeStr) => {
+                      const [time, period] = timeStr.split(" - ")[0].split(" ");
+                      let [hours, minutes] = time.split(":").map(Number);
+                      if (period === "PM" && hours !== 12) hours += 12;
+                      if (period === "AM" && hours === 12) hours = 0;
+                      return hours * 60 + minutes;
+                    };
+
+                    const getTimeBlock = (timeStr) => {
+                      const minutes = getStartTime(timeStr);
+                      if (minutes < 720) return "Morning"; // Before 12 PM
+                      if (minutes < 1020) return "Afternoon"; // Before 5 PM
+                      return "Evening";
+                    };
+
+                    const sortedClasses = [...classesForDay].sort(
+                      (a, b) =>
+                        getStartTime(a.classTime) - getStartTime(b.classTime)
+                    );
+
+                    const groupedClasses = {
+                      Morning: sortedClasses.filter(
+                        (c) => getTimeBlock(c.classTime) === "Morning"
+                      ),
+                      Afternoon: sortedClasses.filter(
+                        (c) => getTimeBlock(c.classTime) === "Afternoon"
+                      ),
+                      Evening: sortedClasses.filter(
+                        (c) => getTimeBlock(c.classTime) === "Evening"
+                      ),
+                    };
+
+                    return (
+                      <div
+                        key={day}
+                        className="bg-gray-50 rounded-xl p-4 border border-gray-100 flex flex-col h-[400px] relative"
+                      >
+                        {showArrow && (
+                          <div className="absolute -top-3 right-4 transform -translate-y-full animate-bounce z-20 flex flex-col items-center pointer-events-none">
+                            <div className="bg-green-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg mb-1 whitespace-nowrap relative">
+                              Step 2: Select Time
+                              <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-green-600 rotate-45"></div>
+                            </div>
+                            <ArrowDown className="w-6 h-6 text-green-600 fill-current mt-1" />
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between mb-3 shrink-0">
+                          <h4 className="text-md font-bold text-gray-800 flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                            {day}
+                          </h4>
+                          <span className="text-xs font-medium text-gray-500 bg-white px-2 py-1 rounded-md border border-gray-200">
+                            {classesForDay.length} Slots
+                          </span>
+                        </div>
+
+                        {classesForDay.length > 0 ? (
+                          <div className="overflow-y-auto pr-2 custom-scrollbar flex-1 space-y-4">
+                            {["Morning", "Afternoon", "Evening"].map(
+                              (block) =>
+                                groupedClasses[block].length > 0 && (
+                                  <div key={block}>
+                                    <div className="sticky top-0 bg-gray-50 z-10 py-1 mb-2">
+                                      <h5 className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                                        {block}
+                                        <div className="h-px bg-gray-200 flex-1"></div>
+                                      </h5>
+                                    </div>
+                                    <div className="space-y-2">
+                                      {groupedClasses[block].map(
+                                        (classItem) => (
+                                          <ClassOption
+                                            key={classItem._id}
+                                            classItem={classItem}
+                                            showDay={false}
+                                            isSelected={selectedClasses.some(
+                                              (c) => c._id === classItem._id
+                                            )}
+                                            onSelect={() =>
+                                              handleClassSelection(classItem)
+                                            }
+                                          />
+                                        )
+                                      )}
+                                    </div>
+                                  </div>
+                                )
+                            )}
+                          </div>
+                        ) : (
+                          <div className="bg-white rounded-lg p-4 text-center border border-dashed border-gray-300 flex items-center justify-center flex-1">
+                            <p className="text-xs text-gray-500 italic">
+                              No classes available.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {generatedSchedule.length > 0 && (
-          <div className="bg-white rounded-lg shadow-lg p-6 mb-16">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-800">
-                Generated Schedule
-              </h2>
-              <div className="flex items-center gap-4">
-                {[
-                  { color: "blue", label: "Online Class" },
-                  { color: "green", label: "Offline Class" },
-                  { color: "red", label: "Cancelled Class" },
-                  { color: "yellow", label: "Rescheduled Class" },
-                ].map(({ color, label }) => (
-                  <div key={color} className="flex items-center gap-2">
-                    <div className={`w-3 h-3 rounded-full bg-${color}-500`} />
-                    <span className="text-sm text-gray-600">{label}</span>
-                  </div>
-                ))}
+          <ScheduleCalendar
+            schedule={generatedSchedule}
+            onSessionAction={handleSessionAction}
+          />
+        )}
+
+        {/* Fixed Submit Button */}
+        {generatedSchedule.length > 0 && (
+          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+                <Calendar className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 font-medium">
+                  Course Duration
+                </p>
+                <p className="text-lg font-bold text-gray-800">
+                  {new Date(
+                    Math.min(
+                      ...generatedSchedule.map((s) => new Date(s.classDate))
+                    )
+                  ).toLocaleDateString("en-US", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                  <span className="mx-2 text-gray-400">-</span>
+                  {new Date(
+                    Math.max(
+                      ...generatedSchedule.map((s) => new Date(s.classDate))
+                    )
+                  ).toLocaleDateString("en-US", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </p>
               </div>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {generatedSchedule.map((session) => (
-                <ClassCard
-                  key={session.sessionId}
-                  session={session}
-                  onSessionAction={handleSessionAction}
-                />
-              ))}
+            <div className="text-right">
+              <p className="text-sm text-gray-500 font-medium">Total Classes</p>
+              <p className="text-lg font-bold text-blue-700">
+                {generatedSchedule.length} Sessions
+              </p>
             </div>
           </div>
         )}
 
-        {/* Fixed Submit Button */}
         {generatedSchedule.length > 0 && (
           <div className="fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t">
             <div className="max-w-7xl mx-auto px-4 py-3 flex justify-end">

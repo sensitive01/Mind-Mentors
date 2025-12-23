@@ -1885,10 +1885,15 @@ const updateEmployeeData = async (req, res) => {
       role: formData.role || "employee",
       centerName: formData.centerName,
       centerId: formData.centerId,
+      centers: formData.centers,
       modes: formData.modes, // fixed name
       status: formData.status,
       perHourRate: formData.perHourRate,
       employmentType: formData.employmentType,
+      dob: formData.dob,
+      doj: formData.doj,
+      bloodGroup: formData.bloodGroup,
+      bankDetails: formData.bankDetails,
     };
 
     // Only set password if it's provided
@@ -3212,36 +3217,36 @@ const updatePaymentDetails = async (req, res) => {
         .json({ message: "Package not found with given paymentId" });
     }
 
-    // if (data.status === "Success") {
-    //   await kidSchema.findOneAndUpdate(
-    //     { _id: newData.kidId },
-    //     { $set: { status: "Active" } }
-    //   );
+    if (data.status === "Captured") {
+      await kidSchema.findOneAndUpdate(
+        { _id: newData.kidId },
+        { $set: { status: "Active" } }
+      );
 
-    //   await enquiryData.findOneAndUpdate(
-    //     { _id: newData.enqId },
-    //     {
-    //       $set: {
-    //         enquiryStatus: "Active",
-    //         paymentStatus: "Success",
-    //       },
-    //     }
-    //   );
+      await enquiryData.findOneAndUpdate(
+        { _id: newData.enqId },
+        {
+          $set: {
+            enquiryStatus: "Active",
+            paymentStatus: "Captured",
+          },
+        }
+      );
 
-    //   const parentQuery = {
-    //     $or: [
-    //       { parentMobile: enqData.contactNumber },
-    //       { parentMobile: enqData.whatsappNumber },
-    //     ],
-    //   };
+      const parentQuery = {
+        $or: [
+          { parentMobile: enqData.contactNumber },
+          { parentMobile: enqData.whatsappNumber },
+        ],
+      };
 
-    //   await parentModel.findOneAndUpdate(parentQuery, {
-    //     $set: {
-    //       status: "Active",
-    //       isParentNew: false,
-    //     },
-    //   });
-    // }
+      await parentModel.findOneAndUpdate(parentQuery, {
+        $set: {
+          status: "Active",
+          isParentNew: false,
+        },
+      });
+    }
 
     res.status(200).json({
       message: "Manual payment data stored for verification",
@@ -3273,7 +3278,7 @@ const getInvoiceData = async (req, res) => {
 
 const getPendingInvoiceData = async (req, res) => {
   try {
-    const invoiceData = await packagePaymentData.find({ paymentStatus: "Processing" });
+    const invoiceData = await packagePaymentData.find({ paymentStatus: "Captured" });
 
     if (!invoiceData || invoiceData.length === 0) {
       return res.status(404).json({ message: "No invoice data found" });
